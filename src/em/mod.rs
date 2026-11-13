@@ -759,6 +759,90 @@ impl EmState {
         )?)
         .to_vec())
     }
+    /// Immutable field snapshot for analysis playback; solver state remains at its latest time.
+    pub fn snapshot(&self) -> EmFrame {
+        let result = self.context.device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Recorded analysis fields"),
+            size: self.result.size(),
+            usage: wgpu::BufferUsages::STORAGE
+                | wgpu::BufferUsages::COPY_SRC
+                | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+        let mut encoder = self
+            .context
+            .device
+            .create_command_encoder(&Default::default());
+        encoder.copy_buffer_to_buffer(&self.result, 0, &result, 0, result.size());
+        self.context.queue.submit(Some(encoder.finish()));
+        EmFrame {
+            context: self.context.clone(),
+            grid: self.grid.clone(),
+            input_versions: self.input_versions,
+            result,
+            time_s: self.time_s,
+            mode: self.mode,
+            diagnostics: self.diagnostics.clone(),
+            bodies: self.bodies.clone(),
+            bytes: self.result.size(),
+        }
+    }
+    fn field_view(&self) -> EmFrame {
+        EmFrame {
+            context: self.context.clone(),
+            grid: self.grid.clone(),
+            input_versions: self.input_versions,
+            result: self.result.clone(),
+            time_s: self.time_s,
+            mode: self.mode,
+            diagnostics: self.diagnostics.clone(),
+            bodies: self.bodies.clone(),
+            bytes: self.result.size(),
+        }
+    }
+    pub fn probe(&self, position_mm: [f32; 3]) -> Result<Option<CellField>, String> {
+        self.field_view().probe(position_mm)
+    }
+    pub fn sample_plane(
+        &self,
+        plane: crate::plane::SectionPlane,
+        span_mm: f32,
+        n: u32,
+        kind: u32,
+    ) -> Result<Vec<[f32; 4]>, String> {
+        self.field_view().sample_plane(plane, span_mm, n, kind)
+    }
+    #[cfg(test)]
+    fn all_fields(&self) -> Vec<CellField> {
+        let bytes = read_bytes(
+            &self.context,
+            &self.result,
+            0,
+            self.params.dims[3] as u64 * 64,
+        )
+        .unwrap();
+        bytemuck::cast_slice(&bytes).to_vec()
+    }
+}
+/// GPU-resident output and diagnostics at one recorded time; no resumable solver state.
+pub struct EmFrame {
+    input_versions: InputVersions,
+    context: GpuContext,
+    grid: GridSi,
+    result: wgpu::Buffer,
+    pub time_s: f64,
+    pub mode: Mode,
+    pub diagnostics: Diagnostics,
+    pub bodies: Vec<BodyDiagnostic>,
+    pub bytes: u64,
+}
+impl EmFrame {
+    pub fn is_current(&self, volume: &Volume) -> bool {
+        self.input_versions == volume.inputs.versions()
+    }
+    pub fn result_buffer(&self) -> &wgpu::Buffer {
+        &self.result
+    }
     pub fn probe(&self, position_mm: [f32; 3]) -> Result<Option<CellField>, String> {
         let mut p = [0u32; 3];
         for i in 0..3 {
@@ -871,18 +955,8 @@ impl EmState {
         self.context.queue.submit(Some(encoder.finish()));
         Ok(bytemuck::cast_slice(&read_bytes(&self.context, &output, 0, output.size())?).to_vec())
     }
-    #[cfg(test)]
-    fn all_fields(&self) -> Vec<CellField> {
-        let bytes = read_bytes(
-            &self.context,
-            &self.result,
-            0,
-            self.params.dims[3] as u64 * 64,
-        )
-        .unwrap();
-        bytemuck::cast_slice(&bytes).to_vec()
-    }
 }
+
 fn groups(n: u32) -> [u32; 3] {
     let n = n.div_ceil(256);
     [n.min(65535), n.div_ceil(65535), 1]

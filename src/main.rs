@@ -4,6 +4,7 @@ mod em_ui;
 mod gizmo;
 mod render;
 mod section;
+mod timeline;
 use glam::Vec3;
 // GPU tests share one physical adapter; serialize context lifetime and teardown.
 #[cfg(test)]

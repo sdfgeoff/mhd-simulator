@@ -462,37 +462,44 @@ impl App {
         ui.small(
             "Arrows translate along world X/Y/Z. Rings rotate around those axes at the pivot.",
         );
-        ui.horizontal(|ui| {
-            let fields = self.em_ui.ready(self.volume.as_ref());
-            if ui
-                .selectable_label(!fields && !self.voxel_overlay, "CAD")
-                .clicked()
-            {
-                self.voxel_overlay = false;
-                self.em_ui.show = false;
-                self.dirty = true;
+        let fields = self.em_ui.ready(self.volume.as_ref());
+        let mut selected = if fields {
+            self.em_ui.kind + 2
+        } else if self.voxel_overlay {
+            2
+        } else if self.hatched {
+            0
+        } else {
+            1
+        };
+        let previous = selected;
+        let view_label = |id: u32| match id {
+            0 => "Hatched CAD",
+            1 => "CAD outlines",
+            2 => "Voxel domain",
+            id => crate::em_ui::label(id - 2),
+        };
+        egui::ComboBox::from_label("Section view")
+            .selected_text(view_label(selected))
+            .show_ui(ui, |ui| {
+                for id in 0..=8 {
+                    ui.add_enabled_ui(id < 3 || self.em_ui.timeline.current().is_some(), |ui| {
+                        ui.selectable_value(&mut selected, id, view_label(id));
+                    });
+                }
+            });
+        if selected != previous {
+            self.em_ui.show = selected >= 3;
+            if selected >= 3 {
+                self.em_ui.kind = selected - 2;
+            } else {
+                self.voxel_overlay = selected == 2;
+                self.hatched = selected == 0;
             }
-            if ui
-                .selectable_label(!fields && self.voxel_overlay, "Voxel domain")
-                .clicked()
-            {
-                self.voxel_overlay = true;
-                self.em_ui.show = false;
-                self.dirty = true;
-            }
-            if ui
-                .add_enabled_ui(self.em_ui.state.is_some(), |ui| {
-                    ui.selectable_label(fields, "Fields")
-                })
-                .inner
-                .clicked()
-            {
-                self.em_ui.show = true;
-                self.dirty = true;
-            }
-        });
-        if self.em_ui.ready(self.volume.as_ref()) {
-            ui.small("Choose the field and range under Electromagnetics.");
+            self.dirty = true;
+        }
+        if fields || selected >= 3 {
+            self.dirty |= self.em_ui.visualization_controls(ui);
         } else if self.voxel_overlay {
             self.dirty |= ui
                 .checkbox(&mut self.grid_lines, "Subtle cell edges")
@@ -500,15 +507,6 @@ impl App {
             self.dirty |= ui
                 .checkbox(&mut self.material_view, "Colour by material ID")
                 .changed();
-        } else {
-            ui.horizontal(|ui| {
-                self.dirty |= ui
-                    .selectable_value(&mut self.hatched, true, "Hatched CAD")
-                    .changed();
-                self.dirty |= ui
-                    .selectable_value(&mut self.hatched, false, "Outlines")
-                    .changed();
-            });
         }
         ui.horizontal(|ui| {
             if ui.button("Reset plane").clicked() {
@@ -599,6 +597,7 @@ impl eframe::App for App {
             ui.add_space(9.);
         });
         egui::TopBottomPanel::bottom("status").show(ctx, |ui| {
+            self.dirty |= self.em_ui.timeline_controls(ui);
             ui.horizontal(|ui| {
                 ui.small(
                     self.gpu
@@ -713,7 +712,9 @@ impl eframe::App for App {
                             "CAD geometry; voxel diagnostics below refer to the built domain.",
                         );
                     }
-                    self.em_ui.panel(ui);
+                    if self.em_ui.ready(self.volume.as_ref()) {
+                        self.em_ui.panel(ui);
+                    }
                     self.domain_diagnostics(ui);
                     ui.separator();
                     if !self.error.is_empty() {
@@ -762,7 +763,33 @@ fn optional(
 }
 impl App {
     fn domain_controls(&mut self, ui: &mut egui::Ui) {
-        egui::CollapsingHeader::new("Bounds and cell spacing").show(ui, |ui| {
+        ui.label("Uniform cell spacing");
+        self.domain_pending |= ui
+            .add(
+                egui::DragValue::new(&mut self.settings.cell_mm)
+                    .speed(0.005)
+                    .range(0.001..=100.)
+                    .suffix(" mm"),
+            )
+            .on_hover_text(
+                "Smaller cells increase resolution, memory and solve time. Rebuild to apply.",
+            )
+            .changed();
+        ui.horizontal(|ui| {
+            if ui.button("2× finer").clicked() {
+                self.settings.cell_mm = (self.settings.cell_mm * 0.5).max(0.001);
+                self.domain_pending = true;
+            }
+            if ui.button("2× coarser").clicked() {
+                self.settings.cell_mm = (self.settings.cell_mm * 2.).min(100.);
+                self.domain_pending = true;
+            }
+        });
+        ui.small(format!(
+            "0.5 mm droplet: {:.1} cells across",
+            0.5 / self.settings.cell_mm
+        ));
+        egui::CollapsingHeader::new("Domain bounds (mm)").show(ui, |ui| {
             for axis in 0..3 {
                 ui.horizontal(|ui| {
                     ui.label(["X", "Y", "Z"][axis]);
@@ -770,36 +797,34 @@ impl App {
                         .add(
                             egui::DragValue::new(&mut self.settings.min_mm[axis])
                                 .speed(0.1)
-                                .prefix("min ")
-                                .suffix(" mm"),
+                                .prefix("min "),
                         )
                         .changed();
                     self.domain_pending |= ui
                         .add(
                             egui::DragValue::new(&mut self.settings.max_mm[axis])
                                 .speed(0.1)
-                                .prefix("max ")
-                                .suffix(" mm"),
+                                .prefix("max "),
                         )
                         .changed();
                 });
             }
-            self.domain_pending |= ui
-                .add(
-                    egui::DragValue::new(&mut self.settings.cell_mm)
-                        .speed(0.005)
-                        .prefix("Cell ")
-                        .suffix(" mm"),
-                )
-                .changed();
             if ui.button("Fit domain to geometry").clicked() {
+                let spacing = self.settings.cell_mm;
                 self.settings = DomainSettings::fit(&self.model);
+                self.settings.cell_mm = spacing;
                 self.domain_pending = true;
             }
         });
         match self.settings.dims() {
             Ok(d) => {
                 ui.monospace(format!("{} × {} × {} cells", d[0], d[1], d[2]));
+                let cells = d.iter().map(|&n| n as u64).product::<u64>();
+                let frame_mib = cells as f64 * 64. / 1048576.;
+                ui.small(format!(
+                    "Field result: {frame_mib:.1} MiB/frame · ~{} retained at 256 MiB",
+                    (256. / frame_mib).floor().max(1.) as usize
+                ));
                 if let Ok(bytes) = self.settings.estimated_bytes(self.model.bodies.len()) {
                     ui.small(format!(
                         "Grid build working set: {:.1} MiB",
