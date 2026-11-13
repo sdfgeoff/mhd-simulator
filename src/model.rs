@@ -82,9 +82,15 @@ impl Body {
         self.boundary_edges == 0 && self.nonmanifold_edges == 0
     }
 }
+#[derive(Clone, Debug)]
+pub struct CurvePath {
+    pub name: String,
+    pub points_mm: Vec<[f32; 3]>,
+}
 #[derive(Default, Clone)]
 pub struct Model {
     pub bodies: Vec<Body>,
+    pub curves: Vec<CurvePath>,
     pub notices: Vec<String>,
     pub source: String,
 }
@@ -95,6 +101,12 @@ impl Model {
         for body in &self.bodies {
             lo = lo.min(body.bounds.0);
             hi = hi.max(body.bounds.1);
+        }
+        for curve in &self.curves {
+            for &p in &curve.points_mm {
+                lo = lo.min(Vec3::from(p));
+                hi = hi.max(Vec3::from(p));
+            }
         }
         if !lo.is_finite() {
             (Vec3::splat(-5.), Vec3::splat(5.))
@@ -124,9 +136,6 @@ impl Model {
                     let world = parent * Mat4::from_cols_array_2d(&node.transform().matrix());
                     if let Some(mesh) = node.mesh() {
                         for (pi, p) in mesh.primitives().enumerate() {
-                            if p.mode() != gltf::mesh::Mode::Triangles {
-                                return Err("Only triangle primitives are supported".into());
-                            }
                             if p.morph_targets().next().is_some() || node.skin().is_some() {
                                 return Err(
                                     "Skinned/morphed geometry is unsupported; export a static mesh"
@@ -143,6 +152,17 @@ impl Model {
                                 .read_indices()
                                 .map(|v| v.into_u32().collect())
                                 .unwrap_or_else(|| (0..pos.len() as u32).collect());
+                            if p.mode() != gltf::mesh::Mode::Triangles {
+                                let paths = centreline_paths(p.mode(), &pos, &ix)?;
+                                let name = node.name().or(mesh.name()).unwrap_or("CAD centreline");
+                                for (j, points_mm) in paths.into_iter().enumerate() {
+                                    m.curves.push(CurvePath {
+                                        name: format!("{name} / {pi}:{j}"),
+                                        points_mm,
+                                    });
+                                }
+                                continue;
+                            }
                             if ix.len() % 3 != 0 {
                                 return Err("Incomplete triangle indices".into());
                             }
@@ -268,5 +288,137 @@ impl Model {
             }
         }
         Ok(m)
+    }
+}
+
+/// Assemble exported line segments into unbranched, ordered current paths.
+fn centreline_paths(
+    mode: gltf::mesh::Mode,
+    positions: &[Vec3],
+    indices: &[u32],
+) -> Result<Vec<Vec<[f32; 3]>>, String> {
+    use gltf::mesh::Mode;
+    if positions.iter().any(|p| !p.is_finite())
+        || indices.iter().any(|&i| i as usize >= positions.len())
+    {
+        return Err("Invalid CAD centreline positions or indices".into());
+    }
+    if matches!(mode, Mode::LineStrip | Mode::LineLoop) {
+        let mut path: Vec<_> = indices
+            .iter()
+            .map(|&i| positions[i as usize].to_array())
+            .collect();
+        if mode == Mode::LineLoop && path.first() != path.last() && path.len() > 2 {
+            path.push(path[0]);
+        }
+        if path.len() < 2
+            || path
+                .windows(2)
+                .any(|p| Vec3::from(p[0]).distance(Vec3::from(p[1])) < 1e-6)
+        {
+            return Err(
+                "CAD centreline needs at least two points and finite nonzero segments".into(),
+            );
+        }
+        return Ok(vec![path]);
+    }
+    let edges: Vec<_> = match mode {
+        Mode::Lines => {
+            if indices.len() % 2 != 0 {
+                return Err("Incomplete centreline edge".into());
+            }
+            indices.chunks_exact(2).map(|p| (p[0], p[1])).collect()
+        }
+        _ => return Err("Export triangle bodies or line/line-strip/line-loop centrelines".into()),
+    };
+    let mut points: Vec<Vec3> = Vec::new();
+    let mut lookup = HashMap::new();
+    let mut links: Vec<Vec<usize>> = Vec::new();
+    for (a, b) in edges {
+        let mut pair = [0; 2];
+        for (j, index) in [a, b].into_iter().enumerate() {
+            let p = positions[index as usize];
+            let key = p.to_array().map(|v| (v as f64 * 1e5).round() as i64);
+            let next = points.len();
+            pair[j] = *lookup.entry(key).or_insert_with(|| {
+                points.push(p);
+                links.push(Vec::new());
+                next
+            });
+        }
+        let [a, b] = pair;
+        if a == b {
+            return Err("Zero-length CAD centreline segment".into());
+        }
+        if links[a].contains(&b) {
+            return Err("Duplicate CAD centreline segment".into());
+        }
+        links[a].push(b);
+        links[b].push(a);
+    }
+    if links.iter().any(|l| l.len() > 2) {
+        return Err(
+            "Branched CAD centreline: export each current circuit as an unbranched path".into(),
+        );
+    }
+    let mut paths = Vec::new();
+    while let Some(start) = links
+        .iter()
+        .position(|l| l.len() == 1)
+        .or_else(|| links.iter().position(|l| !l.is_empty()))
+    {
+        let mut path = vec![points[start].to_array()];
+        let mut at = start;
+        while !links[at].is_empty() {
+            let next = links[at].remove(0);
+            links[next].retain(|&i| i != at);
+            path.push(points[next].to_array());
+            at = next;
+        }
+        paths.push(path);
+    }
+    Ok(paths)
+}
+
+#[cfg(test)]
+mod curve_tests {
+    use super::*;
+    #[test]
+    fn cad_curves_keep_order_units_and_assembly_placement() {
+        let path = Path::new("assets/coil-centreline.gltf");
+        let model = Model::load(path).unwrap();
+        assert!(model.bodies.is_empty());
+        assert_eq!(model.curves.len(), 1);
+        let curve = &model.curves[0];
+        assert_eq!(curve.points_mm.first(), curve.points_mm.last());
+        assert!((Vec3::from(curve.points_mm[0]) - Vec3::new(5., 0., 0.)).length() < 1e-5);
+        assert!(curve.points_mm[1][1] > 0.); // Current direction follows exported vertex order.
+        let mut doc: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
+        doc["nodes"][0]["translation"] = serde_json::json!([0.001, 0.002, 0.003]);
+        doc["nodes"][0]["scale"] = serde_json::json!([2., 2., 2.]);
+        std::fs::create_dir_all("artifacts").unwrap();
+        std::fs::write(
+            "artifacts/transformed-centreline.gltf",
+            serde_json::to_vec(&doc).unwrap(),
+        )
+        .unwrap();
+        let transformed = Model::load(Path::new("artifacts/transformed-centreline.gltf")).unwrap();
+        assert!(
+            (Vec3::from(transformed.curves[0].points_mm[0]) - Vec3::new(11., 2., 3.)).length()
+                < 1e-5
+        );
+    }
+    #[test]
+    fn disjoint_segment_paths_are_stitched_and_branches_rejected() {
+        use gltf::mesh::Mode;
+        let p = [Vec3::ZERO, Vec3::X, Vec3::Y, Vec3::new(0., 0., 0.)];
+        let paths = centreline_paths(Mode::Lines, &p, &[0, 1, 1, 2, 2, 3]).unwrap();
+        assert_eq!(paths.len(), 1);
+        assert_eq!(paths[0].len(), 4);
+        assert_eq!(paths[0].first(), paths[0].last());
+        assert_eq!(paths[0][1], Vec3::X.to_array());
+        assert!(centreline_paths(Mode::Lines, &p, &[0, 1, 0, 2, 0, 3]).is_err());
+        assert!(centreline_paths(Mode::Lines, &p, &[0, 1, 1, 0]).is_err());
     }
 }

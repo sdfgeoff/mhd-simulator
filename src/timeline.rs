@@ -7,7 +7,7 @@ pub struct Sample<T> {
 pub struct Timeline<T> {
     pub samples: Vec<Sample<T>>,
     pub selected: usize,
-    pub budget_bytes: u64,
+    pub capacity_frames: usize,
     pub dropped: usize,
 }
 impl<T> Default for Timeline<T> {
@@ -15,7 +15,7 @@ impl<T> Default for Timeline<T> {
         Self {
             samples: Vec::new(),
             selected: 0,
-            budget_bytes: 256 * 1024 * 1024,
+            capacity_frames: 10,
             dropped: 0,
         }
     }
@@ -47,7 +47,7 @@ impl<T> Timeline<T> {
             self.samples.pop();
         }
         self.samples.push(sample);
-        while self.samples.len() > 1 && self.bytes() > self.budget_bytes {
+        while self.samples.len() > self.capacity_frames.max(1) {
             self.samples.remove(0);
             self.selected = self.selected.saturating_sub(1);
             self.dropped += 1;
@@ -62,6 +62,7 @@ impl<T> Timeline<T> {
     }
     pub fn controls(&mut self, ui: &mut eframe::egui::Ui) -> bool {
         let old = self.selected;
+        let old_time = self.samples.get(self.selected).map(|s| s.time_s);
         ui.horizontal(|ui| {
             ui.strong("Timeline");
             if self.samples.is_empty() {
@@ -100,10 +101,27 @@ impl<T> Timeline<T> {
                 self.samples.len()
             ));
         });
+        ui.horizontal(|ui| {
+            ui.label("History window");
+            if ui
+                .add(
+                    eframe::egui::DragValue::new(&mut self.capacity_frames)
+                        .range(1..=100)
+                        .suffix(" frames"),
+                )
+                .changed()
+            {
+                while self.samples.len() > self.capacity_frames {
+                    self.samples.remove(0);
+                    self.selected = self.selected.saturating_sub(1);
+                    self.dropped += 1;
+                }
+            }
+        });
         if !self.samples.is_empty() {
-            ui.small(format!("Recorded outputs · {:.1} MiB / {:.0} MiB budget · {} older frames discarded · stepping continues from latest solver time", self.bytes() as f64/1048576., self.budget_bytes as f64/1048576., self.dropped));
+            ui.small(format!("Recorded outputs · {:.1} MiB · {}-frame window · {} older frames discarded · stepping continues from latest solver time", self.bytes() as f64/1048576., self.capacity_frames, self.dropped));
         }
-        old != self.selected
+        old != self.selected || old_time != self.samples.get(self.selected).map(|s| s.time_s)
     }
 }
 #[cfg(test)]
@@ -162,9 +180,24 @@ mod tests {
         assert_eq!(timeline.current(), Some(&(timeline.selected as i32)));
     }
     #[test]
+    fn default_window_retains_ten_frames_independent_of_bytes() {
+        let mut timeline = Timeline::default();
+        for i in 0..11 {
+            timeline.push(Sample {
+                time_s: i as f64,
+                bytes: 128 * 1024 * 1024,
+                output: i,
+            });
+        }
+        assert_eq!(timeline.samples.len(), 10);
+        assert_eq!(timeline.samples[0].output, 1);
+        assert_eq!(timeline.current(), Some(&10));
+        assert_eq!(timeline.bytes(), 1280 * 1024 * 1024);
+    }
+    #[test]
     fn retention_selection_and_restart() {
         let mut t = Timeline::default();
-        t.budget_bytes = 3;
+        t.capacity_frames = 3;
         for i in 0..3 {
             t.push(Sample {
                 time_s: i as f64,

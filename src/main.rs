@@ -25,7 +25,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 b.closed()
             );
         }
-        if !m.bodies.is_empty() {
+        for curve in &m.curves {
+            println!(
+                "{}: {} centreline points",
+                curve.name,
+                curve.points_mm.len()
+            );
+        }
+        if !m.bodies.is_empty() || !m.curves.is_empty() {
             println!("Bounds (mm): {:?}", m.bounds());
         }
         for n in &m.notices {

@@ -315,6 +315,20 @@ impl EmConfig {
         Ok(out)
     }
 }
+/// Imported CAD curves are prescribed-current paths, not conducting solid bodies.
+pub fn cad_wires(model: &Model) -> Vec<Wire> {
+    model
+        .curves
+        .iter()
+        .map(|curve| Wire {
+            body_current: None,
+            name: curve.name.clone(),
+            points_mm: curve.points_mm.clone(),
+            core_radius_mm: 0.15,
+            current: Waveform::Constant { value: 0. },
+        })
+        .collect()
+}
 /// Closed helical path with explicit outer return lead. Axis is local Z.
 pub fn helix(
     center_mm: [f32; 3],

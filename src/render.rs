@@ -493,7 +493,7 @@ impl Viewport {
             let c = COLORS[i % COLORS.len()].map(|v| v as f32 / 255.);
             if cut {
                 if let Some(cap) = caps.get(i) {
-                    if hatched && domain.is_none() {
+                    if hatched && domain.as_ref().is_none_or(|d| d.volume.is_none()) {
                         let color = [
                             linear(c[0] * 0.45 + 0.55),
                             linear(c[1] * 0.45 + 0.55),
@@ -533,7 +533,7 @@ impl Viewport {
                     }
                 }
             }
-            if cut {
+            if cut && domain.volume.is_some() {
                 let o = plane.position;
                 let u = plane.u() * domain.span;
                 let v = plane.v() * domain.span;
@@ -562,8 +562,8 @@ impl Viewport {
                             };
                             let mut q = p;
                             q[axis] = hi[axis];
-                            lines.push(vertex(p, [0.12, 0.3, 0.36, 1.], 2.));
-                            lines.push(vertex(q, [0.12, 0.3, 0.36, 1.], 2.));
+                            lines.push(vertex(p, [0.92, 0.62, 0.18, 1.], 2.));
+                            lines.push(vertex(q, [0.92, 0.62, 0.18, 1.], 2.));
                         }
                     }
                 }
@@ -1041,7 +1041,15 @@ mod tests {
                     &model,
                     &caps,
                     1.,
-                    None,
+                    Some(DomainView {
+                        field: None,
+                        source_lines: &[],
+                        span: 5.,
+                        bounds: Some((Vec3::splat(-4.5), Vec3::splat(4.5))),
+                        grid: None,
+                        volume: None,
+                        material_colors: false,
+                    }),
                 );
                 let a = read(&panel);
                 let b = read(&scene);

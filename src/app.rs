@@ -41,6 +41,7 @@ pub struct App {
     fields: FieldState,
     em_ui: EmUi,
     voxel_overlay: bool,
+    show_domain: bool,
     grid_lines: bool,
     material_view: bool,
     project_path: String,
@@ -95,6 +96,7 @@ impl App {
             fields: FieldState::default(),
             em_ui: EmUi::default(),
             voxel_overlay: true,
+            show_domain: true,
             grid_lines: true,
             material_view: false,
             project_path: "project.mhd.json".into(),
@@ -119,6 +121,7 @@ impl App {
             dirty: true,
             section_time: 0.,
         };
+        app.em_ui.config.wires = crate::em::cad_wires(&app.model);
         if app.path.ends_with(".json") {
             app.load();
         } else {
@@ -169,7 +172,10 @@ impl App {
             match Model::load(path) {
                 Ok(m) => {
                     self.model = m;
-                    self.em_ui.config = crate::em::EmConfig::default();
+                    self.em_ui.config = crate::em::EmConfig {
+                        wires: crate::em::cad_wires(&self.model),
+                        ..Default::default()
+                    };
                     self.settings = DomainSettings::fit(&self.model);
                     self.materials = project::default_materials();
                     self.clear_derived();
@@ -198,6 +204,35 @@ impl App {
             Err(e) => self.error = e,
         }
     }
+    fn simulate(&mut self) {
+        if self.em_ui.busy() {
+            return;
+        }
+        if self.em_ui.config.wires.is_empty()
+            && self.em_ui.config.magnets.is_empty()
+            && self.em_ui.config.uniform.is_empty()
+        {
+            self.em_ui.error = "Add a coil/current source or permanent magnet under Assign properties before simulating.".into();
+            return;
+        }
+        if self.domain_pending || self.volume.is_none() {
+            self.build_domain();
+        }
+        self.sync_inputs();
+        if self.domain_pending || self.inputs_pending {
+            return;
+        }
+        if let (Some(gpu), Some(volume)) = (&self.gpu, &self.volume) {
+            self.em_ui.start(
+                crate::em::Mode::Induction,
+                self.em_ui.run_steps,
+                &self.model,
+                volume,
+                &gpu.context,
+            );
+            self.dirty = true;
+        }
+    }
     fn apply_em_demo(&mut self) {
         match crate::em::hotend_example(&mut self.model) {
             Ok((materials, config)) => {
@@ -213,6 +248,7 @@ impl App {
     }
     fn sync_inputs(&mut self) {
         if self.domain_pending {
+            self.dirty |= self.em_ui.timeline.current().is_some();
             self.em_ui.invalidate();
             self.fields.invalidate();
             return;
@@ -221,6 +257,7 @@ impl App {
             return;
         }
         self.fields.invalidate();
+        self.dirty |= self.em_ui.timeline.current().is_some();
         self.em_ui.invalidate();
         let (Some(gpu), Some(volume)) = (&self.gpu, &mut self.volume) else {
             return;
@@ -339,6 +376,7 @@ impl App {
         }
         let painter = ui.painter_at(rect);
         let section_span = self.section_span();
+        let preview_bounds = self.preview_bounds();
         if let Some(viewport) = &mut self.viewport {
             let texture = viewport.draw(
                 camera,
@@ -348,29 +386,29 @@ impl App {
                 &self.model,
                 &self.caps,
                 ui.ctx().pixels_per_point(),
-                (self.voxel_overlay || self.em_ui.ready(self.volume.as_ref())).then_some(
-                    crate::render::DomainView {
-                        field: self.em_ui.view(self.volume.as_ref()),
-                        source_lines: &self.em_ui.source_lines,
-                        volume: self.volume.as_ref(),
-                        material_colors: self.material_view,
-                        span: section_span,
-                        grid: if self.voxel_overlay && self.grid_lines {
-                            self.volume
-                                .as_ref()
-                                .map(|v| (Vec3::from(v.settings.min_mm), v.settings.cell_mm))
-                        } else {
-                            None
-                        },
-                        bounds: if self.voxel_overlay {
-                            self.volume
-                                .as_ref()
-                                .map(|v| (Vec3::from(v.settings.min_mm), v.max()))
-                        } else {
-                            None
-                        },
+                (self.show_domain
+                    || self.voxel_overlay
+                    || self.em_ui.ready(self.volume.as_ref())
+                    || !self.em_ui.source_lines.is_empty())
+                .then_some(crate::render::DomainView {
+                    field: self.em_ui.view(self.volume.as_ref()),
+                    source_lines: &self.em_ui.source_lines,
+                    volume: if self.voxel_overlay || self.em_ui.ready(self.volume.as_ref()) {
+                        self.volume.as_ref()
+                    } else {
+                        None
                     },
-                ),
+                    material_colors: self.material_view,
+                    span: section_span,
+                    grid: if self.voxel_overlay && self.grid_lines {
+                        self.volume
+                            .as_ref()
+                            .map(|v| (Vec3::from(v.settings.min_mm), v.settings.cell_mm))
+                    } else {
+                        None
+                    },
+                    bounds: preview_bounds,
+                }),
             );
             painter.image(
                 texture,
@@ -411,11 +449,24 @@ impl App {
             egui::FontId::monospace(12.),
             Color32::from_gray(180),
         );
+        if self.show_domain {
+            painter.text(
+                rect.left_top() + Vec2::new(16., 36.),
+                egui::Align2::LEFT_TOP,
+                if self.domain_pending {
+                    "DOMAIN PREVIEW · changes apply on Simulate"
+                } else {
+                    "DOMAIN BOX"
+                },
+                egui::FontId::proportional(11.),
+                Color32::from_rgb(235, 174, 70),
+            );
+        }
         painter.text(rect.right_bottom()-Vec2::splat(14.),egui::Align2::RIGHT_BOTTOM,"Drag handles: move / rotate plane\nDrag background or right-drag: orbit · Scroll: zoom",egui::FontId::proportional(12.),Color32::from_gray(180));
     }
     fn controls(&mut self, ui: &mut egui::Ui) {
         ui.add_space(12.);
-        ui.heading("01 / Assembly");
+        ui.heading("01 / Import");
         ui.label("glTF, GLB, STL · STEP metadata only");
         ui.text_edit_singleline(&mut self.path);
         if ui.button("Load file").clicked() {
@@ -453,10 +504,46 @@ impl App {
         }
         ui.add_space(12.);
         ui.separator();
-        ui.heading("02 / Simulation domain");
-        self.domain_controls(ui);
+        ui.heading("02 / Assign properties");
+        self.property_controls(ui);
+        let (changed, demo) = self.em_ui.controls(
+            ui,
+            &self.model,
+            if !self.domain_pending && !self.inputs_pending {
+                self.volume.as_ref()
+            } else {
+                None
+            },
+            self.gpu.as_ref().map(|g| &g.context),
+        );
+        self.dirty |= changed;
+        if demo {
+            self.apply_em_demo();
+        }
         ui.separator();
-        ui.heading("03 / Section plane");
+        ui.heading("03 / Simulate");
+        ui.horizontal(|ui| {
+            ui.add(
+                egui::DragValue::new(&mut self.em_ui.run_steps)
+                    .range(1..=10000)
+                    .suffix(" steps"),
+            );
+            if ui
+                .add_enabled(
+                    !self.em_ui.busy() && !self.model.bodies.is_empty(),
+                    egui::Button::new(egui::RichText::new("Simulate").strong())
+                        .fill(Color32::from_rgb(30, 105, 115)),
+                )
+                .clicked()
+            {
+                self.simulate();
+            }
+        });
+        ui.small("Builds the domain automatically and runs stationary induction. Repeat to continue from the latest time.");
+        egui::CollapsingHeader::new("Domain resolution and bounds")
+            .show(ui, |ui| self.domain_controls(ui));
+        ui.separator();
+        ui.heading("04 / View results");
         ui.checkbox(&mut self.cut, "Cut geometry");
         ui.checkbox(&mut self.show_gizmo, "Show move / rotate handles");
         ui.small(
@@ -556,23 +643,6 @@ impl App {
             self.pitch = 0.45;
             self.zoom = 1.;
         }
-        ui.add_space(10.);
-        ui.separator();
-        self.property_controls(ui);
-        let (changed, demo) = self.em_ui.controls(
-            ui,
-            &self.model,
-            if !self.domain_pending && !self.inputs_pending {
-                self.volume.as_ref()
-            } else {
-                None
-            },
-            self.gpu.as_ref().map(|g| &g.context),
-        );
-        self.dirty |= changed;
-        if demo {
-            self.apply_em_demo();
-        }
     }
 }
 impl eframe::App for App {
@@ -583,6 +653,17 @@ impl eframe::App for App {
             ui.add_space(9.);
             ui.horizontal(|ui| {
                 ui.heading("MHD / WORKBENCH");
+                if ui
+                    .add_enabled(
+                        !self.em_ui.busy() && !self.model.bodies.is_empty(),
+                        egui::Button::new(egui::RichText::new("Simulate").strong())
+                            .fill(Color32::from_rgb(30, 105, 115)),
+                    )
+                    .clicked()
+                {
+                    self.simulate();
+                }
+
                 ui.add_space(20.);
                 ui.colored_label(
                     Color32::from_rgb(75, 196, 208),
@@ -607,6 +688,10 @@ impl eframe::App for App {
                 );
                 ui.separator();
                 ui.small(format!("Section update: {:.1} ms", self.section_time));
+                if !self.em_ui.error.is_empty() {
+                    ui.separator();
+                    ui.colored_label(Color32::LIGHT_RED, &self.em_ui.error);
+                }
             });
         });
         egui::SidePanel::left("controls")
@@ -625,7 +710,7 @@ impl eframe::App for App {
             .show(ctx, |ui| {
                 egui::ScrollArea::vertical().show(ui, |ui| {
                     ui.add_space(12.);
-                    ui.heading("04 / Section");
+                    ui.heading("Section");
                     ui.label(self.section_style().label());
                     ui.small("Rendered directly at viewport resolution");
                     let panel_pixels = (ui.available_width().min(320.) * ctx.pixels_per_point())
@@ -762,7 +847,19 @@ fn optional(
     changed
 }
 impl App {
+    fn preview_bounds(&self) -> Option<(Vec3, Vec3)> {
+        if !self.show_domain {
+            return None;
+        }
+        let dims = self.settings.dims().ok()?;
+        let lo = Vec3::from(self.settings.min_mm);
+        Some((
+            lo,
+            lo + Vec3::new(dims[0] as f32, dims[1] as f32, dims[2] as f32) * self.settings.cell_mm,
+        ))
+    }
     fn domain_controls(&mut self, ui: &mut egui::Ui) {
+        ui.checkbox(&mut self.show_domain, "Preview domain box in 3D");
         ui.label("Uniform cell spacing");
         self.domain_pending |= ui
             .add(
@@ -822,8 +919,9 @@ impl App {
                 let cells = d.iter().map(|&n| n as u64).product::<u64>();
                 let frame_mib = cells as f64 * 64. / 1048576.;
                 ui.small(format!(
-                    "Field result: {frame_mib:.1} MiB/frame · ~{} retained at 256 MiB",
-                    (256. / frame_mib).floor().max(1.) as usize
+                    "Field result: {frame_mib:.1} MiB/frame · {:.1} MiB for {} frames",
+                    frame_mib * self.em_ui.timeline.capacity_frames as f64,
+                    self.em_ui.timeline.capacity_frames
                 ));
                 if let Ok(bytes) = self.settings.estimated_bytes(self.model.bodies.len()) {
                     ui.small(format!(
@@ -892,8 +990,7 @@ impl App {
         }
     }
     fn property_controls(&mut self, ui: &mut egui::Ui) {
-        ui.heading("Simulation properties");
-        ui.small("Material and initial-temperature inputs. Wire paths and drive waveforms are under Electromagnetics.");
+        ui.small("Assign each component a material and optional initial temperature/current. Configure current sources below.");
         for (i, b) in self.model.bodies.iter_mut().enumerate() {
             egui::CollapsingHeader::new(&b.name)
                 .id_salt(("component", i))
@@ -990,6 +1087,44 @@ impl App {
 #[cfg(test)]
 mod project_ui_tests {
     use super::*;
+    #[test]
+    fn cad_import_properties_simulate_rebuilds_and_runs_headlessly() {
+        let _lock = crate::gpu_test_lock();
+        let mut app = App::new("assets/annulus.gltf".into(), None);
+        let serial = app.volume.as_ref().unwrap().build_serial;
+        app.em_ui
+            .import_centrelines(std::path::Path::new("assets/coil-centreline.gltf"))
+            .unwrap();
+        app.em_ui.config.wires[0].current = crate::em::Waveform::Constant { value: 10. };
+        app.em_ui.run_steps = 1;
+        for material in &mut app.materials {
+            material.conductivity_s_m = Some(0.);
+            material.relative_permeability = Some(1.);
+        }
+        app.inputs_pending = true;
+        app.settings.cell_mm *= 2.;
+        app.settings.max_mm[0] += 1.;
+        app.domain_pending = true;
+        let proposed = app.preview_bounds().unwrap();
+        assert_ne!(proposed.1, app.volume.as_ref().unwrap().max());
+        app.simulate();
+        assert!(!app.domain_pending && !app.inputs_pending, "{}", app.error);
+        assert_ne!(serial, app.volume.as_ref().unwrap().build_serial);
+        assert_eq!(proposed.1, app.volume.as_ref().unwrap().max());
+        let context = egui::Context::default();
+        let start = std::time::Instant::now();
+        while app.em_ui.busy() {
+            app.em_ui.poll(&context, app.volume.as_ref());
+            assert!(start.elapsed().as_secs() < 20);
+            std::thread::sleep(std::time::Duration::from_millis(1));
+        }
+        assert!(app.em_ui.error.is_empty(), "{}", app.em_ui.error);
+        assert!(app.em_ui.ready(app.volume.as_ref()));
+        assert_eq!(app.em_ui.timeline.samples.len(), 2);
+        assert!(app.em_ui.state.as_ref().unwrap().diagnostics.maxima[0] > 1e-6);
+        app.show_domain = false;
+        assert!(app.preview_bounds().is_none());
+    }
     #[test]
     fn property_and_source_ui_updates_invalidate_fields_without_rebuilding() {
         let _lock = crate::gpu_test_lock();

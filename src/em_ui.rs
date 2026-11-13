@@ -34,6 +34,7 @@ pub struct EmUi {
     auto_range: bool,
     range: f32,
     pub arrows: bool,
+    arrow_density: u32,
     vectors: Vec<[Vec3; 2]>,
     pub source_lines: Vec<[Vec3; 2]>,
     probe_mm: [f32; 3],
@@ -45,7 +46,8 @@ pub struct EmUi {
     height_mm: f32,
     turns: u32,
     json: String,
-    run_steps: u32,
+    centreline_path: String,
+    pub run_steps: u32,
     preview_time_us: f64,
 }
 impl Default for EmUi {
@@ -61,7 +63,8 @@ impl Default for EmUi {
             component: 0,
             auto_range: true,
             range: 1e-3,
-            arrows: false,
+            arrows: true,
+            arrow_density: 25,
             vectors: Vec::new(),
             source_lines: Vec::new(),
             probe_mm: [1., 0., 4.],
@@ -73,12 +76,28 @@ impl Default for EmUi {
             height_mm: 8.,
             turns: 4,
             json: String::new(),
+            centreline_path: String::new(),
             run_steps: 10,
             preview_time_us: 50.,
         }
     }
 }
 impl EmUi {
+    pub fn import_centrelines(&mut self, path: &std::path::Path) -> Result<usize, String> {
+        let imported = Model::load(path)?;
+        let wires = em::cad_wires(&imported);
+        if wires.is_empty() {
+            return Err("No centreline curves found. Export glTF/GLB line primitives; triangle surfaces are not wire paths.".into());
+        }
+        let count = wires.len();
+        self.config.wires.extend(wires);
+        self.invalidate();
+        self.error.clear();
+        Ok(count)
+    }
+    pub fn busy(&self) -> bool {
+        self.receiver.is_some()
+    }
     pub fn invalidate(&mut self) {
         self.state = None;
         self.timeline.clear();
@@ -283,7 +302,7 @@ impl EmUi {
         let Some(state) = self.timeline.current() else {
             return;
         };
-        let n = 11;
+        let n = self.arrow_density;
         match state.sample_plane(plane, span, n, self.kind) {
             Ok(samples) => {
                 for y in 0..n {
@@ -298,8 +317,10 @@ impl EmUi {
                             + plane.u() * (((x as f32 + 0.5) / n as f32 * 2. - 1.) * span)
                             + plane.v() * (((y as f32 + 0.5) / n as f32 * 2. - 1.) * span);
                         let direction = v / magnitude;
-                        let end =
-                            start + direction * (span * 0.11 * (magnitude / self.scale()).min(1.));
+                        let end = start
+                            + direction
+                                * (span * 1.3 / n as f32
+                                    * (magnitude / self.scale()).sqrt().min(1.));
                         self.vectors.push([start, end]);
                         let side = direction
                             .cross(plane.normal())
@@ -325,17 +346,30 @@ impl EmUi {
         context: Option<&GpuContext>,
     ) -> (bool, bool) {
         ui.separator();
-        ui.heading("05 / Electromagnetics");
-        ui.small("Stationary geometry · linear materials · vacuum background");
-        ui.small("Reaction A is zero at the outer box. Compare results with more air padding before interpreting forces.");
+        ui.label("Current sources and solver settings");
+
         let busy = self.receiver.is_some();
         let mut changed = false;
         let mut config_changed = false;
         let mut demo = false;
         ui.add_enabled_ui(!busy,|ui|{
+            ui.small(format!("{} wire paths · {} magnet sources",self.config.wires.len(),self.config.magnets.len()));
+            egui::CollapsingHeader::new("Import a CAD centreline file").show(ui, |ui| {
+                ui.text_edit_singleline(&mut self.centreline_path);
+                ui.small("glTF/GLB line strips, loops or connected line segments; metres, including assembly transforms.");
+                if ui.button("Import centrelines").clicked() {
+                    let path=self.centreline_path.clone();
+                    match self.import_centrelines(std::path::Path::new(&path)) {
+                        Ok(_) => config_changed=true,
+                        Err(error) => self.error=error,
+                    }
+                }
+            });
 
-            egui::CollapsingHeader::new("Sources").default_open(self.config.wires.is_empty()).show(ui,|ui|{
 
+            egui::CollapsingHeader::new("Current paths / waveforms / magnets").default_open(true).show(ui,|ui|{
+
+                egui::CollapsingHeader::new("Generate an example coil").show(ui, |ui| {
                 ui.horizontal(|ui|{
 ui.label("Coil R / height (mm)");
 ui.add(egui::DragValue::new(&mut self.radius_mm).range(0.1..=100.).speed(0.1));
@@ -376,6 +410,7 @@ demo=true;
 
                 ui.small("Example solder conductivity is illustrative; replace it for quantitative predictions.");
 
+                });
                 let mut remove=None;
 
                 for (i,wire) in self.config.wires.iter_mut().enumerate() {
@@ -383,6 +418,14 @@ ui.push_id(("wire",i),|ui|{
 egui::CollapsingHeader::new(&wire.name).show(ui,|ui|{
 
                     config_changed|=ui.text_edit_singleline(&mut wire.name).changed();
+                    let closed=Vec3::from(wire.points_mm[0]).distance(Vec3::from(*wire.points_mm.last().unwrap()))<1e-4;
+                    ui.small("Positive current follows the point order. Set the waveform in A, or link a component current.");
+                    if !closed {
+                        ui.colored_label(Color32::YELLOW,"Open path: induction needs a return lead to close the circuit.");
+                        if ui.button("Add a straight return to the start").clicked() {wire.points_mm.push(wire.points_mm[0]);config_changed=true;}
+                    }
+                    if ui.button("Reverse current-path direction").clicked() {wire.points_mm.reverse();config_changed=true;}
+
 config_changed|=ui.add(egui::DragValue::new(&mut wire.core_radius_mm).speed(0.01).range(1e-4..=100.).prefix("Core/smoothing ").suffix(" mm")).changed();
 
                     let before=wire.body_current;
@@ -551,6 +594,7 @@ config_changed=true;
 }
 
             egui::CollapsingHeader::new("Numerical solve").show(ui,|ui|{
+ui.small("Reaction A is zero at the outer box. Compare more air padding before interpreting forces.");
 config_changed|=ui.add(egui::DragValue::new(&mut self.config.relative_tolerance).speed(1e-6).range(1e-7..=1e-2).prefix("Relative residual ")).changed();
 config_changed|=ui.add(egui::DragValue::new(&mut self.config.max_iterations).range(1..=20000).prefix("Max iterations ")).changed();
 
@@ -564,6 +608,7 @@ changed=true;
 
 }
 
+            egui::CollapsingHeader::new("Advanced: applied preview / single steps").show(ui, |ui| {
             if let (Some(volume),Some(context))=(volume,context) {
 
                 ui.add(egui::DragValue::new(&mut self.preview_time_us).speed(1.).range(0. ..=1e12).prefix("Applied preview ").suffix(" µs"));
@@ -607,6 +652,7 @@ changed=true;
 ui.label("Build the domain first.");
 
 }
+            });
 
 
 }
@@ -656,6 +702,15 @@ ui.label("Build the domain first.");
         changed |= ui
             .checkbox(&mut self.arrows, "Vector arrows on plane")
             .changed();
+        if self.arrows && self.kind < 6 {
+            changed |= ui
+                .add(egui::Slider::new(&mut self.arrow_density, 8..=64).text("Arrow density"))
+                .changed();
+            ui.small(format!(
+                "{} × {} samples",
+                self.arrow_density, self.arrow_density
+            ));
+        }
         changed
     }
     pub fn panel(&mut self, ui: &mut egui::Ui) {
@@ -1007,6 +1062,14 @@ mod tests {
         assert!(ui.error.is_empty(), "{}", ui.error);
         assert!(ui.ready(Some(&volume)));
         assert!(ui.state.as_ref().unwrap().diagnostics.maxima[0] > 0.);
+        ui.arrow_density = 8;
+        ui.update_vectors(SectionPlane::new(Vec3::ZERO), 1.);
+        assert_eq!(ui.vectors.len(), 8 * 8 * 3);
+        let coarse_length = ui.vectors[0][0].distance(ui.vectors[0][1]);
+        ui.arrow_density = 32;
+        ui.update_vectors(SectionPlane::new(Vec3::ZERO), 1.);
+        assert_eq!(ui.vectors.len(), 32 * 32 * 3);
+        assert!((ui.vectors[0][0].distance(ui.vectors[0][1]) * 4. - coarse_length).abs() < 1e-6);
         // Recorded fields must survive subsequent GPU writes, scrubbing and continuation.
         ui.config.uniform[0].scale = Waveform::Sine {
             amplitude: 1.,

@@ -13,7 +13,7 @@ use crate::{
 };
 use bytemuck::{Pod, Zeroable};
 use grid::Params;
-pub use sources::{EmConfig, Magnet, UniformField, Waveform, Wire, helix};
+pub use sources::{EmConfig, Magnet, UniformField, Waveform, Wire, cad_wires, helix};
 use std::collections::HashMap;
 use wgpu::util::DeviceExt;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
