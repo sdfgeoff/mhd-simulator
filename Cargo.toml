@@ -6,6 +6,8 @@ edition = "2024"
 [dependencies]
 eframe = { version = "0.31.1", default-features = false, features = ["wgpu", "x11", "wayland", "default_fonts"] }
 wgpu = "24.0.5"
+egui-wgpu = "0.31.1"
+earcutr = "0.5"
 pollster = "0.4"
 bytemuck = { version = "1", features = ["derive"] }
 glam = "0.29"

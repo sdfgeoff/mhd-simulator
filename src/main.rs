@@ -1,6 +1,10 @@
 mod app;
+mod caps;
+mod gizmo;
 mod gpu;
 mod model;
+mod plane;
+mod render;
 use glam::Vec3;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<_> = std::env::args().collect();
@@ -58,7 +62,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     eframe::run_native(
         "MHD Workbench",
         options,
-        Box::new(move |_| Ok(Box::new(app::App::new(path)))),
+        Box::new(move |cc| Ok(Box::new(app::App::new(path, cc.wgpu_render_state.clone())))),
     )?;
     Ok(())
 }
