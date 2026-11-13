@@ -1,0 +1,1253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<!-- Tint the mobile browser chrome (address/status bar) to match the dark page. -->
+<meta name="theme-color" content="#111317" />
+<title>step-loupe — STEP viewer</title>
+<style>
+  /* One dark theme for the page, the sidebar and the 3D view. */
+  :root {
+    --bg: #111317;          /* page backdrop */
+    --panel: #171a20;       /* sidebar */
+    --panel-2: #1c2027;     /* detail pane, floating controls */
+    --line: #262b35;        /* borders and separators */
+    --text: #e4e7ec;
+    --muted: #98a1ae;
+    --faint: #646d7a;
+    --accent: #5b8cff;
+    --error: #ff7b72;
+    --row-hover: #20252e;
+    --row-sel: #22355a;
+    --float: #262b35e6;     /* the view's settings button */
+    --float-hi: #313846f0;  /* the same, hovered or open */
+    --float-line: #363d4b;  /* border of the button and its menu */
+    --menu: #1d2129f7;      /* the settings menu */
+    --menu-line: #2c323d;   /* separators in the menu */
+    --menu-hover: #2a303b;
+    --well: #121419;        /* track of a two-way switch */
+    --chip: #3a4252;        /* the chosen side of a switch */
+    --icon: #8b93a1;        /* tree icons */
+    --icon-part: #c3cad4;
+    --amber: #f9d79b;       /* PMI and wireframes: WIRE_RGB as the view shows it (linear -> sRGB) */
+    --fs-row: 13px;         /* node label */
+    --fs-meta: 11.5px;      /* key/value meta lines */
+    --fs-group: 11px;       /* uppercase group headers */
+    --fs-id: 11px;          /* entity #id tag */
+    --indent: 14px;         /* per-depth indentation + chevron slot width */
+  }
+  * { box-sizing: border-box; }
+  /* The page backdrop also fills overscroll gutters and gives iOS Safari a dark
+     surface to tint the toolbar from (paired with the theme-color meta). */
+  html, body {
+    margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  }
+  button { font: inherit; }
+  #app { display: flex; height: 100vh; height: 100dvh; }
+  #side {
+    width: 320px; min-width: 240px; max-width: 60vw;
+    display: flex; flex-direction: column;
+    background: var(--panel); border-right: 1px solid var(--line);
+  }
+  #side-scroll { flex: 1 1 auto; overflow: auto; padding: 8px 8px 12px; }
+  /* pinned detail (inspector) pane at the bottom of the sidebar */
+  #detail {
+    flex: none; max-height: 42%; overflow: auto;
+    border-top: 1px solid var(--line); padding: 10px 14px 12px;
+    background: var(--panel-2);
+  }
+  #view {
+    flex: 1; position: relative; overflow: hidden;
+    background: radial-gradient(ellipse at 50% 38%, #2b313c 0%, #191c22 55%, #121419 100%);
+  }
+  #view canvas { display: block; width: 100% !important; height: 100% !important; }
+  pre { white-space: pre-wrap; word-break: break-all; margin: 4px 0; font-size: 11px; color: var(--muted); }
+  pre.err { color: var(--error); }
+  .drop-hi { outline: 2px dashed var(--accent); outline-offset: -8px; }
+
+  /* over the view: a hint before a file is open, a status line while one reads */
+  #drop {
+    position: absolute; inset: 0; display: flex; align-items: center;
+    justify-content: center; pointer-events: none; text-align: center;
+  }
+  #drop[hidden], #welcome[hidden], #status[hidden] { display: none; }
+  #welcome { font-size: 15px; color: var(--muted); }
+  #status {
+    padding: 8px 14px; border-radius: 999px; font-size: 13px; color: var(--muted);
+    background: #1c2027cc; border: 1px solid var(--line);
+  }
+
+  .btn {
+    flex: none; font-weight: 600; font-size: 12px; line-height: 1; color: #fff;
+    background: var(--accent); border: 0; border-radius: 7px; padding: 8px 12px; cursor: pointer;
+  }
+  .btn:hover { filter: brightness(1.1); }
+
+  /* view menu: a settings button in the view's corner, and its panel below it */
+  #vm {
+    position: absolute; top: 10px; right: 10px;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+  }
+  #vm-btn, #vm-panel {
+    border: 1px solid var(--float-line); box-shadow: 0 8px 24px #0008;
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  }
+  #vm-btn {
+    display: grid; place-items: center; width: 36px; height: 36px; padding: 0;
+    color: var(--muted); background: var(--float); border-radius: 7px; cursor: pointer;
+  }
+  #vm-btn[aria-expanded="true"] { color: #fff; background: var(--float-hi); }
+  #vm-btn svg, .vm-act svg {
+    fill: none; stroke: currentColor; stroke-width: 1.75;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  #vm-btn svg { width: 22px; height: 22px; }
+  #vm-panel {
+    width: max-content; min-width: 248px; max-width: calc(100vw - 20px);
+    padding: 6px; display: flex; flex-direction: column;
+    background: var(--menu); border-radius: 12px; font-size: 12.5px; color: var(--text);
+  }
+  #vm-panel[hidden] { display: none; }   /* display:flex would beat [hidden] */
+  .vm-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 5px 6px 5px 8px; min-height: 34px; }
+  .seg { flex: none; display: inline-flex; padding: 2px; background: var(--well); border-radius: 8px; }
+  .seg button {
+    font-size: 11.5px; font-weight: 500; color: var(--muted); background: none; border: 0;
+    border-radius: 6px; padding: 4px 9px; cursor: pointer;
+  }
+  .seg button[aria-pressed="true"] { color: #fff; background: var(--chip); box-shadow: 0 1px 2px #0006; }
+  .vm-act {
+    display: flex; align-items: center; gap: 10px; min-height: 34px; padding: 0 8px;
+    font-size: 12.5px; color: var(--text); text-align: left;
+    background: none; border: 0; border-radius: 8px; cursor: pointer;
+  }
+  .vm-act svg { width: 16px; height: 16px; color: var(--muted); }
+  .vm-act:disabled { color: var(--faint); cursor: default; }
+  .vm-act:disabled svg { color: var(--faint); }
+  #vm-panel hr { border: 0; border-top: 1px solid var(--menu-line); margin: 5px -6px; }
+  .vm-about { display: flex; align-items: center; justify-content: space-between; padding: 4px 8px 2px; }
+  .vm-about b { font-weight: 650; }
+  .vm-about .ver { margin-left: 6px; color: var(--faint); font-size: 11.5px; }
+  .vm-about a { color: var(--muted); font-size: 12px; text-decoration: none; padding: 4px 6px; margin-right: -6px; border-radius: 6px; }
+  @media (hover: hover) {
+    #vm-btn:hover { color: #fff; background: var(--float-hi); }
+    .seg button:not([aria-pressed="true"]):hover { color: #fff; }
+    .vm-act:not(:disabled):hover, .vm-about a:hover { color: #fff; background: var(--menu-hover); }
+  }
+
+  /* sidebar head: the file control */
+  #filebar {
+    display: flex; align-items: center; gap: 10px; flex: none;
+    padding: 12px 14px; border-bottom: 1px solid var(--line);
+  }
+  #fname {
+    flex: 1 1 auto; min-width: 0;         /* take remaining width, allow shrink */
+    font-size: 12px; color: var(--muted);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  /* ---- tree (native <details>/<summary>) — one design language for scene +
+     report + header ---- */
+  details { margin: 0; }
+  summary { list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+
+  /* a single row (summary for parents, div for leaves) */
+  .row {
+    display: flex; align-items: flex-start; gap: 0;
+    padding: 3px 6px; border-radius: 6px; cursor: pointer;
+    font-size: var(--fs-row); line-height: 1.45; color: var(--text);
+    user-select: none;
+  }
+  .row:hover { background: var(--row-hover); }
+  .row.sel { background: var(--row-sel); }
+  /* read-only info rows (report/header) don't act selectable, but still light up */
+  .row.info { cursor: default; }
+
+  /* chevron: a CSS triangle in a fixed-width slot; leaves reserve the slot */
+  .chev {
+    flex: none; width: var(--indent); height: calc(var(--fs-row) * 1.45);
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--faint); transition: transform .12s ease;
+  }
+  .chev::before { content: ''; border: 4px solid transparent; border-left-color: currentColor; border-right: 0; margin-left: 1px; }
+  details[open] > summary > .chev { transform: rotate(90deg); }
+  .chev.leaf::before { content: none; }  /* leaves: empty slot, keeps alignment */
+
+  /* the stacked content: title line + meta lines */
+  .node-content { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+  .node-title { display: flex; align-items: center; min-width: 0; }
+  /* a dot stands in for the icon of a kind that has none */
+  .dot {
+    flex: none; display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    margin: 0 8px 0 2px; background: var(--icon);
+  }
+  .label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .idtag { color: var(--faint); font-size: var(--fs-id); margin-left: 6px; font-variant-numeric: tabular-nums; }
+  .metaline { font-size: var(--fs-meta); line-height: 1.4; }
+  .mk { color: var(--muted); margin-right: 4px; }
+  .mv { color: var(--text); word-break: break-word; }
+  .mv.empty { color: var(--faint); }
+
+  /* section headings: the top-level categories, and the report, header and units */
+  .row.group, .row.meta-root { margin-top: 6px; }
+  .row.group > .node-content > .node-title > .label,
+  .row.meta-root > .node-content > .node-title > .label {
+    font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+    font-size: var(--fs-group); color: var(--muted);
+  }
+  .row.group.empty { cursor: default; }
+  .row.group.empty > .node-content > .node-title > .label { color: var(--faint); }
+  .none { color: var(--faint); font-size: 10.5px; margin-left: 6px; }
+
+  /* report/header sub-groups: muted */
+  .row.meta-sub > .node-content > .node-title > .label { color: var(--muted); font-size: 12px; }
+  .row.meta-sub.empty { cursor: default; }
+  .row.meta-sub.empty > .node-content > .node-title > .label { color: var(--faint); }
+
+  /* an icon per kind (a dot for any other), grey, lighter for parts, and amber
+     for what the view draws amber (PMI and wireframes) */
+  .ico {
+    flex: none; width: 14px; height: 14px; margin: 0 7px 0 0; color: var(--icon);
+    fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .k-Part .ico, .k-Component .ico { color: var(--icon-part); }
+  .k-Vertex .ico, .k-Point .ico { fill: currentColor; }   /* a point: the small circle, filled */
+  .k-Dimension .ico, .k-Tolerance .ico, .k-Datum .ico,
+  .k-Curve .ico, .k-Point .ico, .k-Wireframe .ico { color: var(--amber); }
+
+  /* ---- detail (inspector) pane ---- */
+  .detail-title {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 4px;
+    font-size: var(--fs-row); font-weight: 600;
+  }
+  .detail-title .kind { font-weight: 400; color: var(--muted); font-size: var(--fs-id); }
+  .detail-title .idtag { margin-left: auto; }
+  .detail-empty { color: var(--faint); font-size: var(--fs-meta); font-style: italic; padding: 4px 0; }
+  .detail-row { display: flex; gap: 6px; font-size: var(--fs-meta); line-height: 1.5; }
+  .detail-row .mk { flex: none; min-width: 84px; }
+  .swatch {
+    display: inline-block; width: 10px; height: 10px; border-radius: 2px;
+    border: 1px solid #ffffff33; margin-right: 4px; vertical-align: -1px;
+  }
+
+  /* ---- mobile: stack the 3D view over the panel (top/bottom split) ---- */
+  @media (max-width: 640px) {
+    #app { flex-direction: column; }
+    #view { order: -1; flex: none; height: 50dvh; }   /* 3D on top, ~half the screen */
+    #side { width: 100%; min-width: 0; max-width: none; flex: 1 1 auto; min-height: 0; border-right: 0; }
+    #side-scroll { min-height: 0; overscroll-behavior: contain; } /* scroll in-panel, no page bleed */
+    #detail { max-height: 40%; }                        /* inspector share of the bottom half */
+  }
+  /* touch input: taller rows, larger controls, and a wider tap area on the
+     chevrons that stays inside its row */
+  @media (pointer: coarse) {
+    .row { padding: 5px 6px; }
+    #vm-btn { width: 44px; height: 44px; }
+    #vm-btn svg { width: 26px; height: 26px; }
+    #vm-panel { font-size: 14px; }
+    .vm-row, .vm-act { min-height: 44px; }
+    .vm-act { font-size: 14px; }
+    .seg button { font-size: 13px; padding: 7px 11px; }
+    .chev { position: relative; }
+    .chev::after { content: ''; position: absolute; inset: -5px; }
+  }
+</style>
+</head>
+<body>
+<!-- Icons: Lucide (ISC, Lucide Icons and Contributors) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="i-package-2" viewBox="0 0 24 24"><path d="M12 3v6"/><path d="M16.76 3a2 2 0 0 1 1.8 1.1l2.23 4.479a2 2 0 0 1 .21.891V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9.472a2 2 0 0 1 .211-.894L5.45 4.1A2 2 0 0 1 7.24 3z"/><path d="M3.054 9.013h17.893"/></symbol>
+<symbol id="i-box" viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></symbol>
+<symbol id="i-layers" viewBox="0 0 24 24"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"/><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"/><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"/></symbol>
+<symbol id="i-square" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/></symbol>
+<symbol id="i-square-dashed" viewBox="0 0 24 24"><path d="M5 3a2 2 0 0 0-2 2"/><path d="M19 3a2 2 0 0 1 2 2"/><path d="M21 19a2 2 0 0 1-2 2"/><path d="M5 21a2 2 0 0 1-2-2"/><path d="M9 3h1"/><path d="M9 21h1"/><path d="M14 3h1"/><path d="M14 21h1"/><path d="M3 9v1"/><path d="M21 9v1"/><path d="M3 14v1"/><path d="M21 14v1"/></symbol>
+<symbol id="i-slash" viewBox="0 0 24 24"><path d="M22 2 2 22"/></symbol>
+<symbol id="i-circle-small" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/></symbol>
+<symbol id="i-spline" viewBox="0 0 24 24"><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><path d="M5 17A12 12 0 0 1 17 5"/></symbol>
+<symbol id="i-waypoints" viewBox="0 0 24 24"><path d="m10.586 5.414-5.172 5.172"/><path d="m18.586 13.414-5.172 5.172"/><path d="M6 12h12"/><circle cx="12" cy="20" r="2"/><circle cx="12" cy="4" r="2"/><circle cx="20" cy="12" r="2"/><circle cx="4" cy="12" r="2"/></symbol>
+<symbol id="i-triangle" viewBox="0 0 24 24"><path d="M13.73 4a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/></symbol>
+<symbol id="i-tag" viewBox="0 0 24 24"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></symbol>
+<symbol id="i-ruler-dimension-line" viewBox="0 0 24 24"><path d="M10 15v-3"/><path d="M14 15v-3"/><path d="M18 15v-3"/><path d="M2 8V4"/><path d="M22 6H2"/><path d="M22 8V4"/><path d="M6 15v-3"/><rect x="2" y="12" width="20" height="8" rx="2"/></symbol>
+<symbol id="i-diff" viewBox="0 0 24 24"><path d="M12 3v14"/><path d="M5 10h14"/><path d="M5 21h14"/></symbol>
+<symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528"/></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/></symbol>
+<symbol id="i-sliders-horizontal" viewBox="0 0 24 24"><path d="M10 5H3"/><path d="M12 19H3"/><path d="M14 3v4"/><path d="M16 17v4"/><path d="M21 12h-9"/><path d="M21 19h-5"/><path d="M21 5h-7"/><path d="M8 10v4"/><path d="M8 12H3"/></symbol>
+<symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></symbol>
+</svg>
+<div id="app">
+  <div id="side">
+    <div id="filebar">
+      <input type="file" id="file" accept=".step,.stp" hidden />
+      <button type="button" id="openbtn" class="btn">Open STEP file</button>
+      <span id="fname">No file loaded</span>
+    </div>
+    <div id="side-scroll">
+      <div id="report"></div>
+      <div id="header"></div>
+      <div id="units"></div>
+      <div id="tree"></div>
+    </div>
+    <div id="detail"><div class="detail-empty">Select an item to see details</div></div>
+  </div>
+  <div id="view">
+    <div id="drop">
+      <div id="welcome">Drop a STEP file here</div>
+      <div id="status" hidden></div>
+    </div>
+    <div id="vm">
+      <button type="button" id="vm-btn" title="View settings" aria-label="View settings" aria-expanded="false" aria-controls="vm-panel"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sliders-horizontal"/></svg></button>
+      <div id="vm-panel" hidden>
+        <div class="vm-row">Up axis
+          <div class="seg" id="seg-up"><button type="button" data-v="y" aria-pressed="true">Y</button><button type="button" data-v="z" aria-pressed="false">Z</button></div>
+        </div>
+        <div class="vm-row">Projection
+          <div class="seg" id="seg-proj"><button type="button" data-v="persp" aria-pressed="true">Perspective</button><button type="button" data-v="ortho" aria-pressed="false">Orthographic</button></div>
+        </div>
+        <hr>
+        <button type="button" class="vm-act" id="vm-fit" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-scan"/></svg>Fit to view</button>
+        <hr>
+        <div class="vm-about"><span><b>step-loupe</b><span class="ver" id="version"></span></span><a href="https://github.com/elgar328/step-loupe" target="_blank" rel="noopener">GitHub ↗</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- three.js r160 (MIT, Three.js Authors), from vendor/; the build puts each
+     module into the page, so the bundle loads nothing from elsewhere. -->
+<script type="importmap">
+{ "imports": {
+  "three": "../vendor/three-0.160.0/build/three.module.min.js",
+  "three/addons/controls/OrbitControls.js": "../vendor/three-0.160.0/examples/jsm/controls/OrbitControls.js",
+  "three/addons/lines/LineSegments2.js": "../vendor/three-0.160.0/examples/jsm/lines/LineSegments2.js",
+  "three/addons/lines/LineSegmentsGeometry.js": "../vendor/three-0.160.0/examples/jsm/lines/LineSegmentsGeometry.js",
+  "three/addons/lines/LineMaterial.js": "../vendor/three-0.160.0/examples/jsm/lines/LineMaterial.js"
+}}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
+import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
+import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
+
+// ---- reader (step-io in wasm, in a Worker) ----
+// The wasm-bindgen glue (no-modules build) and the wasm, from ./pkg; the
+// single-file bundle inlines both in place of these two lines.
+const glueSrc = await (await fetch('./pkg/step_loupe.js')).text();
+const wasmBytes = new Uint8Array(await (await fetch('./pkg/step_loupe_bg.wasm')).arrayBuffer());
+// Compiled once; each read instantiates it in a Worker of its own, ended when
+// the read answers, so the memory the read took goes back with it. A classic
+// Worker: a module Worker from a blob: URL is refused when the page is opened
+// from file:// (the downloaded bundle). The Worker reads the file itself, a block
+// at a time, and hands the reader the pieces it asks for, so the reader never
+// holds the whole file. From file:// the page reads it instead and hands the
+// bytes over, which the Worker then gives out the same way.
+const wasmModule = await WebAssembly.compile(wasmBytes);
+const readerUrl = URL.createObjectURL(new Blob([glueSrc, `
+const BLOCK = 8 << 20; // bytes per FileReaderSync call
+self.onmessage = (e) => {
+  try {
+    wasm_bindgen.initSync({ module: e.data.module });
+    const file = e.data.file, reader = file && new FileReaderSync();
+    let at = 0, block = e.data.bytes || new Uint8Array(0), used = 0;
+    const source = {
+      readInto(buf) {
+        try {
+          if (used === block.length) {
+            if (!file) return 0;
+            if (at >= file.size) {
+              // A file gone since it was picked reads as empty; reading it
+              // whole is what reports that.
+              if (at === 0) reader.readAsArrayBuffer(file);
+              return 0;
+            }
+            const end = Math.min(at + BLOCK, file.size);
+            block = new Uint8Array(reader.readAsArrayBuffer(file.slice(at, end)));
+            used = 0;
+            at = end;
+          }
+          const n = Math.min(buf.length, block.length - used);
+          buf.set(block.subarray(used, used + n));
+          used += n;
+          return n;
+        } catch (err) {
+          throw String(err); // the reader reports it as text
+        }
+      },
+    };
+    // The reader hands its result over as it makes it: the JSON in pieces and
+    // the geometry in runs of [rows, d, tri], each copied out of wasm memory.
+    const decoder = new TextDecoder(), text = [], geom = [];
+    const sink = {
+      text(bytes) { text.push(decoder.decode(bytes)); },
+      geometry(rows, d, tri) { geom.push([rows.slice(), d.slice(), tri.slice()]); },
+    };
+    wasm_bindgen.load_step(source, sink);
+    self.postMessage({ json: text.join(''), geom }, geom.flat().map((a) => a.buffer));
+  } catch (err) {
+    self.postMessage({ error: String(err) });
+  }
+};`], { type: 'text/javascript' }));
+
+// What readStep resolves to when a newer read took its place.
+const CANCELLED = Symbol('cancelled');
+let reading = null; // the running read: { worker, resolve }
+
+// Read a STEP file (a Blob) into what the viewer shows: { json, geom }, the JSON
+// bundle as text and the geometry runs. Starting a read cancels the one still
+// running. The Worker gets the Blob itself, not a copy of its bytes, except
+// from file://, where it gets the bytes the page read.
+function readStep(file) {
+  if (reading) {
+    reading.worker.terminate();
+    reading.resolve(CANCELLED);
+  }
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(readerUrl);
+    const me = { worker, resolve };
+    reading = me;
+    const settle = (fn) => {
+      if (reading !== me) return; // cancelled: whatever it sends is stale
+      reading = null;
+      worker.terminate();
+      fn();
+    };
+    worker.onmessage = (e) => settle(() =>
+      e.data.error ? reject(new Error(e.data.error)) : resolve(e.data));
+    worker.onerror = (e) => { e.preventDefault(); settle(() => reject(new Error(e.message || 'the reader stopped'))); };
+    worker.onmessageerror = () => settle(() => reject(new Error('the read result could not be received')));
+    if (location.protocol !== 'file:') {
+      worker.postMessage({ module: wasmModule, file });
+      return;
+    }
+    // Safari will not let a Worker read a picked file when the page is opened
+    // from file://.
+    file.arrayBuffer().then(
+      (buf) => {
+        if (reading === me) worker.postMessage({ module: wasmModule, bytes: new Uint8Array(buf) }, [buf]);
+      },
+      (err) => settle(() =>
+        resolve({ json: JSON.stringify({ ok: false, error: `could not read the file: ${err}` }), geom: [] })),
+    );
+  });
+}
+
+// ---- three.js scene ----
+const view = document.getElementById('view');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(devicePixelRatio);
+view.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+// One camera per projection; the orthographic one keeps its half-height in `top`.
+const persp = new THREE.PerspectiveCamera(50, 1, 0.001, 1e7);
+const ortho = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.001, 1e7);
+const PROJ_KEY = 'step-loupe-projection'; // not under the hand-over prefix
+function storedProjection() {
+  try { return localStorage.getItem(PROJ_KEY); } catch (_) { return null; }
+}
+let camera = storedProjection() === 'ortho' ? ortho : persp;
+camera.position.set(1, 1, 1);
+let aspect = 1;
+// Rebuilt by setUp() and setProjection(): OrbitControls fixes its orbit axis from
+// camera.up, and its camera, when it is constructed.
+let controls = new OrbitControls(camera, renderer.domElement);
+let root = new THREE.Group();
+scene.add(root);
+
+function resize() {
+  const w = view.clientWidth, h = view.clientHeight;
+  renderer.setSize(w, h, false);
+  aspect = w / h;
+  updateProjection();
+  // Line widths are in CSS pixels, the same at any device pixel ratio.
+  for (const m of [M.edges, M.hiLine, M.fallback]) m.resolution.set(w, h);
+}
+function updateProjection() {
+  persp.aspect = aspect; persp.updateProjectionMatrix();
+  ortho.left = -ortho.top * aspect; ortho.right = ortho.top * aspect; ortho.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+(function loop() { requestAnimationFrame(loop); controls.update(); renderer.render(scene, camera); })();
+
+// ---- materials ----
+const HI = 0x45c2ff; // highlight
+const M = {
+  // Pushed back a little so a highlighted copy drawn over an edge, at the same
+  // depth, always wins; vertices and highlights keep their true depth.
+  // Colours come per segment: edges grey, wireframe curves amber (EDGE_RGB, WIRE_RGB).
+  edges: new LineMaterial({ color: 0xffffff, vertexColors: true, linewidth: 1.2, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 }),
+  hiLine: new LineMaterial({ color: HI, linewidth: 1.7 }),
+  fallback: new LineMaterial({ color: 0xff4444, linewidth: 3, dashed: true, dashSize: 0.5, gapSize: 0.3 }),
+  pt: new THREE.PointsMaterial({ color: 0x888888, size: 4, sizeAttenuation: false }),
+  hiPt: new THREE.PointsMaterial({ color: HI, size: 7, sizeAttenuation: false }),
+  mesh: new THREE.MeshNormalMaterial({ transparent: true, opacity: 0.4, side: THREE.DoubleSide }),
+  hiMesh: new THREE.MeshBasicMaterial({ color: HI, transparent: true, opacity: 0.6, side: THREE.DoubleSide }),
+};
+const EDGE_RGB = [0.80, 0.83, 0.88], WIRE_RGB = [0.95, 0.68, 0.33];
+resize(); // now that M exists, size renderer + line-material resolution
+// Opaque draw order, the one three.js gave one object per edge/vertex (it orders
+// ties by material): edges, highlighted edges, fallback edges, vertices,
+// highlighted vertices — vertex dots stay visible on highlighted edges.
+const ORDER = { edges: 0, hiLine: 1, fallback: 2, pt: 3, hiPt: 4 };
+
+// ---- state ----
+let HLMAP = {};         // node id -> extra render ids to highlight (features/PMI)
+// Render id -> where it is drawn. All edges share one line object and all
+// vertices one points object, so a frame is a few draw calls however large the
+// file: an edge is a run of segments ({ start, count }, in segments), a vertex
+// one point ({ start }), a mesh its own object ({ obj }).
+let ranges = new Map();
+let edgeSegs = new Float32Array(0);  // merged edge segments, 6 floats each
+let vertexPts = new Float32Array(0); // merged vertex points, 3 floats each
+// The highlight: copies of the selected edges/vertices drawn over the base,
+// and the meshes switched to the highlight material.
+let hiNode = null, hiObjs = [], hiMeshes = [];
+
+function clearScene() {
+  scene.remove(root);
+  root.traverse(o => { o.geometry?.dispose(); });
+  root = new THREE.Group(); scene.add(root);
+  ranges.clear();
+  edgeSegs = new Float32Array(0); vertexPts = new Float32Array(0);
+  hiNode = null; hiObjs = []; hiMeshes = [];
+}
+
+// A polyline's points as segment pairs, written into `out` from segment `at`.
+function putSegments(out, at, d) {
+  const n = d.length / 3 - 1;
+  for (let i = 0; i < n; i++) {
+    const o = (at + i) * 6, k = i * 3;
+    for (let c = 0; c < 6; c++) out[o + c] = d[k + c];
+  }
+}
+
+// Kinds of geometry the reader sends; a fallback is a straight segment
+// standing in for an edge whose curve could not be sampled.
+const KIND = { line: 0, fallback: 1, point: 2, mesh: 3 };
+
+// The reader's geometry comes in runs of [rows, d, tri], in node id order: each
+// item is four numbers in `rows` (node id, kind, its floats in `d`, its indices
+// in `tri`). Calls fn(id, kind, d, tri) for each item, with views of its values.
+function eachGeom(geom, fn) {
+  for (const [rows, d, tri] of geom) {
+    let at = 0, ti = 0;
+    for (let r = 0; r < rows.length; r += 4) {
+      const nd = rows[r + 2], nt = rows[r + 3];
+      fn(rows[r], rows[r + 1], d.subarray(at, at + nd), tri.subarray(ti, ti + nt));
+      at += nd; ti += nt;
+    }
+  }
+}
+
+// `wire` holds the render ids of wireframe curves and points (geometric sets:
+// PMI lettering, sketches), drawn apart from the b-rep edges.
+function buildObjects(geom, wire) {
+  const box = new THREE.Box3();
+  const points = [];   // every drawn position, for the camera fit
+  const segCount = d => Math.max(0, d.length / 3 - 1);
+  let nSeg = 0, nFall = 0, nPt = 0;
+  eachGeom(geom, (id, kind, d) => {
+    if (kind === KIND.line) nSeg += segCount(d);
+    else if (kind === KIND.fallback) nFall += segCount(d);
+    else if (kind === KIND.point) nPt++;
+  });
+  const segs = new Float32Array(nSeg * 6), fall = new Float32Array(nFall * 6);
+  const segColors = new Float32Array(nSeg * 6);
+  const fallDist = new Float32Array(nFall * 2), pts = new Float32Array(nPt * 3);
+  let s = 0, f = 0, p = 0;
+  eachGeom(geom, (id, kind, d, tri) => {
+    if (kind === KIND.line || kind === KIND.fallback) {
+      const n = segCount(d);
+      if (kind === KIND.fallback) {
+        // Dash distances restart at each edge, as LineSegments2.computeLineDistances
+        // does for one edge.
+        putSegments(fall, f, d);
+        for (let i = 0; i < n; i++) {
+          const o = (f + i) * 6, j = (f + i) * 2;
+          const dx = fall[o + 3] - fall[o], dy = fall[o + 4] - fall[o + 1], dz = fall[o + 5] - fall[o + 2];
+          fallDist[j] = i === 0 ? 0 : fallDist[j - 1];
+          fallDist[j + 1] = fallDist[j] + Math.sqrt(dx * dx + dy * dy + dz * dz);
+        }
+        ranges.set(id, { type: 'line', fallback: true });
+        f += n;
+      } else {
+        putSegments(segs, s, d);
+        const rgb = wire.has(id) ? WIRE_RGB : EDGE_RGB;
+        for (let i = s * 2; i < (s + n) * 2; i++) segColors.set(rgb, i * 3);
+        ranges.set(id, { type: 'line', start: s, count: n });
+        s += n;
+      }
+    } else if (kind === KIND.point) {
+      pts.set(d, p * 3);
+      ranges.set(id, { type: 'point', start: p });
+      p++;
+    } else if (kind === KIND.mesh) {
+      // Meshes stay one object each: they are see-through, and three.js sorts
+      // see-through objects far to near, which a merged mesh would lose.
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(d, 3));
+      points.push(d);
+      if (tri.length) geo.setIndex(new THREE.BufferAttribute(tri, 1));
+      geo.computeVertexNormals();
+      const obj = new THREE.Mesh(geo, M.mesh);
+      geo.computeBoundingBox();
+      box.union(geo.boundingBox);
+      root.add(obj);
+      ranges.set(id, { type: 'mesh', obj });
+    }
+  });
+  const add = (obj, order) => {
+    obj.renderOrder = order;
+    obj.geometry.computeBoundingBox();
+    box.union(obj.geometry.boundingBox);
+    root.add(obj);
+  };
+  if (nSeg) {
+    const geo = new LineSegmentsGeometry();
+    geo.setPositions(segs);
+    geo.setColors(segColors);
+    add(new LineSegments2(geo, M.edges), ORDER.edges);
+  }
+  if (nFall) {
+    const geo = new LineSegmentsGeometry();
+    geo.setPositions(fall);
+    const dist = new THREE.InstancedInterleavedBuffer(fallDist, 2, 1);
+    geo.setAttribute('instanceDistanceStart', new THREE.InterleavedBufferAttribute(dist, 1, 0));
+    geo.setAttribute('instanceDistanceEnd', new THREE.InterleavedBufferAttribute(dist, 1, 1));
+    add(new LineSegments2(geo, M.fallback), ORDER.fallback);
+  }
+  if (nPt) {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pts, 3));
+    const obj = new THREE.Points(geo, M.pt);
+    add(obj, ORDER.pt);
+    obj.visible = false;   // vertices show only when highlighted (M.hiPt)
+  }
+  edgeSegs = segs; vertexPts = pts;
+  points.push(segs, fall, pts);
+  return { box, points };
+}
+
+// ---- up axis ----
+// STEP carries no "up": Y-up CADs (SolidWorks, Inventor, Creo) and Z-up ones (CATIA,
+// NX, Onshape, FreeCAD) write the same kind of file. Each load starts at what its source
+// says — ?up= for a file named in the address, Y for one opened or dropped here — and is
+// not remembered, since the next file may come from the other kind of CAD. The default
+// view looks from the same height either way; only which axis is up changes.
+const UP = {
+  y: { up: new THREE.Vector3(0, 1, 0), forward: new THREE.Vector3(1, 0.8, 1) },
+  z: { up: new THREE.Vector3(0, 0, 1), forward: new THREE.Vector3(1, -1, 0.8) },
+};
+let upAxis = 'y';
+const NO_FIT = { box: new THREE.Box3(), points: [] };
+let lastFit = NO_FIT;
+const upParam = (new URLSearchParams(location.search).get('up') || '').toLowerCase() === 'z' ? 'z' : 'y';
+
+function newControls() {
+  const target = controls.target.clone();
+  controls.dispose();
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.target.copy(target);
+  controls.update();
+}
+function setUp(axis) {
+  upAxis = axis;
+  persp.up.copy(UP[axis].up); ortho.up.copy(UP[axis].up);
+  newControls();
+  fitCamera(lastFit);
+  pressSeg('seg-up', axis);
+}
+// Switch projection where the view stands: the target, the direction, and the
+// height seen at the target stay as they were.
+function setProjection(kind) {
+  const next = kind === 'ortho' ? ortho : persp;
+  pressSeg('seg-proj', kind);
+  try { localStorage.setItem(PROJ_KEY, kind); } catch (_) {}
+  if (next === camera) return;
+  const target = controls.target;
+  const dir = camera.position.clone().sub(target);
+  const tan = Math.tan(persp.fov * Math.PI / 360);
+  const size = viewSize();
+  if (next === ortho) {
+    const half = dir.length() * tan;
+    ortho.top = half; ortho.bottom = -half; ortho.zoom = 1;
+    dir.setLength(Math.max(dir.length(), size));
+    ortho.near = size / 100; ortho.far = size * 1000;
+  } else {
+    dir.setLength(ortho.top / ortho.zoom / tan);
+    persp.near = size / 100; persp.far = size * 1000;
+  }
+  next.position.copy(target).add(dir);
+  camera = next;
+  updateProjection();
+  newControls();
+}
+function viewSize() {
+  return lastFit.box.isEmpty() ? 1 : lastFit.box.getSize(new THREE.Vector3()).length() || 1;
+}
+function pressSeg(id, v) {
+  for (const b of document.getElementById(id).children) b.setAttribute('aria-pressed', String(b.dataset.v === v));
+}
+function openMenu(on) {
+  document.getElementById('vm-panel').hidden = !on;
+  document.getElementById('vm-btn').setAttribute('aria-expanded', String(on));
+}
+document.getElementById('vm-btn').addEventListener('click', () =>
+  openMenu(document.getElementById('vm-panel').hidden));
+for (const b of document.getElementById('seg-up').children) b.addEventListener('click', () => setUp(b.dataset.v));
+for (const b of document.getElementById('seg-proj').children) b.addEventListener('click', () => setProjection(b.dataset.v));
+document.getElementById('vm-fit').addEventListener('click', () => { openMenu(false); fitCamera(lastFit); });
+pressSeg('seg-proj', camera === ortho ? 'ortho' : 'persp');
+// Ways out: the button again, a press anywhere else, or Escape.
+document.addEventListener('pointerdown', (e) => {
+  if (!document.getElementById('vm').contains(e.target)) openMenu(false);
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') openMenu(false); });
+
+function fitCamera(fit) {
+  lastFit = fit;
+  const { box, points } = fit;
+  document.getElementById('vm-fit').disabled = box.isEmpty();
+  if (box.isEmpty()) return;
+  // Rotate around the AABB centre, and pull the camera in to the closest
+  // distance at which every drawn point still sits inside the middle 90% of the
+  // view (a 5% margin at each edge, respecting the viewport aspect).
+  const c = box.getCenter(new THREE.Vector3());
+  controls.target.copy(c);
+
+  const { up: worldUp, forward: dir } = UP[upAxis];
+  const forward = dir.clone().normalize();   // target → camera
+  const right = new THREE.Vector3().crossVectors(worldUp, forward).normalize();
+  const up = new THREE.Vector3().crossVectors(forward, right).normalize();
+  const tanV = Math.tan((persp.fov * Math.PI / 180) / 2) * 0.9;
+  const tanH = tanV * aspect;
+
+  let dist = 0, front = 0, half = 0;
+  for (const d of points) {
+    for (let i = 0; i < d.length; i += 3) {
+      const px = d[i] - c.x, py = d[i + 1] - c.y, pz = d[i + 2] - c.z;
+      const x = px * right.x + py * right.y + pz * right.z;
+      const y = px * up.x + py * up.y + pz * up.z;
+      const z = px * forward.x + py * forward.y + pz * forward.z;
+      dist = Math.max(dist, z + Math.abs(x) / tanH, z + Math.abs(y) / tanV);
+      half = Math.max(half, Math.abs(x) / (0.9 * aspect), Math.abs(y) / 0.9);
+      front = Math.max(front, z);
+    }
+  }
+  const size = box.getSize(new THREE.Vector3()).length() || 1;
+  if (camera === ortho) {
+    // Seen from a box's length away, so no point is behind the camera.
+    ortho.top = half || size / 2; ortho.bottom = -ortho.top; ortho.zoom = 1;
+    dist = size;
+  } else {
+    // Stay clear of the nearest point, past the near plane set below.
+    dist = Math.max(dist, front + size / 50);
+  }
+
+  camera.position.copy(c).add(forward.multiplyScalar(dist));
+  camera.near = size / 100; camera.far = size * 1000;
+  updateProjection();
+  controls.update();
+}
+
+// gather geom ids inside a tree node subtree
+function collectIds(node, out) {
+  if (ranges.has(node.id)) out.add(node.id);
+  for (const c of (node.children || [])) collectIds(c, out);
+}
+
+// Copy the given runs of `src` (in units of `size` floats) into one array,
+// merging runs that sit next to each other into one copy.
+function gatherRuns(src, runs, size) {
+  runs.sort((a, b) => a[0] - b[0]);
+  let total = 0;
+  for (const [, n] of runs) total += n;
+  const out = new Float32Array(total * size);
+  let at = 0;
+  for (let i = 0; i < runs.length;) {
+    let [start, n] = runs[i++];
+    while (i < runs.length && runs[i][0] === start + n) n += runs[i++][1];
+    out.set(src.subarray(start * size, (start + n) * size), at);
+    at += n * size;
+  }
+  return out;
+}
+
+function selectNode(node) {
+  if (node === hiNode) return;
+  clearHighlight();
+  hiNode = node;
+  const ids = new Set(); collectIds(node, ids);
+  // Features/PMI reference geometry indirectly; HLMAP lists the render ids to
+  // light up (edge lines / vertex points of the referenced faces & edges).
+  const hl = HLMAP[node.id] || [];
+  hl.forEach(i => ids.add(i));
+  const hlSet = new Set(hl);
+  const segRuns = [], ptRuns = [];
+  for (const id of ids) {
+    const r = ranges.get(id);
+    if (!r || r.fallback) continue;        // fallback keeps its red dashed look
+    if (r.type === 'line') {
+      if (r.count) segRuns.push([r.start, r.count]);
+    } else if (r.type === 'point') {
+      // Points highlight only when the vertex itself is the selected node or is
+      // referenced via HLMAP; selecting a solid/face lights up its edges, not
+      // their endpoint points.
+      if (id === node.id || hlSet.has(id)) ptRuns.push([r.start, 1]);
+    } else {
+      r.obj.material = M.hiMesh;
+      hiMeshes.push(r.obj);
+    }
+  }
+  if (segRuns.length) {
+    const geo = new LineSegmentsGeometry();
+    geo.setPositions(gatherRuns(edgeSegs, segRuns, 6));
+    const obj = new LineSegments2(geo, M.hiLine);
+    obj.renderOrder = ORDER.hiLine;
+    hiObjs.push(obj);
+  }
+  if (ptRuns.length) {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(gatherRuns(vertexPts, ptRuns, 3), 3));
+    const obj = new THREE.Points(geo, M.hiPt);
+    obj.renderOrder = ORDER.hiPt;
+    hiObjs.push(obj);
+  }
+  for (const o of hiObjs) root.add(o);
+  dimRest(hiObjs.length > 0 || hiMeshes.length > 0);
+}
+
+// While something is highlighted, the rest of the model fades back. The lines
+// stay opaque and only darken: blended, the overlapping ends of neighbouring
+// segments would add up into brighter dots.
+const DIM = new THREE.Color().setRGB(0.5, 0.5, 0.5, THREE.SRGBColorSpace).r;
+function dimRest(on) {
+  const k = on ? DIM : 1;
+  M.edges.color.setScalar(k);
+  M.fallback.color.setHex(0xff4444).multiplyScalar(k);
+}
+
+function clearHighlight() {
+  dimRest(false);
+  for (const o of hiObjs) { root.remove(o); o.geometry.dispose(); }
+  for (const m of hiMeshes) m.material = M.mesh;
+  hiNode = null; hiObjs = []; hiMeshes = [];
+}
+
+// ---- tree build (native <details>/<summary>) ----
+// The chevron opens and closes a row; a click elsewhere on it selects, which
+// drives the 3D highlight.
+// Children are built lazily on a <details>'s first open (glitch-free: native
+// owns the open/closed state, we only fill once).
+function esc(s) {
+  return String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+}
+
+let selRow = null;  // selected .row element (sticky single selection)
+let selNode = null; // selected node — drives the 3D highlight when not hovering
+function selectRow(rowEl, node) {
+  if (selRow) selRow.classList.remove('sel');
+  selRow = rowEl; rowEl.classList.add('sel');
+  selNode = node;
+  selectNode(node);
+  showDetail(node);
+}
+function deselect() {
+  if (selRow) selRow.classList.remove('sel');
+  selRow = null; selNode = null;
+  clearHighlight();
+  clearDetail();
+}
+// Hover previews an item's geometry in the 3D view; leaving the tree reverts to
+// the selected item (or nothing). Selection (click) and detail are unaffected.
+function hoverNode(node) { selectNode(node); }
+function unhover() { if (selNode) selectNode(selNode); else clearHighlight(); }
+
+// Each kind's icon (an id in the icon sprite at the top of <body>); other kinds get a dot.
+const KIND_ICON = {
+  Part: 'package-2', Component: 'package-2', Solid: 'box', 'Surface body': 'layers', Face: 'square',
+  Bound: 'square-dashed', Edge: 'slash', Vertex: 'circle-small', Wireframe: 'waypoints', Curve: 'spline',
+  Point: 'circle-small', Mesh: 'triangle', Item: 'file', Feature: 'tag', Dimension: 'ruler-dimension-line',
+  Tolerance: 'diff', Datum: 'flag',
+};
+
+// Build the inner content of a row: [chevron][icon][label #id]. Attributes live
+// in the detail pane, not inline, so scene rows stay a single scannable line.
+function rowInner(node, { chevron }) {
+  const group = node.kind === 'Group';
+  const chev = `<span class="chev${chevron ? '' : ' leaf'}"></span>`;
+  const emptyGroup = group && !(node.children && node.children.length);
+  const id = (group || node.id == null) ? '' : `<span class="idtag">#${node.id}</span>`;
+  const none = emptyGroup ? '<span class="none">(none)</span>' : '';
+  const icon = KIND_ICON[node.kind];
+  const mark = group ? '' : icon ? `<svg class="ico" aria-hidden="true"><use href="#i-${icon}"/></svg>` : '<span class="dot"></span>';
+  return `${chev}<div class="node-content"><div class="node-title">${mark}<span class="label">${esc(node.label)}</span>${id}${none}</div></div>`;
+}
+
+// ---- detail (inspector) pane ----
+function detailValueHtml(k, v) {
+  // a `color` value like "#c33240" gets a swatch chip before the hex text
+  if (k === 'color' && /^#[0-9a-fA-F]{6}$/.test(v)) {
+    return `<span class="swatch" style="background:${v}"></span>${esc(v)}`;
+  }
+  return esc(v);
+}
+function clearDetail() {
+  document.getElementById('detail').innerHTML =
+    '<div class="detail-empty">Select an item to see details</div>';
+}
+function showDetail(node) {
+  const el = document.getElementById('detail');
+  const kidCount = node.children ? node.children.length : 0;
+  const id = (node.kind === 'Group' || node.id == null) ? '' : `<span class="idtag">#${node.id}</span>`;
+  // The kind, unless the label already starts with it ("Edge (Line)", "Datum A").
+  const label = String(node.label), kindName = node.kind;
+  const named = label === kindName || label.startsWith(kindName + ' ') || label.startsWith(kindName + ':');
+  const kind = named ? '' : `<span class="kind">${esc(kindName)}</span>`;
+  let html = `<div class="detail-title"><span class="label">${esc(label)}</span>${kind}${id}</div>`;
+  if (node.meta && node.meta.length) {
+    html += node.meta.map(([k, v]) =>
+      `<div class="detail-row"><span class="mk">${esc(k)}</span><span class="mv">${detailValueHtml(k, v)}</span></div>`).join('');
+  } else if (node.kind === 'Group') {
+    html += `<div class="detail-empty">${kidCount} item${kidCount === 1 ? '' : 's'}</div>`;
+  } else {
+    html += '<div class="detail-empty">(no attributes)</div>';
+  }
+  el.innerHTML = html;
+}
+
+function rowClass(node) {
+  let c = 'row k-' + node.kind.replace(/\s+/g, '-');
+  if (node.kind === 'Group') {
+    c += ' group';
+    if (!(node.children && node.children.length)) c += ' empty';
+  }
+  return c;
+}
+
+// Create one tree node element at `depth`. Parents become <details> (filled on
+// first open); leaves become a plain clickable row.
+function renderNode(node, depth) {
+  const pad = `padding-left:${4 + depth * 14}px`;
+  const hasKids = node.children && node.children.length;
+  if (hasKids) {
+    const det = document.createElement('details');
+    const sum = document.createElement('summary');
+    sum.className = rowClass(node);
+    sum.setAttribute('style', pad);
+    sum.innerHTML = rowInner(node, { chevron: true });
+    det.appendChild(sum);
+    let filled = false;
+    det.addEventListener('toggle', () => {
+      if (det.open && !filled) {
+        filled = true;
+        for (const c of node.children) det.appendChild(renderNode(c, depth + 1));
+      }
+    });
+    sum.addEventListener('click', (e) => {
+      if (e.target.closest('.chev')) return;
+      // Enter or Space on a focused row (a click with detail 0) still toggles it.
+      if (e.detail !== 0) e.preventDefault();
+      if (e.detail !== 0 && sum === selRow) deselect(); else selectRow(sum, node);
+    });
+    sum.addEventListener('mouseenter', () => hoverNode(node));
+    return det;
+  }
+  const row = document.createElement('div');
+  row.className = rowClass(node);
+  row.setAttribute('style', pad);
+  row.innerHTML = rowInner(node, { chevron: false });
+  if (!(node.kind === 'Group')) {
+    row.addEventListener('click', () => (row === selRow ? deselect() : selectRow(row, node)));
+    row.addEventListener('mouseenter', () => hoverNode(node));
+  }
+  return row;
+}
+
+// The reader sends each node once, children before their parent: `children`
+// hold node ids (>= 0) and group references (-1 - index into `groups`). Put the
+// objects in their place, so a node under several parents is one shared object.
+function linkTree(out) {
+  const list = out.nodes || [], groups = out.groups || [], nodes = [];
+  for (const n of list) nodes[n.id] = n;
+  const ref = (c) => (c >= 0 ? nodes[c] : groups[-1 - c]);
+  for (const n of list) if (n.children) n.children = n.children.map(ref);
+  for (const g of groups) if (g.children) g.children = g.children.map(ref);
+  return (out.tree || []).map(ref);
+}
+
+// Opened at once, so a file shows its structure: the model, or in a file of
+// bare geometry, the geometry no part holds.
+const OPEN_FIRST = ['Model', 'Unplaced geometry'];
+function buildTree(roots) {
+  selRow = null; selNode = null;
+  const frag = document.createDocumentFragment();
+  const els = roots.map((r) => frag.appendChild(renderNode(r, 0)));
+  const i = roots.findIndex((r) => OPEN_FIRST.includes(r.label) && r.children && r.children.length);
+  if (i >= 0) els[i].open = true;
+  return frag;
+}
+
+// Leaving the tree area drops the hover preview back to the selection; a click on
+// empty sidebar space (not on any row) deselects.
+document.getElementById('tree').addEventListener('mouseleave', unhover);
+document.getElementById('side-scroll').addEventListener('click', (e) => {
+  if (!e.target.closest('.row')) deselect();
+});
+
+// ---- report / header panels (same native primitives, read-only) ----
+// These are info panels: rows expand/collapse but never select or touch the 3D
+// view (no click->selectNode handler; `.info` styling shows a default cursor).
+const metaPad = (depth) => `padding-left:${4 + depth * 14}px`;
+
+// A collapsible info section (closed by default). Append children to it.
+function infoSection(cls, label, depth) {
+  const det = document.createElement('details');
+  const sum = document.createElement('summary');
+  sum.className = `row info ${cls}`;
+  sum.setAttribute('style', metaPad(depth));
+  sum.innerHTML = `<span class="chev"></span><div class="node-content"><div class="node-title"><span class="label">${esc(label)}</span></div></div>`;
+  det.appendChild(sum);
+  return det;
+}
+function kvRow(k, v, depth) {
+  const row = document.createElement('div');
+  row.className = 'row info kv';
+  row.setAttribute('style', metaPad(depth));
+  // An empty value renders as a muted em-dash, so "absent in the file" reads
+  // differently from "not shown".
+  const mv = v ? `<span class="mv">${esc(v)}</span>` : `<span class="mv empty">—</span>`;
+  row.innerHTML = `<span class="chev leaf"></span><div class="node-content"><div class="metaline"><span class="mk">${esc(k)}</span>${mv}</div></div>`;
+  return row;
+}
+function textRow(s, depth) {
+  const row = document.createElement('div');
+  row.className = 'row info kv';
+  row.setAttribute('style', metaPad(depth));
+  row.innerHTML = `<span class="chev leaf"></span><div class="node-content"><div class="metaline"><span class="mv">${esc(s)}</span></div></div>`;
+  return row;
+}
+// A count with its digits grouped: 13,394.
+const num = (n) => Number(n).toLocaleString('en-US');
+
+// A nested "title (n)" section listing up to CAP rendered items.
+function subSection(title, items, depth, render) {
+  const CAP = 500;
+  // Empty: a muted, non-expandable row showing "(0)" so the category is always
+  // visible (0 vs. hidden reads unambiguously).
+  if (!items.length) {
+    const row = document.createElement('div');
+    row.className = 'row info meta-sub empty';
+    row.setAttribute('style', metaPad(depth));
+    row.innerHTML = `<span class="chev leaf"></span><div class="node-content"><div class="node-title"><span class="label">${esc(title)} (0)</span></div></div>`;
+    return row;
+  }
+  const sec = infoSection('meta-sub', `${title} (${num(items.length)})`, depth);
+  items.slice(0, CAP).forEach(x => sec.appendChild(render(x, depth + 1)));
+  if (items.length > CAP) sec.appendChild(textRow(`… ${num(items.length - CAP)} more`, depth + 1));
+  return sec;
+}
+
+function showReport(r, warnings) {
+  const el = document.getElementById('report');
+  el.innerHTML = '';
+  if (!r) return;
+  const drops = r.dropped;
+  const root = infoSection('meta-root', 'Report', 0);
+  // Provenance counts, one per line. `dropped` is not repeated here — its count
+  // shows in the "dropped (N)" section title below.
+  root.appendChild(kvRow('input', num(r.n_in), 1));
+  root.appendChild(kvRow('kept', num(r.validated), 1));
+  root.appendChild(kvRow('synthesized', num(r.n_synth), 1));
+  // Always show every category (empty ones render as "(0)").
+  root.appendChild(subSection('dropped', drops, 1, ([id, why], d) => kvRow('#' + id, why, d)));
+  root.appendChild(subSection('normalized', r.norm, 1, ([id, note], d) => kvRow('#' + id, note, d)));
+  root.appendChild(subSection('parse warnings', r.parse_warnings, 1, (s, d) => textRow(s, d)));
+  root.appendChild(subSection('warnings', warnings, 1, (s, d) => textRow(s, d)));
+  el.appendChild(root);
+}
+function showUnits(units) {
+  const el = document.getElementById('units');
+  el.innerHTML = '';
+  if (!units || !units.length) return;
+  const root = infoSection('meta-root', 'Units', 0);
+  for (const [k, v] of units) root.appendChild(kvRow(k, v, 1));
+  el.appendChild(root);
+}
+function showHeader(h) {
+  const el = document.getElementById('header');
+  el.innerHTML = '';
+  const root = infoSection('meta-root', 'Header', 0);
+  // Every header field is always shown — an absent one renders empty (—) so it's
+  // clear the file lacks it, rather than the viewer hiding it.
+  const add = (k, v) => {
+    const val = Array.isArray(v) ? v.join(', ') : (v || '');
+    root.appendChild(kvRow(k, val, 1));
+  };
+  add('file', h.file_name);
+  add('schema', h.schema); add('schema(raw)', h.raw_schema);
+  add('description', h.description);
+  add('author', h.author); add('organization', h.organization); add('timestamp', h.time_stamp);
+  add('originating system', h.originating_system);
+  add('preprocessor', h.preprocessor); add('authorisation', h.authorisation);
+  el.appendChild(root);
+}
+
+// ---- load ----
+// Over the view: the drop hint ('welcome'), a status line ('status', with its
+// text), or nothing once a file is shown ('none').
+function setDrop(mode, text) {
+  document.getElementById('drop').hidden = mode === 'none';
+  document.getElementById('welcome').hidden = mode !== 'welcome';
+  const status = document.getElementById('status');
+  status.hidden = mode !== 'status';
+  if (text) status.textContent = text;
+}
+
+async function loadBlob(blob, up = 'y') {
+  // The last file stays on screen while this one is read.
+  setDrop('status', 'Reading …');
+  let out, geom = [];
+  try {
+    const read = await readStep(blob);
+    if (read === CANCELLED) return; // a newer file took over
+    out = JSON.parse(read.json);
+    geom = read.geom;
+  } catch (e) {
+    out = { ok: false, error: `read failed: ${e.message}` };
+  }
+  openMenu(false);
+  showHeader(out.header || {});
+  showReport(out.report, out.warnings || []);
+  showUnits(out.units || []);
+  const tree = document.getElementById('tree');
+  tree.innerHTML = '';
+  selRow = null; selNode = null; clearDetail(); // drop lingering selection from the last file
+  clearScene();
+  fitCamera(NO_FIT);
+  if (!out.ok) {
+    tree.innerHTML = `<pre class="err">${esc(out.error || 'read failed')}</pre>`;
+    setDrop('welcome');
+    return;
+  }
+  HLMAP = out.hl || {};
+  const wire = new Set((out.nodes || [])
+    .filter((n) => n && (n.kind === 'Curve' || n.kind === 'Point')).map((n) => n.id));
+  lastFit = buildObjects(geom, wire);
+  setUp(up);
+  tree.appendChild(buildTree(linkTree(out)));
+  setDrop('none');
+}
+
+// ---- file input + drag/drop (both paths sync the displayed filename) ----
+function loadFile(f) {
+  if (!f) return;
+  const fn = document.getElementById('fname');
+  fn.textContent = f.name;
+  fn.title = f.name; // full name on hover, since the display truncates
+  loadBlob(f);
+}
+document.getElementById('openbtn').addEventListener('click', () => document.getElementById('file').click());
+document.getElementById('file').addEventListener('change', (e) => loadFile(e.target.files[0]));
+const dz = document.getElementById('view');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drop-hi'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drop-hi'));
+dz.addEventListener('drop', (e) => {
+  e.preventDefault(); dz.classList.remove('drop-hi');
+  loadFile(e.dataTransfer.files[0]);
+});
+
+// ---- optional auto-open from ?file=<url> ----
+// The STEP data is never embedded in this HTML; instead a URL query param points
+// at an external file (relative to the page or absolute) that is fetched on load.
+// Requires the page to be served over http(s): browsers block fetch under file://.
+async function loadUrl(url, up) {
+  const fn = document.getElementById('fname');
+  let name = url;
+  try { name = decodeURIComponent(new URL(url, location.href).pathname.split('/').pop()) || url; } catch (_) {}
+  fn.textContent = name; fn.title = url;
+  setDrop('status', 'Loading …');
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    await loadBlob(await resp.blob(), up);
+  } catch (e) {
+    fn.textContent = 'No file loaded';
+    setDrop('welcome');
+    document.getElementById('tree').innerHTML =
+      `<pre class="err">Could not load ?file= URL:\n${esc(url)}\n${esc(String(e))}</pre>`;
+  }
+}
+
+// ---- optional hand-over from ?from=<id> ----
+// A page on this same origin (nacre-playground's "Open in step-loupe") hands a STEP
+// over without a URL to fetch. The contract, owned here as its reader:
+//   - The writer stores JSON {name, text, at} (at = epoch ms) in localStorage under
+//     "step-loupe:<id>", then opens this page with ?from=<id>.
+//   - The prefix is added here, never read from the URL. This page deletes what it
+//     reads, so a bare key would let a link delete any other entry on the origin.
+//   - The first read moves the entry into this tab's sessionStorage: a reload or a
+//     duplicated tab opens it again, and closing the tab clears it.
+//   - Every load sweeps entries older than ten minutes, or unreadable ones: a tab the
+//     browser blocked, or one closed before it loaded, leaves its entry behind.
+// Only pages on this origin share the storage, so the downloaded bundle and pages on other
+// hosts cannot hand anything over.
+const HANDOFF = 'step-loupe:';
+const HANDOFF_TTL_MS = 10 * 60 * 1000;
+
+function takeHandoff(id) {
+  const key = HANDOFF + id;
+  const kept = sessionStorage.getItem(key);
+  if (kept !== null) return JSON.parse(kept);
+  const raw = localStorage.getItem(key);
+  if (raw === null) return null;
+  localStorage.removeItem(key);
+  // Too big for this tab's storage: this load still has it, a reload will not.
+  try { sessionStorage.setItem(key, raw); } catch (_) {}
+  return JSON.parse(raw);
+}
+
+function sweepHandoffs() {
+  const now = Date.now();
+  const keys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith(HANDOFF)) keys.push(key);
+  }
+  for (const key of keys) {
+    let at = NaN;
+    try { at = JSON.parse(localStorage.getItem(key)).at; } catch (_) {}
+    if (!(now - at < HANDOFF_TTL_MS)) localStorage.removeItem(key);
+  }
+}
+
+async function loadHandoff(id, up) {
+  let entry = null, failure = null;
+  try { entry = takeHandoff(id); } catch (e) { failure = e; }
+  if (!entry || typeof entry.text !== 'string') {
+    const why = failure ? String(failure)
+      : 'nothing was handed over under this key — open it again from the app';
+    document.getElementById('tree').innerHTML =
+      `<pre class="err">Could not load ?from= hand-over:\n${esc(id)}\n${esc(why)}</pre>`;
+    return;
+  }
+  const fn = document.getElementById('fname');
+  const name = typeof entry.name === 'string' && entry.name ? entry.name : 'handed-over.step';
+  fn.textContent = name; fn.title = name;
+  await loadBlob(new Blob([entry.text]), up);
+}
+
+const params = new URLSearchParams(location.search);
+const fromParam = params.get('from');
+const fileParam = params.get('file');
+if (fromParam) loadHandoff(fromParam, upParam);
+else if (fileParam) loadUrl(fileParam, upParam);
+// After the hand-over is taken (synchronously, before loadHandoff's first await), so a
+// slow load never sweeps the entry it came for.
+try { sweepHandoffs(); } catch (_) {}
+</script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "MHD Workbench acceptance fixtures"
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "Annulus",
+      "mesh": 0,
+      "translation": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Annulus",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0
+          },
+          "indices": 1
+        }
+      ]
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "annulus.bin",
+      "byteLength": 9216
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 3072,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 3072,
+      "byteLength": 6144,
+      "target": 34963
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 256,
+      "type": "VEC3",
+      "min": [
+        -0.003,
+        -0.003,
+        -0.004
+      ],
+      "max": [
+        0.003,
+        0.003,
+        0.004
+      ]
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5125,
+      "count": 1536,
+      "type": "SCALAR"
+    }
+  ]
+}

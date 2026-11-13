@@ -1,0 +1,107 @@
+# step-io
+
+[![crates.io](https://img.shields.io/crates/v/step-io.svg)](https://crates.io/crates/step-io)
+[![docs.rs](https://img.shields.io/docsrs/step-io)](https://docs.rs/step-io)
+[![CI](https://github.com/elgar328/step-io/actions/workflows/ci.yml/badge.svg)](https://github.com/elgar328/step-io/actions/workflows/ci.yml)
+[![license](https://img.shields.io/crates/l/step-io.svg)](#license)
+
+Lean STEP (ISO 10303) I/O for 3D CAD applications — reads every mainstream AP,
+writes only modern AP242.
+
+> ⚠️ **Experimental** — early stage; expect breaking API changes at any time.
+
+## Features
+
+- **Reads everything, writes AP242** — any mainstream AP comes in, legacy
+  included; only AP242 edition 2 (IS) goes out.
+- **Lean** — one universal schema model instead of a per-schema
+  implementation; the supported entity set is curated to what real STEP
+  files actually use.
+- **Heals non-standard input** — what can be fixed is normalized; what
+  cannot is dropped with a reason, never silently.
+- **Ergonomic API** — `scene()` navigates what you read with lightweight
+  handles; `StepBuilder` writes new files element by element, the way CAD
+  data is held.
+
+## Quickstart
+
+Reading STEP into a CAD application or viewer:
+
+```rust,no_run
+let file = std::fs::File::open("model.step").unwrap();
+let (model, report) = step_io::read(file).unwrap();
+let header = model.header(); // file name, authors, originating CAD system, schema, …
+
+for solid in model.scene().all_solids() {
+    for face in solid.faces() {
+        let surface = face.surface().kind(); // Plane, Cylindrical, …
+        for bound in face.bounds() {
+            for (edge, orientation) in bound.oriented_edges() {
+                let curve = edge.curve().kind(); // Line, Circle, …
+                let ends = (edge.start(), edge.end()); // bounding vertices
+            }
+        }
+    }
+}
+```
+
+Writing STEP from a CAD application:
+
+```rust,no_run
+let mut b = step_io::StepBuilder::new();
+let part = b.part("wheel");
+
+// mirror your kernel's arrays, keeping one handle per element
+let vs: Vec<_> = kernel.points.iter()
+    .map(|p| b.vertex(*p).unwrap())
+    .collect();
+let es: Vec<_> = kernel.edges.iter()
+    .map(|e| b.edge(vs[e.start], vs[e.end], curve_of(e)).unwrap())
+    .collect();
+let fs: Vec<_> = kernel.faces.iter()
+    .map(|f| b.face(surface_of(f), f.orientation, loops_of(f, &es)).unwrap())
+    .collect();
+b.solid(part, "wheel body", fs).unwrap();
+
+step_io::write(&b.finish(), std::fs::File::create("wheel.step").unwrap()).unwrap();
+```
+
+## Example app
+
+[**step-loupe**](https://github.com/elgar328/step-loupe) is a single-file,
+in-browser STEP viewer built on step-io (compiled to WebAssembly): a worked
+example of the reading API, rendering b-rep geometry, the assembly tree, PMI,
+units, and the provenance report.
+
+**Live demo:** <https://elgar328.github.io/step-loupe/?file=nist-ctc05.step>
+
+[![step-loupe viewing a NIST CTC 05 part with PMI](https://github.com/elgar328/step-loupe/releases/download/assets/screenshot.webp)](https://github.com/elgar328/step-loupe)
+
+## Design
+
+step-io sits between 3D CAD applications and the STEP files they
+exchange.
+
+Most STEP libraries carry per-schema entity and read/write code, so each
+supported schema adds source and binary size. step-io instead merges the
+mainstream APs into one *universal* schema and reads them all through a
+single pipeline. The supported entity set is curated, guided by what
+50,000+ real-world files contain — the [entity coverage
+matrix](docs/entities.md) lists exactly what is read and written.
+
+Output is AP242 edition 2 (IS) only — AP203 and AP214 were merged into
+it in 2014, and every modern tool reads it. When edition 3 reaches IS
+and takes over, the output moves up with it: one output schema,
+always the current one.
+
+Most of the pipeline is generated from the schemas rather than written
+by hand — no drift, little to maintain.
+
+## License
+
+Licensed under either of [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE)
+at your option.
+
+step-io's entity model derives from the ISO 10303 (STEP) EXPRESS schemas —
+third-party ISO artifacts that are free for implementers and carry their own
+terms, separate from the license above.

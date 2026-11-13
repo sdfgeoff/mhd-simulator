@@ -1,0 +1,354 @@
+//! [`Scene`] — the convenience navigation layer over the raw [`StepModel`].
+//!
+//! The generated model is faithful but tedious to walk by hand (ids and
+//! reference enums); [`model.scene()`](StepModel::scene) wraps it in
+//! lightweight `Copy` handles where forward *and* backward moves are plain
+//! `handle.method()` calls. The backward index ([`RefGraph`]) is built
+//! lazily on the first backward move — a forward-only import never pays
+//! for it.
+//!
+//! The core is enumeration plus scoped navigation. Model-level
+//! `all_<type>()` iterators ([`all_solids`](Scene::all_solids),
+//! [`all_products`](Scene::all_products), …) enumerate one type across the
+//! whole file; each handle then navigates its own neighbourhood
+//! (`solid.faces()`, `face.surface()`, `occurrence.definition()`, …).
+//! Coverage spans:
+//!
+//! - **b-rep geometry** — `Solid` or [`SurfaceModel`] `→ Shell → Face →
+//!   Surface` and `Face → Bound → Edge → Curve / Vertex → Point`; a shell and
+//!   an edge come with the way their body or loop uses them
+//!   ([`Orientation`](crate::Orientation)). Surfaces and curves report their
+//!   analytic kind ([`SurfaceKind`], [`CurveKind`]); a shape outside the
+//!   handled set is `Other`, carrying its STEP keyword.
+//! - **NURBS views** — `to_nurbs()` on a [`Curve`], [`Edge`], [`Surface`] or
+//!   [`Face`] derives a [`NurbsCurve`] / [`NurbsSurface`] on demand, from the
+//!   entity as stored; it is never written back.
+//! - **products and assemblies** — a [`Product`] carries its versions,
+//!   definitions and PLM metadata (contributors, approvals, documents); a
+//!   [`ProductDef`] descends the assembly through its
+//!   [`occurrences`](ProductDef::occurrences) and reaches its geometry through
+//!   [`solids`](ProductDef::solids),
+//!   [`surface_models`](ProductDef::surface_models) and
+//!   [`geometric_sets`](ProductDef::geometric_sets).
+//! - **geometric sets** — a [`GeometricSet`]'s curves and points, kept outside
+//!   any b-rep as a wireframe or sketch.
+//! - **display meshes** — a [`Mesh`] (points, triangles, normals) and the
+//!   [`MeshGroup`] holding it, linked back to the b-rep where the file says.
+//!   They are meshes for display, not for analysis.
+//! - **PMI** — the [`Dimension`]s, [`Tolerance`]s and [`Datum`]s of a shape,
+//!   and the [`Feature`] each applies to.
+//! - **presentation** — `.color()` (an [`Rgb`]), `.transparency()`,
+//!   `.layer()` and `.is_visible()` on the geometry handles.
+//! - **units** — [`Scene::units`]: the length and angle [`Unit`]s, each with
+//!   a [`to_si`](Unit::to_si) factor to metres or radians.
+//!
+//! Kinds outside the handled set come back as `*Kind::Other`; what a handle
+//! cannot resolve into the shape it exposes lands in [`Scene::warnings`],
+//! never silently skipped.
+//!
+//! Anything beyond the handles is reached through the raw model via
+//! [`Scene::model`].
+//!
+//! ```no_run
+//! let file = std::fs::File::open("part.step").unwrap();
+//! let (model, _report) = step_io::read(file).unwrap();
+//! let scene = model.scene();
+//!
+//! // Assembly: definitions and their placed occurrences, top-down. Keep the
+//! // placement on the instance — do not bake it into shared geometry.
+//! for def in scene.root_definitions() {
+//!     for occ in def.occurrences() {
+//!         let _child = occ.definition(); // recurse from here
+//!         let _matrix = occ.transform().and_then(|t| t.matrix());
+//!     }
+//! }
+//!
+//! // Geometry: solid → face → surface, bound → edge → curve → vertex.
+//! // Presentation (colour / layer / visibility) rides on the same handles.
+//! for solid in scene.all_solids() {
+//!     let _colour = solid.color();
+//!     for face in solid.faces() {
+//!         let _surface = face.surface().kind(); // analytic form; `Other` beyond the set
+//!         let _patch = face.to_nurbs(); // the NURBS view, on demand
+//!         for bound in face.bounds() {
+//!             for (edge, _orientation) in bound.oriented_edges() {
+//!                 let _curve = edge.curve().kind();
+//!                 let _ends = (edge.start(), edge.end());
+//!             }
+//!         }
+//!     }
+//! }
+//!
+//! // Display meshes, linked back to the b-rep solid they render.
+//! for group in scene.all_mesh_groups() {
+//!     let _brep = group.solid();
+//!     for mesh in group.meshes() {
+//!         let (_pts, _tris) = (mesh.points(), mesh.triangles());
+//!     }
+//! }
+//!
+//! // PMI: dimensions, tolerances, and the annotated features.
+//! for dim in scene.all_dimensions() {
+//!     let (_kind, _value) = (dim.kind(), dim.value());
+//! }
+//! for tol in scene.all_tolerances() {
+//!     let (_kind, _datums) = (tol.kind(), tol.datums());
+//! }
+//! for feat in scene.all_features() {
+//!     let _geometry = feat.geometry(); // the faces/edges it annotates
+//! }
+//!
+//! // Product metadata: versions, approvals, documents, people.
+//! for product in scene.all_products() {
+//!     let _versions = product.versions();
+//!     let _approvals = product.approvals();
+//!     let _documents = product.documents();
+//!     let _people = product.contributors();
+//! }
+//!
+//! // Coordinates come in the file's units — scaling is the consumer's job.
+//! let _to_si = scene.units().length.map(|u| u.to_si);
+//! for w in scene.warnings() {
+//!     eprintln!("step-io: {w}");
+//! }
+//! ```
+
+// `handle.about()`: the handle with its context naming the handle as the
+// subject of any warning recorded from here on. Each module invokes it for its
+// own handles (their fields are private to it).
+macro_rules! about_by_key {
+    ($($handle:ident),+ $(,)?) => {
+        $(
+            impl $handle<'_> {
+                fn about(&self) -> Self {
+                    Self {
+                        cx: self.cx.about(self.key()),
+                        ..*self
+                    }
+                }
+            }
+        )+
+    };
+}
+
+pub(crate) mod geometry;
+pub(crate) mod mesh;
+pub(crate) mod nurbs;
+pub(crate) mod pmi;
+pub(crate) mod presentation;
+pub(crate) mod product;
+pub(crate) mod sets;
+pub(crate) mod units;
+
+use std::collections::HashSet;
+use std::sync::{Mutex, OnceLock};
+
+use crate::EntityKey;
+use crate::RefGraph;
+use crate::StepModel;
+
+pub use geometry::{
+    Bound, Curve, CurveKind, Edge, Face, Point, Shell, Solid, Surface, SurfaceKind, SurfaceModel,
+    Vertex,
+};
+pub use mesh::{Mesh, MeshGroup, MeshNormals};
+pub use nurbs::{NurbsCurve, NurbsSurface};
+pub use pmi::{
+    Datum, Dimension, DimensionKind, Feature, FeatureGeometry, FeatureKind, Tolerance,
+    ToleranceKind,
+};
+pub use presentation::Rgb;
+pub use product::{
+    Approval, ApprovalDate, Approver, Contributor, Document, MappedInstance, Occurrence, Person,
+    Placement, Product, ProductDef, Scope, SecurityClassification, Target, Transform, Version,
+};
+pub use sets::{GeometricSet, SetElement};
+pub use units::{Unit, Units};
+
+// A handle prints as its type and entity key: the context it carries holds the
+// whole model.
+macro_rules! debug_by_key {
+    ($($handle:ident),+ $(,)?) => {
+        $(
+            impl std::fmt::Debug for $handle<'_> {
+                fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                    f.debug_tuple(stringify!($handle)).field(&self.key()).finish()
+                }
+            }
+        )+
+    };
+}
+
+debug_by_key!(
+    Approval,
+    Approver,
+    Bound,
+    Contributor,
+    Curve,
+    Datum,
+    Dimension,
+    Document,
+    Edge,
+    Face,
+    Feature,
+    GeometricSet,
+    MappedInstance,
+    Mesh,
+    MeshGroup,
+    Occurrence,
+    Person,
+    Point,
+    Product,
+    ProductDef,
+    SecurityClassification,
+    Shell,
+    Solid,
+    Surface,
+    SurfaceModel,
+    Tolerance,
+    Version,
+    Vertex,
+);
+
+/// Something a handle could not resolve into the shape it exposes — a
+/// complex instance where a plain entity was expected, a value out of range —
+/// recorded in [`Scene::warnings`] rather than silently skipped. It prints as
+/// its message.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
+pub struct SceneWarning {
+    /// The entity whose handle ran into it: the handle a method was called on,
+    /// or a handle that method went on to consult (a dimension's features
+    /// walked for a part's dimensions, say).
+    pub entity: Option<EntityKey>,
+    /// What went wrong, starting with the entity type it concerns where that
+    /// is not the handle's own (`TRIMMED_CURVE.to_nurbs: …`).
+    pub message: String,
+}
+
+impl std::fmt::Display for SceneWarning {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.message)
+    }
+}
+
+/// The warnings recorded so far, in order, each once.
+#[derive(Default)]
+struct WarningLog {
+    list: Vec<SceneWarning>,
+    seen: HashSet<SceneWarning>,
+}
+
+/// A `Copy` reference bundle handed to every handle: the model, the lazy reverse
+/// index and units, the scene's warning log, and the entity a warning recorded now is
+/// about. All borrows share one lifetime (the scene borrow), so handles stay
+/// single-lifetime.
+#[derive(Clone, Copy)]
+pub(crate) struct Ctx<'a> {
+    pub(crate) model: &'a StepModel,
+    pub(crate) rg: &'a OnceLock<RefGraph>,
+    units: &'a OnceLock<Units>,
+    warnings: &'a Mutex<WarningLog>,
+    subject: Option<EntityKey>,
+}
+
+impl<'a> Ctx<'a> {
+    /// The reverse-reference index, built on first use.
+    pub(crate) fn ref_graph(&self) -> &'a RefGraph {
+        self.rg.get_or_init(|| self.model.ref_graph())
+    }
+
+    /// The model's units, resolved on first use.
+    pub(crate) fn units(&self) -> &'a Units {
+        self.units.get_or_init(|| units::units_of(self.model))
+    }
+
+    /// The factor taking a plane angle in the model's unit to radians (1 when
+    /// the model names no angle unit).
+    pub(crate) fn angle_to_radians(&self) -> f64 {
+        self.units().angle.as_ref().map_or(1.0, |u| u.to_si)
+    }
+
+    /// This context with `key` as the subject of the warnings recorded
+    /// through it. Every public handle method that can warn starts here.
+    pub(crate) fn about(self, key: EntityKey) -> Self {
+        Self {
+            subject: Some(key),
+            ..self
+        }
+    }
+
+    /// Record a navigation anomaly (something a handle could not resolve into
+    /// the shape it exposes) so it is surfaced rather than silently dropped. A
+    /// warning already recorded for the same subject is not repeated.
+    pub(crate) fn warn(&self, msg: String) {
+        let warning = SceneWarning {
+            entity: self.subject,
+            message: msg,
+        };
+        let mut log = self
+            .warnings
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        if log.seen.insert(warning.clone()) {
+            log.list.push(warning);
+        }
+    }
+}
+
+/// The read API entry point: a [`StepModel`] paired with its (lazy) [`RefGraph`]
+/// and a log of navigation warnings.
+pub struct Scene<'m> {
+    model: &'m StepModel,
+    rg: OnceLock<RefGraph>,
+    units: OnceLock<Units>,
+    warnings: Mutex<WarningLog>,
+}
+
+impl StepModel {
+    /// Build a [`Scene`] over this model — the entry point for the navigation
+    /// handles. The reverse-reference index is built lazily on first use; reuse
+    /// the returned scene for all navigation.
+    #[must_use]
+    pub fn scene(&self) -> Scene<'_> {
+        Scene {
+            model: self,
+            rg: OnceLock::new(),
+            units: OnceLock::new(),
+            warnings: Mutex::new(WarningLog::default()),
+        }
+    }
+}
+
+impl<'m> Scene<'m> {
+    /// The reference bundle to hand to a handle created from this scene.
+    pub(crate) fn ctx(&self) -> Ctx<'_> {
+        Ctx {
+            model: self.model,
+            rg: &self.rg,
+            units: &self.units,
+            warnings: &self.warnings,
+            subject: None,
+        }
+    }
+
+    /// The underlying raw model (escape hatch for uncovered long-tail entities).
+    #[must_use]
+    pub fn model(&self) -> &'m StepModel {
+        self.model
+    }
+
+    /// Navigation anomalies recorded so far, in the order they arose — cases a
+    /// handle could not resolve into the shape it exposes (e.g. an occurrence
+    /// transform whose item is not an `AXIS2_PLACEMENT_3D`), each with the
+    /// entity it concerns. Surfaced here rather than silently dropped; asking
+    /// the same handle again does not repeat a warning.
+    #[must_use]
+    pub fn warnings(&self) -> Vec<SceneWarning> {
+        self.warnings
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .list
+            .clone()
+    }
+}
