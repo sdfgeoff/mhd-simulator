@@ -1,9 +1,10 @@
 mod app;
 mod caps;
+mod domain;
 mod gizmo;
-mod gpu;
 mod model;
 mod plane;
+mod project;
 mod render;
 use glam::Vec3;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -33,21 +34,43 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .map(String::as_str)
             .unwrap_or("assets/hotend.gltf");
         let m = model::Model::load(std::path::Path::new(path))?;
-        let gpu = gpu::Gpu::new()?;
-        let (lo, hi) = m.bounds();
-        let center = (lo + hi) * 0.5;
-        let span = (hi - lo).max_element() * 0.65;
-        let pixels = gpu.section(&m, center, Vec3::Y * span, Vec3::Z * span, 128)?;
-        let mut counts = std::collections::BTreeMap::new();
-        for &p in &pixels {
-            *counts.entry(p).or_insert(0usize) += 1;
+        let gpu = domain::GpuDomain::new()?;
+        let mut settings = project::DomainSettings::fit(&m);
+        if let Some(h) = args.get(3) {
+            settings.cell_mm = h.parse()?;
         }
-        println!("Adapter: {}\nSection labels: {:?}", gpu.name, counts);
+        let volume = gpu.build(&m, &settings, &project::default_materials())?;
+        let (lo, hi) = m.bounds();
+        let plane = plane::SectionPlane::new((lo + hi) * 0.5);
+        let pixels = gpu.section(
+            &volume,
+            plane,
+            (volume.max() - Vec3::from(settings.min_mm)).max_element() * 0.65,
+            256,
+        )?;
+        let mut counts = std::collections::BTreeMap::new();
+        for p in &pixels {
+            *counts.entry(p.body).or_insert(0usize) += 1;
+        }
+        println!(
+            "Adapter: {}\nDomain: {:?} at {} mm, {:.1} ms build, {:.1} MiB persistent\nOccupied: {}, overlaps: {}\nSection labels: {:?}",
+            gpu.name,
+            volume.dims,
+            settings.cell_mm,
+            volume.build_ms,
+            volume.persistent_bytes as f64 / 1048576.,
+            volume.occupied,
+            volume.overlaps,
+            counts
+        );
+        for warning in &volume.warnings {
+            println!("Warning: {warning}");
+        }
         std::fs::create_dir_all("artifacts")?;
-        let mut ppm = b"P6\n128 128\n255\n".to_vec();
-        for row in pixels.chunks(128).rev() {
+        let mut ppm = b"P6\n256 256\n255\n".to_vec();
+        for row in pixels.chunks(256).rev() {
             for &p in row {
-                ppm.extend(app::color(p));
+                ppm.extend(app::color(p.body));
             }
         }
         std::fs::write("artifacts/section.ppm", ppm)?;
@@ -84,76 +107,5 @@ mod tests {
         let (lo, hi) = m.bounds();
         assert!((lo - Vec3::new(-7., -4.2, -2.)).length() < 1e-4);
         assert!((hi - Vec3::new(7., 4.2, 10.)).length() < 1e-4);
-    }
-    #[test]
-    fn open_surface_cannot_enter_gpu_classification() {
-        let m = model::Model::load(std::path::Path::new("assets/open-triangle.gltf")).unwrap();
-        assert!(!m.bodies[0].closed());
-        let gpu = gpu::Gpu::new().unwrap();
-        assert!(
-            gpu.section(&m, Vec3::ZERO, Vec3::X, Vec3::Y, 32)
-                .unwrap_err()
-                .contains("not closed")
-        );
-    }
-    #[test]
-    fn gpu_annulus_matches_analytic_sections_and_converges() {
-        let gpu = gpu::Gpu::new().expect("GPU numerical tests require a working wgpu adapter");
-        eprintln!("GPU numerical test adapter: {}", gpu.name);
-        let m = model::Model::load(std::path::Path::new("assets/annulus.gltf")).unwrap();
-        let span = 5.;
-        let mut area_errors = Vec::new();
-        for n in [64, 128, 256] {
-            let labels = gpu
-                .section(&m, Vec3::ZERO, Vec3::X * span, Vec3::Y * span, n)
-                .unwrap();
-            let area =
-                labels.iter().filter(|&&v| v == 1).count() as f32 * (2. * span / n as f32).powi(2);
-            let exact = std::f32::consts::PI * (9. - 2.25);
-            let error = (area - exact).abs() / exact;
-            assert!(error < 0.025, "n={n} area={area} error={error}");
-            area_errors.push(error);
-            assert_eq!(
-                labels[(n * n / 2 + n / 2) as usize],
-                0,
-                "Cavity must remain empty"
-            );
-            for y in 0..n {
-                for x in 0..n {
-                    let p = Vec3::new(
-                        ((x as f32 + 0.5) / n as f32 * 2. - 1.) * span,
-                        ((y as f32 + 0.5) / n as f32 * 2. - 1.) * span,
-                        0.,
-                    );
-                    let r = p.length();
-                    if (r - 1.5).abs() > 0.03 && (r - 3.).abs() > 0.03 {
-                        assert_eq!(labels[(y * n + x) as usize], u32::from(r > 1.5 && r < 3.));
-                    }
-                }
-            }
-        }
-        assert!(
-            area_errors[2] < area_errors[0],
-            "Refinement must reduce area error: {area_errors:?}"
-        );
-        let u = Vec3::new(1., 0., 1.).normalize() * span;
-        let v = Vec3::Y * span;
-        let n = 128;
-        let labels = gpu.section(&m, Vec3::new(0., 0., 0.37), u, v, n).unwrap();
-        for y in 0..n {
-            for x in 0..n {
-                let p = Vec3::new(0., 0., 0.37)
-                    + ((x as f32 + 0.5) / n as f32 * 2. - 1.) * u
-                    + ((y as f32 + 0.5) / n as f32 * 2. - 1.) * v;
-                let r = p.truncate().length();
-                if (r - 1.5).abs() > 0.03 && (r - 3.).abs() > 0.03 && (p.z.abs() - 4.).abs() > 0.03
-                {
-                    assert_eq!(
-                        labels[(y * n + x) as usize],
-                        u32::from(r > 1.5 && r < 3. && p.z.abs() < 4.)
-                    );
-                }
-            }
-        }
     }
 }

@@ -6,7 +6,7 @@ pub struct Body {
     pub name: String,
     pub triangles: Vec<[Vec3; 3]>, // millimetres
     pub visible: bool,
-    pub role: usize,
+    pub simulation: crate::project::SimulationProperties,
     pub boundary_edges: usize,
     pub nonmanifold_edges: usize,
     pub winding: f32,
@@ -51,10 +51,17 @@ impl Body {
             name,
             triangles,
             visible: true,
-            role: 0,
+            simulation: Default::default(),
             boundary_edges: edges.values().filter(|&&n| n == 1).count(),
             nonmanifold_edges: edges.values().filter(|&&n| n > 2).count(),
         })
+    }
+    pub fn volume_mm3(&self) -> f64 {
+        self.triangles
+            .iter()
+            .map(|t| t[0].as_dvec3().dot(t[1].as_dvec3().cross(t[2].as_dvec3())) / 6.)
+            .sum::<f64>()
+            .abs()
     }
     pub fn closed(&self) -> bool {
         self.boundary_edges == 0 && self.nonmanifold_edges == 0

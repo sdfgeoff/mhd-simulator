@@ -1,55 +1,64 @@
-# MHD Workbench — geometry prototype
+# MHD Workbench
 
-A native Rust/wgpu workbench for exploring the geometry of a molten-metal jetting tool. This first milestone imports meshes, displays an orbitable clipped model, and computes solid occupancy on an arbitrary cut plane using a WGSL compute shader.
+A native Rust/wgpu workbench for preparing a 3D molten-metal jetting simulation. It imports CAD-exported meshes, builds a persistent **rasterized 3D material grid**, and lets you compare its voxel sections against the original geometry with a six-axis plane gizmo.
 
-**There is no electromagnetic or fluid solver yet. The cross-section colours identify bodies, not field strengths.**
+**Electromagnetic, thermal and fluid solvers are not implemented yet.** Materials, initial temperatures and prescribed currents are project configuration; the displayed colours are geometry/material IDs.
 
-## Try it
-
-From this directory:
+## Run and inspect
 
 ```sh
-cargo run -- assets/hotend.gltf
+./run.sh
+./run.sh path/to/assembly.glb
+./run.sh path/to/project.mhd.json
 ```
 
-1. Drag in a `.gltf`, `.glb` or `.stl`, or enter its path and click **Load file**.
-2. Drag the viewport background to orbit; right-drag also orbits when the pointer is over a handle. Scroll to zoom.
-3. Manipulate the single plane with its coloured arrows (translation along world X/Y/Z) and rings (rotation around those axes at the pivot). All six degrees of freedom are supported. **Exact transform** exposes numeric position and rotation. **Reset plane** recentres it; **Flip cut side** reverses the retained half-space. The right panel shows GPU-classified occupancy.
-4. Select **Hatched CAD** for filled, hatched cut faces, or **Outlines** for contours without caps. The outline option is intended for future field overlays; no physical fields are present yet. Toggle bodies and assign roles under **Bodies and roles**. Roles and plane pose are session-only.
+1. Load or drop a `.gltf`, `.glb` or `.stl`. STEP/STP currently provides metadata and import diagnostics only. glTF metres are converted to displayed millimetres; STL is interpreted as millimetres. Static triangle meshes and assembly placements are supported.
+2. Under **Simulation properties**, assign each component a material, optional initial temperature in °C, and optional prescribed current in A. **Show CAD** only affects display. **Include in domain** controls voxelization. Named materials initially have unset conductivity, permeability and density; enter values in **Material library** rather than relying on an implicit database.
+3. Under **Simulation domain**, expand **Bounds and cell spacing**, set the physical box and uniform cell size, then click **Build / rebuild domain**. Bounds round outward to whole cells; the inspector reports the actual built bounds. Changes to domain/material settings leave the last built grid visible with an explicit stale-grid notice until rebuilt.
+4. Select **Voxel domain** to see cell colours/boundaries on the plane with exact mesh contours for comparison. **Colour by material ID** switches from component colours to material IDs. Hover the right-hand section to inspect IDs. **CAD** retains the hatched/outline section view. Darker areas outside the domain are distinct from air inside it.
+5. Drag the plane arrows to translate along world X/Y/Z, or the rings to rotate about those axes at the pivot. Drag the background or right-drag to orbit; scroll to zoom. Numeric transforms, reset and cut-side flip are available. Moving the plane samples the resident volume; it does not rebuild the domain.
+6. Set a filename ending in `.mhd.json` and use **Save project** / **Open project**. The project stores domain settings, material library and assignments, inclusion/visibility, temperatures, currents and plane pose. Geometry is referenced, not embedded; keep the source mesh and its external glTF buffers available. Paths within the project directory are saved relatively. Component name/count checks catch incompatible re-exports.
 
-The included original hotend fixture has a 6 mm OD / 3 mm ID chamber with a tapered nozzle, a separate metal volume, a coil envelope and two offset magnet bodies. It is illustrative geometry, not a proposed validated design. The glTF contains positions in metres; the workbench displays millimetres.
+The included original `assets/hotend.gltf`/`.glb` fixture has a 6 mm OD / 3 mm ID chamber with a tapered nozzle, a separate metal volume, a coil envelope and two offset magnet components. It is illustrative geometry, not a validated design. The coil envelope currently has no electrical winding model.
 
-STL has no declared units: this preview interprets it as millimetres and displays the dimensions for checking. glTF scene hierarchy and transforms are applied. Only static triangle meshes are accepted; no skinning or morph targets.
+## Domain construction
 
-STEP/STP currently loads **metadata and an import report only** through pure-Rust `step-io`; B-rep tessellation is still outstanding. Export glTF/GLB or STL to view solids. STEP inspection never creates substitute geometry.
+1. For each included closed component, hardware rasterization projects all surface crossings onto XY cell-centre columns. A stencil parity operation at each Z cell-centre layer identifies the solid interior, including cavities. A fullscreen stencil-tested pass writes the layer occupancy framebuffer. This uses every crossing rather than nearest-depth rendering.
+2. Compute passes merge components into GPU-resident body masks and material IDs. ID **0** is air/void; **255** marks overlap. Overlapping components are reported even when they share a material. A separate GPU property table stores material scalars plus flags identifying unset values.
+3. The persistent grid uses two `u32` values per cell, plus the small property table: about **128 MiB at 256³**. Build scratch includes an occupancy texture array, stencil target, parameters and mesh uploads. Future physical fields will require additional memory. Allocation limits and estimated build memory are checked before building.
+4. Arbitrary slices perform constant-time grid lookups per sample. The UI reads back a small slice image for display; the full material domain stays on the GPU. It does not scan the mesh again when sampling a slice. Mesh/plane contours for CAD comparison are computed separately.
 
-## Verify without a window
+## Diagnostics and limits
+
+1. The inspector reports grid dimensions, cell size, actual bounds, persistent GPU memory, build time/serial, occupied/overlapping cells, and per-component occupied volumes.
+2. Warnings identify components with no occupied cell centres, large mesh/voxel volume discrepancies, small axis-aligned extents, clipped geometry, and surface patches without nearby occupied cells. These are resolution diagnostics, not a guarantee that every local thin feature survives. Compare CAD contours and refine the grid when needed.
+3. Occupancy is sampled at cell centres. Geometry below the cell spacing can disappear. Physical boundary fractions, face apertures, signed distances and adaptive refinement are not present; those will be needed for more accurate solver boundary treatment.
+4. Mesh closure/nonmanifold checks and nonfinite/degenerate-triangle rejection catch common import errors, but do not prove geometric validity or absence of self-intersections. Included open meshes are rejected. Ambiguous CAD section loops fall back to outlines with a warning.
+5. The current grid supports up to 31 components. Raster target layers, buffer sizes and memory are checked against the GPU limits. The UI's memory estimate covers grid working storage; uploaded mesh vertices add memory.
+6. Temperature and current values are saved but do not generate fields yet. A current value alone does not define a winding path/direction or waveform. Material properties are scalar inputs, not temperature-dependent property curves. No CUDA or C/C++ CAD kernel is used; wgpu/eframe supply platform graphics/window integration.
+
+## Verify
 
 ```sh
 cargo test -- --nocapture
-cargo run -- --inspect assets/hotend.gltf
-cargo run -- --inspect vendor/step-loupe/sample/nist-ctc05.step
-cargo run -- --gpu-check assets/hotend.gltf
+cargo fmt --check
+./run.sh --inspect assets/hotend.gltf
+./run.sh --inspect vendor/step-loupe/sample/nist-ctc05.step
+./run.sh --gpu-check assets/hotend.gltf
+./run.sh --gpu-check assets/hotend.gltf 0.1
 ```
 
-The final command writes `artifacts/section.ppm`. Tests require a working wgpu compute adapter; missing GPU support fails explicitly. GPU tests compare an imported annulus against its analytic cross-section at three resolutions and an oblique plane, check cavity preservation and area convergence, and reject an open surface. There is no duplicate CPU solver. Additional tests drive all six handles through egui pointer events, check plane/camera geometry, triangulate annular and oblique caps without filling holes, and read back GPU-rendered hatching and outline views.
+The last argument to `--gpu-check` optionally sets cell spacing in mm. It reports a real volume build and writes `artifacts/section.ppm`. GPU tests fail explicitly if no working adapter is available.
 
-## Scope and limits
-
-1. Geometry preparation is on the CPU; section classification uses wgpu compute; the egui viewport uses the wgpu renderer. The prototype creates a separate compute device and reads back a small label image on plane changes. A full solver should keep fields resident and share rendering resources.
-2. Section classification uses ray parity per visible body, up to 31 bodies. Pink pixels report overlapping bodies. It samples a plane directly; it does not yet allocate a complete 3D simulation grid.
-3. Positional edge welding and edge-incidence counts detect open and nonmanifold meshes, and nonfinite/degenerate triangles are rejected. These checks do not prove freedom from self-intersections or all geometric defects. Near-edge ray ambiguity remains a numerical limitation.
-4. The 3D view renders to a depth-buffered wgpu texture. Closed-body triangle/plane intersection loops are triangulated with hole-aware `earcutr`, then shaded with diagonal CAD hatching. Cap contours are depth-tested. An ambiguous/nonmanifold intersection falls back to outlines with a warning rather than filling an uncertain region. The caps follow imported mesh accuracy; they are not exact STEP B-rep sections. Rotations use a quaternion; arrows and rings use world axes. An axis viewed end-on can be difficult to grab; orbit the camera for a clearer angle.
-5. No physical materials, current waveform, magnetization, magnetic field, time stepping or droplet dynamics are implemented. Role assignments do not affect classification.
-6. No CUDA and no C/C++ CAD kernel. Platform graphics/window dependencies still come through wgpu/eframe.
+Tests cover analytic hollow-cylinder volume convergence, rotated solids, a 256³ build, overlap detection, visibility/inclusion independence, lost subcell components and patches, open-mesh rejection, slicing without rebuilds, material labels, project round-trips and startup, all six gizmo drags, hole-aware CAD caps, and GPU-rendered hatching/outline readback. There is no duplicate CPU physics solver.
 
 ## Source and next milestones
 
-`vendor/step-io` is the upstream pure-Rust STEP reader at commit `2d7bd2a9d55fe9a4c8b12e3a8f39bcafe2575300` (0.3.0); its MIT/Apache licences are retained. `vendor/step-loupe` is an upstream reference checkout (also MIT/Apache), used to inspect the example viewer and provide its NIST sample for import checks; it is not linked into the app.
+`vendor/step-io` is the upstream pure-Rust STEP reader at commit `2d7bd2a9d55fe9a4c8b12e3a8f39bcafe2575300` (0.3.0). `vendor/step-loupe` is an upstream reference checkout, not linked into the app. Their licences/notices are retained; see `THIRD_PARTY.md`.
 
-1. Validate the import/viewer workflow on the user's exported assembly; add saved scene roles/settings.
-2. Evaluate robust pure-Rust STEP face tessellation, preserving cavities, body identities, units and placements.
-3. Uniform-grid electromagnetic fields and force visualization with GPU analytic benchmarks.
-4. Capillary free-surface dynamics, then coupled metal jetting with convergence checks.
+1. Prescribed-current wire paths and validated magnetic-field visualization.
+2. Transient induction in metal and conductive chamber walls.
+3. Accurate fluid boundary treatment, capillary dynamics, then coupled jetting.
+4. Robust pure-Rust STEP face tessellation.
 
-Regenerate the original test meshes with `python scripts/make_fixtures.py` (development fixture generation only; Python is not required to run the app).
+Regenerate the original mesh fixtures with `python scripts/make_fixtures.py`; Python is only used for development fixture generation.

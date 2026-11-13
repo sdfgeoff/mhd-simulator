@@ -19,7 +19,15 @@ struct Uniforms {
     normal: [f32; 4],
     settings: [f32; 4],
 }
+pub struct DomainView {
+    pub span: f32,
+    pub bounds: Option<(Vec3, Vec3)>,
+}
 pub struct Viewport {
+    slice_texture: wgpu::Texture,
+    slice_sampler: wgpu::Sampler,
+    slice_layout: wgpu::BindGroupLayout,
+    slice_size: u32,
     state: egui_wgpu::RenderState,
     triangle: wgpu::RenderPipeline,
     line: wgpu::RenderPipeline,
@@ -49,24 +57,59 @@ impl Viewport {
         });
         let layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: None,
-            entries: &[wgpu::BindGroupLayoutEntry {
-                binding: 0,
-                visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
-                ty: wgpu::BindingType::Buffer {
-                    ty: wgpu::BufferBindingType::Uniform,
-                    has_dynamic_offset: false,
-                    min_binding_size: None,
+            entries: &[
+                wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
                 },
-                count: None,
-            }],
+                wgpu::BindGroupLayoutEntry {
+                    binding: 1,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Texture {
+                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        view_dimension: wgpu::TextureViewDimension::D2,
+                        multisampled: false,
+                    },
+                    count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 2,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                    count: None,
+                },
+            ],
+        });
+        let slice_texture = make_slice(device, 1);
+        let slice_view = slice_texture.create_view(&Default::default());
+        let slice_sampler = device.create_sampler(&wgpu::SamplerDescriptor {
+            mag_filter: wgpu::FilterMode::Nearest,
+            min_filter: wgpu::FilterMode::Nearest,
+            ..Default::default()
         });
         let bind = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: None,
             layout: &layout,
-            entries: &[wgpu::BindGroupEntry {
-                binding: 0,
-                resource: uniform.as_entire_binding(),
-            }],
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: uniform.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: wgpu::BindingResource::TextureView(&slice_view),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 2,
+                    resource: wgpu::BindingResource::Sampler(&slice_sampler),
+                },
+            ],
         });
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: None,
@@ -79,6 +122,10 @@ impl Viewport {
         let triangle = make(false);
         let line = make(true);
         Self {
+            slice_texture,
+            slice_sampler,
+            slice_layout: layout,
+            slice_size: 1,
             state,
             triangle,
             line,
@@ -89,6 +136,51 @@ impl Viewport {
             texture: None,
         }
     }
+    pub fn set_section(&mut self, pixels: &[u8], n: u32) {
+        if pixels.len() != n as usize * n as usize * 4 {
+            return;
+        }
+        if self.slice_size != n {
+            self.slice_texture = make_slice(&self.state.device, n);
+            self.slice_size = n;
+            let view = self.slice_texture.create_view(&Default::default());
+            self.bind = self
+                .state
+                .device
+                .create_bind_group(&wgpu::BindGroupDescriptor {
+                    label: None,
+                    layout: &self.slice_layout,
+                    entries: &[
+                        wgpu::BindGroupEntry {
+                            binding: 0,
+                            resource: self.uniform.as_entire_binding(),
+                        },
+                        wgpu::BindGroupEntry {
+                            binding: 1,
+                            resource: wgpu::BindingResource::TextureView(&view),
+                        },
+                        wgpu::BindGroupEntry {
+                            binding: 2,
+                            resource: wgpu::BindingResource::Sampler(&self.slice_sampler),
+                        },
+                    ],
+                });
+        }
+        self.state.queue.write_texture(
+            self.slice_texture.as_image_copy(),
+            pixels,
+            wgpu::TexelCopyBufferLayout {
+                offset: 0,
+                bytes_per_row: Some(n * 4),
+                rows_per_image: None,
+            },
+            wgpu::Extent3d {
+                width: n,
+                height: n,
+                depth_or_array_layers: 1,
+            },
+        );
+    }
     pub fn draw(
         &mut self,
         camera: Camera,
@@ -98,6 +190,7 @@ impl Viewport {
         model: &Model,
         caps: &[Cap],
         pixels_per_point: f32,
+        domain: Option<DomainView>,
     ) -> egui::TextureId {
         let device = &self.state.device;
         let queue = &self.state.queue;
@@ -195,7 +288,7 @@ impl Viewport {
             }
             if cut {
                 if let Some(cap) = caps.get(i) {
-                    if hatched {
+                    if hatched && domain.is_none() {
                         let color = [
                             c[0] * 0.45 + 0.55,
                             c[1] * 0.45 + 0.55,
@@ -215,6 +308,43 @@ impl Viewport {
                     for segment in &cap.contours {
                         for &p in segment {
                             lines.push(vertex(p, [0.7, 0.85, 0.9, 1.], 2.));
+                        }
+                    }
+                }
+            }
+        }
+        if let Some(domain) = &domain {
+            if cut {
+                let o = plane.position;
+                let u = plane.u() * domain.span;
+                let v = plane.v() * domain.span;
+                let corners = [o - u + v, o + u + v, o + u - v, o - u - v];
+                let uv = [[0., 0.], [1., 0.], [1., 1.], [0., 1.]];
+                for i in [0, 2, 1, 0, 3, 2] {
+                    let mut vert = vertex(corners[i], [1.; 4], 3.);
+                    vert.uv = uv[i];
+                    vertices.push(vert);
+                }
+            }
+            if let Some((lo, hi)) = domain.bounds {
+                for axis in 0..3 {
+                    for a in [0, 1] {
+                        for b in [0, 1] {
+                            let mut p = lo;
+                            p[(axis + 1) % 3] = if a == 0 {
+                                lo[(axis + 1) % 3]
+                            } else {
+                                hi[(axis + 1) % 3]
+                            };
+                            p[(axis + 2) % 3] = if b == 0 {
+                                lo[(axis + 2) % 3]
+                            } else {
+                                hi[(axis + 2) % 3]
+                            };
+                            let mut q = p;
+                            q[axis] = hi[axis];
+                            lines.push(vertex(p, [0.12, 0.3, 0.36, 1.], 2.));
+                            lines.push(vertex(q, [0.12, 0.3, 0.36, 1.], 2.));
                         }
                     }
                 }
@@ -368,7 +498,7 @@ mod tests {
             scale: 30.,
             size: 8.,
         };
-        view.draw(camera, plane, true, true, &model, &caps, 1.);
+        view.draw(camera, plane, true, true, &model, &caps, 1., None);
         let hatched = read(&view);
         let bright = |data: &[u8], x: usize, y: usize| {
             data[(y * 256 + x) * 4..(y * 256 + x) * 4 + 3]
@@ -387,7 +517,7 @@ mod tests {
             "The cap must cover the annular section"
         );
         assert!(ring.iter().any(|&v| v < 160), "Hatch ink must be visible");
-        view.draw(camera, plane, true, false, &model, &caps, 1.);
+        view.draw(camera, plane, true, false, &model, &caps, 1., None);
         let outline = read(&view);
         assert!(
             (180..208).all(|x| bright(&outline, x, 128) < 100),
@@ -400,4 +530,21 @@ mod tests {
         }
         std::fs::write("artifacts/hatch-test.ppm", ppm).unwrap();
     }
+}
+
+fn make_slice(device: &wgpu::Device, n: u32) -> wgpu::Texture {
+    device.create_texture(&wgpu::TextureDescriptor {
+        label: Some("Voxel section overlay"),
+        size: wgpu::Extent3d {
+            width: n,
+            height: n,
+            depth_or_array_layers: 1,
+        },
+        mip_level_count: 1,
+        sample_count: 1,
+        dimension: wgpu::TextureDimension::D2,
+        format: wgpu::TextureFormat::Rgba8UnormSrgb,
+        usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+        view_formats: &[],
+    })
 }
