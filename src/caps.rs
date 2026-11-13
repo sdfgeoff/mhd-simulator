@@ -36,7 +36,7 @@ pub fn build(body: &Body, plane: SectionPlane, tolerance: f32) -> Cap {
     let mut points = Vec::<DVec2>::new();
     let mut keys = BTreeMap::new();
     let mut segments = BTreeSet::new();
-    for t in &body.triangles {
+    for t in body.triangles() {
         let t = t.map(|p| p.as_dvec3());
         let d = t.map(|p| (p - o).dot(n));
         if d.iter().all(|x| x.abs() <= eps) {

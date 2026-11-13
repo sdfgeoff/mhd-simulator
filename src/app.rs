@@ -2,11 +2,14 @@ use crate::{
     caps::{self, Cap},
     domain::{GpuDomain as Gpu, Volume},
     gizmo::{Camera, Gizmo},
+    gpu::GpuContext,
+    inputs::FieldState,
     model::Model,
     plane::SectionPlane,
-    project::{self, DomainSettings, Material},
+    project,
     render::Viewport,
     section::{Options as SectionOptions, SectionRenderer, Style},
+    simulation::{DomainSettings, Material, SimulationSnapshot},
 };
 use eframe::egui::{self, Color32, Pos2, Stroke, Vec2};
 use glam::{EulerRot, Quat, Vec3};
@@ -33,6 +36,8 @@ pub struct App {
     volume: Option<Volume>,
     materials: Vec<Material>,
     domain_pending: bool,
+    inputs_pending: bool,
+    fields: FieldState,
     voxel_overlay: bool,
     grid_lines: bool,
     material_view: bool,
@@ -64,7 +69,17 @@ impl App {
             Err(e) => (Model::default(), e),
         };
         let (lo, hi) = model.bounds();
-        let (gpu, gpu_error) = match state.as_ref().map(Gpu::from_state).unwrap_or_else(Gpu::new) {
+        let (gpu, gpu_error) = match state
+            .as_ref()
+            .map(|s| {
+                Gpu::from_context(GpuContext::new(
+                    s.device.clone(),
+                    s.queue.clone(),
+                    s.adapter.get_info().name,
+                ))
+            })
+            .unwrap_or_else(Gpu::new)
+        {
             Ok(g) => (Some(g), String::new()),
             Err(e) => (None, e),
         };
@@ -74,6 +89,8 @@ impl App {
             volume: None,
             materials: project::default_materials(),
             domain_pending: true,
+            inputs_pending: false,
+            fields: FieldState::default(),
             voxel_overlay: true,
             grid_lines: true,
             material_view: false,
@@ -108,6 +125,7 @@ impl App {
     }
     fn clear_derived(&mut self) {
         self.volume = None;
+        self.fields = FieldState::default();
         self.caps.clear();
         self.texture = None;
 
@@ -152,7 +170,32 @@ impl App {
         match gpu.build(&self.model, &self.settings, &self.materials) {
             Ok(volume) => {
                 self.volume = Some(volume);
+                self.inputs_pending = false;
+                self.fields = FieldState::default();
                 self.domain_pending = false;
+                self.dirty = true;
+                self.error.clear();
+            }
+            Err(e) => self.error = e,
+        }
+    }
+    fn sync_inputs(&mut self) {
+        if self.domain_pending {
+            self.fields.invalidate();
+            return;
+        }
+        if !self.inputs_pending {
+            return;
+        }
+        self.fields.invalidate();
+        let (Some(gpu), Some(volume)) = (&self.gpu, &mut self.volume) else {
+            return;
+        };
+        let result = SimulationSnapshot::from_model(&self.model, &volume.settings, &self.materials)
+            .and_then(|s| gpu.update_inputs(volume, s));
+        match result {
+            Ok(_) => {
+                self.inputs_pending = false;
                 self.dirty = true;
                 self.error.clear();
             }
@@ -489,6 +532,7 @@ impl eframe::App for App {
             .show(ctx, |ui| {
                 egui::ScrollArea::vertical().show(ui, |ui| self.controls(ui));
             });
+        self.sync_inputs();
         if let Some(path) = ctx.input(|i| i.raw.dropped_files.first().and_then(|f| f.path.clone()))
         {
             self.path = path.display().to_string();
@@ -736,24 +780,61 @@ impl App {
         ui.heading("Simulation properties");
         ui.small("Materials, initial temperatures and prescribed currents. Field and thermal solvers are not yet present.");
         for (i, b) in self.model.bodies.iter_mut().enumerate() {
-            egui::CollapsingHeader::new(&b.name).id_salt(("component",i)).show(ui,|ui|{
-            self.dirty|=ui.checkbox(&mut b.visible,"Show CAD").changed();self.domain_pending|=ui.checkbox(&mut b.simulation.included,"Include in domain").changed();
-            let name=self.materials.iter().find(|m|m.id==b.simulation.material_id).map(|m|m.name.as_str()).unwrap_or("Unknown material");
-            egui::ComboBox::from_id_salt(("material",i)).selected_text(format!("{} · {}",b.simulation.material_id,name)).show_ui(ui,|ui|{for material in self.materials.iter().filter(|m|m.id!=0){self.domain_pending|=ui.selectable_value(&mut b.simulation.material_id,material.id,format!("{} · {}",material.id,material.name)).changed();}});
-            optional(ui,"Initial temperature",&mut b.simulation.temperature_c,20.,1.," °C");optional(ui,"Prescribed current",&mut b.simulation.current_a,0.,1.," A");
-            ui.small("Temperature and current are saved configuration values; no excitation or thermal calculation yet.");
-        });
+            egui::CollapsingHeader::new(&b.name)
+                .id_salt(("component", i))
+                .show(ui, |ui| {
+                    self.dirty |= ui.checkbox(&mut b.visible, "Show CAD").changed();
+                    self.domain_pending |= ui
+                        .checkbox(&mut b.simulation.included, "Include in domain")
+                        .changed();
+                    let name = self
+                        .materials
+                        .iter()
+                        .find(|m| m.id == b.simulation.material_id)
+                        .map(|m| m.name.as_str())
+                        .unwrap_or("Unknown material");
+                    egui::ComboBox::from_id_salt(("material", i))
+                        .selected_text(format!("{} · {}", b.simulation.material_id, name))
+                        .show_ui(ui, |ui| {
+                            for material in self.materials.iter().filter(|m| m.id != 0) {
+                                self.inputs_pending |= ui
+                                    .selectable_value(
+                                        &mut b.simulation.material_id,
+                                        material.id,
+                                        format!("{} · {}", material.id, material.name),
+                                    )
+                                    .changed();
+                            }
+                        });
+                    self.inputs_pending |= optional(
+                        ui,
+                        "Initial temperature",
+                        &mut b.simulation.temperature_c,
+                        20.,
+                        1.,
+                        " °C",
+                    );
+                    self.inputs_pending |= optional(
+                        ui,
+                        "Prescribed current",
+                        &mut b.simulation.current_a,
+                        0.,
+                        1.,
+                        " A",
+                    );
+                    ui.small("Inputs update GPU tables; no physical fields have been calculated.");
+                });
         }
         egui::CollapsingHeader::new("Material library").show(ui, |ui| {
             for m in &mut self.materials {
                 ui.push_id(m.id, |ui| {
                     ui.horizontal(|ui| {
                         ui.label(format!("ID {}", m.id));
-                        self.domain_pending |= ui.text_edit_singleline(&mut m.name).changed();
+                        self.inputs_pending |= ui.text_edit_singleline(&mut m.name).changed();
                     });
-                    self.domain_pending |=
+                    self.inputs_pending |=
                         optional(ui, "Conductivity", &mut m.conductivity_s_m, 0., 1e5, " S/m");
-                    self.domain_pending |= optional(
+                    self.inputs_pending |= optional(
                         ui,
                         "Relative permeability",
                         &mut m.relative_permeability,
@@ -761,7 +842,7 @@ impl App {
                         0.1,
                         "",
                     );
-                    self.domain_pending |=
+                    self.inputs_pending |=
                         optional(ui, "Density", &mut m.density_kg_m3, 1., 10., " kg/m³");
                     if !m.notes.is_empty() {
                         ui.small(&m.notes);
@@ -784,7 +865,7 @@ impl App {
                         notes: String::new(),
                         reference: None,
                     });
-                    self.domain_pending = true;
+                    self.inputs_pending = true;
                 }
             }
         });
@@ -794,6 +875,49 @@ impl App {
 #[cfg(test)]
 mod project_ui_tests {
     use super::*;
+    #[test]
+    fn property_and_source_ui_updates_invalidate_fields_without_rebuilding() {
+        let _lock = crate::gpu_test_lock();
+        let mut app = App::new("assets/annulus.gltf".into(), None);
+        assert!(app.error.is_empty(), "{}", app.error);
+        let serial = app.volume.as_ref().unwrap().build_serial;
+        let original = app.volume.as_ref().unwrap().inputs.versions();
+        app.fields.computed_from = Some(original);
+        app.materials[1].conductivity_s_m = Some(1e6);
+        app.inputs_pending = true;
+        app.sync_inputs();
+        assert!(!app.domain_pending && !app.inputs_pending);
+        assert!(app.fields.computed_from.is_none());
+        let after_material = app.volume.as_ref().unwrap().inputs.versions();
+        assert_ne!(after_material.materials, original.materials);
+        assert_eq!(after_material.excitation, original.excitation);
+        app.fields.computed_from = Some(after_material);
+        app.model.bodies[0].simulation.temperature_c = Some(250.);
+        app.model.bodies[0].simulation.current_a = Some(3.);
+        app.inputs_pending = true;
+        app.sync_inputs();
+        let after_source = app.volume.as_ref().unwrap().inputs.versions();
+        assert_eq!(after_source.materials, after_material.materials);
+        assert_ne!(after_source.excitation, after_material.excitation);
+        assert!(app.fields.computed_from.is_none());
+        assert_eq!(app.volume.as_ref().unwrap().build_serial, serial);
+        app.fields.computed_from = Some(after_source);
+        app.materials[1].conductivity_s_m = Some(-1.);
+        app.inputs_pending = true;
+        app.sync_inputs();
+        assert!(app.inputs_pending);
+        assert!(!app.error.is_empty());
+        assert_eq!(app.volume.as_ref().unwrap().inputs.versions(), after_source);
+        assert!(app.fields.computed_from.is_none());
+        app.materials[1].conductivity_s_m = Some(1e6);
+        app.sync_inputs();
+        assert!(app.error.is_empty());
+        app.model.bodies[0].simulation.included = false;
+        app.domain_pending = true;
+        app.sync_inputs();
+        assert!(app.domain_pending);
+        assert_eq!(app.volume.as_ref().unwrap().build_serial, serial);
+    }
     #[test]
     fn project_startup_and_geometry_replacement_clear_cached_sections() {
         let _gpu_lock = crate::gpu_test_lock();

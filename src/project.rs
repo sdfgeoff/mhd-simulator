@@ -1,173 +1,11 @@
+pub use crate::simulation::{
+    DomainSettings, Material, SimulationProperties, default_materials, validate_bodies,
+};
+use crate::simulation::{ensure_presets, validate_materials};
 use crate::{model::Model, plane::SectionPlane};
 use glam::{Quat, Vec3};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-pub struct SimulationProperties {
-    pub included: bool,
-    pub material_id: u32,
-    pub temperature_c: Option<f32>,
-    pub current_a: Option<f32>,
-}
-impl Default for SimulationProperties {
-    fn default() -> Self {
-        Self {
-            included: true,
-            material_id: 1,
-            temperature_c: None,
-            current_a: None,
-        }
-    }
-}
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-pub struct Material {
-    pub id: u32,
-    pub name: String,
-    pub conductivity_s_m: Option<f32>,
-    pub relative_permeability: Option<f32>,
-    pub density_kg_m3: Option<f32>,
-    #[serde(default)]
-    pub notes: String,
-    #[serde(default)]
-    pub reference: Option<String>,
-}
-pub fn default_materials() -> Vec<Material> {
-    let mut materials: Vec<_> = [
-        "Air / void",
-        "Unassigned",
-        "Copper",
-        "Sn60Pb40",
-        "Sn99.3Cu0.7",
-        "Permanent magnet",
-    ]
-    .iter()
-    .enumerate()
-    .map(|(i, n)| Material {
-        id: i as u32,
-        name: (*n).into(),
-        conductivity_s_m: None,
-        relative_permeability: None,
-        density_kg_m3: None,
-        notes: String::new(),
-        reference: None,
-    })
-    .collect();
-    materials.push(stainless316(6));
-    materials.push(alumina(7));
-    materials
-}
-fn stainless316(id: u32) -> Material {
-    Material{id,name:"316 stainless steel".into(),conductivity_s_m:Some(1.0/0.75e-6),relative_permeability:None,density_kg_m3:Some(8000.),notes:"Preset defaults use density and conductivity reference values at 20 °C. Permeability is unset; processing and temperature matter.".into(),reference:Some("https://www.thyssenkrupp-materials.co.uk/stainless-steel-316-14401.html".into())}
-}
-fn alumina(id: u32) -> Material {
-    Material{id,name:"Alumina".into(),conductivity_s_m:None,relative_permeability:None,density_kg_m3:None,notes:"Alumina (grade/purity unspecified). Enter supplier-specific properties before using physical solvers.".into(),reference:None}
-}
-fn ensure_presets(materials: &mut Vec<Material>) {
-    for mut preset in [stainless316(0), alumina(0)] {
-        if materials
-            .iter()
-            .any(|m| m.name.eq_ignore_ascii_case(&preset.name))
-        {
-            continue;
-        }
-        if let Some(id) = (1..255).find(|id| materials.iter().all(|m| m.id != *id)) {
-            preset.id = id;
-            materials.push(preset);
-        }
-    }
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-pub struct DomainSettings {
-    pub min_mm: [f32; 3],
-    pub max_mm: [f32; 3],
-    pub cell_mm: f32,
-}
-impl DomainSettings {
-    pub fn fit(model: &Model) -> Self {
-        let (lo, hi) = model.bounds();
-        let pad = (hi - lo).max_element().max(1.) * 0.1;
-        let min = lo - Vec3::splat(pad);
-        let max = hi + Vec3::splat(pad);
-        Self {
-            min_mm: min.to_array(),
-            max_mm: max.to_array(),
-            cell_mm: (max - min).max_element() / 128.,
-        }
-    }
-    pub fn dims(&self) -> Result<[u32; 3], String> {
-        if !self.cell_mm.is_finite() || self.cell_mm <= 0. {
-            return Err("Cell spacing must be finite and positive".into());
-        }
-        let mut d = [0; 3];
-        for (i, cell) in d.iter_mut().enumerate() {
-            let span = self.max_mm[i] as f64 - self.min_mm[i] as f64;
-            if !self.min_mm[i].is_finite() || !self.max_mm[i].is_finite() || span <= 0. {
-                return Err("Domain maximum must exceed minimum on every axis".into());
-            }
-            let n = (span / self.cell_mm as f64 - 1e-6).ceil();
-            if !(1.0..=2048.).contains(&n) {
-                return Err("Each domain dimension must be 1..2048 cells".into());
-            }
-            *cell = n as u32;
-        }
-        Ok(d)
-    }
-    pub fn actual_max(&self) -> Result<Vec3, String> {
-        let d = self.dims()?;
-        Ok(Vec3::from(self.min_mm)
-            + Vec3::new(d[0] as f32, d[1] as f32, d[2] as f32) * self.cell_mm)
-    }
-    pub fn cells(&self) -> Result<u64, String> {
-        Ok(self.dims()?.iter().map(|&n| n as u64).product())
-    }
-    pub fn estimated_bytes(&self, bodies: usize) -> Result<u64, String> {
-        let d = self.dims()?;
-        Ok(self.cells()? * 9
-            + d[0] as u64 * d[1] as u64 * 4
-            + d[2] as u64 * bodies as u64 * 256
-            + 4096)
-    }
-}
-pub fn validate_materials(materials: &[Material]) -> Result<(), String> {
-    let mut ids = std::collections::BTreeSet::new();
-    for m in materials {
-        if m.id > 254 || m.name.trim().is_empty() || !ids.insert(m.id) {
-            return Err("Material IDs must be unique in 0..254, with nonempty names".into());
-        }
-        for (name, v, allow_zero) in [
-            ("conductivity", m.conductivity_s_m, true),
-            ("permeability", m.relative_permeability, false),
-            ("density", m.density_kg_m3, false),
-        ] {
-            if v.is_some_and(|v| !v.is_finite() || v < 0. || (!allow_zero && v == 0.)) {
-                return Err(format!("Invalid {name} for material {}", m.name));
-            }
-        }
-    }
-    if !ids.contains(&0) {
-        return Err("Material 0 must identify air / void".into());
-    }
-    Ok(())
-}
-pub fn validate_bodies(model: &Model, materials: &[Material]) -> Result<(), String> {
-    validate_materials(materials)?;
-    for b in &model.bodies {
-        if !materials.iter().any(|m| m.id == b.simulation.material_id)
-            || b.simulation.material_id == 0
-        {
-            return Err(format!("{} needs a non-air material", b.name));
-        }
-        if b.simulation
-            .temperature_c
-            .is_some_and(|v| !v.is_finite() || v < -273.15)
-            || b.simulation.current_a.is_some_and(|v| !v.is_finite())
-        {
-            return Err(format!("Invalid temperature or current for {}", b.name));
-        }
-    }
-    Ok(())
-}
 #[derive(Serialize, Deserialize)]
 struct SavedBody {
     name: String,
@@ -231,7 +69,7 @@ pub fn save(
             .iter()
             .map(|b| SavedBody {
                 name: b.name.clone(),
-                triangles: b.triangles.len(),
+                triangles: b.triangles().len(),
                 visible: b.visible,
                 simulation: b.simulation.clone(),
             })
@@ -282,7 +120,7 @@ pub fn load(path: &Path) -> Result<Loaded, String> {
         return Err("Geometry changed: component count differs from the saved project".into());
     }
     for (b, s) in model.bodies.iter_mut().zip(f.bodies) {
-        if b.name != s.name || b.triangles.len() != s.triangles {
+        if b.name != s.name || b.triangles().len() != s.triangles {
             return Err(
                 "Geometry changed: component identities differ from the saved project".into(),
             );

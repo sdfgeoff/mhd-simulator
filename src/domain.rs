@@ -1,8 +1,11 @@
 //! Solid voxelization by hardware-rasterized crossing parity, then GPU volume fill.
 use crate::{
+    gpu::GpuContext,
+    inputs::{GpuInputs, InputChanges},
     model::Model,
     plane::SectionPlane,
-    project::{self, DomainSettings, Material},
+    simulation::SimulationSnapshot,
+    simulation::{DomainSettings, Material},
 };
 use bytemuck::{Pod, Zeroable};
 use glam::Vec3;
@@ -33,12 +36,6 @@ pub struct Pixel {
     pub _padding: f32,
     pub inside: u32,
 }
-#[repr(C)]
-#[derive(Clone, Copy, Pod, Zeroable)]
-struct Physical {
-    values: [f32; 4],
-    flags: [u32; 4],
-}
 pub struct Volume {
     pub settings: DomainSettings,
     pub dims: [u32; 3],
@@ -52,9 +49,15 @@ pub struct Volume {
     pub build_serial: u64,
     pub(crate) masks: wgpu::Buffer,
     pub(crate) materials: wgpu::Buffer,
-    _properties: wgpu::Buffer,
+    pub inputs: GpuInputs,
 }
 impl Volume {
+    pub fn body_masks(&self) -> &wgpu::Buffer {
+        &self.masks
+    }
+    pub fn material_ids(&self) -> &wgpu::Buffer {
+        &self.materials
+    }
     pub fn max(&self) -> Vec3 {
         Vec3::from(self.settings.min_mm)
             + Vec3::new(
@@ -65,8 +68,7 @@ impl Volume {
     }
 }
 pub struct GpuDomain {
-    device: wgpu::Device,
-    queue: wgpu::Queue,
+    pub context: GpuContext,
     raster_layout: wgpu::BindGroupLayout,
     build_layout: wgpu::BindGroupLayout,
     crossing: wgpu::RenderPipeline,
@@ -75,6 +77,7 @@ pub struct GpuDomain {
     finalize: wgpu::ComputePipeline,
     coverage: wgpu::ComputePipeline,
     slice: wgpu::ComputePipeline,
+    assign: wgpu::ComputePipeline,
     pub name: String,
     serial: std::cell::Cell<u64>,
 }
@@ -97,42 +100,11 @@ fn buffer_entry(
 }
 impl GpuDomain {
     pub fn new() -> Result<Self, String> {
-        pollster::block_on(async {
-            let instance = wgpu::Instance::default();
-            let adapter = instance
-                .request_adapter(&Default::default())
-                .await
-                .ok_or("No compatible GPU adapter")?;
-            let name = adapter.get_info().name;
-            let limits = adapter.limits();
-            let required = wgpu::Limits {
-                max_texture_array_layers: limits.max_texture_array_layers,
-                max_storage_buffer_binding_size: limits.max_storage_buffer_binding_size,
-                max_buffer_size: limits.max_buffer_size,
-                ..Default::default()
-            };
-            let (device, queue) = adapter
-                .request_device(
-                    &wgpu::DeviceDescriptor {
-                        label: Some("Rasterized simulation domain"),
-                        required_limits: required,
-                        ..Default::default()
-                    },
-                    None,
-                )
-                .await
-                .map_err(|e| e.to_string())?;
-            Self::from_device(device, queue, name)
-        })
+        Self::from_context(GpuContext::headless()?)
     }
-    pub fn from_state(state: &egui_wgpu::RenderState) -> Result<Self, String> {
-        Self::from_device(
-            state.device.clone(),
-            state.queue.clone(),
-            state.adapter.get_info().name,
-        )
-    }
-    fn from_device(device: wgpu::Device, queue: wgpu::Queue, name: String) -> Result<Self, String> {
+    pub fn from_context(context: GpuContext) -> Result<Self, String> {
+        let device = context.device.clone();
+        let name = context.name.clone();
         let raster_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: None,
             entries: &[buffer_entry(
@@ -305,9 +277,20 @@ impl GpuDomain {
             compilation_options: Default::default(),
             cache: None,
         });
+        let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("Refresh material assignments"),
+            source: wgpu::ShaderSource::Wgsl(include_str!("voxel-assign.wgsl").into()),
+        });
+        let assign = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+            label: Some("Reuse existing body masks"),
+            layout: None,
+            module: &shader,
+            entry_point: Some("main"),
+            compilation_options: Default::default(),
+            cache: None,
+        });
         Ok(Self {
-            device,
-            queue,
+            context,
             raster_layout,
             build_layout,
             crossing,
@@ -316,25 +299,29 @@ impl GpuDomain {
             finalize,
             coverage,
             slice,
+            assign,
             name,
             serial: std::cell::Cell::new(0),
         })
     }
     fn read(&self, buffer: &wgpu::Buffer, bytes: u64) -> Result<Vec<u8>, String> {
-        let output = self.device.create_buffer(&wgpu::BufferDescriptor {
+        let output = self.context.device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("Small diagnostic readback"),
             size: bytes,
             usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
             mapped_at_creation: false,
         });
-        let mut encoder = self.device.create_command_encoder(&Default::default());
+        let mut encoder = self
+            .context
+            .device
+            .create_command_encoder(&Default::default());
         encoder.copy_buffer_to_buffer(buffer, 0, &output, 0, bytes);
-        self.queue.submit(Some(encoder.finish()));
+        self.context.queue.submit(Some(encoder.finish()));
         let (tx, rx) = std::sync::mpsc::channel();
         output.slice(..).map_async(wgpu::MapMode::Read, move |r| {
             let _ = tx.send(r);
         });
-        self.device.poll(wgpu::Maintain::Wait);
+        self.context.device.poll(wgpu::Maintain::Wait);
         rx.recv()
             .map_err(|e| e.to_string())?
             .map_err(|e| e.to_string())?;
@@ -347,10 +334,10 @@ impl GpuDomain {
         materials: &[Material],
     ) -> Result<Volume, String> {
         let started = std::time::Instant::now();
-        project::validate_bodies(model, materials)?;
+        let snapshot = SimulationSnapshot::from_model(model, settings, materials)?;
         let dims = settings.dims()?;
         let cells = settings.cells()?;
-        let limits = self.device.limits();
+        let limits = self.context.device.limits();
         if model.bodies.is_empty() || model.bodies.len() > 31 {
             return Err("The domain needs 1..31 mesh components".into());
         }
@@ -371,11 +358,11 @@ impl GpuDomain {
             .bodies
             .iter()
             .filter(|b| b.simulation.included)
-            .map(|b| b.triangles.len() as u64)
+            .map(|b| b.triangles().len() as u64)
             .sum::<u64>();
         if (triangles * 16).max(16) > limits.max_storage_buffer_binding_size as u64
             || model.bodies.iter().any(|b| {
-                b.simulation.included && b.triangles.len() as u64 * 36 > limits.max_buffer_size
+                b.simulation.included && b.triangles().len() as u64 * 36 > limits.max_buffer_size
             })
         {
             return Err("Mesh upload exceeds this GPU's buffer limits; simplify the mesh".into());
@@ -384,7 +371,7 @@ impl GpuDomain {
             .bodies
             .iter()
             .filter(|b| b.simulation.included)
-            .map(|b| b.triangles.len() as u64 * 52)
+            .map(|b| b.triangles().len() as u64 * 52)
             .sum::<u64>();
         if settings.estimated_bytes(model.bodies.len())? + mesh_bytes > 2 * 1024 * 1024 * 1024 {
             return Err("Estimated build memory exceeds 2 GiB; increase cell spacing".into());
@@ -398,7 +385,7 @@ impl GpuDomain {
             }
         }
         let create = |label, size| {
-            self.device.create_buffer(&wgpu::BufferDescriptor {
+            self.context.device.create_buffer(&wgpu::BufferDescriptor {
                 label: Some(label),
                 size,
                 usage: wgpu::BufferUsages::STORAGE
@@ -415,46 +402,19 @@ impl GpuDomain {
             .iter()
             .map(|b| b.simulation.material_id)
             .collect();
-        let assignment = self
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Body-to-material map"),
-                contents: bytemuck::cast_slice(&assignments),
-                usage: wgpu::BufferUsages::STORAGE,
-            });
-        let mut property_values = vec![
-            Physical::zeroed();
-            materials.iter().map(|m| m.id).max().unwrap_or(0) as usize
-                + 1
-        ];
-        for m in materials {
-            property_values[m.id as usize] = Physical {
-                values: [
-                    m.conductivity_s_m.unwrap_or(0.),
-                    m.relative_permeability.unwrap_or(0.),
-                    m.density_kg_m3.unwrap_or(0.),
-                    0.,
-                ],
-                flags: [
-                    u32::from(m.conductivity_s_m.is_some()),
-                    u32::from(m.relative_permeability.is_some()),
-                    u32::from(m.density_kg_m3.is_some()),
-                    0,
-                ],
-            };
-        }
-        let properties = self
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Material physical-property table"),
-                contents: bytemuck::cast_slice(&property_values),
-                usage: wgpu::BufferUsages::STORAGE,
-            });
+        let assignment =
+            self.context
+                .device
+                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("Body-to-material map"),
+                    contents: bytemuck::cast_slice(&assignments),
+                    usage: wgpu::BufferUsages::STORAGE,
+                });
         let probe_count: usize = model
             .bodies
             .iter()
             .filter(|b| b.simulation.included)
-            .map(|b| b.triangles.len())
+            .map(|b| b.triangles().len())
             .sum();
         let mut probe_values: Vec<[f32; 4]> = Vec::with_capacity(probe_count.max(1));
         for (i, b) in model
@@ -463,7 +423,7 @@ impl GpuDomain {
             .enumerate()
             .filter(|(_, b)| b.simulation.included)
         {
-            for t in &b.triangles {
+            for t in b.triangles() {
                 probe_values.push(((t[0] + t[1] + t[2]) / 3.).extend(i as f32).to_array());
             }
         }
@@ -471,6 +431,7 @@ impl GpuDomain {
             probe_values.push([0.; 4]);
         }
         let probes = self
+            .context
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Surface coverage probes"),
@@ -495,6 +456,7 @@ impl GpuDomain {
             }
         }
         let uniform = self
+            .context
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Raster slice parameters"),
@@ -508,28 +470,35 @@ impl GpuDomain {
                 size: NonZeroU64::new(48),
             })
         };
-        let raster_bind = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: None,
-            layout: &self.raster_layout,
-            entries: &[wgpu::BindGroupEntry {
-                binding: 0,
-                resource: ub(),
-            }],
-        });
-        let occupancy = self.device.create_texture(&wgpu::TextureDescriptor {
-            label: Some("Rasterized per-body slice occupancy"),
-            size: wgpu::Extent3d {
-                width: dims[0],
-                height: dims[1],
-                depth_or_array_layers: dims[2],
-            },
-            mip_level_count: 1,
-            sample_count: 1,
-            dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::R8Unorm,
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
-            view_formats: &[],
-        });
+        let raster_bind = self
+            .context
+            .device
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                label: None,
+                layout: &self.raster_layout,
+                entries: &[wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: ub(),
+                }],
+            });
+        let occupancy = self
+            .context
+            .device
+            .create_texture(&wgpu::TextureDescriptor {
+                label: Some("Rasterized per-body slice occupancy"),
+                size: wgpu::Extent3d {
+                    width: dims[0],
+                    height: dims[1],
+                    depth_or_array_layers: dims[2],
+                },
+                mip_level_count: 1,
+                sample_count: 1,
+                dimension: wgpu::TextureDimension::D2,
+                format: wgpu::TextureFormat::R8Unorm,
+                usage: wgpu::TextureUsages::RENDER_ATTACHMENT
+                    | wgpu::TextureUsages::TEXTURE_BINDING,
+                view_formats: &[],
+            });
         let whole = occupancy.create_view(&wgpu::TextureViewDescriptor {
             dimension: Some(wgpu::TextureViewDimension::D2Array),
             ..Default::default()
@@ -544,56 +513,65 @@ impl GpuDomain {
                 })
             })
             .collect();
-        let stencil = self.device.create_texture(&wgpu::TextureDescriptor {
-            label: Some("Crossing parity stencil"),
-            size: wgpu::Extent3d {
-                width: dims[0],
-                height: dims[1],
-                depth_or_array_layers: 1,
-            },
-            mip_level_count: 1,
-            sample_count: 1,
-            dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Depth24PlusStencil8,
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            view_formats: &[],
-        });
+        let stencil = self
+            .context
+            .device
+            .create_texture(&wgpu::TextureDescriptor {
+                label: Some("Crossing parity stencil"),
+                size: wgpu::Extent3d {
+                    width: dims[0],
+                    height: dims[1],
+                    depth_or_array_layers: 1,
+                },
+                mip_level_count: 1,
+                sample_count: 1,
+                dimension: wgpu::TextureDimension::D2,
+                format: wgpu::TextureFormat::Depth24PlusStencil8,
+                usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+                view_formats: &[],
+            });
         let stencil_view = stencil.create_view(&Default::default());
-        let bind = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: None,
-            layout: &self.build_layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: ub(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: wgpu::BindingResource::TextureView(&whole),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 2,
-                    resource: masks.as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 3,
-                    resource: material_grid.as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 4,
-                    resource: assignment.as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 5,
-                    resource: stats.as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 6,
-                    resource: probes.as_entire_binding(),
-                },
-            ],
-        });
-        let mut encoder = self.device.create_command_encoder(&Default::default());
+        let bind = self
+            .context
+            .device
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                label: None,
+                layout: &self.build_layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: ub(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: wgpu::BindingResource::TextureView(&whole),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 2,
+                        resource: masks.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 3,
+                        resource: material_grid.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 4,
+                        resource: assignment.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 5,
+                        resource: stats.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 6,
+                        resource: probes.as_entire_binding(),
+                    },
+                ],
+            });
+        let mut encoder = self
+            .context
+            .device
+            .create_command_encoder(&Default::default());
         encoder.clear_buffer(&masks, 0, None);
         encoder.clear_buffer(&stats, 0, None);
         for (body, b) in model
@@ -602,9 +580,14 @@ impl GpuDomain {
             .enumerate()
             .filter(|(_, b)| b.simulation.included)
         {
-            let vertices: Vec<[f32; 3]> =
-                b.triangles.iter().flatten().map(|p| p.to_array()).collect();
+            let vertices: Vec<[f32; 3]> = b
+                .triangles()
+                .iter()
+                .flatten()
+                .map(|p| p.to_array())
+                .collect();
             let vb = self
+                .context
                 .device
                 .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                     label: Some("Voxelization triangles"),
@@ -668,7 +651,7 @@ impl GpuDomain {
             pass.set_bind_group(0, &bind, &[0]);
             pass.dispatch_workgroups(groups.min(1024), groups.div_ceil(1024), 1);
         }
-        self.queue.submit(Some(encoder.finish()));
+        self.context.queue.submit(Some(encoder.finish()));
         let data = self.read(&stats, 64 * 4)?;
         let totals: &[u32] = bytemuck::cast_slice(&data);
         let counts = totals[..model.bodies.len()].to_vec();
@@ -704,7 +687,7 @@ impl GpuDomain {
             }
             let mut lo = Vec3::splat(f32::INFINITY);
             let mut hi = Vec3::splat(f32::NEG_INFINITY);
-            for &p in b.triangles.iter().flatten() {
+            for &p in b.triangles().iter().flatten() {
                 lo = lo.min(p);
                 hi = hi.max(p);
             }
@@ -715,7 +698,10 @@ impl GpuDomain {
                 warnings.push(format!("{} extends outside the domain.", b.name));
             }
         }
-        self.serial.set(self.serial.get() + 1);
+        static NEXT_BUILD: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+        self.serial
+            .set(NEXT_BUILD.fetch_add(1, std::sync::atomic::Ordering::Relaxed));
+        let inputs = GpuInputs::new(&self.context, snapshot, self.serial.get())?;
         Ok(Volume {
             settings: settings.clone(),
             dims,
@@ -724,13 +710,94 @@ impl GpuDomain {
             occupied,
             build_ms: started.elapsed().as_secs_f64() * 1000.,
             warnings,
-            persistent_bytes: cells * 8 + property_values.len() as u64 * 32,
+            persistent_bytes: cells * 8 + inputs.bytes(),
             material_names: materials.iter().map(|m| (m.id, m.name.clone())).collect(),
             build_serial: self.serial.get(),
             masks,
             materials: material_grid,
-            _properties: properties,
+            inputs,
         })
+    }
+    /// Update physical inputs and material IDs without repeating rasterization.
+    pub fn update_inputs(
+        &self,
+        volume: &mut Volume,
+        snapshot: SimulationSnapshot,
+    ) -> Result<InputChanges, String> {
+        let change = volume.inputs.changes(&snapshot)?;
+        if change.assignments {
+            let assignments: Vec<u32> = snapshot.components.iter().map(|c| c.material_id).collect();
+            let uniform =
+                self.context
+                    .device
+                    .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                        label: None,
+                        contents: bytemuck::cast_slice(&[
+                            volume.dims[0],
+                            volume.dims[1],
+                            volume.dims[2],
+                            0,
+                        ]),
+                        usage: wgpu::BufferUsages::UNIFORM,
+                    });
+            let map = self
+                .context
+                .device
+                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("Updated body materials"),
+                    contents: bytemuck::cast_slice(&assignments),
+                    usage: wgpu::BufferUsages::STORAGE,
+                });
+            let bind = self
+                .context
+                .device
+                .create_bind_group(&wgpu::BindGroupDescriptor {
+                    label: None,
+                    layout: &self.assign.get_bind_group_layout(0),
+                    entries: &[
+                        wgpu::BindGroupEntry {
+                            binding: 0,
+                            resource: uniform.as_entire_binding(),
+                        },
+                        wgpu::BindGroupEntry {
+                            binding: 1,
+                            resource: volume.masks.as_entire_binding(),
+                        },
+                        wgpu::BindGroupEntry {
+                            binding: 2,
+                            resource: map.as_entire_binding(),
+                        },
+                        wgpu::BindGroupEntry {
+                            binding: 3,
+                            resource: volume.materials.as_entire_binding(),
+                        },
+                    ],
+                });
+            let mut encoder = self
+                .context
+                .device
+                .create_command_encoder(&Default::default());
+            {
+                let mut pass = encoder.begin_compute_pass(&Default::default());
+                pass.set_pipeline(&self.assign);
+                pass.set_bind_group(0, &bind, &[]);
+                pass.dispatch_workgroups(
+                    volume.dims[0].div_ceil(8),
+                    volume.dims[1].div_ceil(8),
+                    volume.dims[2].div_ceil(4),
+                );
+            }
+            self.context.queue.submit(Some(encoder.finish()));
+        }
+        volume.material_names = snapshot
+            .materials
+            .iter()
+            .map(|m| (m.id, m.name.clone()))
+            .collect();
+        volume.inputs.update(&self.context, snapshot, change);
+        volume.persistent_bytes =
+            volume.dims.iter().map(|&d| d as u64).product::<u64>() * 8 + volume.inputs.bytes();
+        Ok(change)
     }
     pub fn section(
         &self,
@@ -756,6 +823,7 @@ impl GpuDomain {
             options: [n, 0, 0, 0],
         };
         let uniform = self
+            .context
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Slice plane"),
@@ -763,42 +831,48 @@ impl GpuDomain {
                 usage: wgpu::BufferUsages::UNIFORM,
             });
         let bytes = n as u64 * n as u64 * 16;
-        let output = self.device.create_buffer(&wgpu::BufferDescriptor {
+        let output = self.context.device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("Volume slice"),
             size: bytes,
             usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
             mapped_at_creation: false,
         });
-        let bind = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: None,
-            layout: &self.slice.get_bind_group_layout(0),
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: uniform.as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: volume.masks.as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 2,
-                    resource: volume.materials.as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 3,
-                    resource: output.as_entire_binding(),
-                },
-            ],
-        });
-        let mut encoder = self.device.create_command_encoder(&Default::default());
+        let bind = self
+            .context
+            .device
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                label: None,
+                layout: &self.slice.get_bind_group_layout(0),
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: uniform.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: volume.masks.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 2,
+                        resource: volume.materials.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 3,
+                        resource: output.as_entire_binding(),
+                    },
+                ],
+            });
+        let mut encoder = self
+            .context
+            .device
+            .create_command_encoder(&Default::default());
         {
             let mut pass = encoder.begin_compute_pass(&Default::default());
             pass.set_pipeline(&self.slice);
             pass.set_bind_group(0, &bind, &[]);
             pass.dispatch_workgroups(n.div_ceil(8), n.div_ceil(8), 1);
         }
-        self.queue.submit(Some(encoder.finish()));
+        self.context.queue.submit(Some(encoder.finish()));
         Ok(bytemuck::cast_slice(&self.read(&output, bytes)?).to_vec())
     }
     #[cfg(test)]
@@ -816,6 +890,7 @@ impl GpuDomain {
 mod tests {
     use super::*;
     use crate::model::Body;
+    use crate::simulation;
     use glam::{Mat4, Quat};
     fn annulus() -> Model {
         Model::load(std::path::Path::new("assets/annulus.gltf")).unwrap()
@@ -826,7 +901,7 @@ mod tests {
         let gpu = GpuDomain::new().unwrap();
         let mut model = annulus();
         model.bodies[0].simulation.material_id = 3;
-        let materials = project::default_materials();
+        let materials = simulation::default_materials();
         let mut errors = Vec::new();
         for h in [0.5, 0.25, 0.125] {
             let settings = DomainSettings {
@@ -894,7 +969,7 @@ mod tests {
         );
         let inverse = transform.inverse();
         let triangles = model.bodies[0]
-            .triangles
+            .triangles()
             .iter()
             .map(|t| t.map(|p| transform.transform_point3(p)))
             .collect();
@@ -905,7 +980,7 @@ mod tests {
             cell_mm: 0.25,
         };
         let volume = gpu
-            .build(&model, &settings, &project::default_materials())
+            .build(&model, &settings, &simulation::default_materials())
             .unwrap();
         let masks = gpu.read_masks(&volume);
         for z in 0..48 {
@@ -942,7 +1017,7 @@ mod tests {
         model.bodies[0].visible = false;
         model.bodies.push(model.bodies[0].clone());
         let volume = gpu
-            .build(&model, &settings, &project::default_materials())
+            .build(&model, &settings, &simulation::default_materials())
             .unwrap();
         assert!(volume.occupied > 0);
         assert_eq!(volume.overlaps, volume.occupied);
@@ -950,29 +1025,29 @@ mod tests {
         assert!(volume.warnings.iter().any(|w| w.contains("overlapping")));
         model.bodies[1].simulation.included = false;
         let single = gpu
-            .build(&model, &settings, &project::default_materials())
+            .build(&model, &settings, &simulation::default_materials())
             .unwrap();
         assert_eq!(single.occupied, volume.occupied);
         assert_eq!(single.overlaps, 0);
         assert_eq!(single.counts[1], 0);
         let mut tiny = Model::load(std::path::Path::new("assets/hotend.glb")).unwrap();
         let triangles = tiny.bodies[3]
-            .triangles
+            .triangles()
             .iter()
             .map(|t| t.map(|p| (p - Vec3::new(6., 0., 5.)) * 0.005))
             .collect();
         tiny.bodies = vec![Body::new("Subcell component".into(), triangles).unwrap()];
         let v = gpu
-            .build(&tiny, &settings, &project::default_materials())
+            .build(&tiny, &settings, &simulation::default_materials())
             .unwrap();
         assert_eq!(v.occupied, 0);
         assert!(v.warnings.iter().any(|w| w.contains("disappears")));
         let mut compound = annulus();
-        compound.bodies[0]
-            .triangles
-            .extend(tiny.bodies[0].triangles.clone());
+        let mut combined = compound.bodies[0].triangles().to_vec();
+        combined.extend_from_slice(tiny.bodies[0].triangles());
+        compound.bodies[0] = Body::new("Compound".into(), combined).unwrap();
         let v = gpu
-            .build(&compound, &settings, &project::default_materials())
+            .build(&compound, &settings, &simulation::default_materials())
             .unwrap();
         assert!(v.occupied > 0);
         assert!(
@@ -989,7 +1064,7 @@ mod tests {
             gpu.build(
                 &model,
                 &DomainSettings::fit(&model),
-                &project::default_materials()
+                &simulation::default_materials()
             )
             .err()
             .unwrap()
@@ -1001,6 +1076,7 @@ mod tests {
 #[cfg(test)]
 mod larger_grid_test {
     use super::*;
+    use crate::simulation;
     #[test]
     fn persistent_256_cubed_grid() {
         let _gpu_lock = crate::gpu_test_lock();
@@ -1012,7 +1088,7 @@ mod larger_grid_test {
             cell_mm: 10. / 256.,
         };
         let v = gpu
-            .build(&model, &settings, &project::default_materials())
+            .build(&model, &settings, &simulation::default_materials())
             .unwrap();
         assert_eq!(v.dims, [256; 3]);
         assert!(v.persistent_bytes >= 128 * 1024 * 1024);
@@ -1025,5 +1101,140 @@ mod larger_grid_test {
             v.persistent_bytes as f64 / 1048576.,
             measured
         );
+    }
+}
+
+#[cfg(test)]
+mod input_update_tests {
+    use super::*;
+    use crate::{
+        inputs::{FieldState, TableEntry},
+        simulation::{self, MaterialProperty},
+    };
+    #[test]
+    fn tables_and_assignments_update_without_revoxelization_and_reject_stale_geometry() {
+        let _lock = crate::gpu_test_lock();
+        let gpu = GpuDomain::new().unwrap();
+        let mut model = Model::load(std::path::Path::new("assets/annulus.gltf")).unwrap();
+        let settings = DomainSettings {
+            min_mm: [-4., -4., -5.],
+            max_mm: [4., 4., 5.],
+            cell_mm: 0.5,
+        };
+        let mut materials = simulation::default_materials();
+        let mut volume = gpu.build(&model, &settings, &materials).unwrap();
+        let masks = gpu.read_masks(&volume);
+        let serial = volume.build_serial;
+        let occupied = volume.occupied;
+        assert!(
+            volume
+                .inputs
+                .solver_tables(&[MaterialProperty::Conductivity], false)
+                .is_err()
+        );
+        let mut fields = FieldState {
+            computed_from: Some(volume.inputs.versions()),
+            ..Default::default()
+        };
+        assert!(fields.is_current(&volume.inputs));
+        let initial = volume.inputs.versions();
+        materials[1].conductivity_s_m = Some(0.);
+        let change = gpu
+            .update_inputs(
+                &mut volume,
+                SimulationSnapshot::from_model(&model, &settings, &materials).unwrap(),
+            )
+            .unwrap();
+        assert!(change.materials && !change.assignments && !change.excitation);
+        assert_eq!(volume.inputs.versions().excitation, initial.excitation);
+        assert!(!fields.is_current(&volume.inputs));
+        fields.invalidate();
+        assert!(fields.computed_from.is_none());
+        volume
+            .inputs
+            .solver_tables(&[MaterialProperty::Conductivity], false)
+            .unwrap();
+        let raw = gpu
+            .read(
+                &volume.inputs.material_table,
+                volume.inputs.material_table.size(),
+            )
+            .unwrap();
+        let table = bytemuck::cast_slice::<u8, TableEntry>(&raw);
+        assert_eq!(table[0].flags[0], 0);
+        assert_eq!(table[1].flags[0], 1);
+        assert_eq!(table[1].values[0], 0.);
+        let before_source = volume.inputs.versions();
+        model.bodies[0].simulation.current_a = Some(-12.);
+        model.bodies[0].simulation.temperature_c = Some(250.);
+        let change = gpu
+            .update_inputs(
+                &mut volume,
+                SimulationSnapshot::from_model(&model, &settings, &materials).unwrap(),
+            )
+            .unwrap();
+        assert!(change.excitation && !change.materials && !change.assignments);
+        assert_eq!(volume.inputs.versions().materials, before_source.materials);
+        let raw = gpu
+            .read(
+                &volume.inputs.component_table,
+                volume.inputs.component_table.size(),
+            )
+            .unwrap();
+        let entry = bytemuck::cast_slice::<u8, TableEntry>(&raw)[0];
+        assert!((entry.values[0] - 523.15).abs() < 1e-4);
+        assert_eq!(entry.values[1], -12.);
+        assert_eq!(entry.flags[..2], [1, 1]);
+        model.bodies[0].simulation.material_id = 6;
+        let change = gpu
+            .update_inputs(
+                &mut volume,
+                SimulationSnapshot::from_model(&model, &settings, &materials).unwrap(),
+            )
+            .unwrap();
+        assert!(change.assignments && change.materials && !change.excitation);
+        let pixels = gpu
+            .section(&volume, SectionPlane::new(Vec3::ZERO), 4., 64)
+            .unwrap();
+        assert!(pixels.iter().any(|p| p.body == 1 && p.material == 6));
+        assert!(pixels.iter().all(|p| p.body != 1 || p.material == 6));
+        assert_eq!(gpu.read_masks(&volume), masks);
+        assert_eq!(volume.build_serial, serial);
+        assert_eq!(volume.occupied, occupied);
+        let stable = volume.inputs.versions();
+        let snapshot = volume.inputs.snapshot().clone();
+        assert_eq!(
+            gpu.update_inputs(&mut volume, snapshot).unwrap(),
+            InputChanges::default()
+        );
+        assert_eq!(volume.inputs.versions(), stable);
+        model.bodies[0].simulation.included = false;
+        assert!(
+            gpu.update_inputs(
+                &mut volume,
+                SimulationSnapshot::from_model(&model, &settings, &materials).unwrap()
+            )
+            .is_err()
+        );
+        model.bodies[0].simulation.included = true;
+        let mut finer = settings.clone();
+        finer.cell_mm *= 0.5;
+        assert!(
+            gpu.update_inputs(
+                &mut volume,
+                SimulationSnapshot::from_model(&model, &finer, &materials).unwrap()
+            )
+            .is_err()
+        );
+        let replacement = Model::load(std::path::Path::new("assets/annulus.gltf")).unwrap();
+        assert!(
+            gpu.update_inputs(
+                &mut volume,
+                SimulationSnapshot::from_model(&replacement, &settings, &materials).unwrap()
+            )
+            .is_err()
+        );
+        assert_eq!(volume.inputs.versions(), stable);
+        assert_eq!(gpu.read_masks(&volume), masks);
     }
 }

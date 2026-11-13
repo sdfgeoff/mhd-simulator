@@ -29,7 +29,14 @@ pub struct DomainView<'a> {
     pub volume: Option<&'a crate::domain::Volume>,
     pub material_colors: bool,
 }
+struct CachedBody {
+    key: (u64, u32),
+    buffer: wgpu::Buffer,
+    count: u32,
+}
 pub struct Viewport {
+    meshes: Vec<CachedBody>,
+    mesh_uploads: u64,
     volume_layout: wgpu::BindGroupLayout,
     empty: wgpu::Buffer,
     state: egui_wgpu::RenderState,
@@ -137,6 +144,8 @@ impl Viewport {
         let triangle = make(false);
         let line = make(true);
         Self {
+            meshes: Vec::new(),
+            mesh_uploads: 0,
             volume_layout: layout,
             empty,
             state,
@@ -147,6 +156,57 @@ impl Viewport {
             target: None,
             size: [0, 0],
             texture: None,
+        }
+    }
+    fn cache_meshes(&mut self, model: &Model) {
+        if self.meshes.len() == model.bodies.len()
+            && self
+                .meshes
+                .iter()
+                .zip(&model.bodies)
+                .all(|(m, b)| m.key == (b.geometry_id(), b.winding.to_bits()))
+        {
+            return;
+        }
+        self.meshes.clear();
+        for (i, body) in model.bodies.iter().enumerate() {
+            let c = COLORS[i % COLORS.len()].map(|v| v as f32 / 255.);
+            let mut vertices = Vec::with_capacity(body.triangles().len() * 3);
+            for triangle in body.triangles() {
+                let mut t = *triangle;
+                if body.winding < 0. {
+                    t.swap(1, 2);
+                }
+                let shade = 0.4
+                    + 0.6
+                        * (t[1] - t[0])
+                            .cross(t[2] - t[0])
+                            .normalize()
+                            .dot(Vec3::new(0.3, -0.6, 0.74))
+                            .abs();
+                for p in t {
+                    vertices.push(Vertex {
+                        position: p.to_array(),
+                        color: [c[0] * shade, c[1] * shade, c[2] * shade, 1.],
+                        uv: [0.; 2],
+                        mode: 0.,
+                    });
+                }
+            }
+            let buffer = self
+                .state
+                .device
+                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("Cached immutable CAD mesh"),
+                    contents: bytemuck::cast_slice(&vertices),
+                    usage: wgpu::BufferUsages::VERTEX,
+                });
+            self.meshes.push(CachedBody {
+                key: (body.geometry_id(), body.winding.to_bits()),
+                buffer,
+                count: vertices.len() as u32,
+            });
+            self.mesh_uploads += 1;
         }
     }
     #[cfg(test)]
@@ -232,6 +292,9 @@ impl Viewport {
         domain: Option<DomainView>,
         panel: bool,
     ) -> egui::TextureId {
+        if !panel {
+            self.cache_meshes(model);
+        }
         let device = &self.state.device;
         let queue = &self.state.queue;
         let size = [
@@ -356,14 +419,14 @@ impl Viewport {
                 wgpu::BindGroupEntry {
                     binding: 1,
                     resource: volume
-                        .map(|v| &v.masks)
+                        .map(|v| v.body_masks())
                         .unwrap_or(&self.empty)
                         .as_entire_binding(),
                 },
                 wgpu::BindGroupEntry {
                     binding: 2,
                     resource: volume
-                        .map(|v| &v.materials)
+                        .map(|v| v.material_ids())
                         .unwrap_or(&self.empty)
                         .as_entire_binding(),
                 },
@@ -380,28 +443,8 @@ impl Viewport {
                 mode,
             }
         };
-        for (i, body) in model.bodies.iter().enumerate().filter(|(_, b)| b.visible) {
+        for (i, _) in model.bodies.iter().enumerate().filter(|(_, b)| b.visible) {
             let c = COLORS[i % COLORS.len()].map(|v| v as f32 / 255.);
-            for t in body.triangles.iter().filter(|_| !panel) {
-                let mut t = *t;
-                if body.winding < 0. {
-                    t.swap(1, 2);
-                }
-                let shade = 0.4
-                    + 0.6
-                        * (t[1] - t[0])
-                            .cross(t[2] - t[0])
-                            .normalize()
-                            .dot(Vec3::new(0.3, -0.6, 0.74))
-                            .abs();
-                for p in t {
-                    vertices.push(vertex(
-                        p,
-                        [c[0] * shade, c[1] * shade, c[2] * shade, 1.],
-                        0.,
-                    ));
-                }
-            }
             if cut {
                 if let Some(cap) = caps.get(i) {
                     if hatched && domain.is_none() {
@@ -532,6 +575,15 @@ impl Viewport {
             pass.set_pipeline(&self.line);
             pass.set_vertex_buffer(0, lb.slice(..));
             pass.draw(contour_count..lines.len() as u32, 0..1);
+            if !panel {
+                pass.set_pipeline(&self.triangle);
+                for (body, mesh) in model.bodies.iter().zip(&self.meshes) {
+                    if body.visible {
+                        pass.set_vertex_buffer(0, mesh.buffer.slice(..));
+                        pass.draw(0..mesh.count, 0..1);
+                    }
+                }
+            }
             if let Some(vb) = &vb {
                 pass.set_pipeline(&self.triangle);
                 pass.set_vertex_buffer(0, vb.slice(..));
@@ -603,10 +655,44 @@ mod tests {
         buffer.slice(..).get_mapped_range().to_vec()
     }
     #[test]
+    fn cad_mesh_uploads_are_reused_until_geometry_is_replaced() {
+        let _lock = crate::gpu_test_lock();
+        let mut view = viewport();
+        let mut model = Model::load(std::path::Path::new("assets/annulus.gltf")).unwrap();
+        let mut plane = SectionPlane::new(Vec3::ZERO);
+        let mut camera = Camera {
+            rect: egui::Rect::from_min_size(egui::Pos2::ZERO, egui::Vec2::splat(256.)),
+            center: Vec3::ZERO,
+            rotation: glam::Quat::IDENTITY,
+            scale: 20.,
+            size: 8.,
+        };
+        view.draw(camera, plane, true, false, &model, &[], 1., None);
+        let uploaded = view.mesh_uploads;
+        assert_eq!(uploaded, 1);
+        camera.rotation = glam::Quat::from_rotation_z(0.3);
+        plane.position.x = 0.1;
+        model.bodies[0].simulation.current_a = Some(10.);
+        view.draw(camera, plane, true, false, &model, &[], 1., None);
+        model.bodies[0].visible = false;
+        view.draw(camera, plane, true, false, &model, &[], 1., None);
+        model.bodies[0].visible = true;
+        view.draw(camera, plane, true, false, &model, &[], 1., None);
+        assert_eq!(view.mesh_uploads, uploaded);
+        let replacement = Model::load(std::path::Path::new("assets/annulus.gltf")).unwrap();
+        view.draw(camera, plane, true, false, &replacement, &[], 1., None);
+        assert_eq!(view.mesh_uploads, uploaded + 1);
+    }
+    #[test]
     fn direct_voxel_fragments_match_resident_grid_at_two_viewport_sizes() {
         let _gpu_lock = crate::gpu_test_lock();
         let mut view = viewport();
-        let gpu = crate::domain::GpuDomain::from_state(&view.state).unwrap();
+        let gpu = crate::domain::GpuDomain::from_context(crate::gpu::GpuContext::new(
+            view.state.device.clone(),
+            view.state.queue.clone(),
+            view.state.adapter.get_info().name,
+        ))
+        .unwrap();
         let mut scene = Viewport::new(view.state.clone());
         let mut model = Model::load(std::path::Path::new("assets/annulus.gltf")).unwrap();
         model.bodies[0].simulation.material_id = 3;

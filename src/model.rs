@@ -4,9 +4,11 @@ use std::{collections::HashMap, path::Path};
 #[derive(Clone)]
 pub struct Body {
     pub name: String,
-    pub triangles: Vec<[Vec3; 3]>, // millimetres
+    triangles: Vec<[Vec3; 3]>, // immutable millimetres; replace via Body::new
+    geometry_id: u64,
+    bounds: (Vec3, Vec3),
     pub visible: bool,
-    pub simulation: crate::project::SimulationProperties,
+    pub simulation: crate::simulation::SimulationProperties,
     pub boundary_edges: usize,
     pub nonmanifold_edges: usize,
     pub winding: f32,
@@ -46,7 +48,14 @@ impl Body {
             .iter()
             .map(|t| t[0].as_dvec3().dot(t[1].as_dvec3().cross(t[2].as_dvec3())) / 6.)
             .sum();
+        static NEXT_GEOMETRY: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+        let bounds = triangles.iter().flatten().fold(
+            (Vec3::splat(f32::INFINITY), Vec3::splat(f32::NEG_INFINITY)),
+            |(lo, hi), p| (lo.min(*p), hi.max(*p)),
+        );
         Ok(Self {
+            geometry_id: NEXT_GEOMETRY.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
+            bounds,
             winding: if signed_volume < 0. { -1. } else { 1. },
             name,
             triangles,
@@ -55,6 +64,12 @@ impl Body {
             boundary_edges: edges.values().filter(|&&n| n == 1).count(),
             nonmanifold_edges: edges.values().filter(|&&n| n > 2).count(),
         })
+    }
+    pub fn triangles(&self) -> &[[Vec3; 3]] {
+        &self.triangles
+    }
+    pub fn geometry_id(&self) -> u64 {
+        self.geometry_id
     }
     pub fn volume_mm3(&self) -> f64 {
         self.triangles
@@ -77,13 +92,9 @@ impl Model {
     pub fn bounds(&self) -> (Vec3, Vec3) {
         let mut lo = Vec3::splat(f32::INFINITY);
         let mut hi = Vec3::splat(f32::NEG_INFINITY);
-        for p in self
-            .bodies
-            .iter()
-            .flat_map(|b| b.triangles.iter().flatten())
-        {
-            lo = lo.min(*p);
-            hi = hi.max(*p);
+        for body in &self.bodies {
+            lo = lo.min(body.bounds.0);
+            hi = hi.max(body.bounds.1);
         }
         if !lo.is_finite() {
             (Vec3::splat(-5.), Vec3::splat(5.))
