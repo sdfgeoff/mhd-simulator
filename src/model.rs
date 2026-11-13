@@ -134,6 +134,12 @@ impl Model {
                     m: &mut Model,
                 ) -> Result<(), String> {
                     let world = parent * Mat4::from_cols_array_2d(&node.transform().matrix());
+                    if node.mesh().is_none()
+                        && node.children().next().is_none()
+                        && node.camera().is_none()
+                    {
+                        m.notices.push(format!("Empty exported object '{}': no mesh/centreline data. For edge-only Blender objects enable Loose Edges in glTF export.",node.name().unwrap_or("Unnamed")));
+                    }
                     if let Some(mesh) = node.mesh() {
                         for (pi, p) in mesh.primitives().enumerate() {
                             if p.morph_targets().next().is_some() || node.skin().is_some() {

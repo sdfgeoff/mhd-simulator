@@ -1,6 +1,6 @@
 use crate::{
     domain::Volume,
-    em::{self, CellField, EmConfig, EmFrame, EmState, Mode, Waveform},
+    em::{self, CellField, EmConfig, EmFrame, Mode, Waveform},
     flow::{VectorField, VectorLayout},
     gpu::GpuContext,
     model::Model,
@@ -10,26 +10,12 @@ use crate::{
 };
 use eframe::egui::{self, Color32, Pos2, Stroke, Vec2};
 use glam::Vec3;
-use std::sync::{
-    Arc,
-    atomic::{AtomicBool, Ordering},
-    mpsc,
-};
 struct Trace {
     time: f64,
     field: CellField,
 }
-enum Event {
-    Progress(u32, u32),
-    Frame(EmFrame),
-    Done(Result<EmState, String>),
-}
 pub struct EmUi {
     pub config: EmConfig,
-    pub state: Option<EmState>,
-    receiver: Option<mpsc::Receiver<Event>>,
-    cancel: Option<Arc<AtomicBool>>,
-    progress: String,
     pub show: bool,
     pub kind: u32,
     component: u32,
@@ -44,18 +30,11 @@ pub struct EmUi {
     pub timeline: crate::timeline::Timeline<EmFrame>,
     accept_frames: bool,
     pub error: String,
-
-    pub run_steps: u32,
-    preview_time_us: f64,
 }
 impl Default for EmUi {
     fn default() -> Self {
         Self {
             config: EmConfig::default(),
-            state: None,
-            receiver: None,
-            cancel: None,
-            progress: String::new(),
             show: true,
             kind: 1,
             component: 0,
@@ -70,156 +49,24 @@ impl Default for EmUi {
             timeline: Default::default(),
             accept_frames: false,
             error: String::new(),
-
-            run_steps: 10,
-            preview_time_us: 50.,
         }
     }
 }
 impl EmUi {
-    pub fn busy(&self) -> bool {
-        self.receiver.is_some()
-    }
     pub fn invalidate(&mut self) {
-        self.state = None;
         self.overlay.clear();
         self.timeline.clear();
         self.accept_frames = false;
         self.history.clear();
         self.history_key = None;
         self.hover_cache = None;
-        if let Some(c) = &self.cancel {
-            c.store(true, Ordering::Relaxed);
-        }
     }
-    pub fn poll(&mut self, ctx: &egui::Context, volume: Option<&Volume>) -> bool {
-        let mut changed = false;
-        let mut finished = false;
-        if let Some(rx) = &self.receiver {
-            loop {
-                let event = match rx.try_recv() {
-                    Ok(e) => e,
-                    Err(mpsc::TryRecvError::Empty) => break,
-                    Err(mpsc::TryRecvError::Disconnected) => {
-                        if !finished {
-                            self.error = "Electromagnetic worker ended unexpectedly.".into();
-                            changed = true;
-                        }
-                        finished = true;
-                        break;
-                    }
-                };
-                match event {
-                    Event::Progress(i, n) => self.progress = format!("Computing step {i}/{n}…"),
-                    Event::Frame(frame) => {
-                        if self.accept_frames {
-                            self.timeline.push(crate::timeline::Sample {
-                                time_s: frame.time_s,
-                                bytes: frame.bytes,
-                                output: frame,
-                            });
-                            changed = true;
-                        }
-                    }
-                    Event::Done(result) => {
-                        finished = true;
-                        changed = true;
-                        match result {
-                            Ok(state) => {
-                                if volume.is_some_and(|v| state.is_current(v))
-                                    && state.config() == &self.config
-                                    && self.accept_frames
-                                {
-                                    self.state = Some(state);
-                                    self.error.clear();
-                                } else {
-                                    self.error =
-                                        "Inputs changed during computation; initialize again."
-                                            .into();
-                                }
-                            }
-                            Err(e) => self.error = e,
-                        }
-                    }
-                }
-            }
-        }
-        if finished {
-            self.receiver = None;
-            self.cancel = None;
-            self.progress.clear();
-        }
-        if self.receiver.is_some() {
-            ctx.request_repaint_after(std::time::Duration::from_millis(100));
-        }
-        changed
-    }
-    pub(crate) fn start(
-        &mut self,
-        mode: Mode,
-        steps: u32,
-        model: &Model,
-        volume: &Volume,
-        context: &GpuContext,
-    ) {
-        self.show = true;
+    pub fn record(&mut self, frame: EmFrame) {
         self.accept_frames = true;
-        if steps == 0 {
-            self.timeline.clear();
-            self.history.clear();
-            self.history_key = None;
-            self.hover_cache = None;
-        }
-        if mode == Mode::Applied {
-            self.kind = 2;
-        }
-        let old = if steps > 0 { self.state.take() } else { None };
-        let config = self.config.clone();
-        let model = model.clone();
-        let volume = volume.clone();
-        let context = context.clone();
-        let preview_time = self.preview_time_us * 1e-6;
-        let cancel = Arc::new(AtomicBool::new(false));
-        self.cancel = Some(cancel.clone());
-        let (tx, rx) = mpsc::sync_channel(2);
-        self.receiver = Some(rx);
-        self.error.clear();
-        self.progress = "Preparing GPU electromagnetics…".into();
-        std::thread::spawn(move || {
-            let run = || -> Result<EmState, String> {
-                let mut state = match old {
-                    Some(s) if s.mode == mode && s.config() == &config && s.is_current(&volume) => {
-                        s
-                    }
-                    _ => EmState::new(context, &volume, &model, config, mode)?,
-                };
-                if cancel.load(Ordering::Relaxed) {
-                    return Err("Electromagnetic computation cancelled.".into());
-                }
-                if steps == 0 && mode == Mode::Applied {
-                    state.evaluate_applied(&model, preview_time, &volume)?;
-                }
-                if steps == 0 || state.time_s == 0. {
-                    tx.send(Event::Frame(state.snapshot()))
-                        .map_err(|_| "Analysis view closed")?;
-                }
-                for i in 0..steps {
-                    if cancel.load(Ordering::Relaxed) {
-                        return Err("Electromagnetic computation cancelled.".into());
-                    }
-                    let _ = tx.send(Event::Progress(i + 1, steps));
-                    if mode == Mode::Induction {
-                        state.step(&model, &volume)?;
-                    } else {
-                        let t = state.time_s + state.config().dt_s;
-                        state.evaluate_applied(&model, t, &volume)?;
-                    }
-                    tx.send(Event::Frame(state.snapshot()))
-                        .map_err(|_| "Analysis view closed")?;
-                }
-                Ok(state)
-            };
-            let _ = tx.send(Event::Done(run()));
+        self.timeline.push(crate::timeline::Sample {
+            time_s: frame.time_s,
+            bytes: frame.bytes,
+            output: frame,
         });
     }
     pub fn ready(&self, volume: Option<&Volume>) -> bool {
@@ -230,16 +77,6 @@ impl EmUi {
                 .current()
                 .zip(volume)
                 .is_some_and(|(frame, volume)| frame.is_current(volume))
-    }
-    pub fn timeline_controls(&mut self, ui: &mut egui::Ui) -> bool {
-        let changed = self.timeline.controls(ui);
-        if self.receiver.is_some() {
-            ui.horizontal(|ui| {
-                ui.spinner();
-                ui.label(&self.progress);
-            });
-        }
-        changed
     }
     fn scale(&self) -> f32 {
         if !self.auto_range {
@@ -335,12 +172,22 @@ impl EmUi {
             self.error = error;
         }
     }
-    pub fn curve_properties(&mut self, ui: &mut egui::Ui, model: &Model) -> bool {
+    pub fn curve_properties(
+        &mut self,
+        ui: &mut egui::Ui,
+        model: &Model,
+        selected: Option<usize>,
+    ) -> bool {
         let mut changed = false;
-        for (index, curve) in model.curves.iter().enumerate() {
+        for (index, curve) in model
+            .curves
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| Some(*i) == selected)
+        {
             let title = format!("Curve · {}", curve.name);
             egui::CollapsingHeader::new(title)
-                .id_salt(("cad_curve", index))
+                .id_salt(("cad_curve", index)).default_open(true)
                 .show(ui, |ui| {
                     let existing = self.config.wires.iter().position(|wire| wire.cad_curve == index);
                     let mut enabled = existing.is_some();
@@ -433,97 +280,20 @@ impl EmUi {
         }
         changed
     }
-    /// Solver settings and optional diagnostic stepping; sources live on CAD items.
-    pub fn controls(
-        &mut self,
-        ui: &mut egui::Ui,
-        model: &Model,
-        volume: Option<&Volume>,
-        context: Option<&GpuContext>,
-    ) -> bool {
-        ui.separator();
-        ui.label("Solver settings");
-        ui.small(format!(
-            "{} current paths · {} magnetized solids",
-            self.config.wires.len(),
-            self.config.magnets.len()
-        ));
-        let busy = self.busy();
-        let mut changed = false;
-        let mut config_changed = false;
-        ui.add_enabled_ui(!busy, |ui| {
-            let mut dt_us = self.config.dt_s * 1e6;
-            let timestep_changed = ui.add(
-                egui::DragValue::new(&mut dt_us)
-                    .speed(1.)
-                    .range(1e-5..=1e8)
-                    .prefix("Δt ")
-                    .suffix(" µs"),
-            ).changed();
-            if timestep_changed {
-                self.config.dt_s = dt_us * 1e-6;
-                config_changed = true;
-            }
-            egui::CollapsingHeader::new("Numerical solve").show(ui, |ui| {
-                ui.small("Reaction A is zero at the outer box. Compare more air padding before interpreting forces.");
-                config_changed |= ui.add(
-                    egui::DragValue::new(&mut self.config.relative_tolerance)
-                        .speed(1e-6)
-                        .range(1e-7..=1e-2)
-                        .prefix("Relative residual "),
-                ).changed();
-                config_changed |= ui.add(
-                    egui::DragValue::new(&mut self.config.max_iterations)
-                        .range(1..=20000)
-                        .prefix("Max iterations "),
-                ).changed();
-            });
-            if config_changed {
-                self.invalidate();
-                self.error.clear();
-                changed = true;
-            }
-            egui::CollapsingHeader::new("Applied field / diagnostic stepping").show(ui, |ui| {
-                let (Some(volume), Some(context)) = (volume, context) else {
-                    ui.label("Build the domain first.");
-                    return;
-                };
-                ui.add(
-                    egui::DragValue::new(&mut self.preview_time_us)
-                        .speed(1.)
-                        .range(0. ..=1e12)
-                        .prefix("Applied preview ")
-                        .suffix(" µs"),
-                );
-                if ui.button("Compute applied B (vacuum)").clicked() {
-                    self.start(Mode::Applied, 0, model, volume, context);
-                    changed = true;
-                }
-                if ui.button("Initialize induction at t = 0").clicked() {
-                    self.start(Mode::Induction, 0, model, volume, context);
-                    changed = true;
-                }
-                if let Some(mode) = self.state.as_ref().map(|state| state.mode) {
-                    if ui.button("Single step").clicked() {
-                        self.start(mode, 1, model, volume, context);
-                        changed = true;
-                    }
-                }
-            });
-        });
-        if busy {
-            ui.spinner();
-            ui.label(&self.progress);
-            if ui.button("Cancel after current step").clicked() {
-                if let Some(cancel) = &self.cancel {
-                    cancel.store(true, Ordering::Relaxed);
-                }
-            }
-        }
-        if !self.error.is_empty() {
-            ui.colored_label(Color32::LIGHT_RED, &self.error);
-        }
-        changed
+    pub fn controls(&mut self, ui: &mut egui::Ui) -> bool {
+        let old = self.config.clone();
+        ui.add(
+            egui::DragValue::new(&mut self.config.relative_tolerance)
+                .speed(1e-6)
+                .range(1e-7..=1e-2)
+                .prefix("EM relative residual "),
+        );
+        ui.add(
+            egui::DragValue::new(&mut self.config.max_iterations)
+                .range(1..=20000)
+                .prefix("EM max iterations "),
+        );
+        self.config != old
     }
     pub fn visualization_controls(&mut self, ui: &mut egui::Ui) -> bool {
         let mut changed = false;
@@ -885,105 +655,4 @@ fn waveform(ui: &mut egui::Ui, w: &mut Waveform, unit: &str) -> bool {
         }
     }
     changed
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::flow::VectorStyle;
-    #[test]
-    fn background_field_job_finishes_and_cancel_does_not_publish_results() {
-        let _lock = crate::gpu_test_lock();
-        let gpu = crate::domain::GpuDomain::new().unwrap();
-        let model = Model::load(std::path::Path::new("assets/annulus.gltf")).unwrap();
-        let settings = crate::simulation::DomainSettings {
-            min_mm: [-5.; 3],
-            max_mm: [5.; 3],
-            cell_mm: 1.,
-        };
-        let volume = gpu
-            .build(&model, &settings, &crate::simulation::default_materials())
-            .unwrap();
-        let mut ui = EmUi::default();
-        ui.config.uniform.push(em::UniformField {
-            tesla: [0., 0., 0.001],
-            scale: Waveform::Constant { value: 1. },
-        });
-        let context = egui::Context::default();
-        let wait = |ui: &mut EmUi| {
-            let start = std::time::Instant::now();
-            while ui.receiver.is_some() {
-                ui.poll(&context, Some(&volume));
-                assert!(start.elapsed().as_secs() < 10, "worker did not finish");
-                std::thread::sleep(std::time::Duration::from_millis(1));
-            }
-        };
-        ui.show = false;
-        ui.start(Mode::Applied, 0, &model, &volume, &gpu.context);
-        wait(&mut ui);
-        assert!(ui.error.is_empty(), "{}", ui.error);
-        assert!(ui.ready(Some(&volume)));
-        assert!(ui.state.as_ref().unwrap().diagnostics.maxima[0] > 0.);
-        ui.overlay.style = VectorStyle::Arrows;
-        ui.overlay.density = 8;
-        ui.update_trails(0., SectionPlane::new(Vec3::ZERO), 1., &gpu.context, true);
-        assert_eq!(ui.overlay.arrows.len(), 8 * 8 * 3);
-        let coarse_length = ui.overlay.arrows[0][0].distance(ui.overlay.arrows[0][1]);
-        ui.overlay.density = 32;
-        ui.update_trails(0., SectionPlane::new(Vec3::ZERO), 1., &gpu.context, true);
-        assert_eq!(ui.overlay.arrows.len(), 32 * 32 * 3);
-        assert!(
-            (ui.overlay.arrows[0][0].distance(ui.overlay.arrows[0][1]) * 4. - coarse_length).abs()
-                < 1e-6
-        );
-        // Recorded fields must survive subsequent GPU writes, scrubbing and continuation.
-        ui.config.uniform[0].scale = Waveform::Sine {
-            amplitude: 1.,
-            frequency_hz: 1000.,
-            phase_rad: 0.,
-        };
-        ui.start(Mode::Applied, 0, &model, &volume, &gpu.context);
-        wait(&mut ui);
-        let p = [0., 0., 0.];
-        let first = ui.timeline.current().unwrap().probe(p).unwrap().unwrap().b[2];
-        ui.start(Mode::Applied, 3, &model, &volume, &gpu.context);
-        wait(&mut ui);
-        assert_eq!(ui.timeline.samples.len(), 4);
-        let latest_time = ui.state.as_ref().unwrap().time_s;
-        let latest = ui.timeline.current().unwrap().probe(p).unwrap().unwrap().b[2];
-        assert!((latest - first).abs() > 1e-5);
-        ui.timeline.selected = 0;
-        assert_eq!(
-            ui.timeline.current().unwrap().probe(p).unwrap().unwrap().b[2],
-            first
-        );
-        assert_eq!(
-            ui.view(Some(&volume)).unwrap().buffer,
-            ui.timeline.current().unwrap().result_buffer()
-        );
-        ui.start(Mode::Applied, 1, &model, &volume, &gpu.context);
-        wait(&mut ui);
-        assert_eq!(ui.timeline.selected, 0);
-        assert!((ui.state.as_ref().unwrap().time_s - latest_time - ui.config.dt_s).abs() < 1e-12);
-        assert_eq!(
-            ui.timeline.current().unwrap().probe(p).unwrap().unwrap().b[2],
-            first
-        );
-        let solver_time = ui.state.as_ref().unwrap().time_s;
-        let selected_time = ui.timeline.current().unwrap().time_s;
-        ui.overlay.style = VectorStyle::Trails;
-        ui.update_trails(1., SectionPlane::new(Vec3::ZERO), 1., &gpu.context, false);
-        ui.update_trails(1.1, SectionPlane::new(Vec3::ZERO), 1., &gpu.context, false);
-        assert_eq!(ui.state.as_ref().unwrap().time_s, solver_time);
-        assert_eq!(ui.timeline.current().unwrap().time_s, selected_time);
-        ui.overlay.paused = true;
-        let visual_time = ui.overlay.visual_time;
-        ui.update_trails(1.2, SectionPlane::new(Vec3::ZERO), 1., &gpu.context, false);
-        assert_eq!(ui.overlay.visual_time, visual_time);
-        ui.start(Mode::Applied, 1000, &model, &volume, &gpu.context);
-        ui.cancel.as_ref().unwrap().store(true, Ordering::Relaxed);
-        wait(&mut ui);
-        assert!(ui.state.is_none());
-        assert!(ui.error.contains("cancelled"));
-    }
 }

@@ -1,11 +1,14 @@
 pub use mhd_workbench::{
-    caps, domain, em, flow, fluid, gpu, inputs, model, plane, project, simulation,
+    caps, domain, em, flow, fluid, gpu, inputs, model, plane, project, run, simulation,
 };
 mod app;
 mod em_ui;
+mod file_picker;
 mod fluid_ui;
 mod gizmo;
+mod picking;
 mod render;
+mod run_ui;
 mod section;
 mod timeline;
 mod vector_ui;
@@ -42,6 +45,60 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         for n in &m.notices {
             println!("{n}");
         }
+        return Ok(());
+    }
+    if args.get(1).is_some_and(|a| a == "--run-check") {
+        let path = args
+            .get(2)
+            .map(String::as_str)
+            .unwrap_or("assets/hotend-cad.mhd.json");
+        let steps = args
+            .get(3)
+            .map(|s| s.parse::<u32>())
+            .transpose()?
+            .unwrap_or(10);
+        let p = project::load(std::path::Path::new(path))?;
+        let gpu = domain::GpuDomain::new()?;
+        let volume = gpu.build(&p.model, &p.settings, &p.materials)?;
+        let mut state = run::RunState::new(
+            gpu.context.clone(),
+            &volume,
+            &p.model,
+            p.run,
+            p.electromagnetics,
+            p.fluid,
+        )?;
+        println!(
+            "Unified run: EM={} fluid={} dt={} s",
+            state.em.is_some(),
+            state.fluid.is_some(),
+            state.config.dt_s
+        );
+        let mut csv = String::from("time_s,max_B_T,max_u_m_s,rms_div_u_s_inv\n");
+        for i in 0..=steps {
+            if i > 0 {
+                state.step(&p.model, &volume)?;
+            }
+            let b = state.em.as_ref().map_or(0., |e| e.diagnostics.maxima[0]);
+            let u = state
+                .fluid
+                .as_ref()
+                .map_or(0., |f| f.diagnostics.max_speed_m_s);
+            let d = state
+                .fluid
+                .as_ref()
+                .map_or(0., |f| f.diagnostics.rms_divergence_s_inv);
+            println!(
+                "t={:.3} µs Bmax={:.3e} T Umax={:.3e} m/s rms_div={:.3e} s^-1",
+                state.time_s * 1e6,
+                b,
+                u,
+                d
+            );
+            csv.push_str(&format!("{},{},{},{}\n", state.time_s, b, u, d));
+        }
+        std::fs::create_dir_all("artifacts")?;
+        std::fs::write("artifacts/run-diagnostics.csv", csv)?;
         return Ok(());
     }
     if args.get(1).is_some_and(|a| a == "--fluid-check") {
@@ -255,7 +312,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .get(1)
         .is_some_and(|a| a.starts_with("--") && a != "--em-preview")
     {
-        return Err("Unknown command. Supported: --inspect, --gpu-check, --em-check, --fluid-check, --em-preview".into());
+        return Err("Unknown command. Supported: --inspect, --gpu-check, --em-check, --fluid-check, --run-check, --em-preview".into());
     }
     let preview = args.get(1).is_some_and(|a| a == "--em-preview");
     let path = args

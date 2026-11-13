@@ -291,7 +291,7 @@ impl FluidState {
                 config.absolute_divergence_tolerance.powi(2)
                     * grid.cell_m.powi(4)
                     * fluid_cells as f32,
-                0.,
+                fluid_cells as f32,
                 0.,
             ],
         };
@@ -338,6 +338,8 @@ impl FluidState {
             "predict",
             "viscous",
             "pressure_guess",
+            "pressure_warm",
+            "pressure_commit",
             "pressure_refresh",
             "initial_reduce",
             "pressure_apply",
@@ -455,6 +457,33 @@ impl FluidState {
         state.read_diagnostics(iterations, residual, 0.)?;
         Ok(state)
     }
+    /// Replace the driving Lorentz force before a coupled step (GPU to GPU).
+    pub fn update_force(&mut self, field: ForceField<'_>) -> Result<(), String> {
+        if !self.config.use_em_force
+            || field.grid != &self.grid
+            || field.buffer.size() < self.result.size()
+            || !field.buffer.usage().contains(wgpu::BufferUsages::COPY_SRC)
+        {
+            return Err("Coupled force requires enabled EM forcing and matching GPU grids".into());
+        }
+        let mut encoder = self
+            .context
+            .device
+            .create_command_encoder(&Default::default());
+        encoder.copy_buffer_to_buffer(field.buffer, 0, &self._force, 0, self.result.size());
+        self.context.queue.submit(Some(encoder.finish()));
+        // Refresh the force bound before the CFL check, not after taking the step.
+        self.dispatch(&[
+            ("fields", groups(self.params.dims[3])),
+            ("diagnostics", [1, 1, 1]),
+        ]);
+        self.read_diagnostics(
+            self.diagnostics.iterations,
+            self.diagnostics.relative_residual,
+            0.,
+        )?;
+        Ok(())
+    }
     pub fn config(&self) -> &FluidConfig {
         &self.config
     }
@@ -480,21 +509,18 @@ impl FluidState {
         self.context.queue.submit(Some(encoder.finish()));
     }
     fn convergence(&self) -> Result<(f32, bool), String> {
-        let data = read_bytes(&self.context, &self.scalars, 0, 16)?;
+        let data = read_bytes(&self.context, &self.scalars, 0, 32)?;
         let s = bytemuck::cast_slice::<u8, f32>(&data);
         let residual = (s[1] / s[2].max(1e-38)).sqrt();
         if !residual.is_finite() || s[1] < 0. || s[2] < 0. {
             return Err("Nonfinite fluid pressure residual".into());
         }
-        Ok((
-            residual,
-            s[1] <= self.config.relative_tolerance.powi(2) * s[2] + self.params.solve[1]
-                || s[2] == 0.,
-        ))
+        Ok((residual, s[6] > 0.5))
     }
     fn project(&mut self) -> Result<(u32, f32), String> {
         let cells = groups(self.params.dims[3]);
         self.dispatch(&[
+            ("pressure_warm", groups(self.params.faces[3])),
             ("pressure_guess", cells),
             ("pressure_refresh", cells),
             ("initial_reduce", [1, 1, 1]),
@@ -527,7 +553,10 @@ impl FluidState {
                 residual.0
             ));
         }
-        self.dispatch(&[("correct", groups(self.params.faces[3]))]);
+        self.dispatch(&[
+            ("correct", groups(self.params.faces[3])),
+            ("pressure_commit", cells),
+        ]);
         Ok((iterations, residual.0))
     }
     fn read_diagnostics(

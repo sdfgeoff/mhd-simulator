@@ -56,5 +56,6 @@ fn main() -> Result<(), String> {
         SectionPlane::new(Vec3::new(0., 0., 4.)),
         &config,
         &Default::default(),
+        &Default::default(),
     )
 }

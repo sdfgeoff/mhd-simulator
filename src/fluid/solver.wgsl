@@ -104,12 +104,26 @@ fn viscous(@builtin(global_invocation_id) gid:vec3<u32>) {
     }
     velocity[i]=out;
 }
+fn old_potential(pos:vec3<i32>)->f32 {
+    let q=wrap_cell(pos);if !fluid(q){return 0.0;}
+    return output_fields[index(q,p.dims.xyz)].pressure.x*p.physical.y/p.physical.w;
+}
+// Apply the previous pressure before solving a small, zero-based correction.
+// Each invocation reads/writes only its own face record (including periodic duplicates).
+@compute @workgroup_size(256)
+fn pressure_warm(@builtin(global_invocation_id) gid:vec3<u32>){
+    let i=flat_id(gid);if i>=p.faces.w{return;}let pos=decode(i,p.faces.xyz);var out=predicted[i];
+    for(var axis=0u;axis<3u;axis++){if open_face(pos,axis){var left=pos;left[axis]-=1;
+        out[axis]-=(old_potential(pos)-old_potential(left))/p.physical.x;
+    }}predicted[i]=out;
+}
 @compute @workgroup_size(256)
 fn pressure_guess(@builtin(global_invocation_id) gid:vec3<u32>) {
-    let i=flat_id(gid);if i>=p.dims.w {return;}
-    var guess=0.0;
-    if mask[i]==1u {guess=output_fields[i].pressure.x*p.physical.y/p.physical.w;}
-    work[i]=vec4<f32>(guess,0.0,0.0,0.0);
+    let i=flat_id(gid);if i<p.dims.w {work[i]=vec4<f32>(0.0);}
+}
+@compute @workgroup_size(256)
+fn pressure_commit(@builtin(global_invocation_id) gid:vec3<u32>){
+    let i=flat_id(gid);if i<p.dims.w && mask[i]!=0u {work[i].x+=output_fields[i].pressure.x*p.physical.y/p.physical.w;}
 }
 @compute @workgroup_size(256)
 fn pressure_refresh(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>) {
@@ -157,7 +171,7 @@ fn beta_reduce(@builtin(local_invocation_index) l:u32) {
     var sum=vec4<f32>(0.0);for(var i=l;i<count_groups();i+=256u) {sum+=partials[i];}reduce[l]=sum;let total=sum_group(l);
     if l==0u && scalars[1].z<0.5 {
         scalars[1].y=total.x/max(scalars[0].x,1e-35);scalars[0].x=total.x;scalars[0].y=total.y;
-        scalars[1].z=select(0.0,1.0,total.y<=p.solve.x*scalars[0].z+p.solve.y);
+        scalars[1].z=select(0.0,1.0,total.y<=(p.solve.x*scalars[0].z+p.solve.y)/p.solve.z);
     }
 }
 @compute @workgroup_size(256)

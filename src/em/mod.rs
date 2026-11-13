@@ -75,6 +75,7 @@ pub struct EmState {
     checkpoint: wgpu::Buffer,
     elements: wgpu::Buffer,
     source_pipeline: wgpu::ComputePipeline,
+    motion_pipeline: Option<wgpu::ComputePipeline>,
     pipelines: HashMap<&'static str, wgpu::ComputePipeline>,
     bind: wgpu::BindGroup,
     source_bind: wgpu::BindGroup,
@@ -167,7 +168,7 @@ impl EmState {
         let cells = params.dims[3] as u64;
         let groups = edges.div_ceil(256).max(cells.div_ceil(256));
         let sizes = [
-            edges * 16,
+            edges * 32,
             edges * 16,
             edges * 4,
             groups * 64,
@@ -504,6 +505,7 @@ impl EmState {
             checkpoint,
             elements,
             source_pipeline,
+            motion_pipeline: None,
             pipelines,
             bind,
             source_bind,
@@ -608,6 +610,86 @@ impl EmState {
         }
         self.params.control[3] = 0;
         self.write_params();
+        Ok(())
+    }
+    /// Prepare lagged motional EMF from the current fluid velocity and total B.
+    /// The next induction step enforces the same discrete current continuity as at rest.
+    pub fn set_velocity(
+        &mut self,
+        volume: &Volume,
+        velocity: &wgpu::Buffer,
+        grid: &GridSi,
+    ) -> Result<(), String> {
+        if grid != &self.grid
+            || velocity.size() < self.params.dims[3] as u64 * 64
+            || !velocity.usage().contains(wgpu::BufferUsages::STORAGE)
+        {
+            return Err("Motional induction requires a fluid packet on the same grid".into());
+        }
+        if self.motion_pipeline.is_none() {
+            let shader = self
+                .context
+                .device
+                .create_shader_module(wgpu::ShaderModuleDescriptor {
+                    label: Some("Fluid velocity to motional EMF"),
+                    source: wgpu::ShaderSource::Wgsl(
+                        format!(
+                            "{}\n{}",
+                            include_str!("common.wgsl"),
+                            include_str!("motion.wgsl")
+                        )
+                        .into(),
+                    ),
+                });
+            self.motion_pipeline = Some(self.context.device.create_compute_pipeline(
+                &wgpu::ComputePipelineDescriptor {
+                    label: Some("u cross B edge projection"),
+                    layout: None,
+                    module: &shader,
+                    entry_point: Some("motion"),
+                    compilation_options: Default::default(),
+                    cache: None,
+                },
+            ));
+        }
+        let pipeline = self.motion_pipeline.as_ref().unwrap();
+        let properties = volume.inputs.solver_tables(&[], false)?.0;
+        let buffers = [
+            &self.uniform,
+            velocity,
+            &self.result,
+            &self._source,
+            volume.material_ids(),
+            &properties,
+        ];
+        let entries: Vec<_> = buffers
+            .iter()
+            .enumerate()
+            .map(|(binding, b)| wgpu::BindGroupEntry {
+                binding: binding as u32,
+                resource: b.as_entire_binding(),
+            })
+            .collect();
+        let bind = self
+            .context
+            .device
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                label: Some("Motional feedback"),
+                layout: &pipeline.get_bind_group_layout(0),
+                entries: &entries,
+            });
+        let mut encoder = self
+            .context
+            .device
+            .create_command_encoder(&Default::default());
+        {
+            let mut pass = encoder.begin_compute_pass(&Default::default());
+            pass.set_pipeline(pipeline);
+            pass.set_bind_group(0, &bind, &[]);
+            let g = self.edge_groups();
+            pass.dispatch_workgroups(g[0], g[1], g[2]);
+        }
+        self.context.queue.submit(Some(encoder.finish()));
         Ok(())
     }
     pub fn step(&mut self, model: &Model, volume: &Volume) -> Result<&Diagnostics, String> {

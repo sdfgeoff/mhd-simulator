@@ -14,8 +14,16 @@ Named presets provide usable starting scalars. **Unassigned** is deliberately em
 
 Conductivity is converted as σ=1/ρₑ. One µΩ·cm is 10⁻⁸ Ω·m. The solder values are bulk datasheet references, not calibrated molten-metal properties. The magnet preset does not imply a particular strength or orientation: assign magnetization independently on each CAD solid. The model does not include demagnetization evolution or temperature effects.
 
-Existing saved values and custom materials are preserved on load. **Material library → Fill missing preset properties** fills only unset conductivity/permeability/density fields on matching named presets; it keeps explicit values, including zero. Reference notes are visible beside the material controls.
+Existing saved values and custom materials are preserved on load. Named materials already contain their initial defaults; reference notes are visible beside the shared material editor.
 
 ## Liquid viscosity
 
-The solder presets include **0.002 Pa·s (2 mPa·s)** as an illustrative starting assumption for the fixed-geometry fluid solver. It is not a measured fit for either alloy at the selected temperature. Other presets leave liquid viscosity unset. Choose operating-temperature density and viscosity before interpreting a fluid experiment; temperature inputs do not apply property curves automatically. [Fluid configuration, numerical assumptions and tests](FLUIDS.md) describes the solver. **Fill missing preset properties** also fills an unset solder viscosity while preserving explicit values.
+The solder presets include **0.002 Pa·s (2 mPa·s)** as an illustrative starting assumption for the fixed-geometry fluid solver. It is not a measured fit for either alloy at the selected temperature. Other presets leave liquid viscosity unset. Choose operating-temperature density and viscosity before interpreting a fluid experiment; temperature inputs do not apply property curves automatically. [Fluid configuration, numerical assumptions and tests](FLUIDS.md) describes the solver. Existing projects with unset solder viscosity can set it directly in the shared material editor.
+
+## Shared entities and thermal setup
+
+Objects reference material IDs; assignment does not copy scalar values. Editing a material updates all its users. Older projects gain missing built-in library entries without replacing their saved material values. There is no fill/copy step in the UI.
+
+**Aluminium 6061 (T6)** defaults to density 2700 kg/m³, conductivity 25 MS/m and unit permeability. Thermal setup uses 167 W/(m K), heat capacity 896 J/(kg K) at 100 °C, and melting interval 582–652 °C, from [Kaiser Aluminum technical data](https://online.kaiseraluminum.com/depot/PublicProductInformation/Document/1006/Kaiser_Aluminum_Shapes_Soft_Alloy.pdf). The heat capacity is converted from the stated 0.214 BTU/(lb °F); the metric unit label in that document is inconsistent. Latent heat and liquid viscosity remain unknown. These constants are representative; temper and operating temperature matter.
+
+Materials can store solidus/liquidus temperatures, heat capacity, thermal conductivity and latent heat. Equal solidus/liquidus represent a single melting point. The initial phase percentage in Setup is only a preview; heat transport and phase-dependent fluid/solid evolution remain unimplemented.

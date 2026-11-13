@@ -76,7 +76,7 @@ fn prepare(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invocatio
     let i=flat_id(gid);var v=vec4<f32>(0.0);
     if i<scene.edges.w {
         let e=edge_decode(i);
-        var r=-mass(i)*(source[i].x-source[i].y)+adjoint(e,2u,true)-adjoint(e,4u,false);
+        var r=mass(i)*scene.physical.x*source[i+scene.edges.w].x-mass(i)*(source[i].x-source[i].y)+adjoint(e,2u,true)-adjoint(e,4u,false);
         if boundary(e){r=0.0;}
         let z=r/diagonal(i);work[i].y=r;work[i].z=z;work[i].w=0.0;v=vec4<f32>(r*z,r*r,0.0,0.0);
     }
@@ -117,7 +117,7 @@ fn update_search(@builtin(global_invocation_id) gid:vec3<u32>){let i=flat_id(gid
 fn rollback(@builtin(global_invocation_id) gid:vec3<u32>){let i=flat_id(gid);if i<scene.edges.w {work[i].x=previous[i];source[i].x=source[i].y;}}
 fn electric_edge(axis:u32,p:vec3<i32>)->f32 {
     if scene.control.y==1u || !valid(p,edge_dims(axis)){return 0.0;}
-    let i=edge_index(axis,p);return -(work[i].x+(source[i].x-source[i].y))/scene.physical.x;
+    let i=edge_index(axis,p);return -(work[i].x+(source[i].x-source[i].y))/scene.physical.x+source[i+scene.edges.w].x;
 }
 fn current_edge(axis:u32,p:vec3<i32>)->f32 {if !valid(p,edge_dims(axis)){return 0.0;}return source[edge_index(axis,p)].z*electric_edge(axis,p);}
 @compute @workgroup_size(256)
@@ -157,7 +157,7 @@ fn true_residual(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_inv
     let i=flat_id(gid);var v=vec4<f32>(0.0);
     if i<scene.edges.w {
         let e=edge_decode(i);
-        var r=-mass(i)*(work[i].x+(source[i].x-source[i].y))+adjoint(e,2u,true)-adjoint(e,4u,false)-adjoint(e,0u,false);
+        var r=mass(i)*scene.physical.x*source[i+scene.edges.w].x-mass(i)*(work[i].x+(source[i].x-source[i].y))+adjoint(e,2u,true)-adjoint(e,4u,false)-adjoint(e,0u,false);
         if boundary(e){r=0.0;}
         work[i].y=r;work[i].z=r/diagonal(i);v=vec4<f32>(r*r/diagonal(i),r*r,0.0,0.0);
     }

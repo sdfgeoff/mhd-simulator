@@ -19,6 +19,8 @@ impl Default for SimulationProperties {
 }
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Material {
+    #[serde(default)]
+    pub thermal: ThermalProperties,
     pub id: u32,
     pub name: String,
     pub conductivity_s_m: Option<f32>,
@@ -31,9 +33,32 @@ pub struct Material {
     #[serde(default)]
     pub reference: Option<String>,
 }
+/// Setup data for the thermal/phase solver. No temperature evolution is implied.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct ThermalProperties {
+    pub solidus_c: Option<f32>,
+    pub liquidus_c: Option<f32>,
+    pub heat_capacity_j_kg_k: Option<f32>,
+    pub conductivity_w_m_k: Option<f32>,
+    pub latent_heat_j_kg: Option<f32>,
+}
+impl ThermalProperties {
+    pub fn liquid_fraction(&self, t: f32) -> Option<f32> {
+        let (s, l) = (self.solidus_c?, self.liquidus_c?);
+        if !t.is_finite() || l < s {
+            return None;
+        }
+        Some(if s == l {
+            f32::from(t > s)
+        } else {
+            ((t - s) / (l - s)).clamp(0., 1.)
+        })
+    }
+}
 pub fn default_materials() -> Vec<Material> {
     let preset = |id, name: &str, sigma, mu, density, notes: &str, reference: &str| Material {
         id,
+        thermal: Default::default(),
         name: name.into(),
         conductivity_s_m: Some(sigma),
         relative_permeability: Some(mu),
@@ -60,6 +85,7 @@ pub fn default_materials() -> Vec<Material> {
         ),
         Material {
             id: 1,
+            thermal:Default::default(),
             name: "Unassigned".into(),
             conductivity_s_m: None,
             relative_permeability: None,
@@ -106,57 +132,40 @@ pub fn default_materials() -> Vec<Material> {
         ),
         stainless316(6),
         alumina(7),
+        Material {id:8,name:"Aluminium 6061 (T6)".into(),conductivity_s_m:Some(25e6),relative_permeability:Some(1.),density_kg_m3:Some(2700.),dynamic_viscosity_pa_s:None,
+            thermal:ThermalProperties {solidus_c:Some(582.),liquidus_c:Some(652.),heat_capacity_j_kg_k:Some(896.),conductivity_w_m_k:Some(167.),latent_heat_j_kg:None},
+            notes:"Representative 6061-T6 room-temperature properties: density 2700 kg/m³, conductivity 25 MS/m, heat capacity 896 J/(kg K) at 100 °C, thermal conductivity 167 W/(m K). Melting interval 582–652 °C. Unit permeability approximation. Temper/temperature dependence and thermal evolution are not yet modeled.".into(),
+            reference:Some("https://online.kaiseraluminum.com/depot/PublicProductInformation/Document/1006/Kaiser_Aluminum_Shapes_Soft_Alloy.pdf".into())},
     ]
 }
 fn stainless316(id: u32) -> Material {
-    Material {id,name:"316 stainless steel".into(),conductivity_s_m:Some(1./0.75e-6),relative_permeability:Some(1.),density_kg_m3:Some(8000.),dynamic_viscosity_pa_s:None,
+    Material {id,thermal:Default::default(),name:"316 stainless steel".into(),conductivity_s_m:Some(1./0.75e-6),relative_permeability:Some(1.),density_kg_m3:Some(8000.),dynamic_viscosity_pa_s:None,
         notes:"Density and conductivity references at 20 °C. Unit permeability is an annealed/nonmagnetic approximation; processing can change it. No temperature dependence is applied.".into(),
         reference:Some("https://www.thyssenkrupp-materials.co.uk/stainless-steel-316-14401.html/index.html".into())}
 }
 fn alumina(id: u32) -> Material {
-    Material {id,name:"Alumina".into(),conductivity_s_m:Some(0.),relative_permeability:Some(1.),density_kg_m3:Some(3900.),dynamic_viscosity_pa_s:None,
+    Material {id,thermal:Default::default(),name:"Alumina".into(),conductivity_s_m:Some(0.),relative_permeability:Some(1.),density_kg_m3:Some(3900.),dynamic_viscosity_pa_s:None,
         notes:"Representative CoorsTek AD-995 (99.5%) density. Ideal electrical insulator and unit-permeability approximations; room-temperature resistivity exceeds 10¹⁴ Ω·cm. Grade and temperature matter; no temperature dependence is applied.".into(),
         reference:Some("https://www2.coorstek.com/media/4235/advanced-alumina.pdf".into())}
 }
-/// Fill only missing scalar values on matching built-in materials; preserve overrides and custom materials.
-pub fn fill_missing_defaults(materials: &mut [Material]) -> bool {
-    let presets = default_materials();
-    let mut changed = false;
-    for material in materials {
-        if let Some(preset) = presets
+/// Add built-in library entries missing from an older project, without replacing any material.
+pub fn ensure_material_library(materials: &mut Vec<Material>) {
+    for mut preset in default_materials() {
+        if materials
             .iter()
-            .find(|p| p.name.eq_ignore_ascii_case(&material.name))
+            .any(|m| m.name.eq_ignore_ascii_case(&preset.name))
         {
-            let mut filled = false;
-            for (target, value) in [
-                (&mut material.conductivity_s_m, preset.conductivity_s_m),
-                (
-                    &mut material.relative_permeability,
-                    preset.relative_permeability,
-                ),
-                (&mut material.density_kg_m3, preset.density_kg_m3),
-                (
-                    &mut material.dynamic_viscosity_pa_s,
-                    preset.dynamic_viscosity_pa_s,
-                ),
-            ] {
-                if target.is_none() && value.is_some() {
-                    *target = value;
-                    filled = true;
-                }
-            }
-            if filled && material.reference.is_none() {
-                material.reference = preset.reference.clone();
-            }
-            if filled && !material.notes.contains(&preset.notes) {
-                material.notes = format!("{} {}", material.notes, preset.notes).trim().into();
-            }
-            changed |= filled;
+            continue;
         }
+        if materials.iter().any(|m| m.id == preset.id) {
+            let Some(id) = (1..255).find(|id| materials.iter().all(|m| m.id != *id)) else {
+                continue;
+            };
+            preset.id = id;
+        }
+        materials.push(preset);
     }
-    changed
 }
-
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct DomainSettings {
     pub min_mm: [f32; 3],
@@ -222,10 +231,22 @@ pub fn validate_materials(materials: &[Material]) -> Result<(), String> {
             ("permeability", m.relative_permeability, false),
             ("density", m.density_kg_m3, false),
             ("dynamic viscosity", m.dynamic_viscosity_pa_s, false),
+            ("heat capacity", m.thermal.heat_capacity_j_kg_k, false),
+            ("thermal conductivity", m.thermal.conductivity_w_m_k, false),
+            ("latent heat", m.thermal.latent_heat_j_kg, false),
         ] {
             if v.is_some_and(|v| !v.is_finite() || v < 0. || (!allow_zero && v == 0.)) {
                 return Err(format!("Invalid {name} for material {}", m.name));
             }
+        }
+        let t = &m.thermal;
+        if [t.solidus_c, t.liquidus_c]
+            .iter()
+            .flatten()
+            .any(|v| !v.is_finite() || *v < -273.15)
+            || t.solidus_c.zip(t.liquidus_c).is_some_and(|(s, l)| s > l)
+        {
+            return Err(format!("Invalid melting interval for material {}", m.name));
         }
     }
     if !ids.contains(&0) {
@@ -474,32 +495,30 @@ mod tests {
         assert!((snapshot.components[0].initial_temperature_k.unwrap() - 523.15).abs() < 1e-4);
     }
     #[test]
-    fn named_presets_are_complete_and_missing_fill_preserves_overrides() {
+    fn named_presets_are_complete_and_library_preserves_overrides() {
         let mut materials = default_materials();
-        for material in materials.iter().filter(|m| m.id != 1) {
-            assert!(
-                material.conductivity_s_m.is_some()
-                    && material.relative_permeability.is_some()
-                    && material.density_kg_m3.is_some(),
-                "{}",
-                material.name
-            );
-        }
-        materials[2].conductivity_s_m = Some(123.);
-        materials[2].density_kg_m3 = None;
-        materials[3].relative_permeability = None;
-        let mut custom = materials[2].clone();
-        custom.name = "Custom".into();
-        custom.id = 55;
-        materials.push(custom.clone());
-        assert!(fill_missing_defaults(&mut materials));
-        assert_eq!(materials[2].conductivity_s_m, Some(123.));
-        assert_eq!(materials[2].density_kg_m3, Some(8890.));
-        assert_eq!(materials[3].relative_permeability, Some(1.));
-        assert_eq!(materials.last(), Some(&custom));
-        assert!(!fill_missing_defaults(&mut materials));
-        assert!(materials[1].conductivity_s_m.is_none());
+        assert!(
+            materials
+                .iter()
+                .filter(|m| m.id != 1)
+                .all(|m| m.conductivity_s_m.is_some()
+                    && m.relative_permeability.is_some()
+                    && m.density_kg_m3.is_some())
+        );
+        materials[2].conductivity_s_m = Some(12.);
+        materials.retain(|m| m.id != 8);
+        ensure_material_library(&mut materials);
+        assert_eq!(materials[2].conductivity_s_m, Some(12.));
+        assert!(materials.iter().any(|m| m.name == "Aluminium 6061 (T6)"));
+        let count = materials.len();
+        ensure_material_library(&mut materials);
+        assert_eq!(materials.len(), count);
+        let t = &materials.iter().find(|m| m.id == 8).unwrap().thermal;
+        assert_eq!(t.liquid_fraction(500.), Some(0.));
+        assert_eq!(t.liquid_fraction(700.), Some(1.));
+        assert_eq!(t.liquid_fraction(617.), Some(0.5));
     }
+
     #[test]
     fn required_materials_reject_unknown_and_allow_explicit_zero() {
         let mut model = Model::load(std::path::Path::new("assets/annulus.gltf")).unwrap();

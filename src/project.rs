@@ -21,6 +21,8 @@ struct SavedPlane {
 #[derive(Serialize, Deserialize)]
 struct File {
     #[serde(default)]
+    run: crate::run::RunConfig,
+    #[serde(default)]
     cad_curves: Option<Vec<crate::model::CurvePath>>,
     #[serde(default)]
     electromagnetics: crate::em::EmConfig,
@@ -34,6 +36,7 @@ struct File {
     plane: SavedPlane,
 }
 pub struct Loaded {
+    pub run: crate::run::RunConfig,
     pub electromagnetics: crate::em::EmConfig,
     pub fluid: crate::fluid::FluidConfig,
     pub model: Model,
@@ -49,9 +52,11 @@ pub fn save(
     plane: SectionPlane,
     electromagnetics: &crate::em::EmConfig,
     fluid: &crate::fluid::FluidConfig,
+    run: &crate::run::RunConfig,
 ) -> Result<(), String> {
     electromagnetics.validate(model)?;
     fluid.validate()?;
+    run.validate()?;
     if !path
         .file_name()
         .is_some_and(|n| n.to_string_lossy().ends_with(".mhd.json"))
@@ -72,6 +77,7 @@ pub fn save(
         .to_string_lossy()
         .into_owned();
     let f = File {
+        run: run.clone(),
         cad_curves: Some(model.curves.clone()),
         electromagnetics: electromagnetics.clone(),
         fluid: fluid.clone(),
@@ -116,12 +122,14 @@ pub fn save(
     result
 }
 pub fn load(path: &Path) -> Result<Loaded, String> {
-    let f: File = serde_json::from_slice(&std::fs::read(path).map_err(|e| e.to_string())?)
+    let mut f: File = serde_json::from_slice(&std::fs::read(path).map_err(|e| e.to_string())?)
         .map_err(|e| e.to_string())?;
     if f.version != 1 {
         return Err("Unsupported project version".into());
     }
     f.domain.dims()?;
+    f.run.validate()?;
+    crate::simulation::ensure_material_library(&mut f.materials);
     validate_materials(&f.materials)?;
     let geometry = PathBuf::from(&f.geometry);
     let geometry = if geometry.is_absolute() {
@@ -157,6 +165,7 @@ pub fn load(path: &Path) -> Result<Loaded, String> {
     f.electromagnetics.validate(&model)?;
     f.fluid.validate()?;
     Ok(Loaded {
+        run: f.run,
         electromagnetics: f.electromagnetics,
         fluid: f.fluid,
         model,
@@ -185,6 +194,7 @@ mod tests {
             loaded.plane,
             &loaded.electromagnetics,
             &loaded.fluid,
+            &loaded.run,
         )
         .unwrap();
         let restored = load(saved).unwrap();
@@ -215,6 +225,7 @@ mod tests {
             &s,
             &materials,
             p,
+            &Default::default(),
             &Default::default(),
             &Default::default(),
         )

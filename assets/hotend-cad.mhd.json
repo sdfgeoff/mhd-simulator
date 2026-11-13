@@ -1,4 +1,8 @@
 {
+  "run": {
+    "dt_s": 0.00001,
+    "fluid_enabled": true
+  },
   "cad_curves": [
     {
       "name": "Winding A / 0:0",
@@ -2070,6 +2074,13 @@
   },
   "materials": [
     {
+      "thermal": {
+        "solidus_c": null,
+        "liquidus_c": null,
+        "heat_capacity_j_kg_k": null,
+        "conductivity_w_m_k": null,
+        "latent_heat_j_kg": null
+      },
       "id": 0,
       "name": "Air / void",
       "conductivity_s_m": 0.0,
@@ -2080,6 +2091,13 @@
       "reference": null
     },
     {
+      "thermal": {
+        "solidus_c": null,
+        "liquidus_c": null,
+        "heat_capacity_j_kg_k": null,
+        "conductivity_w_m_k": null,
+        "latent_heat_j_kg": null
+      },
       "id": 1,
       "name": "Unassigned",
       "conductivity_s_m": null,
@@ -2090,6 +2108,13 @@
       "reference": null
     },
     {
+      "thermal": {
+        "solidus_c": null,
+        "liquidus_c": null,
+        "heat_capacity_j_kg_k": null,
+        "conductivity_w_m_k": null,
+        "latent_heat_j_kg": null
+      },
       "id": 2,
       "name": "Copper",
       "conductivity_s_m": 58000000.0,
@@ -2100,6 +2125,13 @@
       "reference": "https://help.copper.fyi/hc/en-us/articles/4410229175442-How-does-copper-set-the-standard-for-electrical-conductivity"
     },
     {
+      "thermal": {
+        "solidus_c": null,
+        "liquidus_c": null,
+        "heat_capacity_j_kg_k": null,
+        "conductivity_w_m_k": null,
+        "latent_heat_j_kg": null
+      },
       "id": 3,
       "name": "Sn60Pb40",
       "conductivity_s_m": 6671114.0,
@@ -2110,6 +2142,13 @@
       "reference": "https://www.ametekinterconnect.com/-/media/ametek-ecp/v2/files/cw_datasheets_sds_cfsi/datasheets/sn60pb40%20data%20sheet.pdf?la=en"
     },
     {
+      "thermal": {
+        "solidus_c": null,
+        "liquidus_c": null,
+        "heat_capacity_j_kg_k": null,
+        "conductivity_w_m_k": null,
+        "latent_heat_j_kg": null
+      },
       "id": 4,
       "name": "Sn99.3Cu0.7",
       "conductivity_s_m": 8340284.0,
@@ -2120,6 +2159,13 @@
       "reference": "https://www.macdermidalpha.com/sites/default/files/2024-04/ALPHA-VACULOY-Sn99.3Cu0.7-Solid-Solder-EN-12Apr24-TB.pdf"
     },
     {
+      "thermal": {
+        "solidus_c": null,
+        "liquidus_c": null,
+        "heat_capacity_j_kg_k": null,
+        "conductivity_w_m_k": null,
+        "latent_heat_j_kg": null
+      },
       "id": 5,
       "name": "Permanent magnet",
       "conductivity_s_m": 625000.0,
@@ -2130,6 +2176,13 @@
       "reference": "https://www.kjmagnetics.com/neodymium-magnet-specifications.asp"
     },
     {
+      "thermal": {
+        "solidus_c": null,
+        "liquidus_c": null,
+        "heat_capacity_j_kg_k": null,
+        "conductivity_w_m_k": null,
+        "latent_heat_j_kg": null
+      },
       "id": 6,
       "name": "316 stainless steel",
       "conductivity_s_m": 1333333.2,
@@ -2140,6 +2193,13 @@
       "reference": "https://www.thyssenkrupp-materials.co.uk/stainless-steel-316-14401.html/index.html"
     },
     {
+      "thermal": {
+        "solidus_c": null,
+        "liquidus_c": null,
+        "heat_capacity_j_kg_k": null,
+        "conductivity_w_m_k": null,
+        "latent_heat_j_kg": null
+      },
       "id": 7,
       "name": "Alumina",
       "conductivity_s_m": 0.0,
@@ -2148,6 +2208,23 @@
       "dynamic_viscosity_pa_s": null,
       "notes": "Representative CoorsTek AD-995 (99.5%) density. Ideal electrical insulator and unit-permeability approximations; room-temperature resistivity exceeds 10¹⁴ Ω·cm. Grade and temperature matter; no temperature dependence is applied.",
       "reference": "https://www2.coorstek.com/media/4235/advanced-alumina.pdf"
+    },
+    {
+      "thermal": {
+        "solidus_c": 582.0,
+        "liquidus_c": 652.0,
+        "heat_capacity_j_kg_k": 896.0,
+        "conductivity_w_m_k": 167.0,
+        "latent_heat_j_kg": null
+      },
+      "id": 8,
+      "name": "Aluminium 6061 (T6)",
+      "conductivity_s_m": 25000000.0,
+      "relative_permeability": 1.0,
+      "density_kg_m3": 2700.0,
+      "dynamic_viscosity_pa_s": null,
+      "notes": "Representative 6061-T6 room-temperature properties: density 2700 kg/m³, conductivity 25 MS/m, heat capacity 896 J/(kg K) at 100 °C, thermal conductivity 167 W/(m K). Melting interval 582–652 °C. Unit permeability approximation. Temper/temperature dependence and thermal evolution are not yet modeled.",
+      "reference": "https://online.kaiseraluminum.com/depot/PublicProductInformation/Document/1006/Kaiser_Aluminum_Shapes_Soft_Alloy.pdf"
     }
   ],
   "bodies": [

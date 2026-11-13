@@ -2,7 +2,7 @@ use crate::{
     caps::{self, Cap},
     domain::{GpuDomain as Gpu, Volume},
     em_ui::EmUi,
-    fluid_ui::{FluidUi, FrozenForce},
+    fluid_ui::FluidUi,
     gizmo::{Camera, Gizmo},
     gpu::GpuContext,
     inputs::FieldState,
@@ -48,6 +48,11 @@ pub struct App {
     em_ui: EmUi,
     fluid_ui: FluidUi,
     analysis: Analysis,
+    run_ui: crate::run_ui::RunUi,
+    setup: bool,
+    selection: Option<crate::picking::Object>,
+    material_selection: u32,
+    file_picker: crate::file_picker::FilePicker,
     voxel_overlay: bool,
     show_domain: bool,
     grid_lines: bool,
@@ -105,6 +110,11 @@ impl App {
             em_ui: EmUi::default(),
             fluid_ui: FluidUi::default(),
             analysis: Analysis::Electromagnetics,
+            run_ui: Default::default(),
+            setup: true,
+            selection: None,
+            material_selection: 2,
+            file_picker: Default::default(),
             voxel_overlay: true,
             show_domain: true,
             grid_lines: true,
@@ -140,27 +150,23 @@ impl App {
         app
     }
     pub fn start_em_preview(&mut self, steps: u32) {
-        if let (Some(gpu), Some(volume)) = (&self.gpu, &self.volume) {
-            self.em_ui.start(
-                crate::em::Mode::Induction,
-                steps,
-                &self.model,
-                volume,
-                &gpu.context,
-            );
-        }
+        self.run_ui.steps = steps;
+        self.setup = false;
+        self.simulate();
     }
     fn clear_derived(&mut self) {
         self.volume = None;
         self.fields = FieldState::default();
         self.em_ui.invalidate();
         self.fluid_ui.invalidate();
+        self.run_ui.invalidate();
         self.caps.clear();
         self.texture = None;
 
         self.dirty = true;
     }
     fn load(&mut self) {
+        self.selection = None;
         self.notice.clear();
         let path = std::path::Path::new(&self.path);
         if path.extension().is_some_and(|e| e == "json") {
@@ -172,6 +178,7 @@ impl App {
                     self.plane = p.plane;
                     self.em_ui.config = p.electromagnetics;
                     self.fluid_ui.config = p.fluid;
+                    self.run_ui.config = p.run;
                     self.project_path = self.path.clone();
                     self.clear_derived();
                     self.gizmo = Gizmo::default();
@@ -185,6 +192,7 @@ impl App {
                     self.model = m;
                     self.em_ui.config = crate::em::EmConfig::default();
                     self.fluid_ui.config = crate::fluid::FluidConfig::default();
+                    self.run_ui.config = Default::default();
                     self.settings = DomainSettings::fit(&self.model);
                     self.materials = crate::simulation::default_materials();
                     self.clear_derived();
@@ -207,6 +215,7 @@ impl App {
                 self.fields = FieldState::default();
                 self.em_ui.invalidate();
                 self.fluid_ui.invalidate();
+                self.run_ui.invalidate();
                 self.domain_pending = false;
                 self.dirty = true;
                 self.error.clear();
@@ -215,15 +224,8 @@ impl App {
         }
     }
     fn simulate(&mut self) {
-        if self.em_ui.busy() || self.fluid_ui.busy() {
-            return;
-        }
-        if self.analysis == Analysis::Electromagnetics
-            && self.em_ui.config.wires.is_empty()
-            && self.em_ui.config.magnets.is_empty()
-            && self.em_ui.config.uniform.is_empty()
-        {
-            self.em_ui.error = "Enable prescribed current on a CAD curve or a permanent magnet on a CAD solid under Assign properties.".into();
+        self.setup = false;
+        if self.run_ui.busy() {
             return;
         }
         if self.domain_pending || self.volume.is_none() {
@@ -233,31 +235,28 @@ impl App {
         if self.domain_pending || self.inputs_pending {
             return;
         }
-        if let (Some(gpu), Some(volume)) = (&self.gpu, &self.volume) {
-            match self.analysis {
-                Analysis::Electromagnetics => self.em_ui.start(
-                    crate::em::Mode::Induction,
-                    self.em_ui.run_steps,
-                    &self.model,
-                    volume,
-                    &gpu.context,
-                ),
-                Analysis::Fluid => {
-                    let force = self
-                        .em_ui
-                        .timeline
-                        .current()
-                        .filter(|f| f.is_current(volume))
-                        .map(|f| FrozenForce {
-                            buffer: f.result_buffer().clone(),
-                            grid: f.grid().clone(),
-                            time_s: f.time_s,
-                        });
-                    self.fluid_ui.start(volume, &gpu.context, force);
-                }
-            }
-            self.dirty = true;
+        if self.em_ui.config.wires.is_empty()
+            && self.em_ui.config.magnets.is_empty()
+            && self.em_ui.config.uniform.is_empty()
+        {
+            self.analysis = Analysis::Fluid;
+            self.fluid_ui.show = true;
+            self.em_ui.show = false;
+        } else {
+            self.analysis = Analysis::Electromagnetics;
+            self.em_ui.show = true;
+            self.fluid_ui.show = false;
         }
+        if let (Some(gpu), Some(volume)) = (&self.gpu, &self.volume) {
+            self.run_ui.start(
+                &self.model,
+                volume,
+                &gpu.context,
+                &mut self.em_ui,
+                &mut self.fluid_ui,
+            );
+        }
+        self.dirty = true;
     }
     fn sync_inputs(&mut self) {
         if self.domain_pending {
@@ -265,6 +264,7 @@ impl App {
                 || self.fluid_ui.timeline.current().is_some();
             self.em_ui.invalidate();
             self.fluid_ui.invalidate();
+            self.run_ui.invalidate();
             self.fields.invalidate();
             return;
         }
@@ -276,6 +276,7 @@ impl App {
             self.em_ui.timeline.current().is_some() || self.fluid_ui.timeline.current().is_some();
         self.em_ui.invalidate();
         self.fluid_ui.invalidate();
+        self.run_ui.invalidate();
         let (Some(gpu), Some(volume)) = (&self.gpu, &mut self.volume) else {
             return;
         };
@@ -305,6 +306,9 @@ impl App {
         self.dirty = true;
     }
     fn fields_ready(&self) -> bool {
+        if self.setup {
+            return false;
+        }
         match self.analysis {
             Analysis::Electromagnetics => self.em_ui.ready(self.volume.as_ref()),
             Analysis::Fluid => self.fluid_ui.ready(self.volume.as_ref()),
@@ -342,6 +346,7 @@ impl App {
     }
     fn draw_section_texture(&mut self) {
         let style = self.section_style();
+        let fields_ready = self.fields_ready();
         let span = self.section_span();
         if let Some(renderer) = &mut self.section_renderer {
             self.texture = Some(renderer.draw_section(
@@ -356,9 +361,13 @@ impl App {
                 },
                 span,
                 self.panel_pixels.max(32),
-                match self.analysis {
-                    Analysis::Electromagnetics => self.em_ui.view(self.volume.as_ref()),
-                    Analysis::Fluid => self.fluid_ui.view(self.volume.as_ref()),
+                if fields_ready {
+                    match self.analysis {
+                        Analysis::Electromagnetics => self.em_ui.view(self.volume.as_ref()),
+                        Analysis::Fluid => self.fluid_ui.view(self.volume.as_ref()),
+                    }
+                } else {
+                    None
                 },
             ));
         }
@@ -375,7 +384,8 @@ impl App {
         }
     }
     fn viewport(&mut self, ui: &mut egui::Ui) {
-        let (rect, response) = ui.allocate_exact_size(ui.available_size(), egui::Sense::drag());
+        let (rect, response) =
+            ui.allocate_exact_size(ui.available_size(), egui::Sense::click_and_drag());
         if rect.width() < 10. || rect.height() < 10. {
             return;
         }
@@ -398,11 +408,26 @@ impl App {
                 (self.zoom * ui.input(|i| (i.smooth_scroll_delta.y * 0.001).exp())).clamp(0.2, 8.);
         }
         camera = self.camera(rect);
-        let animate = match self.analysis {
-            Analysis::Electromagnetics => self.em_ui.animation_running(self.volume.as_ref()),
-            Analysis::Fluid => self.fields_ready() && self.fluid_ui.overlay.running(),
-        };
-        if let Some(gpu) = &self.gpu {
+        if self.setup && response.clicked() {
+            if let Some(p) = response.interact_pointer_pos() {
+                if !self.show_gizmo || !self.gizmo.hit_test(camera, self.plane, p) {
+                    self.selection =
+                        crate::picking::pick(&self.model, camera, p, self.cut, self.plane);
+                    if let Some(crate::picking::Object::Solid(i)) = self.selection {
+                        self.material_selection = self.model.bodies[i].simulation.material_id;
+                    }
+                    self.dirty = true;
+                }
+            }
+        }
+
+        let ready = self.fields_ready();
+        let animate = ready
+            && match self.analysis {
+                Analysis::Electromagnetics => self.em_ui.animation_running(self.volume.as_ref()),
+                Analysis::Fluid => self.fields_ready() && self.fluid_ui.overlay.running(),
+            };
+        if let Some(gpu) = self.gpu.as_ref().filter(|_| ready) {
             let time = ui.input(|i| i.time);
             let span = self.section_span();
             match self.analysis {
@@ -445,9 +470,13 @@ impl App {
                     || fields_ready
                     || !self.em_ui.source_lines.is_empty())
                 .then_some(crate::render::DomainView {
-                    field: match self.analysis {
-                        Analysis::Electromagnetics => self.em_ui.view(self.volume.as_ref()),
-                        Analysis::Fluid => self.fluid_ui.view(self.volume.as_ref()),
+                    field: if fields_ready {
+                        match self.analysis {
+                            Analysis::Electromagnetics => self.em_ui.view(self.volume.as_ref()),
+                            Analysis::Fluid => self.fluid_ui.view(self.volume.as_ref()),
+                        }
+                    } else {
+                        None
                     },
                     source_lines: &self.em_ui.source_lines,
                     volume: if self.voxel_overlay || fields_ready {
@@ -473,6 +502,53 @@ impl App {
                 egui::Rect::from_min_max(Pos2::ZERO, Pos2::new(1., 1.)),
                 Color32::WHITE,
             );
+        }
+        if self.setup {
+            let accent = Stroke::new(2., Color32::from_rgb(255, 220, 100));
+            match self.selection {
+                Some(crate::picking::Object::Curve(i)) => {
+                    for p in self.model.curves[i].points_mm.windows(2) {
+                        painter.line_segment(
+                            [
+                                camera.project(Vec3::from(p[0])),
+                                camera.project(Vec3::from(p[1])),
+                            ],
+                            accent,
+                        );
+                    }
+                }
+                Some(crate::picking::Object::Solid(i)) => {
+                    let b = &self.model.bodies[i];
+                    let mut lo = Vec3::splat(f32::INFINITY);
+                    let mut hi = Vec3::splat(f32::NEG_INFINITY);
+                    for p in b.triangles().iter().flatten() {
+                        lo = lo.min(*p);
+                        hi = hi.max(*p);
+                    }
+                    for axis in 0..3 {
+                        for a in 0..2 {
+                            for b in 0..2 {
+                                let mut p = lo;
+                                p[(axis + 1) % 3] = if a == 0 {
+                                    lo[(axis + 1) % 3]
+                                } else {
+                                    hi[(axis + 1) % 3]
+                                };
+                                p[(axis + 2) % 3] = if b == 0 {
+                                    lo[(axis + 2) % 3]
+                                } else {
+                                    hi[(axis + 2) % 3]
+                                };
+                                let mut q = p;
+                                q[axis] = hi[axis];
+                                painter
+                                    .line_segment([camera.project(p), camera.project(q)], accent);
+                            }
+                        }
+                    }
+                }
+                None => {}
+            }
         }
         let span = self.section_span();
         let o = self.plane.position;
@@ -526,106 +602,94 @@ impl App {
     }
     fn controls(&mut self, ui: &mut egui::Ui) {
         let previous_em_config = self.em_ui.config.clone();
-        ui.add_space(12.);
-        ui.heading("01 / Import");
-        ui.label("glTF, GLB, STL · STEP metadata only");
-        ui.text_edit_singleline(&mut self.path);
-        if ui.button("Load file").clicked() {
-            self.load();
-        }
-        ui.small("Or drop geometry / an .mhd.json project here.");
-        ui.small("Project file");
-        ui.text_edit_singleline(&mut self.project_path);
-        ui.horizontal(|ui| {
-            if ui.button("Save project").clicked() {
-                match project::save(
-                    std::path::Path::new(&self.project_path),
-                    &self.model,
-                    &self.settings,
-                    &self.materials,
-                    self.plane,
-                    &self.em_ui.config,
-                    &self.fluid_ui.config,
-                ) {
-                    Ok(()) => self.notice = "Project saved".into(),
-                    Err(e) => self.error = e,
+        let previous_fluid_config = self.fluid_ui.config.clone();
+        let previous_run_config = self.run_ui.config.clone();
+        if self.setup {
+            ui.add_space(12.);
+            ui.heading("01 / Import");
+            ui.label("glTF, GLB, STL · STEP metadata only");
+            ui.text_edit_singleline(&mut self.path);
+            if ui.button("Load file…").clicked() {
+                self.file_picker.open(&self.path);
+            }
+            ui.small("Or drop geometry / an .mhd.json project here.");
+            ui.small("Project file");
+            ui.text_edit_singleline(&mut self.project_path);
+            ui.horizontal(|ui| {
+                if ui.button("Save project").clicked() {
+                    match project::save(
+                        std::path::Path::new(&self.project_path),
+                        &self.model,
+                        &self.settings,
+                        &self.materials,
+                        self.plane,
+                        &self.em_ui.config,
+                        &self.fluid_ui.config,
+                        &self.run_ui.config,
+                    ) {
+                        Ok(()) => self.notice = "Project saved".into(),
+                        Err(e) => self.error = e,
+                    }
                 }
+                if ui.button("Open project").clicked() {
+                    self.path = self.project_path.clone();
+                    self.load();
+                }
+            });
+            if !self.notice.is_empty() {
+                ui.small(&self.notice);
             }
-            if ui.button("Open project").clicked() {
-                self.path = self.project_path.clone();
-                self.load();
+            let (lo, hi) = self.model.bounds();
+            let d = hi - lo;
+            if !self.model.bodies.is_empty() {
+                ui.monospace(format!("{:.3} × {:.3} × {:.3} mm", d.x, d.y, d.z));
             }
-        });
-        if !self.notice.is_empty() {
-            ui.small(&self.notice);
-        }
-        let (lo, hi) = self.model.bounds();
-        let d = hi - lo;
-        if !self.model.bodies.is_empty() {
-            ui.monospace(format!("{:.3} × {:.3} × {:.3} mm", d.x, d.y, d.z));
-        }
-        ui.add_space(12.);
-        ui.separator();
-        ui.heading("02 / Assign properties");
-        self.property_controls(ui);
-        let changed = self.analysis == Analysis::Electromagnetics
-            && self.em_ui.controls(
-                ui,
-                &self.model,
-                if !self.domain_pending && !self.inputs_pending {
-                    self.volume.as_ref()
-                } else {
-                    None
-                },
-                self.gpu.as_ref().map(|g| &g.context),
-            );
-        self.dirty |= changed;
-        ui.separator();
-        ui.heading("03 / Simulate");
-        let previous_analysis = self.analysis;
-        ui.horizontal(|ui| {
-            ui.selectable_value(
-                &mut self.analysis,
-                Analysis::Electromagnetics,
-                "Electromagnetics",
-            );
-            ui.selectable_value(&mut self.analysis, Analysis::Fluid, "Fluids");
-        });
-        if self.analysis != previous_analysis {
-            self.dirty = true;
-            self.em_ui.show = self.analysis == Analysis::Electromagnetics;
-            self.fluid_ui.show = self.analysis == Analysis::Fluid;
-        }
-        if self.analysis == Analysis::Fluid {
-            self.dirty |= self.fluid_ui.controls(
-                ui,
-                &self.materials,
-                self.em_ui.timeline.current().map(|f| f.time_s),
-            );
-        }
-        ui.horizontal(|ui| {
-            ui.add(
-                egui::DragValue::new(match self.analysis {
-                    Analysis::Electromagnetics => &mut self.em_ui.run_steps,
-                    Analysis::Fluid => &mut self.fluid_ui.run_steps,
-                })
-                .range(1..=10000)
-                .suffix(" steps"),
-            );
+            ui.add_space(12.);
+            ui.separator();
+            ui.heading("02 / Assign properties");
+            self.property_controls(ui);
+            ui.separator();
+            egui::CollapsingHeader::new("Domain resolution and bounds")
+                .show(ui, |ui| self.domain_controls(ui));
+        } else {
+            ui.heading("Simulation");
+            ui.small("One clock · EM ↔ fluid coupling · fixed liquid geometry");
+            let mut us = self.run_ui.config.dt_s * 1e6;
             if ui
-                .add_enabled(
-                    !self.em_ui.busy() && !self.fluid_ui.busy() && !self.model.bodies.is_empty(),
-                    egui::Button::new(egui::RichText::new("Simulate").strong())
-                        .fill(Color32::from_rgb(30, 105, 115)),
+                .add(
+                    egui::DragValue::new(&mut us)
+                        .speed(1.)
+                        .range(1e-5..=1e9)
+                        .prefix("Δt ")
+                        .suffix(" µs"),
                 )
-                .clicked()
+                .changed()
             {
-                self.simulate();
+                self.run_ui.config.dt_s = us * 1e-6;
             }
-        });
-        ui.small("Builds the domain automatically and runs the selected physics. Repeat to continue from the latest time.");
-        egui::CollapsingHeader::new("Domain resolution and bounds")
-            .show(ui, |ui| self.domain_controls(ui));
+            ui.checkbox(&mut self.run_ui.config.fluid_enabled, "Fluid motion");
+            ui.small("EM participates when currents, magnets or an imposed field are configured. No electricity is required for fluid-only runs. Thermal evolution is pending.");
+            if self.run_ui.config.fluid_enabled {
+                self.fluid_ui.controls(ui, &self.materials);
+            }
+            egui::CollapsingHeader::new("EM numerical settings").show(ui, |ui| {
+                self.em_ui.controls(ui);
+            });
+            ui.horizontal(|ui| {
+                ui.add(
+                    egui::DragValue::new(&mut self.run_ui.steps)
+                        .range(1..=10000)
+                        .suffix(" steps"),
+                );
+                if ui
+                    .add_enabled(!self.run_ui.busy(), egui::Button::new("Simulate"))
+                    .clicked()
+                {
+                    self.simulate();
+                }
+            });
+            ui.small("Repeat Simulate to continue. Changing inputs starts a fresh run.");
+        }
         ui.separator();
         ui.heading("04 / View results");
         ui.checkbox(&mut self.cut, "Cut geometry");
@@ -657,7 +721,7 @@ impl App {
         egui::ComboBox::from_label("Section view")
             .selected_text(view_label(selected))
             .show_ui(ui, |ui| {
-                for id in 0..=11 {
+                for id in 0..=if self.setup { 2 } else { 11 } {
                     ui.add_enabled_ui(
                         id < 3
                             || (id < 9 && self.em_ui.timeline.current().is_some())
@@ -744,25 +808,35 @@ impl App {
             self.pitch = 0.45;
             self.zoom = 1.;
         }
-        if self.em_ui.config != previous_em_config && self.fluid_ui.config.use_em_force {
+        if self.em_ui.config != previous_em_config
+            || self.fluid_ui.config != previous_fluid_config
+            || self.run_ui.config != previous_run_config
+        {
+            self.em_ui.invalidate();
             self.fluid_ui.invalidate();
+            self.run_ui.invalidate();
         }
     }
 }
-impl eframe::App for App {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        self.dirty |= self.em_ui.poll(ctx, self.volume.as_ref());
-        self.dirty |= self.fluid_ui.poll(ctx, self.volume.as_ref());
+impl App {
+    fn ui(&mut self, ctx: &egui::Context) {
+        self.dirty |= self.run_ui.poll(
+            ctx,
+            self.volume.as_ref(),
+            &mut self.em_ui,
+            &mut self.fluid_ui,
+        );
+        let previous_setup = self.setup;
         ctx.set_visuals(egui::Visuals::dark());
         egui::TopBottomPanel::top("header").show(ctx, |ui| {
             ui.add_space(9.);
             ui.horizontal(|ui| {
                 ui.heading("MHD / WORKBENCH");
+                ui.selectable_value(&mut self.setup, true, "Setup");
+                ui.selectable_value(&mut self.setup, false, "Simulation");
                 if ui
                     .add_enabled(
-                        !self.em_ui.busy()
-                            && !self.fluid_ui.busy()
-                            && !self.model.bodies.is_empty(),
+                        !self.run_ui.busy() && !self.model.bodies.is_empty(),
                         egui::Button::new(egui::RichText::new("Simulate").strong())
                             .fill(Color32::from_rgb(30, 105, 115)),
                     )
@@ -772,10 +846,7 @@ impl eframe::App for App {
                 }
 
                 ui.add_space(20.);
-                ui.colored_label(
-                    Color32::from_rgb(75, 196, 208),
-                    "EM + FIXED-GEOMETRY FLUIDS",
-                );
+                ui.colored_label(Color32::from_rgb(75, 196, 208), "COUPLED EM / FLUIDS");
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     if ctx.screen_rect().width() > 850. {
                         ui.label("Moving surface / thermal pending");
@@ -784,11 +855,13 @@ impl eframe::App for App {
             });
             ui.add_space(9.);
         });
+        self.dirty |= self.setup != previous_setup;
         egui::TopBottomPanel::bottom("status").show(ctx, |ui| {
-            self.dirty |= match self.analysis {
-                Analysis::Electromagnetics => self.em_ui.timeline_controls(ui),
-                Analysis::Fluid => self.fluid_ui.timeline_controls(ui),
-            };
+            if !self.setup {
+                self.dirty |= self
+                    .run_ui
+                    .controls(ui, &mut self.em_ui, &mut self.fluid_ui);
+            }
             ui.horizontal(|ui| {
                 ui.small(
                     self.gpu
@@ -802,6 +875,9 @@ impl eframe::App for App {
                     ui.separator();
                     ui.colored_label(Color32::LIGHT_RED, &self.em_ui.error);
                 }
+                if !self.run_ui.error.is_empty() {
+                    ui.colored_label(Color32::LIGHT_RED, &self.run_ui.error);
+                }
                 if !self.fluid_ui.error.is_empty() {
                     ui.separator();
                     ui.colored_label(Color32::LIGHT_RED, &self.fluid_ui.error);
@@ -813,6 +889,10 @@ impl eframe::App for App {
             .show(ctx, |ui| {
                 egui::ScrollArea::vertical().show(ui, |ui| self.controls(ui));
             });
+        if let Some(path) = self.file_picker.show(ctx) {
+            self.path = path.display().to_string();
+            self.load();
+        }
         self.sync_inputs();
         if let Some(path) = ctx.input(|i| i.raw.dropped_files.first().and_then(|f| f.path.clone()))
         {
@@ -1108,118 +1188,218 @@ impl App {
         }
     }
     fn property_controls(&mut self, ui: &mut egui::Ui) {
-        ui.small("Assign materials and temperatures to solids, current waveforms to CAD curves, and magnetization to any magnetized solids.");
-        for (i, b) in self.model.bodies.iter_mut().enumerate() {
-            egui::CollapsingHeader::new(format!("Solid · {}", b.name))
-                .id_salt(("component", i))
-                .show(ui, |ui| {
-                    self.dirty |= ui.checkbox(&mut b.visible, "Show CAD").changed();
-                    self.domain_pending |= ui
-                        .checkbox(&mut b.simulation.included, "Include in domain")
-                        .changed();
-                    let name = self
-                        .materials
-                        .iter()
-                        .find(|m| m.id == b.simulation.material_id)
-                        .map(|m| m.name.as_str())
-                        .unwrap_or("Unknown material");
-                    egui::ComboBox::from_id_salt(("material", i))
-                        .selected_text(format!("{} · {}", b.simulation.material_id, name))
-                        .show_ui(ui, |ui| {
-                            for material in self.materials.iter().filter(|m| m.id != 0) {
-                                self.inputs_pending |= ui
-                                    .selectable_value(
-                                        &mut b.simulation.material_id,
-                                        material.id,
-                                        format!("{} · {}", material.id, material.name),
-                                    )
-                                    .changed();
-                            }
-                        });
-                    self.inputs_pending |= optional(
-                        ui,
-                        "Initial temperature",
-                        &mut b.simulation.temperature_c,
-                        20.,
-                        1.,
-                        " °C",
+        use crate::picking::Object;
+        ui.small("Click an object in the 3D view, or select it here.");
+        let previous_selection = self.selection;
+        egui::ScrollArea::vertical()
+            .id_salt("object_list")
+            .max_height(150.)
+            .show(ui, |ui| {
+                for (i, b) in self.model.bodies.iter().enumerate() {
+                    ui.selectable_value(
+                        &mut self.selection,
+                        Some(Object::Solid(i)),
+                        format!("Solid · {}", b.name),
                     );
-                    self.dirty |= self.em_ui.body_source_properties(ui, i, b.closed());
-                    let unassigned = self.materials.iter().any(|m| {
-                        m.id == b.simulation.material_id
-                            && m.name.eq_ignore_ascii_case("Unassigned")
-                    });
-                    if self.em_ui.config.magnets.iter().any(|m| m.body == i) && unassigned {
-                        if let Some(material) = self
-                            .materials
-                            .iter()
-                            .find(|m| m.name.eq_ignore_ascii_case("Permanent magnet"))
-                        {
-                            b.simulation.material_id = material.id;
-                            self.inputs_pending = true;
-                        }
-                    }
-                });
-        }
-        self.dirty |= self.em_ui.curve_properties(ui, &self.model);
-        egui::CollapsingHeader::new("Material library").show(ui, |ui| {
-            if ui.button("Fill missing preset properties").clicked() {
-                self.inputs_pending |=
-                    crate::simulation::fill_missing_defaults(&mut self.materials);
-            }
-
-            for m in &mut self.materials {
-                ui.push_id(m.id, |ui| {
-                    ui.horizontal(|ui| {
-                        ui.label(format!("ID {}", m.id));
-                        self.inputs_pending |= ui.text_edit_singleline(&mut m.name).changed();
-                    });
-                    self.inputs_pending |=
-                        optional(ui, "Conductivity", &mut m.conductivity_s_m, 0., 1e5, " S/m");
-                    self.inputs_pending |= optional(
-                        ui,
-                        "Relative permeability",
-                        &mut m.relative_permeability,
-                        1.,
-                        0.1,
-                        "",
-                    );
-                    self.inputs_pending |=
-                        optional(ui, "Density", &mut m.density_kg_m3, 1., 10., " kg/m³");
-                    self.inputs_pending |= optional(
-                        ui,
-                        "Liquid viscosity",
-                        &mut m.dynamic_viscosity_pa_s,
-                        0.002,
-                        0.0001,
-                        " Pa·s",
-                    );
-                    if !m.notes.is_empty() {
-                        ui.small(&m.notes);
-                    }
-                    if let Some(reference) = &m.reference {
-                        ui.hyperlink_to("Reference datasheet", reference);
-                    }
-                    ui.separator();
-                });
-            }
-            if ui.button("Add material").clicked() {
-                let id = (1..255).find(|id| self.materials.iter().all(|m| m.id != *id));
-                if let Some(id) = id {
-                    self.materials.push(Material {
-                        id,
-                        name: format!("Material {id}"),
-                        conductivity_s_m: None,
-                        relative_permeability: None,
-                        density_kg_m3: None,
-                        dynamic_viscosity_pa_s: None,
-                        notes: String::new(),
-                        reference: None,
-                    });
-                    self.inputs_pending = true;
                 }
+                for (i, c) in self.model.curves.iter().enumerate() {
+                    ui.selectable_value(
+                        &mut self.selection,
+                        Some(Object::Curve(i)),
+                        format!("Centreline · {}", c.name),
+                    );
+                }
+            });
+        if self.selection != previous_selection {
+            if let Some(Object::Solid(i)) = self.selection {
+                self.material_selection = self.model.bodies[i].simulation.material_id;
             }
-        });
+        }
+        match self.selection {
+            Some(Object::Solid(i)) => {
+                let body = &mut self.model.bodies[i];
+                ui.strong(&body.name);
+                self.dirty |= ui.checkbox(&mut body.visible, "Show CAD").changed();
+                self.domain_pending |= ui
+                    .checkbox(&mut body.simulation.included, "Include in domain")
+                    .changed();
+                let name = self
+                    .materials
+                    .iter()
+                    .find(|m| m.id == body.simulation.material_id)
+                    .map(|m| m.name.as_str())
+                    .unwrap_or("Unassigned");
+                let previous_material = body.simulation.material_id;
+                egui::ComboBox::from_label("Material")
+                    .selected_text(name)
+                    .show_ui(ui, |ui| {
+                        for m in self.materials.iter().filter(|m| m.id != 0) {
+                            self.inputs_pending |= ui
+                                .selectable_value(&mut body.simulation.material_id, m.id, &m.name)
+                                .changed();
+                        }
+                    });
+                if body.simulation.material_id != previous_material {
+                    self.material_selection = body.simulation.material_id;
+                }
+                if ui.button("Edit assigned material").clicked() {
+                    self.material_selection = body.simulation.material_id;
+                }
+                self.inputs_pending |= optional(
+                    ui,
+                    "Initial temperature",
+                    &mut body.simulation.temperature_c,
+                    20.,
+                    1.,
+                    " °C",
+                );
+                if let Some(m) = self
+                    .materials
+                    .iter()
+                    .find(|m| m.id == body.simulation.material_id)
+                {
+                    if let Some(f) = body
+                        .simulation
+                        .temperature_c
+                        .and_then(|t| m.thermal.liquid_fraction(t))
+                    {
+                        ui.small(format!(
+                            "Initial liquid fraction: {:.1}% (thermal setup preview)",
+                            f * 100.
+                        ));
+                    }
+                }
+                self.dirty |= self.em_ui.body_source_properties(ui, i, body.closed());
+            }
+            Some(Object::Curve(i)) => {
+                self.dirty |= self.em_ui.curve_properties(ui, &self.model, Some(i));
+            }
+            None => {
+                ui.small("Select an object to edit its properties.");
+            }
+        }
+        ui.separator();
+        ui.heading("Materials");
+        ui.small("Objects reference these shared materials. Edits affect every assigned object.");
+        let name = self
+            .materials
+            .iter()
+            .find(|m| m.id == self.material_selection)
+            .map(|m| m.name.as_str())
+            .unwrap_or("Select material");
+        egui::ComboBox::from_id_salt("library_material")
+            .selected_text(name)
+            .show_ui(ui, |ui| {
+                for m in &self.materials {
+                    ui.selectable_value(&mut self.material_selection, m.id, &m.name);
+                }
+            });
+        if let Some(m) = self
+            .materials
+            .iter_mut()
+            .find(|m| m.id == self.material_selection)
+        {
+            let users = self
+                .model
+                .bodies
+                .iter()
+                .filter(|b| b.simulation.material_id == m.id)
+                .count();
+            ui.small(format!("Assigned to {users} objects"));
+            self.inputs_pending |= ui.text_edit_singleline(&mut m.name).changed();
+            self.inputs_pending |=
+                optional(ui, "Conductivity", &mut m.conductivity_s_m, 0., 1e5, " S/m");
+            self.inputs_pending |= optional(
+                ui,
+                "Relative permeability",
+                &mut m.relative_permeability,
+                1.,
+                0.1,
+                "",
+            );
+            self.inputs_pending |=
+                optional(ui, "Density", &mut m.density_kg_m3, 1000., 10., " kg/m³");
+            self.inputs_pending |= optional(
+                ui,
+                "Liquid viscosity",
+                &mut m.dynamic_viscosity_pa_s,
+                0.002,
+                0.0001,
+                " Pa·s",
+            );
+            egui::CollapsingHeader::new("Thermal / phase properties").show(ui, |ui| {
+                ui.small("Setup data; heat transport and phase evolution are not implemented yet.");
+                self.inputs_pending |= optional(
+                    ui,
+                    "Solidus / melting onset",
+                    &mut m.thermal.solidus_c,
+                    200.,
+                    1.,
+                    " °C",
+                );
+                self.inputs_pending |= optional(
+                    ui,
+                    "Liquidus / fully liquid",
+                    &mut m.thermal.liquidus_c,
+                    200.,
+                    1.,
+                    " °C",
+                );
+                self.inputs_pending |= optional(
+                    ui,
+                    "Heat capacity",
+                    &mut m.thermal.heat_capacity_j_kg_k,
+                    1000.,
+                    10.,
+                    " J/(kg K)",
+                );
+                self.inputs_pending |= optional(
+                    ui,
+                    "Thermal conductivity",
+                    &mut m.thermal.conductivity_w_m_k,
+                    100.,
+                    1.,
+                    " W/(m K)",
+                );
+                self.inputs_pending |= optional(
+                    ui,
+                    "Latent heat",
+                    &mut m.thermal.latent_heat_j_kg,
+                    50000.,
+                    100.,
+                    " J/kg",
+                );
+            });
+            if !m.notes.is_empty() {
+                ui.small(&m.notes);
+            }
+            if let Some(r) = &m.reference {
+                ui.hyperlink_to("Reference", r);
+            }
+        }
+        if ui.button("Create material").clicked() {
+            if let Some(id) = (1..255).find(|id| self.materials.iter().all(|m| m.id != *id)) {
+                self.materials.push(Material {
+                    id,
+                    name: format!("Material {id}"),
+                    conductivity_s_m: None,
+                    relative_permeability: None,
+                    density_kg_m3: None,
+                    dynamic_viscosity_pa_s: None,
+                    thermal: Default::default(),
+                    notes: String::new(),
+                    reference: None,
+                });
+                self.material_selection = id;
+                self.inputs_pending = true;
+            }
+        }
+    }
+}
+
+impl eframe::App for App {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        self.ui(ctx);
     }
 }
 
@@ -1227,50 +1407,69 @@ impl App {
 mod project_ui_tests {
     use super::*;
     #[test]
-    fn fluid_analysis_runs_from_frozen_em_and_invalidates_with_material_changes() {
+    fn unified_run_records_synchronous_frames_and_continues_from_latest() {
         let _lock = crate::gpu_test_lock();
         let mut app = App::new("assets/hotend-cad.mhd.json".into(), None);
         assert!(app.error.is_empty(), "{}", app.error);
         let ctx = egui::Context::default();
-        app.em_ui.run_steps = 5;
+        let wait = |app: &mut App| {
+            let start = std::time::Instant::now();
+            while app.run_ui.busy() {
+                app.run_ui
+                    .poll(&ctx, app.volume.as_ref(), &mut app.em_ui, &mut app.fluid_ui);
+                assert!(start.elapsed().as_secs() < 30);
+                std::thread::sleep(std::time::Duration::from_millis(1));
+            }
+            assert!(app.run_ui.error.is_empty(), "{}", app.run_ui.error);
+        };
+        app.run_ui.steps = 3;
         app.simulate();
-        let start = std::time::Instant::now();
-        while app.em_ui.busy() {
-            app.em_ui.poll(&ctx, app.volume.as_ref());
-            assert!(start.elapsed().as_secs() < 30);
-            std::thread::sleep(std::time::Duration::from_millis(1));
+        wait(&mut app);
+        assert_eq!(app.run_ui.timeline.samples.len(), 4);
+        for (em, fluid) in app
+            .em_ui
+            .timeline
+            .samples
+            .iter()
+            .zip(&app.fluid_ui.timeline.samples)
+        {
+            assert_eq!(em.time_s, fluid.time_s);
         }
-        assert!(app.em_ui.error.is_empty(), "{}", app.em_ui.error);
-        app.analysis = Analysis::Fluid;
-        app.em_ui.show = false;
-        app.fluid_ui.show = true;
-        app.fluid_ui.run_steps = 3;
-        app.fluid_ui.config.use_em_force = true;
-        app.simulate();
-        while app.fluid_ui.busy() {
-            app.fluid_ui.poll(&ctx, app.volume.as_ref());
-            assert!(start.elapsed().as_secs() < 30);
-            std::thread::sleep(std::time::Duration::from_millis(1));
-        }
-        assert!(app.fluid_ui.error.is_empty(), "{}", app.fluid_ui.error);
-        assert!(app.fields_ready());
-        assert_eq!(app.fluid_ui.timeline.samples.len(), 4);
-        let frame = app.fluid_ui.timeline.current().unwrap();
-        assert!(frame.diagnostics.max_speed_m_s > 0.);
         assert!(
-            frame.diagnostics.rms_divergence_s_inv < 3e-5,
-            "{:?}",
-            frame.diagnostics
+            app.fluid_ui
+                .timeline
+                .current()
+                .unwrap()
+                .diagnostics
+                .max_speed_m_s
+                > 0.
         );
-        app.fluid_ui.timeline.selected = 0;
-        assert_eq!(
-            app.fluid_ui.view(app.volume.as_ref()).unwrap().buffer,
-            app.fluid_ui.timeline.samples[0].output.result_buffer()
-        );
+        app.run_ui.timeline.selected = 0;
+        app.run_ui
+            .poll(&ctx, app.volume.as_ref(), &mut app.em_ui, &mut app.fluid_ui);
+        assert_eq!(app.em_ui.timeline.selected, 0);
+        assert_eq!(app.fluid_ui.timeline.selected, 0);
+        app.run_ui.steps = 1;
+        app.simulate();
+        wait(&mut app);
+        assert_eq!(app.run_ui.timeline.samples.len(), 5);
+        assert_eq!(app.run_ui.timeline.selected, 0);
+        assert!((app.run_ui.timeline.samples.last().unwrap().time_s - 4e-5).abs() < 1e-12);
+        let serial = app.volume.as_ref().unwrap().build_serial;
         app.materials[3].dynamic_viscosity_pa_s = Some(0.003);
         app.inputs_pending = true;
         app.sync_inputs();
-        assert!(app.fluid_ui.timeline.samples.is_empty() && app.em_ui.timeline.samples.is_empty());
+        assert!(app.run_ui.timeline.samples.is_empty());
+        assert!(app.em_ui.timeline.samples.is_empty());
+        assert!(app.fluid_ui.timeline.samples.is_empty());
+        assert_eq!(serial, app.volume.as_ref().unwrap().build_serial);
+        app.em_ui.config.wires.clear();
+        app.em_ui.config.magnets.clear();
+        app.em_ui.config.uniform.clear();
+        app.simulate();
+        wait(&mut app);
+        assert!(app.em_ui.timeline.samples.is_empty());
+        assert_eq!(app.fluid_ui.timeline.samples.len(), 2);
     }
     #[test]
     fn cad_import_properties_simulate_rebuilds_and_runs_headlessly() {
@@ -1282,7 +1481,7 @@ mod project_ui_tests {
             .curves;
         app.em_ui.config.wires = crate::em::cad_wires(&app.model);
         app.em_ui.config.wires[0].current = crate::em::Waveform::Constant { value: 10. };
-        app.em_ui.run_steps = 1;
+        app.run_ui.steps = 1;
         for material in &mut app.materials {
             material.conductivity_s_m = Some(0.);
             material.relative_permeability = Some(1.);
@@ -1299,15 +1498,20 @@ mod project_ui_tests {
         assert_eq!(proposed.1, app.volume.as_ref().unwrap().max());
         let context = egui::Context::default();
         let start = std::time::Instant::now();
-        while app.em_ui.busy() {
-            app.em_ui.poll(&context, app.volume.as_ref());
+        while app.run_ui.busy() {
+            app.run_ui.poll(
+                &context,
+                app.volume.as_ref(),
+                &mut app.em_ui,
+                &mut app.fluid_ui,
+            );
             assert!(start.elapsed().as_secs() < 20);
             std::thread::sleep(std::time::Duration::from_millis(1));
         }
         assert!(app.em_ui.error.is_empty(), "{}", app.em_ui.error);
         assert!(app.em_ui.ready(app.volume.as_ref()));
         assert_eq!(app.em_ui.timeline.samples.len(), 2);
-        assert!(app.em_ui.state.as_ref().unwrap().diagnostics.maxima[0] > 1e-6);
+        assert!(app.em_ui.timeline.current().unwrap().diagnostics.maxima[0] > 1e-6);
         app.show_domain = false;
         assert!(app.preview_bounds().is_none());
     }
@@ -1378,6 +1582,7 @@ mod project_ui_tests {
             SectionPlane::new(Vec3::new(0.1, 0.2, 4.)),
             &Default::default(),
             &Default::default(),
+            &Default::default(),
         )
         .unwrap();
         let mut app = App::new(file.display().to_string(), None);
@@ -1391,5 +1596,215 @@ mod project_ui_tests {
         assert_eq!(app.model.bodies.len(), 1);
         assert!(app.caps.is_empty());
         assert_eq!(app.volume.as_ref().unwrap().counts.len(), 1);
+    }
+}
+
+#[cfg(test)]
+mod ui_render_tests {
+    use super::*;
+    #[test]
+    fn setup_and_simulation_render_headlessly_with_file_picker() {
+        let _lock = crate::gpu_test_lock();
+        let instance = wgpu::Instance::default();
+        let adapter = pollster::block_on(instance.request_adapter(&Default::default())).unwrap();
+        let (device, queue) = pollster::block_on(
+            adapter.request_device(&crate::gpu::device_descriptor(&adapter), None),
+        )
+        .unwrap();
+        let renderer =
+            egui_wgpu::Renderer::new(&device, wgpu::TextureFormat::Rgba8Unorm, None, 1, false);
+        let state = egui_wgpu::RenderState {
+            adapter,
+            available_adapters: vec![],
+            device,
+            queue,
+            target_format: wgpu::TextureFormat::Rgba8Unorm,
+            renderer: std::sync::Arc::new(egui::epaint::mutex::RwLock::new(renderer)),
+        };
+        let mut app = App::new("assets/hotend-cad.mhd.json".into(), Some(state.clone()));
+        app.selection = Some(crate::picking::Object::Solid(1));
+        app.material_selection = 3;
+        let ctx = egui::Context::default();
+        let mut tick = 0;
+        for mode in 0..3 {
+            app.setup = mode != 1;
+            if mode == 1 {
+                app.run_ui.steps = 3;
+                app.simulate();
+                let start = std::time::Instant::now();
+                while app.run_ui.busy() {
+                    app.run_ui
+                        .poll(&ctx, app.volume.as_ref(), &mut app.em_ui, &mut app.fluid_ui);
+                    assert!(start.elapsed().as_secs() < 30);
+                    std::thread::sleep(std::time::Duration::from_millis(1));
+                }
+                assert!(app.run_ui.error.is_empty(), "{}", app.run_ui.error);
+                app.analysis = Analysis::Fluid;
+                app.em_ui.show = false;
+                app.fluid_ui.show = true;
+                app.dirty = true;
+            }
+            if mode == 2 {
+                app.file_picker.open("assets/hotend-cad.mhd.json");
+            }
+            for _ in 0..6 {
+                tick += 1;
+                let output = ctx.run(
+                    egui::RawInput {
+                        time: Some(tick as f64 / 30.),
+                        screen_rect: Some(egui::Rect::from_min_size(
+                            Pos2::ZERO,
+                            Vec2::new(1280., 900.),
+                        )),
+                        ..Default::default()
+                    },
+                    |ctx| app.ui(ctx),
+                );
+                let jobs = ctx.tessellate(output.shapes, output.pixels_per_point);
+                let target = state.device.create_texture(&wgpu::TextureDescriptor {
+                    label: Some("Headless workbench screenshot"),
+                    size: wgpu::Extent3d {
+                        width: 1280,
+                        height: 900,
+                        depth_or_array_layers: 1,
+                    },
+                    mip_level_count: 1,
+                    sample_count: 1,
+                    dimension: wgpu::TextureDimension::D2,
+                    format: state.target_format,
+                    usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
+                    view_formats: &[],
+                });
+                let buffer = state.device.create_buffer(&wgpu::BufferDescriptor {
+                    label: None,
+                    size: 1280 * 900 * 4,
+                    usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
+                    mapped_at_creation: false,
+                });
+                let mut encoder = state.device.create_command_encoder(&Default::default());
+                let screen = egui_wgpu::ScreenDescriptor {
+                    size_in_pixels: [1280, 900],
+                    pixels_per_point: output.pixels_per_point,
+                };
+                let mut renderer = state.renderer.write();
+                for (id, delta) in output.textures_delta.set {
+                    renderer.update_texture(&state.device, &state.queue, id, &delta);
+                }
+                let commands = renderer.update_buffers(
+                    &state.device,
+                    &state.queue,
+                    &mut encoder,
+                    &jobs,
+                    &screen,
+                );
+                {
+                    let pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                        label: None,
+                        color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                            view: &target.create_view(&Default::default()),
+                            resolve_target: None,
+                            ops: wgpu::Operations {
+                                load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
+                                store: wgpu::StoreOp::Store,
+                            },
+                        })],
+                        depth_stencil_attachment: None,
+                        timestamp_writes: None,
+                        occlusion_query_set: None,
+                    });
+                    renderer.render(&mut pass.forget_lifetime(), &jobs, &screen);
+                }
+                encoder.copy_texture_to_buffer(
+                    target.as_image_copy(),
+                    wgpu::TexelCopyBufferInfo {
+                        buffer: &buffer,
+                        layout: wgpu::TexelCopyBufferLayout {
+                            offset: 0,
+                            bytes_per_row: Some(1280 * 4),
+                            rows_per_image: Some(900),
+                        },
+                    },
+                    target.size(),
+                );
+                state
+                    .queue
+                    .submit(commands.into_iter().chain(Some(encoder.finish())));
+                for id in output.textures_delta.free {
+                    renderer.free_texture(&id);
+                }
+                drop(renderer);
+                let (tx, rx) = std::sync::mpsc::channel();
+                buffer
+                    .slice(..)
+                    .map_async(wgpu::MapMode::Read, move |v| tx.send(v).unwrap());
+                state.device.poll(wgpu::Maintain::Wait);
+                rx.recv().unwrap().unwrap();
+                let data = buffer.slice(..).get_mapped_range();
+                let mut ppm = b"P6\n1280 900\n255\n".to_vec();
+                for p in data.chunks_exact(4) {
+                    ppm.extend_from_slice(&p[..3]);
+                }
+                std::fs::create_dir_all("artifacts").unwrap();
+                std::fs::write(format!("artifacts/workflow-{mode}.ppm"), ppm).unwrap();
+                drop(data);
+                buffer.unmap();
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod selection_ui_tests {
+    use super::*;
+    #[test]
+    fn a_primary_click_selects_geometry_and_its_shared_material() {
+        let _lock = crate::gpu_test_lock();
+        let mut app = App::new("assets/annulus.gltf".into(), None);
+        app.show_gizmo = false;
+        app.model.bodies[0].simulation.material_id = 2;
+        let ctx = egui::Context::default();
+        let mut rect = egui::Rect::NOTHING;
+        let input = |events| egui::RawInput {
+            screen_rect: Some(egui::Rect::from_min_size(Pos2::ZERO, Vec2::new(600., 600.))),
+            events,
+            ..Default::default()
+        };
+        let _ = ctx.run(input(vec![]), |ctx| {
+            egui::CentralPanel::default().show(ctx, |ui| {
+                rect = ui.available_rect_before_wrap();
+                app.viewport(ui);
+            });
+        });
+        let camera = app.camera(rect);
+        let point = (0..50)
+            .flat_map(|y| {
+                (0..50)
+                    .map(move |x| rect.min + Vec2::new(x as f32 * 11. + 10., y as f32 * 11. + 10.))
+            })
+            .find(|p| {
+                crate::picking::pick(&app.model, camera, *p, app.cut, app.plane)
+                    == Some(crate::picking::Object::Solid(0))
+            })
+            .expect("visible annulus surface");
+        for pressed in [true, false] {
+            let _ = ctx.run(
+                input(vec![
+                    egui::Event::PointerMoved(point),
+                    egui::Event::PointerButton {
+                        pos: point,
+                        button: egui::PointerButton::Primary,
+                        pressed,
+                        modifiers: Default::default(),
+                    },
+                ]),
+                |ctx| {
+                    egui::CentralPanel::default().show(ctx, |ui| {
+                        app.viewport(ui);
+                    });
+                },
+            );
+        }
+        assert_eq!(app.selection, Some(crate::picking::Object::Solid(0)));
+        assert_eq!(app.material_selection, 2);
     }
 }

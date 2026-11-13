@@ -14,3 +14,5 @@ pub(crate) fn gpu_test_lock() -> std::sync::MutexGuard<'static, ()> {
     static LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
     LOCK.lock().unwrap_or_else(|p| p.into_inner())
 }
+
+pub mod run;

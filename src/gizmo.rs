@@ -80,6 +80,9 @@ fn radial(camera: Camera, pointer: Pos2, pivot: Vec3, axis: Vec3) -> Option<Vec3
     (p - pivot).try_normalize()
 }
 impl Gizmo {
+    pub fn hit_test(&self, camera: Camera, plane: SectionPlane, p: Pos2) -> bool {
+        self.hit(camera, plane, p).is_some()
+    }
     fn hit(&self, camera: Camera, plane: SectionPlane, p: Pos2) -> Option<Handle> {
         let pivot = camera.project(plane.position);
         let length = 82. / camera.scale;
