@@ -21,7 +21,7 @@ enum Event {
 pub struct RunUi {
     pub config: RunConfig,
     pub steps: u32,
-    pub timeline: Timeline<()>,
+    pub timeline: Timeline<RunFrame>,
     pub error: String,
     state: Option<RunState>,
     receiver: Option<mpsc::Receiver<Event>>,
@@ -65,17 +65,12 @@ impl RunUi {
         if self.busy() {
             return;
         }
-        let mut ec = em.config.clone();
-        ec.dt_s = self.config.dt_s;
-        let mut fc = fluid.config.clone();
-        fc.dt_s = self.config.dt_s;
-        fc.use_em_force = !ec.wires.is_empty() || !ec.magnets.is_empty() || !ec.uniform.is_empty();
-        let continuing = self.state.as_ref().is_some_and(|s| {
-            s.is_current(volume)
-                && s.config == self.config
-                && s.em_config == ec
-                && s.fluid_config == fc
-        });
+        let ec = em.config.clone();
+        let fc = fluid.config.clone();
+        let continuing = self
+            .state
+            .as_ref()
+            .is_some_and(|s| s.matches(volume, &self.config, &ec, &fc));
         let old = if continuing {
             self.state.take()
         } else {
@@ -120,13 +115,7 @@ impl RunUi {
             let _ = tx.send(Event::Done(run()));
         });
     }
-    pub fn poll(
-        &mut self,
-        ctx: &egui::Context,
-        volume: Option<&Volume>,
-        em: &mut EmUi,
-        fluid: &mut FluidUi,
-    ) -> bool {
+    pub fn poll(&mut self, ctx: &egui::Context, volume: Option<&Volume>) -> bool {
         let mut changed = false;
         let mut done = false;
         if let Some(rx) = &self.receiver {
@@ -135,18 +124,10 @@ impl RunUi {
                     Ok(Event::Frame(frame)) if self.accept => {
                         let bytes = frame.em.as_ref().map_or(0, |f| f.bytes)
                             + frame.fluid.as_ref().map_or(0, |f| f.bytes);
-                        em.timeline.capacity_frames = self.timeline.capacity_frames;
-                        fluid.timeline.capacity_frames = self.timeline.capacity_frames;
-                        if let Some(f) = frame.em {
-                            em.record(f);
-                        }
-                        if let Some(f) = frame.fluid {
-                            fluid.record(f);
-                        }
                         self.timeline.push(Sample {
                             time_s: frame.time_s,
                             bytes,
-                            output: (),
+                            output: frame,
                         });
                         changed = true;
                     }
@@ -181,41 +162,19 @@ impl RunUi {
             self.receiver = None;
             self.cancel = None;
         }
-        self.sync_selection(em, fluid);
         if self.busy() {
             ctx.request_repaint_after(std::time::Duration::from_millis(50));
         }
         changed
     }
-    fn sync_selection(&self, em: &mut EmUi, fluid: &mut FluidUi) {
-        // Timestamp lookup also handles changing the history window while a job runs.
-        if let Some(s) = self.timeline.samples.get(self.timeline.selected) {
-            if let Some(i) = em
-                .timeline
-                .samples
-                .iter()
-                .position(|f| f.time_s == s.time_s)
-            {
-                em.timeline.selected = i;
-            }
-            if let Some(i) = fluid
-                .timeline
-                .samples
-                .iter()
-                .position(|f| f.time_s == s.time_s)
-            {
-                fluid.timeline.selected = i;
-            }
-        }
+    pub fn em_frame(&self) -> Option<&crate::em::EmFrame> {
+        self.timeline.current().and_then(|f| f.em.as_ref())
     }
-    pub fn controls(&mut self, ui: &mut egui::Ui, em: &mut EmUi, fluid: &mut FluidUi) -> bool {
+    pub fn fluid_frame(&self) -> Option<&crate::fluid::FluidFrame> {
+        self.timeline.current().and_then(|f| f.fluid.as_ref())
+    }
+    pub fn controls(&mut self, ui: &mut egui::Ui) -> bool {
         let changed = self.timeline.controls(ui);
-        // Trim backend output storage to the same retained time window.
-        if let Some(first) = self.timeline.samples.first() {
-            em.timeline.samples.retain(|f| f.time_s >= first.time_s);
-            fluid.timeline.samples.retain(|f| f.time_s >= first.time_s);
-        }
-        self.sync_selection(em, fluid);
         if self.busy() {
             ui.horizontal(|ui| {
                 ui.spinner();

@@ -235,10 +235,7 @@ impl App {
         if self.domain_pending || self.inputs_pending {
             return;
         }
-        if self.em_ui.config.wires.is_empty()
-            && self.em_ui.config.magnets.is_empty()
-            && self.em_ui.config.uniform.is_empty()
-        {
+        if !self.em_ui.config.has_sources() {
             self.analysis = Analysis::Fluid;
             self.fluid_ui.show = true;
             self.em_ui.show = false;
@@ -260,8 +257,7 @@ impl App {
     }
     fn sync_inputs(&mut self) {
         if self.domain_pending {
-            self.dirty |= self.em_ui.timeline.current().is_some()
-                || self.fluid_ui.timeline.current().is_some();
+            self.dirty |= self.run_ui.em_frame().is_some() || self.run_ui.fluid_frame().is_some();
             self.em_ui.invalidate();
             self.fluid_ui.invalidate();
             self.run_ui.invalidate();
@@ -272,8 +268,7 @@ impl App {
             return;
         }
         self.fields.invalidate();
-        self.dirty |=
-            self.em_ui.timeline.current().is_some() || self.fluid_ui.timeline.current().is_some();
+        self.dirty |= self.run_ui.em_frame().is_some() || self.run_ui.fluid_frame().is_some();
         self.em_ui.invalidate();
         self.fluid_ui.invalidate();
         self.run_ui.invalidate();
@@ -310,8 +305,12 @@ impl App {
             return false;
         }
         match self.analysis {
-            Analysis::Electromagnetics => self.em_ui.ready(self.volume.as_ref()),
-            Analysis::Fluid => self.fluid_ui.ready(self.volume.as_ref()),
+            Analysis::Electromagnetics => self
+                .em_ui
+                .ready(self.run_ui.em_frame(), self.volume.as_ref()),
+            Analysis::Fluid => self
+                .fluid_ui
+                .ready(self.run_ui.fluid_frame(), self.volume.as_ref()),
         }
     }
     fn section_style(&self) -> Style {
@@ -363,8 +362,12 @@ impl App {
                 self.panel_pixels.max(32),
                 if fields_ready {
                     match self.analysis {
-                        Analysis::Electromagnetics => self.em_ui.view(self.volume.as_ref()),
-                        Analysis::Fluid => self.fluid_ui.view(self.volume.as_ref()),
+                        Analysis::Electromagnetics => self
+                            .em_ui
+                            .view(self.run_ui.em_frame(), self.volume.as_ref()),
+                        Analysis::Fluid => self
+                            .fluid_ui
+                            .view(self.run_ui.fluid_frame(), self.volume.as_ref()),
                     }
                 } else {
                     None
@@ -424,21 +427,31 @@ impl App {
         let ready = self.fields_ready();
         let animate = ready
             && match self.analysis {
-                Analysis::Electromagnetics => self.em_ui.animation_running(self.volume.as_ref()),
+                Analysis::Electromagnetics => self
+                    .em_ui
+                    .animation_running(self.run_ui.em_frame(), self.volume.as_ref()),
                 Analysis::Fluid => self.fields_ready() && self.fluid_ui.overlay.running(),
             };
         if let Some(gpu) = self.gpu.as_ref().filter(|_| ready) {
             let time = ui.input(|i| i.time);
             let span = self.section_span();
             match self.analysis {
-                Analysis::Electromagnetics => {
-                    self.em_ui
-                        .update_trails(time, self.plane, span, &gpu.context, self.dirty)
-                }
-                Analysis::Fluid => {
-                    self.fluid_ui
-                        .update_vectors(time, self.plane, span, &gpu.context, self.dirty)
-                }
+                Analysis::Electromagnetics => self.em_ui.update_trails(
+                    time,
+                    self.plane,
+                    span,
+                    &gpu.context,
+                    self.dirty,
+                    self.run_ui.em_frame(),
+                ),
+                Analysis::Fluid => self.fluid_ui.update_vectors(
+                    time,
+                    self.plane,
+                    span,
+                    &gpu.context,
+                    self.dirty,
+                    self.run_ui.fluid_frame(),
+                ),
             }
         }
         if animate {
@@ -472,8 +485,12 @@ impl App {
                 .then_some(crate::render::DomainView {
                     field: if fields_ready {
                         match self.analysis {
-                            Analysis::Electromagnetics => self.em_ui.view(self.volume.as_ref()),
-                            Analysis::Fluid => self.fluid_ui.view(self.volume.as_ref()),
+                            Analysis::Electromagnetics => self
+                                .em_ui
+                                .view(self.run_ui.em_frame(), self.volume.as_ref()),
+                            Analysis::Fluid => self
+                                .fluid_ui
+                                .view(self.run_ui.fluid_frame(), self.volume.as_ref()),
                         }
                     } else {
                         None
@@ -724,8 +741,8 @@ impl App {
                 for id in 0..=if self.setup { 2 } else { 11 } {
                     ui.add_enabled_ui(
                         id < 3
-                            || (id < 9 && self.em_ui.timeline.current().is_some())
-                            || (id >= 9 && self.fluid_ui.timeline.current().is_some()),
+                            || (id < 9 && self.run_ui.em_frame().is_some())
+                            || (id >= 9 && self.run_ui.fluid_frame().is_some()),
                         |ui| {
                             ui.selectable_value(&mut selected, id, view_label(id));
                         },
@@ -820,12 +837,7 @@ impl App {
 }
 impl App {
     fn ui(&mut self, ctx: &egui::Context) {
-        self.dirty |= self.run_ui.poll(
-            ctx,
-            self.volume.as_ref(),
-            &mut self.em_ui,
-            &mut self.fluid_ui,
-        );
+        self.dirty |= self.run_ui.poll(ctx, self.volume.as_ref());
         let previous_setup = self.setup;
         ctx.set_visuals(egui::Visuals::dark());
         egui::TopBottomPanel::top("header").show(ctx, |ui| {
@@ -858,9 +870,7 @@ impl App {
         self.dirty |= self.setup != previous_setup;
         egui::TopBottomPanel::bottom("status").show(ctx, |ui| {
             if !self.setup {
-                self.dirty |= self
-                    .run_ui
-                    .controls(ui, &mut self.em_ui, &mut self.fluid_ui);
+                self.dirty |= self.run_ui.controls(ui);
             }
             ui.horizontal(|ui| {
                 ui.small(
@@ -934,7 +944,7 @@ impl App {
                                 + self.plane.u() * ((uv.x * 2. - 1.) * span)
                                 + self.plane.v() * ((1. - uv.y * 2.) * span);
                             if self.fields_ready() {
-                                match self.analysis {Analysis::Electromagnetics=>self.em_ui.hover_probe(ui,point.to_array()),Analysis::Fluid=>self.fluid_ui.hover_probe(ui,point.to_array())}
+                                match self.analysis {Analysis::Electromagnetics=>self.em_ui.hover_probe(ui,point.to_array(),self.run_ui.em_frame()),Analysis::Fluid=>self.fluid_ui.hover_probe(ui,point.to_array(),self.run_ui.fluid_frame())}
                             }
                             let pixel =
                                 if self.voxel_overlay && !self.fields_ready() {
@@ -992,7 +1002,7 @@ impl App {
                         );
                     }
                     if self.fields_ready() {
-                        match self.analysis {Analysis::Electromagnetics=>self.em_ui.panel(ui),Analysis::Fluid=>self.fluid_ui.panel(ui)}
+                        match self.analysis {Analysis::Electromagnetics=>self.em_ui.panel(ui,&self.run_ui.timeline),Analysis::Fluid=>self.fluid_ui.panel(ui,self.run_ui.fluid_frame())}
                     }
                     self.domain_diagnostics(ui);
                     ui.separator();
@@ -1113,8 +1123,8 @@ impl App {
                 let cells = d.iter().map(|&n| n as u64).product::<u64>();
                 let frame_mib = cells as f64 * 64. / 1048576.;
                 let frames = match self.analysis {
-                    Analysis::Electromagnetics => self.em_ui.timeline.capacity_frames,
-                    Analysis::Fluid => self.fluid_ui.timeline.capacity_frames,
+                    Analysis::Electromagnetics => self.run_ui.timeline.capacity_frames,
+                    Analysis::Fluid => self.run_ui.timeline.capacity_frames,
                 };
                 ui.small(format!(
                     "Field result: {frame_mib:.1} MiB/frame · {:.1} MiB for {} frames",
@@ -1415,8 +1425,7 @@ mod project_ui_tests {
         let wait = |app: &mut App| {
             let start = std::time::Instant::now();
             while app.run_ui.busy() {
-                app.run_ui
-                    .poll(&ctx, app.volume.as_ref(), &mut app.em_ui, &mut app.fluid_ui);
+                app.run_ui.poll(&ctx, app.volume.as_ref());
                 assert!(start.elapsed().as_secs() < 30);
                 std::thread::sleep(std::time::Duration::from_millis(1));
             }
@@ -1426,50 +1435,47 @@ mod project_ui_tests {
         app.simulate();
         wait(&mut app);
         assert_eq!(app.run_ui.timeline.samples.len(), 4);
-        for (em, fluid) in app
-            .em_ui
-            .timeline
-            .samples
-            .iter()
-            .zip(&app.fluid_ui.timeline.samples)
-        {
-            assert_eq!(em.time_s, fluid.time_s);
+        for sample in &app.run_ui.timeline.samples {
+            let f = &sample.output;
+            assert_eq!(
+                f.em.as_ref().unwrap().time_s,
+                f.fluid.as_ref().unwrap().time_s
+            );
         }
-        assert!(
-            app.fluid_ui
-                .timeline
-                .current()
-                .unwrap()
-                .diagnostics
-                .max_speed_m_s
-                > 0.
-        );
+        assert!(app.run_ui.fluid_frame().unwrap().diagnostics.max_speed_m_s > 0.);
         app.run_ui.timeline.selected = 0;
-        app.run_ui
-            .poll(&ctx, app.volume.as_ref(), &mut app.em_ui, &mut app.fluid_ui);
-        assert_eq!(app.em_ui.timeline.selected, 0);
-        assert_eq!(app.fluid_ui.timeline.selected, 0);
+        app.run_ui.poll(&ctx, app.volume.as_ref());
+        assert_eq!(app.run_ui.em_frame().unwrap().time_s, 0.);
+        assert_eq!(app.run_ui.fluid_frame().unwrap().time_s, 0.);
         app.run_ui.steps = 1;
         app.simulate();
         wait(&mut app);
         assert_eq!(app.run_ui.timeline.samples.len(), 5);
         assert_eq!(app.run_ui.timeline.selected, 0);
         assert!((app.run_ui.timeline.samples.last().unwrap().time_s - 4e-5).abs() < 1e-12);
+        app.run_ui.timeline.capacity_frames = 2;
+        app.simulate();
+        wait(&mut app);
+        assert_eq!(app.run_ui.timeline.samples.len(), 2);
+        for sample in &app.run_ui.timeline.samples {
+            assert_eq!(sample.output.em.as_ref().unwrap().time_s, sample.time_s);
+            assert_eq!(sample.output.fluid.as_ref().unwrap().time_s, sample.time_s);
+        }
         let serial = app.volume.as_ref().unwrap().build_serial;
         app.materials[3].dynamic_viscosity_pa_s = Some(0.003);
         app.inputs_pending = true;
         app.sync_inputs();
         assert!(app.run_ui.timeline.samples.is_empty());
-        assert!(app.em_ui.timeline.samples.is_empty());
-        assert!(app.fluid_ui.timeline.samples.is_empty());
+        assert!(app.run_ui.em_frame().is_none());
+        assert!(app.run_ui.fluid_frame().is_none());
         assert_eq!(serial, app.volume.as_ref().unwrap().build_serial);
         app.em_ui.config.wires.clear();
         app.em_ui.config.magnets.clear();
         app.em_ui.config.uniform.clear();
         app.simulate();
         wait(&mut app);
-        assert!(app.em_ui.timeline.samples.is_empty());
-        assert_eq!(app.fluid_ui.timeline.samples.len(), 2);
+        assert!(app.run_ui.em_frame().is_none());
+        assert_eq!(app.run_ui.timeline.samples.len(), 2);
     }
     #[test]
     fn cad_import_properties_simulate_rebuilds_and_runs_headlessly() {
@@ -1499,19 +1505,14 @@ mod project_ui_tests {
         let context = egui::Context::default();
         let start = std::time::Instant::now();
         while app.run_ui.busy() {
-            app.run_ui.poll(
-                &context,
-                app.volume.as_ref(),
-                &mut app.em_ui,
-                &mut app.fluid_ui,
-            );
+            app.run_ui.poll(&context, app.volume.as_ref());
             assert!(start.elapsed().as_secs() < 20);
             std::thread::sleep(std::time::Duration::from_millis(1));
         }
         assert!(app.em_ui.error.is_empty(), "{}", app.em_ui.error);
-        assert!(app.em_ui.ready(app.volume.as_ref()));
-        assert_eq!(app.em_ui.timeline.samples.len(), 2);
-        assert!(app.em_ui.timeline.current().unwrap().diagnostics.maxima[0] > 1e-6);
+        assert!(app.em_ui.ready(app.run_ui.em_frame(), app.volume.as_ref()));
+        assert_eq!(app.run_ui.timeline.samples.len(), 2);
+        assert!(app.run_ui.em_frame().unwrap().diagnostics.maxima[0] > 1e-6);
         app.show_domain = false;
         assert!(app.preview_bounds().is_none());
     }
@@ -1633,8 +1634,7 @@ mod ui_render_tests {
                 app.simulate();
                 let start = std::time::Instant::now();
                 while app.run_ui.busy() {
-                    app.run_ui
-                        .poll(&ctx, app.volume.as_ref(), &mut app.em_ui, &mut app.fluid_ui);
+                    app.run_ui.poll(&ctx, app.volume.as_ref());
                     assert!(start.elapsed().as_secs() < 30);
                     std::thread::sleep(std::time::Duration::from_millis(1));
                 }

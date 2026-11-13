@@ -7,18 +7,15 @@ use crate::{
     plane::SectionPlane,
     render::FieldView,
     simulation::Material,
-    timeline::{Sample, Timeline},
     vector_ui::VectorUi,
 };
 use eframe::egui::{self, Color32};
 pub struct FluidUi {
     pub config: FluidConfig,
-    pub timeline: Timeline<FluidFrame>,
     pub overlay: VectorUi,
     pub kind: u32,
     pub show: bool,
     pub error: String,
-    accept: bool,
     component: u32,
     auto_range: bool,
     range: f32,
@@ -30,12 +27,10 @@ impl Default for FluidUi {
         overlay.minimum = 1e-7;
         Self {
             config: Default::default(),
-            timeline: Default::default(),
             overlay,
             kind: 8,
             show: true,
             error: String::new(),
-            accept: false,
             component: 0,
             auto_range: true,
             range: 1.,
@@ -45,27 +40,11 @@ impl Default for FluidUi {
 }
 impl FluidUi {
     pub fn invalidate(&mut self) {
-        self.timeline.clear();
         self.overlay.clear();
-        self.accept = false;
         self.probe_cache = None;
     }
-    pub fn record(&mut self, frame: FluidFrame) {
-        self.accept = true;
-        self.timeline.push(Sample {
-            time_s: frame.time_s,
-            bytes: frame.bytes,
-            output: frame,
-        });
-    }
-    pub fn ready(&self, volume: Option<&Volume>) -> bool {
-        self.show
-            && self.accept
-            && self
-                .timeline
-                .current()
-                .zip(volume)
-                .is_some_and(|(f, v)| f.is_current(v))
+    pub fn ready(&self, frame: Option<&FluidFrame>, volume: Option<&Volume>) -> bool {
+        self.show && frame.zip(volume).is_some_and(|(f, v)| f.is_current(v))
     }
     pub fn controls(&mut self, ui: &mut egui::Ui, materials: &[Material]) -> bool {
         ui.label("Fixed liquid region · impermeable/no-slip walls");
@@ -97,12 +76,11 @@ impl FluidUi {
         }
         changed
     }
-    fn scale(&self) -> f32 {
+    fn scale(&self, frame: Option<&FluidFrame>) -> f32 {
         if !self.auto_range {
             return self.range.abs().max(1e-30);
         }
-        self.timeline
-            .current()
+        frame
             .map(|f| match self.kind {
                 7 => f.diagnostics.max_speed_m_s,
                 8 => f.diagnostics.max_pressure_pa,
@@ -111,15 +89,19 @@ impl FluidUi {
             .unwrap_or(1.)
             .max(1e-30)
     }
-    pub fn view(&self, volume: Option<&Volume>) -> Option<FieldView<'_>> {
-        if !self.ready(volume) {
+    pub fn view<'a>(
+        &'a self,
+        frame: Option<&'a FluidFrame>,
+        volume: Option<&Volume>,
+    ) -> Option<FieldView<'a>> {
+        if !self.ready(frame, volume) {
             return None;
         }
-        self.timeline.current().map(|f| FieldView {
+        frame.map(|f| FieldView {
             buffer: f.result_buffer(),
             kind: self.kind,
             component: self.component,
-            range: self.scale(),
+            range: self.scale(frame),
             vectors: &self.overlay.arrows,
             trails: self.overlay.draw(),
         })
@@ -162,11 +144,12 @@ impl FluidUi {
         span: f32,
         context: &GpuContext,
         dirty: bool,
+        frame: Option<&FluidFrame>,
     ) {
         if !self.show {
             return;
         }
-        let Some(frame) = self.timeline.current() else {
+        let Some(frame) = frame else {
             return;
         };
         if let Err(error) = self.overlay.update(
@@ -191,8 +174,8 @@ impl FluidUi {
             self.error = error;
         }
     }
-    pub fn panel(&self, ui: &mut egui::Ui) {
-        let Some(frame) = self.timeline.current() else {
+    pub fn panel(&self, ui: &mut egui::Ui, frame: Option<&FluidFrame>) {
+        let Some(frame) = frame else {
             return;
         };
         let d = &frame.diagnostics;
@@ -203,7 +186,7 @@ impl FluidUi {
         ));
         crate::vector_ui::color_legend(
             ui,
-            self.scale(),
+            self.scale(Some(frame)),
             unit(self.kind),
             self.kind >= 8 || self.component > 0,
         );
@@ -216,8 +199,8 @@ impl FluidUi {
             d.iterations, d.relative_residual, d.elapsed_ms
         ));
     }
-    pub fn hover_probe(&mut self, ui: &mut egui::Ui, point: [f32; 3]) {
-        let Some(frame) = self.timeline.current() else {
+    pub fn hover_probe(&mut self, ui: &mut egui::Ui, point: [f32; 3], frame: Option<&FluidFrame>) {
+        let Some(frame) = frame else {
             return;
         };
         let key = (point.map(f32::to_bits), frame.time_s.to_bits());

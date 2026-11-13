@@ -29,6 +29,20 @@ impl RunConfig {
         }
     }
 }
+/// One place determines effective timesteps and force wiring for all run clients.
+fn effective(
+    config: &RunConfig,
+    em: &EmConfig,
+    fluid: &FluidConfig,
+) -> Result<(EmConfig, FluidConfig), String> {
+    config.validate()?;
+    let mut em = em.clone();
+    let mut fluid = fluid.clone();
+    em.dt_s = config.dt_s;
+    fluid.dt_s = config.dt_s;
+    fluid.use_em_force = em.has_sources();
+    Ok((em, fluid))
+}
 pub struct RunFrame {
     pub time_s: f64,
     pub em: Option<EmFrame>,
@@ -49,15 +63,11 @@ impl RunState {
         volume: &Volume,
         model: &Model,
         config: RunConfig,
-        mut em_config: EmConfig,
-        mut fluid_config: FluidConfig,
+        em_config: EmConfig,
+        fluid_config: FluidConfig,
     ) -> Result<Self, String> {
-        config.validate()?;
-        em_config.dt_s = config.dt_s;
-        fluid_config.dt_s = config.dt_s;
-        let em_enabled = !em_config.wires.is_empty()
-            || !em_config.magnets.is_empty()
-            || !em_config.uniform.is_empty();
+        let (em_config, fluid_config) = effective(&config, &em_config, &fluid_config)?;
+        let em_enabled = fluid_config.use_em_force;
         let fluid_present =
             config.fluid_enabled
                 && volume
@@ -72,7 +82,6 @@ impl RunState {
         if !em_enabled && !fluid_present {
             return Err("No active physics: assign a liquid material with density/viscosity for fluid motion, or configure a current/magnet source. Thermal evolution is not implemented yet.".into());
         }
-        fluid_config.use_em_force = em_enabled;
         let em = if em_enabled {
             Some(EmState::new(
                 context.clone(),
@@ -106,6 +115,18 @@ impl RunState {
             fluid_config,
             failed: false,
         })
+    }
+    pub fn matches(
+        &self,
+        volume: &Volume,
+        config: &RunConfig,
+        em: &EmConfig,
+        fluid: &FluidConfig,
+    ) -> bool {
+        self.is_current(volume)
+            && &self.config == config
+            && effective(config, em, fluid)
+                .is_ok_and(|(e, f)| e == self.em_config && f == self.fluid_config)
     }
     pub fn is_current(&self, volume: &Volume) -> bool {
         !self.failed

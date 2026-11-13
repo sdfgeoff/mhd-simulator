@@ -27,8 +27,6 @@ pub struct EmUi {
     history: Vec<Trace>,
     history_key: Option<([u32; 3], usize, u64, u64)>,
     hover_cache: Option<([u32; 3], u64, Option<CellField>)>,
-    pub timeline: crate::timeline::Timeline<EmFrame>,
-    accept_frames: bool,
     pub error: String,
 }
 impl Default for EmUi {
@@ -46,8 +44,6 @@ impl Default for EmUi {
             history: Vec::new(),
             history_key: None,
             hover_cache: None,
-            timeline: Default::default(),
-            accept_frames: false,
             error: String::new(),
         }
     }
@@ -55,35 +51,18 @@ impl Default for EmUi {
 impl EmUi {
     pub fn invalidate(&mut self) {
         self.overlay.clear();
-        self.timeline.clear();
-        self.accept_frames = false;
         self.history.clear();
         self.history_key = None;
         self.hover_cache = None;
     }
-    pub fn record(&mut self, frame: EmFrame) {
-        self.accept_frames = true;
-        self.timeline.push(crate::timeline::Sample {
-            time_s: frame.time_s,
-            bytes: frame.bytes,
-            output: frame,
-        });
+    pub fn ready(&self, frame: Option<&EmFrame>, volume: Option<&Volume>) -> bool {
+        self.show && frame.zip(volume).is_some_and(|(f, v)| f.is_current(v))
     }
-    pub fn ready(&self, volume: Option<&Volume>) -> bool {
-        self.show
-            && self.accept_frames
-            && self
-                .timeline
-                .current()
-                .zip(volume)
-                .is_some_and(|(frame, volume)| frame.is_current(volume))
-    }
-    fn scale(&self) -> f32 {
+    fn scale(&self, frame: Option<&EmFrame>) -> f32 {
         if !self.auto_range {
             return self.range.max(1e-30);
         }
-        self.timeline
-            .current()
+        frame
             .map(|s| match self.kind {
                 1 => s.diagnostics.maxima[0],
                 2 => s.diagnostics.applied_max_t,
@@ -95,15 +74,19 @@ impl EmUi {
             .unwrap_or(1.)
             .max(1e-30)
     }
-    pub fn view(&self, volume: Option<&Volume>) -> Option<FieldView<'_>> {
-        if !self.ready(volume) {
+    pub fn view<'a>(
+        &'a self,
+        frame: Option<&'a EmFrame>,
+        volume: Option<&Volume>,
+    ) -> Option<FieldView<'a>> {
+        if !self.ready(frame, volume) {
             return None;
         }
-        self.timeline.current().map(|s| FieldView {
+        frame.map(|s| FieldView {
             buffer: s.result_buffer(),
             kind: self.kind,
             component: self.component,
-            range: self.scale(),
+            range: self.scale(frame),
             vectors: &self.overlay.arrows,
             trails: if self.kind < 6 {
                 self.overlay.draw()
@@ -126,8 +109,8 @@ impl EmUi {
             })
             .collect();
     }
-    pub fn animation_running(&self, volume: Option<&Volume>) -> bool {
-        self.ready(volume) && self.kind < 6 && self.overlay.running()
+    pub fn animation_running(&self, frame: Option<&EmFrame>, volume: Option<&Volume>) -> bool {
+        self.ready(frame, volume) && self.kind < 6 && self.overlay.running()
     }
     pub fn update_trails(
         &mut self,
@@ -136,11 +119,12 @@ impl EmUi {
         span: f32,
         context: &GpuContext,
         dirty: bool,
+        frame: Option<&EmFrame>,
     ) {
         if !self.show || self.kind >= 6 {
             return;
         }
-        let Some(frame) = self.timeline.current() else {
+        let Some(frame) = frame else {
             return;
         };
         let layout = VectorLayout {
@@ -155,7 +139,7 @@ impl EmUi {
             interpolate: self.kind <= 3,
             validity: None,
         };
-        let scale = self.scale();
+        let scale = self.scale(Some(frame));
         if let Err(error) = self.overlay.update(
             time,
             context,
@@ -327,8 +311,13 @@ impl EmUi {
         }
         changed
     }
-    pub fn panel(&mut self, ui: &mut egui::Ui) {
-        let Some(state) = self.timeline.current() else {
+    pub fn panel(
+        &mut self,
+        ui: &mut egui::Ui,
+        timeline: &crate::timeline::Timeline<crate::run::RunFrame>,
+    ) {
+        let frame = timeline.current().and_then(|f| f.em.as_ref());
+        let Some(state) = frame else {
             return;
         };
         ui.label(if state.mode == Mode::Applied {
@@ -358,7 +347,7 @@ impl EmUi {
         ));
         crate::vector_ui::color_legend(
             ui,
-            self.scale(),
+            self.scale(frame),
             unit(self.kind),
             self.component > 0 && self.kind < 6,
         );
@@ -394,13 +383,13 @@ impl EmUi {
         });
         let key = (
             self.probe_mm.map(f32::to_bits),
-            self.timeline.samples.len(),
-            self.timeline
+            timeline.samples.len(),
+            timeline
                 .samples
                 .first()
                 .map(|s| s.time_s.to_bits())
                 .unwrap_or(0),
-            self.timeline
+            timeline
                 .samples
                 .last()
                 .map(|s| s.time_s.to_bits())
@@ -408,12 +397,13 @@ impl EmUi {
         );
         if moved || self.history_key != Some(key) {
             self.history_key = Some(key);
-            self.history = self
-                .timeline
+            self.history = timeline
                 .samples
                 .iter()
                 .filter_map(|s| {
                     s.output
+                        .em
+                        .as_ref()?
                         .probe(self.probe_mm)
                         .ok()
                         .flatten()
@@ -468,8 +458,8 @@ impl EmUi {
             ));
         }
     }
-    pub fn hover_probe(&mut self, ui: &mut egui::Ui, point: [f32; 3]) {
-        if let Some(frame) = self.timeline.current() {
+    pub fn hover_probe(&mut self, ui: &mut egui::Ui, point: [f32; 3], frame: Option<&EmFrame>) {
+        if let Some(frame) = frame {
             let key = (point.map(f32::to_bits), frame.time_s.to_bits());
             if self
                 .hover_cache

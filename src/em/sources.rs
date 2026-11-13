@@ -206,6 +206,9 @@ pub(crate) struct Element {
     pub c: [f32; 4],
 }
 impl EmConfig {
+    pub fn has_sources(&self) -> bool {
+        !self.wires.is_empty() || !self.magnets.is_empty() || !self.uniform.is_empty()
+    }
     pub fn validate(&self, model: &Model) -> Result<(), String> {
         if !(self.dt_s as f32).is_finite()
             || self.dt_s as f32 <= 0.
