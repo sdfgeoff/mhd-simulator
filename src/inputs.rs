@@ -23,12 +23,12 @@ pub(crate) struct TableEntry {
 pub struct InputVersions {
     pub geometry: u64,
     pub materials: u64,
-    pub excitation: u64,
+    pub initial_conditions: u64,
 }
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct InputChanges {
     pub materials: bool,
-    pub excitation: bool,
+    pub initial_conditions: bool,
     pub assignments: bool,
 }
 #[derive(Clone)]
@@ -75,15 +75,10 @@ fn component_table(context: &GpuContext, s: &SimulationSnapshot) -> wgpu::Buffer
         .components
         .iter()
         .map(|c| TableEntry {
-            values: [
-                c.initial_temperature_k.unwrap_or(0.),
-                c.current_a.unwrap_or(0.),
-                0.,
-                0.,
-            ],
+            values: [c.initial_temperature_k.unwrap_or(0.), 0., 0., 0.],
             flags: [
                 c.initial_temperature_k.is_some() as u32,
-                c.current_a.is_some() as u32,
+                0,
                 c.included as u32,
                 c.material_id,
             ],
@@ -114,7 +109,7 @@ impl GpuInputs {
             versions: InputVersions {
                 geometry,
                 materials: 1,
-                excitation: 1,
+                initial_conditions: 1,
             },
         })
     }
@@ -144,14 +139,12 @@ impl GpuInputs {
         Ok(InputChanges {
             assignments,
             materials: assignments || self.snapshot.materials != next.materials,
-            excitation: self
+            initial_conditions: self
                 .snapshot
                 .components
                 .iter()
                 .zip(&next.components)
-                .any(|(a, b)| {
-                    a.initial_temperature_k != b.initial_temperature_k || a.current_a != b.current_a
-                }),
+                .any(|(a, b)| a.initial_temperature_k != b.initial_temperature_k),
         })
     }
     pub(crate) fn update(
@@ -164,11 +157,11 @@ impl GpuInputs {
             self.material_table = material_table(context, &next);
             self.versions.materials += 1;
         }
-        if change.excitation || change.assignments {
+        if change.initial_conditions || change.assignments {
             self.component_table = component_table(context, &next);
         }
-        if change.excitation {
-            self.versions.excitation += 1;
+        if change.initial_conditions {
+            self.versions.initial_conditions += 1;
         }
         self.snapshot = next;
     }

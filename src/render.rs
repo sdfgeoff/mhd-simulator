@@ -888,7 +888,6 @@ mod tests {
         assert_eq!(uploaded, 1);
         camera.rotation = glam::Quat::from_rotation_z(0.3);
         plane.position.x = 0.1;
-        model.bodies[0].simulation.current_a = Some(10.);
         view.draw(camera, plane, true, false, &model, &[], 1., None);
         model.bodies[0].visible = false;
         view.draw(camera, plane, true, false, &model, &[], 1., None);
@@ -912,13 +911,13 @@ mod tests {
         let mut scene = Viewport::new(view.state.clone());
         let mut model = Model::load(std::path::Path::new("assets/annulus.gltf")).unwrap();
         model.bodies[0].simulation.material_id = 3;
-        let settings = crate::project::DomainSettings {
+        let settings = crate::simulation::DomainSettings {
             min_mm: [-4., -4., -5.],
             max_mm: [4., 4., 5.],
             cell_mm: 0.25,
         };
         let volume = gpu
-            .build(&model, &settings, &crate::project::default_materials())
+            .build(&model, &settings, &crate::simulation::default_materials())
             .unwrap();
         let serial = volume.build_serial;
         // Isolate the clipping shader from CAD surface coverage along the cut boundary.

@@ -7,7 +7,6 @@ pub struct SimulationProperties {
     pub included: bool,
     pub material_id: u32,
     pub temperature_c: Option<f32>,
-    pub current_a: Option<f32>,
 }
 impl Default for SimulationProperties {
     fn default() -> Self {
@@ -15,7 +14,6 @@ impl Default for SimulationProperties {
             included: true,
             material_id: 1,
             temperature_c: None,
-            current_a: None,
         }
     }
 }
@@ -144,20 +142,6 @@ pub fn fill_missing_defaults(materials: &mut [Material]) -> bool {
     }
     changed
 }
-pub(crate) fn ensure_presets(materials: &mut Vec<Material>) {
-    for mut preset in [stainless316(0), alumina(0)] {
-        if materials
-            .iter()
-            .any(|m| m.name.eq_ignore_ascii_case(&preset.name))
-        {
-            continue;
-        }
-        if let Some(id) = (1..255).find(|id| materials.iter().all(|m| m.id != *id)) {
-            preset.id = id;
-            materials.push(preset);
-        }
-    }
-}
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct DomainSettings {
@@ -245,7 +229,6 @@ pub fn validate_bodies(model: &Model, materials: &[Material]) -> Result<(), Stri
         if b.simulation
             .temperature_c
             .is_some_and(|v| !v.is_finite() || v < -273.15)
-            || b.simulation.current_a.is_some_and(|v| !v.is_finite())
         {
             return Err(format!("Invalid temperature or current for {}", b.name));
         }
@@ -328,7 +311,6 @@ pub struct ComponentInput {
     pub included: bool,
     pub material_id: u32,
     pub initial_temperature_k: Option<f32>,
-    pub current_a: Option<f32>,
 }
 #[derive(Clone, Debug, PartialEq)]
 pub struct SimulationSnapshot {
@@ -362,7 +344,6 @@ impl SimulationSnapshot {
                     included: b.simulation.included,
                     material_id: b.simulation.material_id,
                     initial_temperature_k: b.simulation.temperature_c.map(|v| v + 273.15),
-                    current_a: b.simulation.current_a,
                 })
                 .collect(),
         };
@@ -387,7 +368,6 @@ impl SimulationSnapshot {
             }
             if c.initial_temperature_k
                 .is_some_and(|v| !v.is_finite() || v < 0.)
-                || c.current_a.is_some_and(|v| !v.is_finite())
             {
                 return Err(format!("Invalid SI temperature or current for {}", c.name));
             }

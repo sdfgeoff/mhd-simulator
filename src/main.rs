@@ -44,7 +44,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let path = args
             .get(2)
             .map(String::as_str)
-            .unwrap_or("assets/hotend-em.mhd.json");
+            .unwrap_or("assets/hotend-cad.mhd.json");
         let steps = args
             .get(3)
             .map(|s| s.parse::<u32>())
@@ -124,11 +124,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .unwrap_or("assets/hotend.gltf");
         let m = model::Model::load(std::path::Path::new(path))?;
         let gpu = domain::GpuDomain::new()?;
-        let mut settings = project::DomainSettings::fit(&m);
+        let mut settings = simulation::DomainSettings::fit(&m);
         if let Some(h) = args.get(3) {
             settings.cell_mm = h.parse()?;
         }
-        let volume = gpu.build(&m, &settings, &project::default_materials())?;
+        let volume = gpu.build(&m, &settings, &crate::simulation::default_materials())?;
         let (lo, hi) = m.bounds();
         let plane = plane::SectionPlane::new((lo + hi) * 0.5);
         let pixels = gpu.section(
@@ -169,11 +169,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let path = args
         .get(if preview { 2 } else { 1 })
         .cloned()
-        .unwrap_or(if preview {
-            "assets/hotend-em.mhd.json".into()
-        } else {
-            "assets/hotend-cad.mhd.json".into()
-        });
+        .unwrap_or_else(|| "assets/hotend-cad.mhd.json".into());
     let preview_steps = if preview {
         Some(
             args.get(3)

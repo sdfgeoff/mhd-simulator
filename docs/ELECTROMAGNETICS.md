@@ -5,12 +5,12 @@ The workbench now computes applied magnetic fields and transient eddy currents i
 ## Run an example
 
 ```sh
-./run.sh assets/hotend-em.mhd.json
+./run.sh assets/hotend-cad.mhd.json
 # Or initialize and advance five steps automatically:
-./run.sh --em-preview assets/hotend-em.mhd.json 5
+./run.sh --em-preview assets/hotend-cad.mhd.json 5
 ```
 
-1. Use **01 / Import**, then **02 / Assign properties** to set materials, temperatures and current sources. Expand each CAD **Curve**, enable **Carry prescribed current**, and set its independent waveform and wire/core radius. Expand any CAD **Solid** to enable its own **Permanent magnet source** and set magnetization. **03 / Simulate → Simulate** builds/rebuilds the domain, synchronizes properties and runs the requested number of induction steps. Click again to continue. The example uses a 100 A, four-turn closed coil with 50 µs rise, hold and fall, and 10 µs steps. Applied-only previews, initialization and single stepping remain under **Advanced: applied preview / single steps**.
+1. Use **01 / Import**, then **02 / Assign properties** to set materials, temperatures and current sources. Expand each CAD **Curve**, enable **Carry prescribed current**, and set its independent waveform and wire/core radius. Expand any CAD **Solid** to enable its own **Permanent magnet source** and set magnetization. **03 / Simulate → Simulate** builds/rebuilds the domain, synchronizes properties and runs the requested number of induction steps. Click again to continue. The example has two independently driven CAD windings, two permanent magnets, and 10 µs steps. Applied-only previews, initialization and single stepping remain under **Applied field / diagnostic stepping**.
 2. Under **04 / View results → Section view**, choose Hatched CAD, CAD outlines, Voxel domain, total/applied/reaction B, induced J, Lorentz force or Joule heating. Field component, colour range and arrow controls sit here too. The choice applies to both viewports. Each viewport samples the resident 3D field buffer at its own pixel size. B is interpolated between cell samples; J/force/heating retain cell values across material interfaces. CAD section contours remain visible. The legend states the colour range and SI unit.
 3. **Vector arrows on plane** uses a small GPU gather of the selected vector field. Density defaults to 25×25 samples and is adjustable from 8×8 to 64×64; arrow length scales with sample spacing to limit overlap. The arrows are drawn as geometry in each viewport. The source wire path and its return lead appear in the 3D view. Moving or rotating the plane does not rerun the physics.
 4. The right panel provides a nearest-cell probe and time traces. **Force / power / conservation** contains whole-domain and per-component force/heating integrals, plus current/flux divergence diagnostics. Component totals distinguish forces in the molten metal from those in the chamber.
@@ -20,28 +20,28 @@ The workbench now computes applied magnetic fields and transient eddy currents i
 
 Recorded fields stay on the GPU: 64 bytes per cell per frame. Retention uses a frame-count window, default **10**, adjustable beside the timeline. Older frames are discarded and the timeline reports their count and actual memory use. Ten 60³ frames use about 132 MiB; ten 128³ frames use 1280 MiB. Domain controls estimate memory for the selected frame count. A bounded worker queue can temporarily hold two additional frames, plus the worker's current copy and solver allocations. Results and timeline selection are session-only. The generic `Timeline<T>` owns time, selection and retention independently of electromagnetics, ready for other analysis outputs. It stores display results and diagnostics, not restart checkpoints; there is no interpolated or reconstructed history.
 
-The bundled example has deliberately **illustrative** molten-solder conductivity, 4×10⁶ S/m, and unit relative permeability. Its chamber uses the existing 316 conductivity preset referenced at 20 °C. These are not calibrated operating-temperature properties. Coil/magnet CAD envelopes are nonconducting placeholders in this example; prescribed wire paths supply the coil current. The permanent-magnet sources are initially empty. Replace inputs and check convergence before drawing design conclusions.
+The bundled example uses the default material references and approximations in [MATERIALS.md](MATERIALS.md). These are not calibrated operating-temperature properties. The coil envelope is nonconducting alumina; currents follow the CAD centrelines. The two magnet solids use the permanent-magnet material preset and independent magnetization vectors.
 
 To regenerate the example project:
 
 ```sh
-cargo run --example make_em_project
+cargo run --example make_multi_source
 ```
 
 ## CAD centreline import
 
 1. Export winding **centrelines in the main CAD assembly** as glTF/GLB `LINE_STRIP`, `LINE_LOOP`, or unbranched connected `LINES`, alongside triangle solids. Node/assembly transforms and glTF metre units are applied as for solids. All curves appear as geometry even before current is assigned. Curves remain separate CAD items; selecting them does not create conducting solid voxels.
-2. Under **Assign properties**, expand any **Curve · name**, enable **Carry prescribed current**, assign its own constant/sine/pulse/table waveform in A, and set wire/core radius. Table waveforms expose editable time/current samples directly in the curve properties. Repeat for as many curves as needed. **Reverse current direction** reverses the CAD point order for that source. Unchecked curves carry no current. All enabled currents and all magnets contribute together to the 3D field and induction solve. Generated/legacy explicit paths remain under **Legacy / generated paths** for compatibility.
+2. Under **Assign properties**, expand any **Curve · name**, enable **Carry prescribed current**, assign its own constant/sine/pulse/table waveform in A, and set wire/core radius. Table waveforms expose editable time/current samples directly in the curve properties. Repeat for as many curves as needed. **Reverse current direction** reverses the CAD point order for that source. Unchecked curves carry no current. All enabled currents and all magnets contribute together to the 3D field and induction solve.
 3. Under each **Solid · name**, enable **Permanent magnet source** and set its own world-space magnetization vector in A/m. Each magnet has independent surface refinement and smoothing settings. Enabling a magnet on an Unassigned body selects the permanent-magnet material preset; an existing material assignment is preserved. Magnetization remains a source property, separate from density/conductivity/permeability.
 4. Include each physical return lead as part of its CAD curve for induction. Open curves show a warning and remain open. Disconnected `LINES` become separate curves; branched or duplicated segments are rejected as ambiguous. Ordered strips/loops retain their direction. These are sampled polylines: export curved CAD geometry with sufficient chord resolution and compare refinement. STEP remains inspection-only; STL surface triangles cannot carry a centreline curve.
-5. New projects store each source's CAD curve index, direction and waveform, and guard the saved CAD curve names/coordinates. A changed/reordered export is rejected rather than silently reattaching currents. Source points come from the loaded CAD geometry. Older explicit-path projects remain readable. Geometry is referenced, so keep the assembly and its external buffers available.
-6. Run `./run.sh` or `./run.sh assets/hotend-cad.mhd.json` for the main-CAD example: **two separately driven winding curves and two magnetized solids**. Its geometry lives in `assets/hotend-cad.gltf`; all four sources are editable through the CAD item properties. Regenerate the example with `cargo run --example make_multi_source`. The older `hotend-em.mhd.json` remains a legacy prescribed-path example.
+5. New projects store each source's CAD curve index, direction and waveform, and guard the saved CAD curve names/coordinates. A changed/reordered export is rejected rather than silently reattaching currents. Source points come from the loaded CAD geometry. Geometry is referenced, so keep the assembly and its external buffers available.
+6. Run `./run.sh` or `./run.sh assets/hotend-cad.mhd.json` for the main-CAD example: **two separately driven winding curves and two magnetized solids**. Its geometry lives in `assets/hotend-cad.gltf`; all four sources are editable through the CAD item properties. Regenerate the example with `cargo run --example make_multi_source`.
 
 [Material defaults and sources](MATERIALS.md) describe the starting conductivity, permeability and density values, including approximations and temperature limits.
 
 ## Sources and saved settings
 
-1. Wire sources are arbitrary 3D polylines with a positive core/smoothing radius. The vector potential uses the analytic line integral of a softened 1/R kernel. This avoids resolving wire cross-sections in the material grid, but does not model skin/proximity redistribution or coil heating. Induction requires closed paths including their return leads. A generated helix includes an explicit outer return.
+1. Wire sources are arbitrary 3D polylines with a positive core/smoothing radius. The vector potential uses the analytic line integral of a softened 1/R kernel. This avoids resolving wire cross-sections in the material grid, but does not model skin/proximity redistribution or coil heating. Induction requires closed paths including their return leads.
 2. A wire can use its own current waveform in amperes, or a dimensionless waveform multiplied by a linked component's prescribed current. Constant, sine, finite-rise pulse and piecewise-linear table waveforms are supported. Table times are seconds; path coordinates are millimetres. The UI displays pulse times in microseconds. Advanced JSON exposes the complete source/settings schema.
 3. Permanent-magnet sources assign uniform magnetization M (A/m) to a closed CAD body. Oriented surface-current patches approximate K = M×n, with adjustable subdivision and smoothing. Refine both to check near-surface accuracy. In induction mode, a magnetized body must have μr=1; other bodies can have linear permeability contrast. Sources are independent of CAD visibility and material-grid inclusion: excluding a body removes its material response, not an explicitly configured source. Nonlinear saturation, hysteresis, demagnetization evolution and magnetization-dependent mechanical force are outside this version.
 4. Uniform time-dependent applied B sources are available through the JSON schema, including for verification. The applied-only mode explicitly assumes vacuum permeability and no conductive reaction. Induction uses the assigned scalar conductivity and relative permeability; unset required values are rejected. Background material 0 is explicitly vacuum (σ=0, μr=1), and incompatible values are rejected.
@@ -90,7 +90,7 @@ cargo test published_team6_hollow_sphere -- --ignored --nocapture
 # Additional refinement:
 MHD_TEAM6_GRIDS=128 cargo test published_team6_hollow_sphere -- --ignored --nocapture
 # Reproducible device run and CSV output:
-./run.sh --em-check assets/hotend-em.mhd.json 20
+./run.sh --em-check assets/hotend-cad.mhd.json 20
 ```
 
 The CLI writes `artifacts/em-probe.csv` at [1,0,4] mm and `artifacts/em-body.csv` for component integrals. The benchmark writes `artifacts/team6.csv`. These are runtime artifacts, ignored by git.
@@ -109,6 +109,4 @@ Measured on an NVIDIA RTX 3060 Laptop GPU:
 
 These results demonstrate the coarse-wall error and improvement in local current with refinement; they do not establish high-accuracy force prediction. Central-field and local heating errors do not decrease monotonically at fixed first-order timestep. Further spatial/time refinement and interface treatment are needed when tighter accuracy is required. The benchmark does not validate dynamic TEAM 28 motion.
 
-For the illustrative hotend, increasing the box from 24 to 36 mm at fixed 0.4 mm spacing changed combined force by 0.03% and total Joule power by 0.003% at t=50 µs. At t=10 µs the differences were 0.23% and 0.36%. Near zero net force, relative errors are less useful: at t=150 µs the combined force changed by approximately 4×10⁻⁸ N (about 23% of that small net value). This is one boundary-size experiment, not a material or grid-accuracy validation.
-
-The 60³ hotend run took approximately 0.15–0.24 s per step without competing GPU workloads. The 128³ reference took approximately 0.9 s per step. Background rendering or other GPU work can increase these times. GPU buffer requirements are shown in the UI.
+The current 60×40×40 multi-source example took approximately 0.12–0.17 s per step in a three-step headless run on the same GPU. The 128³ reference took approximately 0.9 s per step. Background rendering or other GPU work can increase these times. Field-memory estimates are shown in the UI.

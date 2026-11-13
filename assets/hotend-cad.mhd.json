@@ -1976,9 +1976,7 @@
       {
         "cad_curve": 0,
         "reverse": false,
-        "body_current": null,
         "name": "Winding A / 0:0",
-        "points_mm": [],
         "core_radius_mm": 0.15,
         "current": {
           "kind": "pulse",
@@ -1992,9 +1990,7 @@
       {
         "cad_curve": 1,
         "reverse": false,
-        "body_current": null,
         "name": "Winding B / 0:0",
-        "points_mm": [],
         "core_radius_mm": 0.15,
         "current": {
           "kind": "pulse",
@@ -2130,8 +2126,7 @@
       "simulation": {
         "included": true,
         "material_id": 6,
-        "temperature_c": null,
-        "current_a": null
+        "temperature_c": null
       }
     },
     {
@@ -2141,8 +2136,7 @@
       "simulation": {
         "included": true,
         "material_id": 3,
-        "temperature_c": null,
-        "current_a": null
+        "temperature_c": null
       }
     },
     {
@@ -2152,8 +2146,7 @@
       "simulation": {
         "included": true,
         "material_id": 7,
-        "temperature_c": null,
-        "current_a": null
+        "temperature_c": null
       }
     },
     {
@@ -2163,8 +2156,7 @@
       "simulation": {
         "included": true,
         "material_id": 5,
-        "temperature_c": null,
-        "current_a": null
+        "temperature_c": null
       }
     },
     {
@@ -2174,8 +2166,7 @@
       "simulation": {
         "included": true,
         "material_id": 5,
-        "temperature_c": null,
-        "current_a": null
+        "temperature_c": null
       }
     }
   ],

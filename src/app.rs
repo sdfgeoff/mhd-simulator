@@ -90,7 +90,7 @@ impl App {
         let mut app = Self {
             settings,
             volume: None,
-            materials: project::default_materials(),
+            materials: crate::simulation::default_materials(),
             domain_pending: true,
             inputs_pending: false,
             fields: FieldState::default(),
@@ -174,7 +174,7 @@ impl App {
                     self.model = m;
                     self.em_ui.config = crate::em::EmConfig::default();
                     self.settings = DomainSettings::fit(&self.model);
-                    self.materials = project::default_materials();
+                    self.materials = crate::simulation::default_materials();
                     self.clear_derived();
                     self.reset_plane();
                     self.build_domain();
@@ -228,19 +228,6 @@ impl App {
                 &gpu.context,
             );
             self.dirty = true;
-        }
-    }
-    fn apply_em_demo(&mut self) {
-        match crate::em::hotend_example(&mut self.model) {
-            Ok((materials, config)) => {
-                self.materials = materials;
-                self.em_ui.config = config;
-                self.inputs_pending = true;
-                self.notice="Example inputs: illustrative solder conductivity; chamber uses 316 preset. Coil/magnet CAD envelopes are nonconducting; closed wire paths provide current.".into();
-                self.em_ui.invalidate();
-                self.dirty = true;
-            }
-            Err(e) => self.em_ui.error = e,
         }
     }
     fn sync_inputs(&mut self) {
@@ -503,7 +490,7 @@ impl App {
         ui.separator();
         ui.heading("02 / Assign properties");
         self.property_controls(ui);
-        let (changed, demo) = self.em_ui.controls(
+        let changed = self.em_ui.controls(
             ui,
             &self.model,
             if !self.domain_pending && !self.inputs_pending {
@@ -514,9 +501,6 @@ impl App {
             self.gpu.as_ref().map(|g| &g.context),
         );
         self.dirty |= changed;
-        if demo {
-            self.apply_em_demo();
-        }
         ui.separator();
         ui.heading("03 / Simulate");
         ui.horizontal(|ui| {
@@ -989,7 +973,7 @@ impl App {
     fn property_controls(&mut self, ui: &mut egui::Ui) {
         ui.small("Assign materials and temperatures to solids, current waveforms to CAD curves, and magnetization to any magnetized solids.");
         for (i, b) in self.model.bodies.iter_mut().enumerate() {
-            egui::CollapsingHeader::new(format!("Solid · {}",b.name))
+            egui::CollapsingHeader::new(format!("Solid · {}", b.name))
                 .id_salt(("component", i))
                 .show(ui, |ui| {
                     self.dirty |= ui.checkbox(&mut b.visible, "Show CAD").changed();
@@ -1023,15 +1007,19 @@ impl App {
                         1.,
                         " °C",
                     );
-                    egui::CollapsingHeader::new("Legacy linked current").show(ui,|ui| {
-                        self.inputs_pending |= optional(ui,"Prescribed current",&mut b.simulation.current_a,0.,1.," A");
-                        ui.small("Independent current waveforms are assigned to CAD curves below. This scalar supports older linked sources.");
+                    self.dirty |= self.em_ui.body_source_properties(ui, i, b.closed());
+                    let unassigned = self.materials.iter().any(|m| {
+                        m.id == b.simulation.material_id
+                            && m.name.eq_ignore_ascii_case("Unassigned")
                     });
-                    self.dirty |= self.em_ui.body_source_properties(ui,i,b.closed());
-                    let unassigned=self.materials.iter().any(|m|m.id==b.simulation.material_id && m.name.eq_ignore_ascii_case("Unassigned"));
-                    if self.em_ui.config.magnets.iter().any(|m|m.body==i) && unassigned {
-                        if let Some(material)=self.materials.iter().find(|m|m.name.eq_ignore_ascii_case("Permanent magnet")) {
-                            b.simulation.material_id=material.id;self.inputs_pending=true;
+                    if self.em_ui.config.magnets.iter().any(|m| m.body == i) && unassigned {
+                        if let Some(material) = self
+                            .materials
+                            .iter()
+                            .find(|m| m.name.eq_ignore_ascii_case("Permanent magnet"))
+                        {
+                            b.simulation.material_id = material.id;
+                            self.inputs_pending = true;
                         }
                     }
                 });
@@ -1146,24 +1134,32 @@ mod project_ui_tests {
         assert!(app.fields.computed_from.is_none());
         let after_material = app.volume.as_ref().unwrap().inputs.versions();
         assert_ne!(after_material.materials, original.materials);
-        assert_eq!(after_material.excitation, original.excitation);
+        assert_eq!(
+            after_material.initial_conditions,
+            original.initial_conditions
+        );
         app.fields.computed_from = Some(after_material);
         app.model.bodies[0].simulation.temperature_c = Some(250.);
-        app.model.bodies[0].simulation.current_a = Some(3.);
         app.inputs_pending = true;
         app.sync_inputs();
-        let after_source = app.volume.as_ref().unwrap().inputs.versions();
-        assert_eq!(after_source.materials, after_material.materials);
-        assert_ne!(after_source.excitation, after_material.excitation);
+        let after_temperature = app.volume.as_ref().unwrap().inputs.versions();
+        assert_eq!(after_temperature.materials, after_material.materials);
+        assert_ne!(
+            after_temperature.initial_conditions,
+            after_material.initial_conditions
+        );
         assert!(app.fields.computed_from.is_none());
         assert_eq!(app.volume.as_ref().unwrap().build_serial, serial);
-        app.fields.computed_from = Some(after_source);
+        app.fields.computed_from = Some(after_temperature);
         app.materials[1].conductivity_s_m = Some(-1.);
         app.inputs_pending = true;
         app.sync_inputs();
         assert!(app.inputs_pending);
         assert!(!app.error.is_empty());
-        assert_eq!(app.volume.as_ref().unwrap().inputs.versions(), after_source);
+        assert_eq!(
+            app.volume.as_ref().unwrap().inputs.versions(),
+            after_temperature
+        );
         assert!(app.fields.computed_from.is_none());
         app.materials[1].conductivity_s_m = Some(1e6);
         app.sync_inputs();
@@ -1179,7 +1175,7 @@ mod project_ui_tests {
         let _gpu_lock = crate::gpu_test_lock();
         let model = Model::load(std::path::Path::new("assets/hotend.glb")).unwrap();
         let settings = DomainSettings::fit(&model);
-        let materials = project::default_materials();
+        let materials = crate::simulation::default_materials();
         std::fs::create_dir_all("artifacts").unwrap();
         let file = std::path::Path::new("artifacts/startup.mhd.json");
         project::save(

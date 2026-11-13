@@ -42,10 +42,6 @@ pub struct EmUi {
     pub timeline: crate::timeline::Timeline<EmFrame>,
     accept_frames: bool,
     pub error: String,
-    radius_mm: f32,
-    height_mm: f32,
-    turns: u32,
-    json: String,
 
     pub run_steps: u32,
     preview_time_us: f64,
@@ -72,10 +68,6 @@ impl Default for EmUi {
             timeline: Default::default(),
             accept_frames: false,
             error: String::new(),
-            radius_mm: 5.,
-            height_mm: 8.,
-            turns: 4,
-            json: String::new(),
 
             run_steps: 10,
             preview_time_us: 50.,
@@ -329,28 +321,34 @@ impl EmUi {
     }
     pub fn curve_properties(&mut self, ui: &mut egui::Ui, model: &Model) -> bool {
         let mut changed = false;
-        for (curve_index, curve) in model.curves.iter().enumerate() {
-            egui::CollapsingHeader::new(format!("Curve · {}",curve.name)).id_salt(("cad_curve",curve_index)).show(ui, |ui| {
-                let existing=self.config.wires.iter().position(|w|w.cad_curve==Some(curve_index));
-                let mut enabled=existing.is_some();
-                if ui.checkbox(&mut enabled,"Carry prescribed current").changed() {
-                    if enabled {self.config.wires.push(em::cad_wires(model).remove(curve_index));}
-                    else if let Some(i)=existing {self.config.wires.remove(i);}
-                    changed=true;
-                }
-                ui.small(format!("{} CAD points · positive current follows CAD curve direction",curve.points_mm.len()));
-                if let Some(wire)=self.config.wires.iter_mut().find(|w|w.cad_curve==Some(curve_index)) {
-                    changed|=waveform(ui,&mut wire.current,if wire.body_current.is_some(){"× linked component A"}else{" A"});
-                    if wire.body_current.is_some() && ui.button("Use independent current waveform").clicked() {wire.body_current=None;changed=true;}
-                    changed|=ui.add(egui::DragValue::new(&mut wire.core_radius_mm).range(1e-4..=100.).speed(0.01).prefix("Wire/core radius ").suffix(" mm")).changed();
-                    changed|=ui.checkbox(&mut wire.reverse,"Reverse current direction").changed();
-                    if let Ok(points)=wire.points(model) {
-                        if points.len()>1 && Vec3::from(points[0]).distance(Vec3::from(*points.last().unwrap()))>1e-4 {
-                            ui.colored_label(Color32::YELLOW,"Open CAD path: include the physical return lead in the CAD for induction.");
+        for (index, curve) in model.curves.iter().enumerate() {
+            let title = format!("Curve · {}", curve.name);
+            egui::CollapsingHeader::new(title)
+                .id_salt(("cad_curve", index))
+                .show(ui, |ui| {
+                    let existing = self.config.wires.iter().position(|wire| wire.cad_curve == index);
+                    let mut enabled = existing.is_some();
+                    if ui.checkbox(&mut enabled, "Carry prescribed current").changed() {
+                        if enabled {
+                            self.config.wires.push(em::Wire::for_curve(index, curve));
+                        } else if let Some(i) = existing {
+                            self.config.wires.remove(i);
+                        }
+                        changed = true;
+                    }
+                    ui.small(format!("{} CAD points · positive current follows CAD curve direction", curve.points_mm.len()));
+                    let Some(wire) = self.config.wires.iter_mut().find(|wire| wire.cad_curve == index) else { return; };
+                    changed |= waveform(ui, &mut wire.current, " A");
+                    changed |= ui.add(egui::DragValue::new(&mut wire.core_radius_mm)
+                        .range(1e-4..=100.).speed(0.01).prefix("Wire/core radius ").suffix(" mm")).changed();
+                    changed |= ui.checkbox(&mut wire.reverse, "Reverse current direction").changed();
+                    if let Ok(points) = wire.points(model) {
+                        let open = points.len() > 1 && Vec3::from(points[0]).distance(Vec3::from(*points.last().unwrap())) > 1e-4;
+                        if open {
+                            ui.colored_label(Color32::YELLOW, "Open CAD path: include the physical return lead in the CAD for induction.");
                         }
                     }
-                }
-            });
+                });
         }
         if changed {
             self.invalidate();
@@ -419,274 +417,97 @@ impl EmUi {
         }
         changed
     }
-    /// Returns (view changed, apply illustrative demo materials).
+    /// Solver settings and optional diagnostic stepping; sources live on CAD items.
     pub fn controls(
         &mut self,
         ui: &mut egui::Ui,
         model: &Model,
         volume: Option<&Volume>,
         context: Option<&GpuContext>,
-    ) -> (bool, bool) {
+    ) -> bool {
         ui.separator();
-        ui.label("Current sources and solver settings");
-
-        let busy = self.receiver.is_some();
+        ui.label("Solver settings");
+        ui.small(format!(
+            "{} current paths · {} magnetized solids",
+            self.config.wires.len(),
+            self.config.magnets.len()
+        ));
+        let busy = self.busy();
         let mut changed = false;
         let mut config_changed = false;
-        let mut demo = false;
-        ui.add_enabled_ui(!busy,|ui|{
-            ui.small(format!("{} active current paths · {} magnetized CAD bodies",self.config.wires.len(),self.config.magnets.len()));
-            egui::CollapsingHeader::new("Legacy / generated paths").default_open(false).show(ui,|ui|{
-
-                egui::CollapsingHeader::new("Generate an example coil").show(ui, |ui| {
-                ui.horizontal(|ui|{
-ui.label("Coil R / height (mm)");
-ui.add(egui::DragValue::new(&mut self.radius_mm).range(0.1..=100.).speed(0.1));
-ui.add(egui::DragValue::new(&mut self.height_mm).range(0.1..=100.).speed(0.1));
-
-}
-);
-
-                ui.horizontal(|ui|{
-ui.label("Turns");
-ui.add(egui::DragValue::new(&mut self.turns).range(1..=100));
-
-}
-);
-
-                if ui.button("Add closed coil at model centre").clicked(){
-let (lo,hi)=model.bounds();
-self.config.wires.push(em::helix(((lo+hi)*0.5).to_array(),self.radius_mm,self.height_mm,self.turns,Waveform::Pulse{
-peak:100.,delay_s:0.,rise_s:50e-6,hold_s:50e-6,fall_s:50e-6
-}
-));
-config_changed=true;
-
-}
-
-                if ui.button("Use example coil + material inputs").clicked(){
-let (lo,hi)=model.bounds();
-self.config.wires=vec![em::helix(((lo+hi)*0.5).to_array(),5.,8.,4,Waveform::Pulse{
-peak:100.,delay_s:0.,rise_s:50e-6,hold_s:50e-6,fall_s:50e-6
-}
-)];
-self.config.magnets.clear();
-self.config.uniform.clear();
-config_changed=true;
-demo=true;
-
-}
-
-                ui.small("Example solder conductivity is illustrative; replace it for quantitative predictions.");
-
-                });
-                let mut remove=None;
-
-                for (i,wire) in self.config.wires.iter_mut().enumerate().filter(|(_,w)|w.cad_curve.is_none()) {
-ui.push_id(("wire",i),|ui|{
-egui::CollapsingHeader::new(&wire.name).show(ui,|ui|{
-
-                    config_changed|=ui.text_edit_singleline(&mut wire.name).changed();
-                    let closed=Vec3::from(wire.points_mm[0]).distance(Vec3::from(*wire.points_mm.last().unwrap()))<1e-4;
-                    ui.small("Positive current follows the point order. Set the waveform in A, or link a component current.");
-                    if !closed {
-                        ui.colored_label(Color32::YELLOW,"Open path: induction needs a return lead to close the circuit.");
-                        if ui.button("Add a straight return to the start").clicked() {wire.points_mm.push(wire.points_mm[0]);config_changed=true;}
-                    }
-                    if ui.button("Reverse current-path direction").clicked() {wire.reverse=!wire.reverse;config_changed=true;}
-
-config_changed|=ui.add(egui::DragValue::new(&mut wire.core_radius_mm).speed(0.01).range(1e-4..=100.).prefix("Core/smoothing ").suffix(" mm")).changed();
-
-                    let before=wire.body_current;
-
-                    egui::ComboBox::from_id_salt("current_link").selected_text(wire.body_current.and_then(|i|model.bodies.get(i)).map(|b|b.name.as_str()).unwrap_or("Direct waveform (A)")).show_ui(ui,|ui|{
-ui.selectable_value(&mut wire.body_current,None,"Direct waveform (A)");
-for (i,b) in model.bodies.iter().enumerate(){
-ui.selectable_value(&mut wire.body_current,Some(i),format!("× current: {}",b.name));
-
-}
-
-}
-);
-
-                    if before!=wire.body_current {
-wire.current=Waveform::Constant{
-value:if wire.body_current.is_some(){
-1.
-}
-else{
-100.
-}
-
-}
-;
-config_changed=true;
-
-}
-
-                    config_changed|=waveform(ui,&mut wire.current,if wire.body_current.is_some(){
-"× component A"
-}
-else{
-"A"
-}
-);
-
-                    egui::CollapsingHeader::new(format!("{} path points (mm)",wire.points_mm.len())).show(ui,|ui|{
-for p in &mut wire.points_mm {
-ui.horizontal(|ui|{
-for v in p {
-config_changed|=ui.add(egui::DragValue::new(v).speed(0.1)).changed();
-
-}
-
-}
-);
-
-}
-
-}
-);
-
-                    if ui.button("Remove wire").clicked(){
-remove=Some(i);
-
-}
-
-
-}
-);
-
-}
-);
-
-}
-
-                if let Some(i)=remove{
-self.config.wires.remove(i);
-config_changed=true;
-
-}
-
-                egui::CollapsingHeader::new("Advanced source/settings JSON").show(ui,|ui|{
-
-                    if ui.button("Read current settings").clicked(){
-self.json=serde_json::to_string_pretty(&self.config).unwrap_or_default();
-
-}
-
-                    ui.add(egui::TextEdit::multiline(&mut self.json).desired_rows(6).code_editor());
-
-                    if ui.button("Apply JSON").clicked(){
-match serde_json::from_str::<EmConfig>(&self.json).map_err(|e|e.to_string()).and_then(|c|{
-c.validate(model)?;
-Ok(c)
-}
-) {
-Ok(c)=>{
-self.config=c;
-config_changed=true;
-
-}
-,Err(e)=>self.error=e
-}
-
-}
-
-
-}
-);
-
-
-}
-);
-
-            let mut dt_us=self.config.dt_s*1e6;
-
-            if ui.add(egui::DragValue::new(&mut dt_us).speed(1.).range(1e-5..=1e8).prefix("Δt ").suffix(" µs")).changed(){
-self.config.dt_s=dt_us*1e-6;
-config_changed=true;
-
-}
-
-            egui::CollapsingHeader::new("Numerical solve").show(ui,|ui|{
-ui.small("Reaction A is zero at the outer box. Compare more air padding before interpreting forces.");
-config_changed|=ui.add(egui::DragValue::new(&mut self.config.relative_tolerance).speed(1e-6).range(1e-7..=1e-2).prefix("Relative residual ")).changed();
-config_changed|=ui.add(egui::DragValue::new(&mut self.config.max_iterations).range(1..=20000).prefix("Max iterations ")).changed();
-
-}
-);
-
-            if config_changed {
-self.invalidate();
-self.error.clear();
-changed=true;
-
-}
-
-            egui::CollapsingHeader::new("Advanced: applied preview / single steps").show(ui, |ui| {
-            if let (Some(volume),Some(context))=(volume,context) {
-
-                ui.add(egui::DragValue::new(&mut self.preview_time_us).speed(1.).range(0. ..=1e12).prefix("Applied preview ").suffix(" µs"));
-
-                if ui.button("Compute applied B (vacuum)").clicked(){
-self.start(Mode::Applied,0,model,volume,context);
-changed=true;
-
-}
-
-                if ui.button("Initialize induction at t = 0").clicked(){
-self.start(Mode::Induction,0,model,volume,context);
-changed=true;
-
-}
-
-                if let Some(mode)=self.state.as_ref().map(|s|s.mode) {
-
-                    ui.horizontal(|ui|{
-if ui.button("Step").clicked(){
-self.start(mode,1,model,volume,context);
-changed=true;
-
-}
-ui.add(egui::DragValue::new(&mut self.run_steps).range(1..=10000));
-if ui.button("Run steps").clicked(){
-self.start(mode,self.run_steps,model,volume,context);
-changed=true;
-
-}
-
-}
-);
-
-
-}
-
-
-}
- else {
-ui.label("Build the domain first.");
-
-}
+        ui.add_enabled_ui(!busy, |ui| {
+            let mut dt_us = self.config.dt_s * 1e6;
+            let timestep_changed = ui.add(
+                egui::DragValue::new(&mut dt_us)
+                    .speed(1.)
+                    .range(1e-5..=1e8)
+                    .prefix("Δt ")
+                    .suffix(" µs"),
+            ).changed();
+            if timestep_changed {
+                self.config.dt_s = dt_us * 1e-6;
+                config_changed = true;
+            }
+            egui::CollapsingHeader::new("Numerical solve").show(ui, |ui| {
+                ui.small("Reaction A is zero at the outer box. Compare more air padding before interpreting forces.");
+                config_changed |= ui.add(
+                    egui::DragValue::new(&mut self.config.relative_tolerance)
+                        .speed(1e-6)
+                        .range(1e-7..=1e-2)
+                        .prefix("Relative residual "),
+                ).changed();
+                config_changed |= ui.add(
+                    egui::DragValue::new(&mut self.config.max_iterations)
+                        .range(1..=20000)
+                        .prefix("Max iterations "),
+                ).changed();
             });
-
-
-}
-);
-
+            if config_changed {
+                self.invalidate();
+                self.error.clear();
+                changed = true;
+            }
+            egui::CollapsingHeader::new("Applied field / diagnostic stepping").show(ui, |ui| {
+                let (Some(volume), Some(context)) = (volume, context) else {
+                    ui.label("Build the domain first.");
+                    return;
+                };
+                ui.add(
+                    egui::DragValue::new(&mut self.preview_time_us)
+                        .speed(1.)
+                        .range(0. ..=1e12)
+                        .prefix("Applied preview ")
+                        .suffix(" µs"),
+                );
+                if ui.button("Compute applied B (vacuum)").clicked() {
+                    self.start(Mode::Applied, 0, model, volume, context);
+                    changed = true;
+                }
+                if ui.button("Initialize induction at t = 0").clicked() {
+                    self.start(Mode::Induction, 0, model, volume, context);
+                    changed = true;
+                }
+                if let Some(mode) = self.state.as_ref().map(|state| state.mode) {
+                    if ui.button("Single step").clicked() {
+                        self.start(mode, 1, model, volume, context);
+                        changed = true;
+                    }
+                }
+            });
+        });
         if busy {
             ui.spinner();
             ui.label(&self.progress);
             if ui.button("Cancel after current step").clicked() {
-                if let Some(c) = &self.cancel {
-                    c.store(true, Ordering::Relaxed);
+                if let Some(cancel) = &self.cancel {
+                    cancel.store(true, Ordering::Relaxed);
                 }
             }
         }
         if !self.error.is_empty() {
             ui.colored_label(Color32::LIGHT_RED, &self.error);
         }
-        (changed, demo)
+        changed
     }
     pub fn visualization_controls(&mut self, ui: &mut egui::Ui) -> bool {
         let mut changed = false;

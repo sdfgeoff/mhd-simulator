@@ -123,33 +123,38 @@ impl Waveform {
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Wire {
-    /// Index of a centreline in the main CAD assembly; None preserves legacy explicit paths.
-    #[serde(default)]
-    pub cad_curve: Option<usize>,
+    /// Centreline in the main CAD assembly.
+    pub cad_curve: usize,
     #[serde(default)]
     pub reverse: bool,
-    #[serde(default)]
-    pub body_current: Option<usize>,
     pub name: String,
-    #[serde(default)]
-    pub points_mm: Vec<[f32; 3]>,
     pub core_radius_mm: f32,
     pub current: Waveform,
 }
 impl Wire {
+    pub fn for_curve(index: usize, curve: &crate::model::CurvePath) -> Self {
+        Self {
+            cad_curve: index,
+            reverse: false,
+            name: curve.name.clone(),
+            core_radius_mm: 0.15,
+            current: Waveform::Constant { value: 0. },
+        }
+    }
     pub fn points<'a>(
         &'a self,
         model: &'a Model,
     ) -> Result<std::borrow::Cow<'a, [[f32; 3]]>, String> {
-        let points = if let Some(i) = self.cad_curve {
-            &model
-                .curves
-                .get(i)
-                .ok_or_else(|| format!("Wire {} refers to missing CAD curve {i}", self.name))?
-                .points_mm
-        } else {
-            &self.points_mm
-        };
+        let points = &model
+            .curves
+            .get(self.cad_curve)
+            .ok_or_else(|| {
+                format!(
+                    "Wire {} refers to missing CAD curve {}",
+                    self.name, self.cad_curve
+                )
+            })?
+            .points_mm;
         if self.reverse {
             Ok(std::borrow::Cow::Owned(
                 points.iter().rev().copied().collect(),
@@ -215,19 +220,6 @@ impl EmConfig {
         }
         for wire in &self.wires {
             let points = wire.points(model)?;
-            if let Some(i) = wire.body_current {
-                if model
-                    .bodies
-                    .get(i)
-                    .and_then(|b| b.simulation.current_a)
-                    .is_none()
-                {
-                    return Err(format!(
-                        "Wire {} needs a prescribed current on its linked component",
-                        wire.name
-                    ));
-                }
-            }
             wire.current.validate()?;
             if points.len() < 2
                 || points.iter().flatten().any(|v| !v.is_finite())
@@ -286,11 +278,7 @@ impl EmConfig {
         self.validate(model)?;
         let mut out = Vec::new();
         for wire in &self.wires {
-            let current = wire.current.value(t)
-                * wire
-                    .body_current
-                    .and_then(|i| model.bodies.get(i).and_then(|b| b.simulation.current_a))
-                    .unwrap_or(1.);
+            let current = wire.current.value(t);
             for pair in wire.points(model)?.windows(2) {
                 out.push(Element {
                     a: (Vec3::from(pair[0]) * 1e-3).extend(0.).to_array(),
@@ -352,53 +340,6 @@ pub fn cad_wires(model: &Model) -> Vec<Wire> {
         .curves
         .iter()
         .enumerate()
-        .map(|(i, curve)| Wire {
-            cad_curve: Some(i),
-            reverse: false,
-            body_current: None,
-            name: curve.name.clone(),
-            points_mm: Vec::new(),
-            core_radius_mm: 0.15,
-            current: Waveform::Constant { value: 0. },
-        })
+        .map(|(i, curve)| Wire::for_curve(i, curve))
         .collect()
-}
-/// Closed helical path with explicit outer return lead. Axis is local Z.
-pub fn helix(
-    center_mm: [f32; 3],
-    radius_mm: f32,
-    height_mm: f32,
-    turns: u32,
-    current: Waveform,
-) -> Wire {
-    let n = (turns * 48).max(48);
-    let c = Vec3::from(center_mm);
-    let mut points = Vec::new();
-    for i in 0..=n {
-        let u = i as f32 / n as f32;
-        let a = u * turns as f32 * std::f32::consts::TAU;
-        points.push(
-            (c + Vec3::new(
-                radius_mm * a.cos(),
-                radius_mm * a.sin(),
-                height_mm * (u - 0.5),
-            ))
-            .to_array(),
-        );
-    }
-    let first = Vec3::from(points[0]);
-    let last = Vec3::from(*points.last().unwrap());
-    let lead = radius_mm * 1.8;
-    points.push((last + Vec3::X * lead).to_array());
-    points.push((first + Vec3::X * lead).to_array());
-    points.push(first.to_array());
-    Wire {
-        cad_curve: None,
-        reverse: false,
-        body_current: None,
-        name: "Closed helical coil".into(),
-        points_mm: points,
-        core_radius_mm: 0.15,
-        current,
-    }
 }

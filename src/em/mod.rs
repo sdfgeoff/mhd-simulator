@@ -1,8 +1,6 @@
 //! Stationary magnetoquasistatic electromagnetics on an oriented edge/face grid.
 //! See docs/ELECTROMAGNETICS.md for the discrete formulation and limitations.
-mod example;
 mod grid;
-pub use example::hotend_example;
 mod sources;
 use crate::{
     domain::Volume,
@@ -13,7 +11,7 @@ use crate::{
 };
 use bytemuck::{Pod, Zeroable};
 use grid::Params;
-pub use sources::{EmConfig, Magnet, UniformField, Waveform, Wire, cad_wires, helix};
+pub use sources::{EmConfig, Magnet, UniformField, Waveform, Wire, cad_wires};
 use std::collections::HashMap;
 use wgpu::util::DeviceExt;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -569,11 +567,7 @@ impl EmState {
         let mut offset = 0;
         for wire in &self.config.wires {
             let count = wire.points(model)?.len() - 1;
-            let value = wire.current.value(t)
-                * wire
-                    .body_current
-                    .and_then(|i| model.bodies.get(i).and_then(|b| b.simulation.current_a))
-                    .unwrap_or(1.);
+            let value = wire.current.value(t);
             if !value.is_finite() {
                 return Err("Nonfinite source current at this time".into());
             }

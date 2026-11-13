@@ -1,7 +1,7 @@
-pub use crate::simulation::{
-    DomainSettings, Material, SimulationProperties, default_materials, validate_bodies,
-};
-use crate::simulation::{ensure_presets, validate_materials};
+#[cfg(test)]
+use crate::simulation::default_materials;
+use crate::simulation::validate_materials;
+use crate::simulation::{DomainSettings, Material, SimulationProperties, validate_bodies};
 use crate::{model::Model, plane::SectionPlane};
 use glam::{Quat, Vec3};
 use serde::{Deserialize, Serialize};
@@ -126,14 +126,13 @@ pub fn save_with_em(
     result
 }
 pub fn load(path: &Path) -> Result<Loaded, String> {
-    let mut f: File = serde_json::from_slice(&std::fs::read(path).map_err(|e| e.to_string())?)
+    let f: File = serde_json::from_slice(&std::fs::read(path).map_err(|e| e.to_string())?)
         .map_err(|e| e.to_string())?;
     if f.version != 1 {
         return Err("Unsupported project version".into());
     }
     f.domain.dims()?;
     validate_materials(&f.materials)?;
-    ensure_presets(&mut f.materials);
     let geometry = PathBuf::from(&f.geometry);
     let geometry = if geometry.is_absolute() {
         geometry
@@ -209,7 +208,6 @@ mod tests {
         let mut m = Model::load(Path::new("assets/hotend.glb")).unwrap();
         m.bodies[1].simulation.material_id = 3;
         m.bodies[1].simulation.temperature_c = Some(250.);
-        m.bodies[2].simulation.current_a = Some(-12.);
         m.bodies[0].visible = false;
         let s = DomainSettings::fit(&m);
         let mut materials = default_materials();
@@ -236,7 +234,7 @@ mod tests {
 mod material_preset_tests {
     use super::*;
     #[test]
-    fn stainless_preset_and_legacy_library_preserve_custom_ids() {
+    fn named_material_values_match_reference_conversions() {
         let materials = default_materials();
         let steel = materials
             .iter()
@@ -248,63 +246,5 @@ mod material_preset_tests {
         let ceramic = materials.iter().find(|m| m.name == "Alumina").unwrap();
         assert_eq!(ceramic.conductivity_s_m, Some(0.));
         assert_eq!(ceramic.density_kg_m3, Some(3900.));
-        let mut legacy: Vec<_> = materials.into_iter().filter(|m| m.id < 6).collect();
-        let mut custom = legacy[1].clone();
-        custom.id = 6;
-        custom.name = "My custom material".into();
-        legacy.push(custom.clone());
-        ensure_presets(&mut legacy);
-        assert_eq!(legacy.iter().find(|m| m.id == 6), Some(&custom));
-        assert_eq!(
-            legacy
-                .iter()
-                .find(|m| m.name == "316 stainless steel")
-                .unwrap()
-                .id,
-            7
-        );
-        assert!(legacy.iter().any(|m| m.name == "Alumina" && m.id == 8));
-        let text = r#"{"id":2,"name":"Copper","conductivity_s_m":null,"relative_permeability":null,"density_kg_m3":null}"#;
-        let old: Material = serde_json::from_str(text).unwrap();
-        assert!(old.notes.is_empty() && old.reference.is_none());
-    }
-}
-
-#[cfg(test)]
-mod em_tests {
-    use super::*;
-    #[test]
-    fn electromagnetic_sources_roundtrip_and_old_projects_default_cleanly() {
-        let mut model = Model::load(Path::new("assets/hotend.gltf")).unwrap();
-        let (materials, mut config) = crate::em::hotend_example(&mut model).unwrap();
-        config.magnets.push(crate::em::Magnet {
-            body: 3,
-            magnetization_a_m: [8e5, 0., 0.],
-            subdivisions: 1,
-            smoothing_mm: 0.05,
-        });
-        let settings = DomainSettings::fit(&model);
-        let path = Path::new("artifacts/em-roundtrip.mhd.json");
-        std::fs::create_dir_all("artifacts").unwrap();
-        save_with_em(
-            path,
-            &model,
-            &settings,
-            &materials,
-            SectionPlane::new(Vec3::ZERO),
-            &config,
-        )
-        .unwrap();
-        let loaded = load(path).unwrap();
-        assert_eq!(loaded.electromagnetics, config);
-        assert_eq!(loaded.model.bodies[2].simulation.current_a, Some(100.));
-        let mut legacy: serde_json::Value =
-            serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
-        legacy.as_object_mut().unwrap().remove("electromagnetics");
-        std::fs::write(path, serde_json::to_string(&legacy).unwrap()).unwrap();
-        assert_eq!(
-            load(path).unwrap().electromagnetics,
-            crate::em::EmConfig::default()
-        );
     }
 }

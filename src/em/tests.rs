@@ -49,7 +49,7 @@ fn uniform_field_and_zero_dc_induction() {
 #[test]
 fn loop_field_matches_analytic_and_pulse_induces_conserved_currents() {
     let _lock = crate::gpu_test_lock();
-    let (gpu, volume, model) = setup(24);
+    let (gpu, volume, mut model) = setup(24);
     let radius = 5.;
     let n = 128;
     let points = (0..=n)
@@ -58,12 +58,14 @@ fn loop_field_matches_analytic_and_pulse_induces_conserved_currents() {
             [radius * a.cos(), radius * a.sin(), 0.]
         })
         .collect();
-    let wire = Wire {
-        cad_curve: None,
-        reverse: false,
-        body_current: None,
+    model.curves.push(crate::model::CurvePath {
         name: "Loop".into(),
         points_mm: points,
+    });
+    let wire = Wire {
+        cad_curve: 0,
+        reverse: false,
+        name: "Loop".into(),
         core_radius_mm: 0.01,
         current: Waveform::Constant { value: 100. },
     };
@@ -84,14 +86,20 @@ fn loop_field_matches_analytic_and_pulse_induces_conserved_currents() {
         "B={} expected={expect}",
         p.b[2]
     );
-    let mut rotated = cfg.clone();
+    let mut rotated_model = model.clone();
     let axis = glam::Vec3::new(1., 2., 3.).normalize();
     let rotation = glam::Quat::from_rotation_arc(glam::Vec3::Z, axis);
-    for point in &mut rotated.wires[0].points_mm {
+    for point in &mut rotated_model.curves[0].points_mm {
         *point = (rotation * glam::Vec3::from(*point)).to_array();
     }
-    let rotated_state =
-        EmState::new(gpu.context.clone(), &volume, &model, rotated, Mode::Applied).unwrap();
+    let rotated_state = EmState::new(
+        gpu.context.clone(),
+        &volume,
+        &rotated_model,
+        cfg.clone(),
+        Mode::Applied,
+    )
+    .unwrap();
     let b = rotated_state.probe([0.; 3]).unwrap().unwrap().b;
     let b = glam::Vec3::new(b[0], b[1], b[2]);
     assert!(
@@ -441,11 +449,9 @@ fn multiple_cad_currents_and_magnets_superpose_with_independent_drives() {
     assert_eq!(model.curves.len(), 2);
     assert_eq!(config.wires.len(), 2);
     assert_eq!(config.magnets.len(), 2);
-    assert!(
-        config
-            .wires
-            .iter()
-            .all(|w| w.points_mm.is_empty() && w.cad_curve.is_some())
+    assert_eq!(
+        config.wires.iter().map(|w| w.cad_curve).collect::<Vec<_>>(),
+        vec![0, 1]
     );
     let mut combined = EmState::new(
         gpu.context.clone(),
@@ -502,7 +508,7 @@ fn multiple_cad_currents_and_magnets_superpose_with_independent_drives() {
             .contains("centrelines changed")
     );
     let mut invalid = config.clone();
-    invalid.wires[0].cad_curve = Some(99);
+    invalid.wires[0].cad_curve = 99;
     assert!(invalid.validate(&model).is_err());
     let mut induction = EmState::new(
         gpu.context.clone(),

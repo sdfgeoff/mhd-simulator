@@ -1156,8 +1156,11 @@ mod input_update_tests {
                 SimulationSnapshot::from_model(&model, &settings, &materials).unwrap(),
             )
             .unwrap();
-        assert!(change.materials && !change.assignments && !change.excitation);
-        assert_eq!(volume.inputs.versions().excitation, initial.excitation);
+        assert!(change.materials && !change.assignments && !change.initial_conditions);
+        assert_eq!(
+            volume.inputs.versions().initial_conditions,
+            initial.initial_conditions
+        );
         assert!(!fields.is_current(&volume.inputs));
         fields.invalidate();
         assert!(fields.computed_from.is_none());
@@ -1175,8 +1178,7 @@ mod input_update_tests {
         assert_eq!(table[0].flags[0], 0);
         assert_eq!(table[1].flags[0], 1);
         assert_eq!(table[1].values[0], 0.);
-        let before_source = volume.inputs.versions();
-        model.bodies[0].simulation.current_a = Some(-12.);
+        let before_temperature = volume.inputs.versions();
         model.bodies[0].simulation.temperature_c = Some(250.);
         let change = gpu
             .update_inputs(
@@ -1184,8 +1186,11 @@ mod input_update_tests {
                 SimulationSnapshot::from_model(&model, &settings, &materials).unwrap(),
             )
             .unwrap();
-        assert!(change.excitation && !change.materials && !change.assignments);
-        assert_eq!(volume.inputs.versions().materials, before_source.materials);
+        assert!(change.initial_conditions && !change.materials && !change.assignments);
+        assert_eq!(
+            volume.inputs.versions().materials,
+            before_temperature.materials
+        );
         let raw = gpu
             .read(
                 &volume.inputs.component_table,
@@ -1194,8 +1199,8 @@ mod input_update_tests {
             .unwrap();
         let entry = bytemuck::cast_slice::<u8, TableEntry>(&raw)[0];
         assert!((entry.values[0] - 523.15).abs() < 1e-4);
-        assert_eq!(entry.values[1], -12.);
-        assert_eq!(entry.flags[..2], [1, 1]);
+        assert_eq!(entry.values[1], 0.);
+        assert_eq!(entry.flags[..2], [1, 0]);
         let old_snapshot = volume.clone();
         model.bodies[0].simulation.material_id = 6;
         let change = gpu
@@ -1204,7 +1209,7 @@ mod input_update_tests {
                 SimulationSnapshot::from_model(&model, &settings, &materials).unwrap(),
             )
             .unwrap();
-        assert!(change.assignments && change.materials && !change.excitation);
+        assert!(change.assignments && change.materials && !change.initial_conditions);
         let pixels = gpu
             .section(&volume, SectionPlane::new(Vec3::ZERO), 4., 64)
             .unwrap();
