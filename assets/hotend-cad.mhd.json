@@ -1,5 +1,33 @@
 {
   "run": {
+    "thermal_enabled": false,
+    "thermal": {
+      "initial_temperature_c": 20.0,
+      "boundaries": [
+        {
+          "kind": "insulated"
+        },
+        {
+          "kind": "insulated"
+        },
+        {
+          "kind": "insulated"
+        },
+        {
+          "kind": "insulated"
+        },
+        {
+          "kind": "insulated"
+        },
+        {
+          "kind": "insulated"
+        }
+      ],
+      "exposed_boundary": {
+        "kind": "insulated"
+      },
+      "max_substeps": 4096
+    },
     "dt_s": 0.00001,
     "fluid_enabled": true
   },
@@ -2053,11 +2081,12 @@
     ],
     "advection": true,
     "use_em_force": false,
+    "mushy_drag_rate_s_inv": 1000000.0,
     "relative_tolerance": 0.00001,
     "absolute_divergence_tolerance": 0.00001,
     "max_iterations": 1000
   },
-  "version": 1,
+  "version": 2,
   "geometry": "hotend-cad.gltf",
   "domain": {
     "min_mm": [
@@ -2077,8 +2106,8 @@
       "thermal": {
         "solidus_c": null,
         "liquidus_c": null,
-        "heat_capacity_j_kg_k": null,
-        "conductivity_w_m_k": null,
+        "heat_capacity_j_kg_k": 1005.0,
+        "conductivity_w_m_k": 0.026,
         "latent_heat_j_kg": null
       },
       "id": 0,
@@ -2109,10 +2138,10 @@
     },
     {
       "thermal": {
-        "solidus_c": null,
-        "liquidus_c": null,
-        "heat_capacity_j_kg_k": null,
-        "conductivity_w_m_k": null,
+        "solidus_c": 1084.62,
+        "liquidus_c": 1084.62,
+        "heat_capacity_j_kg_k": 394.0,
+        "conductivity_w_m_k": 394.0,
         "latent_heat_j_kg": null
       },
       "id": 2,
@@ -2126,11 +2155,11 @@
     },
     {
       "thermal": {
-        "solidus_c": null,
-        "liquidus_c": null,
-        "heat_capacity_j_kg_k": null,
-        "conductivity_w_m_k": null,
-        "latent_heat_j_kg": null
+        "solidus_c": 183.0,
+        "liquidus_c": 190.0,
+        "heat_capacity_j_kg_k": 190.0,
+        "conductivity_w_m_k": 49.0,
+        "latent_heat_j_kg": 45000.0
       },
       "id": 3,
       "name": "Sn60Pb40",
@@ -2138,16 +2167,16 @@
       "relative_permeability": 1.0,
       "density_kg_m3": 8520.0,
       "dynamic_viscosity_pa_s": 0.002,
-      "notes": "Bulk solder datasheet defaults: resistivity 14.99 µΩ·cm and density 8.52 Mg/m³. Unit permeability approximation. Not calibrated molten-metal properties; temperature dependence is not applied. Liquid viscosity 0.002 Pa·s is an illustrative starting assumption; replace it at operating temperature.",
+      "notes": "Bulk solder datasheet defaults: resistivity 14.99 µΩ·cm and density 8.52 Mg/m³. Unit permeability approximation. Not calibrated molten-metal properties; temperature dependence is not applied. Liquid viscosity 0.002 Pa·s and latent heat are illustrative starting assumptions; Sn60Pb40 heat capacity is also an estimate. Replace them with operating-temperature data.",
       "reference": "https://www.ametekinterconnect.com/-/media/ametek-ecp/v2/files/cw_datasheets_sds_cfsi/datasheets/sn60pb40%20data%20sheet.pdf?la=en"
     },
     {
       "thermal": {
-        "solidus_c": null,
-        "liquidus_c": null,
-        "heat_capacity_j_kg_k": null,
-        "conductivity_w_m_k": null,
-        "latent_heat_j_kg": null
+        "solidus_c": 227.0,
+        "liquidus_c": 227.0,
+        "heat_capacity_j_kg_k": 214.0,
+        "conductivity_w_m_k": 60.5,
+        "latent_heat_j_kg": 59000.0
       },
       "id": 4,
       "name": "Sn99.3Cu0.7",
@@ -2155,15 +2184,15 @@
       "relative_permeability": 1.0,
       "density_kg_m3": 7420.0,
       "dynamic_viscosity_pa_s": 0.002,
-      "notes": "ALPHA VACULOY datasheet defaults: resistivity 11.99 µΩ·cm and density 7.42 g/cm³. Unit permeability approximation. Not calibrated molten-metal properties; temperature dependence is not applied. Liquid viscosity 0.002 Pa·s is an illustrative starting assumption; replace it at operating temperature.",
+      "notes": "ALPHA VACULOY datasheet defaults: resistivity 11.99 µΩ·cm and density 7.42 g/cm³. Unit permeability approximation. Not calibrated molten-metal properties; temperature dependence is not applied. Liquid viscosity 0.002 Pa·s and latent heat are illustrative starting assumptions; Sn60Pb40 heat capacity is also an estimate. Replace them with operating-temperature data.",
       "reference": "https://www.macdermidalpha.com/sites/default/files/2024-04/ALPHA-VACULOY-Sn99.3Cu0.7-Solid-Solder-EN-12Apr24-TB.pdf"
     },
     {
       "thermal": {
         "solidus_c": null,
         "liquidus_c": null,
-        "heat_capacity_j_kg_k": null,
-        "conductivity_w_m_k": null,
+        "heat_capacity_j_kg_k": 450.0,
+        "conductivity_w_m_k": 9.0,
         "latent_heat_j_kg": null
       },
       "id": 5,
@@ -2172,15 +2201,15 @@
       "relative_permeability": 1.0,
       "density_kg_m3": 7500.0,
       "dynamic_viscosity_pa_s": null,
-      "notes": "Representative NdFeB: resistivity 160 µΩ·cm, density 7.5 g/cm³. The solver uses μr=1 as an explicit approximation (typical recoil μr≈1.05). Set source magnetization separately per CAD body; no temperature dependence or demagnetization model.",
+      "notes": "Representative NdFeB: resistivity 160 µΩ·cm, density 7.5 g/cm³. The solver uses μr=1 as an explicit approximation (typical recoil μr≈1.05). Set source magnetization separately per CAD body; no temperature dependence or demagnetization model. Thermal conductivity 9 W/(m K) is an illustrative assumption; heat capacity 450 J/(kg K) is within the vendor range.",
       "reference": "https://www.kjmagnetics.com/neodymium-magnet-specifications.asp"
     },
     {
       "thermal": {
-        "solidus_c": null,
-        "liquidus_c": null,
-        "heat_capacity_j_kg_k": null,
-        "conductivity_w_m_k": null,
+        "solidus_c": 1375.0,
+        "liquidus_c": 1400.0,
+        "heat_capacity_j_kg_k": 500.0,
+        "conductivity_w_m_k": 15.0,
         "latent_heat_j_kg": null
       },
       "id": 6,
@@ -2196,8 +2225,8 @@
       "thermal": {
         "solidus_c": null,
         "liquidus_c": null,
-        "heat_capacity_j_kg_k": null,
-        "conductivity_w_m_k": null,
+        "heat_capacity_j_kg_k": 880.0,
+        "conductivity_w_m_k": 30.0,
         "latent_heat_j_kg": null
       },
       "id": 7,
@@ -2235,7 +2264,9 @@
       "simulation": {
         "included": true,
         "material_id": 6,
-        "temperature_c": null
+        "temperature_c": null,
+        "fixed_temperature_c": null,
+        "heat_source_w_m3": 0.0
       }
     },
     {
@@ -2245,7 +2276,9 @@
       "simulation": {
         "included": true,
         "material_id": 3,
-        "temperature_c": null
+        "temperature_c": null,
+        "fixed_temperature_c": null,
+        "heat_source_w_m3": 0.0
       }
     },
     {
@@ -2255,7 +2288,9 @@
       "simulation": {
         "included": true,
         "material_id": 7,
-        "temperature_c": null
+        "temperature_c": null,
+        "fixed_temperature_c": null,
+        "heat_source_w_m3": 0.0
       }
     },
     {
@@ -2265,7 +2300,9 @@
       "simulation": {
         "included": true,
         "material_id": 5,
-        "temperature_c": null
+        "temperature_c": null,
+        "fixed_temperature_c": null,
+        "heat_source_w_m3": 0.0
       }
     },
     {
@@ -2275,7 +2312,9 @@
       "simulation": {
         "included": true,
         "material_id": 5,
-        "temperature_c": null
+        "temperature_c": null,
+        "fixed_temperature_c": null,
+        "heat_source_w_m3": 0.0
       }
     }
   ],

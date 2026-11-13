@@ -46,21 +46,33 @@ impl FluidUi {
     pub fn ready(&self, frame: Option<&FluidFrame>, volume: Option<&Volume>) -> bool {
         self.show && frame.zip(volume).is_some_and(|(f, v)| f.is_current(v))
     }
-    pub fn controls(&mut self, ui: &mut egui::Ui, materials: &[Material]) -> bool {
-        ui.label("Fixed liquid region · impermeable/no-slip walls");
-        ui.small("This stage computes velocity and pressure inside the initial liquid geometry. Moving surfaces and ejection are not enabled.");
+    pub fn controls(
+        &mut self,
+        ui: &mut egui::Ui,
+        materials: &[Material],
+        phase_driven: bool,
+    ) -> bool {
+        ui.label(if phase_driven {
+            "Phase-driven flow · fixed material boundary"
+        } else {
+            "Fixed liquid region · impermeable/no-slip walls"
+        });
+        ui.small(if phase_driven {"Melting and freezing change fluid mobility inside the imported material. Moving liquid/air boundaries are the next stage."}else{"Velocity and pressure inside the initial liquid geometry. Moving surfaces and ejection are not enabled."});
         let mut changed = false;
         ui.scope(|ui| {
+            if phase_driven {ui.label("Liquid regions and mobility follow thermal phase.");}else{
             let selected_material=self.config.material_id;
             let name=materials.iter().find(|m|m.id==self.config.material_id).map(|m|m.name.as_str()).unwrap_or("Select fluid material");
             egui::ComboBox::from_label("Liquid material").selected_text(name).show_ui(ui,|ui| {
                 for m in materials.iter().filter(|m|m.id>1 && (m.dynamic_viscosity_pa_s.is_some() || m.id==selected_material)) {changed|=ui.selectable_value(&mut self.config.material_id,m.id,&m.name).changed();}
             });
+            }
             egui::CollapsingHeader::new("Fluid driving and numerical settings").show(ui,|ui| {
                 for (axis,v) in ["X","Y","Z"].into_iter().zip(&mut self.config.acceleration_m_s2) {changed|=ui.add(egui::DragValue::new(v).speed(0.1).prefix(format!("Acceleration {axis} ")).suffix(" m/s²")).changed();}
                 for (axis,v) in ["X","Y","Z"].into_iter().zip(&mut self.config.initial_velocity_m_s) {changed|=ui.add(egui::DragValue::new(v).speed(0.001).prefix(format!("Initial velocity {axis} ")).suffix(" m/s")).changed();}
                 for (axis,periodic) in ["X","Y","Z"].into_iter().zip(&mut self.config.periodic) {changed|=ui.checkbox(periodic,format!("Periodic {axis} boundaries")).on_hover_text("Connect fluid cells on opposite domain faces; use for matching periodic geometry.").changed();}
                 changed|=ui.checkbox(&mut self.config.advection,"Velocity advection").changed();
+                if phase_driven {changed|=ui.add(egui::DragValue::new(&mut self.config.mushy_drag_rate_s_inv).range(1. ..=1e12).speed(1e4).prefix("Mushy resistance ").suffix(" s⁻¹")).changed();}
                 changed|=ui.add(egui::DragValue::new(&mut self.config.relative_tolerance).speed(1e-6).range(1e-7..=1e-2).prefix("Pressure relative tolerance ")).changed();
                 changed|=ui.add(egui::DragValue::new(&mut self.config.absolute_divergence_tolerance).speed(1e-6).range(0. ..=1.).prefix("Divergence tolerance ").suffix(" s⁻¹")).changed();
                 changed|=ui.add(egui::DragValue::new(&mut self.config.max_iterations).range(1..=20000).prefix("Max pressure iterations ")).changed();

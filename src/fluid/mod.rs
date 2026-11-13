@@ -21,6 +21,7 @@ pub struct FluidConfig {
     pub periodic: [bool; 3],
     pub advection: bool,
     pub use_em_force: bool,
+    pub mushy_drag_rate_s_inv: f32,
     pub relative_tolerance: f32,
     pub absolute_divergence_tolerance: f32,
     pub max_iterations: u32,
@@ -35,6 +36,7 @@ impl Default for FluidConfig {
             periodic: [false; 3],
             advection: true,
             use_em_force: false,
+            mushy_drag_rate_s_inv: 1e6,
             relative_tolerance: 1e-5,
             absolute_divergence_tolerance: 1e-5,
             max_iterations: 1000,
@@ -43,7 +45,9 @@ impl Default for FluidConfig {
 }
 impl FluidConfig {
     pub fn validate(&self) -> Result<(), String> {
-        if !self.dt_s.is_finite()
+        if !self.mushy_drag_rate_s_inv.is_finite()
+            || self.mushy_drag_rate_s_inv <= 0.
+            || !self.dt_s.is_finite()
             || self.dt_s <= 0.
             || !(self.dt_s as f32).is_finite()
             || self.dt_s as f32 <= 0.
@@ -106,6 +110,11 @@ struct Params {
     initial: [f32; 4],
     solve: [f32; 4],
 }
+struct PhaseGpu {
+    pipeline: wgpu::ComputePipeline,
+    uniform: wgpu::Buffer,
+    changed: wgpu::Buffer,
+}
 pub struct FluidState {
     context: GpuContext,
     pub grid: GridSi,
@@ -131,6 +140,7 @@ pub struct FluidState {
     _force: wgpu::Buffer,
     bind: wgpu::BindGroup,
     energy_bind: wgpu::BindGroup,
+    phase_gpu: Option<PhaseGpu>,
     pipelines: HashMap<&'static str, wgpu::ComputePipeline>,
     force_max: f32,
     max_face_speed: f32,
@@ -308,14 +318,16 @@ impl FluidState {
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Fluid solver parameters"),
                 contents: bytemuck::bytes_of(&params),
-                usage: wgpu::BufferUsages::UNIFORM,
+                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             });
         let mask = context
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Fluid cells and pressure gauges"),
                 contents: bytemuck::cast_slice(&mask),
-                usage: wgpu::BufferUsages::STORAGE,
+                usage: wgpu::BufferUsages::STORAGE
+                    | wgpu::BufferUsages::COPY_SRC
+                    | wgpu::BufferUsages::COPY_DST,
             });
         let buffer = |label: &str, size: u64| {
             context.device.create_buffer(&wgpu::BufferDescriptor {
@@ -348,6 +360,7 @@ impl FluidState {
             "pressure_guess",
             "pressure_warm",
             "pressure_commit",
+            "phase_faces",
             "pressure_refresh",
             "initial_reduce",
             "pressure_apply",
@@ -469,6 +482,7 @@ impl FluidState {
             _force: force,
             bind,
             energy_bind,
+            phase_gpu: None,
             pipelines,
             force_max: 0.,
             max_face_speed: 0.,
@@ -512,11 +526,150 @@ impl FluidState {
         )?;
         Ok(())
     }
+    /// GPU phase classification; CPU work only prepares component gauges when topology changes.
+    pub fn update_phase(&mut self, volume: &Volume, thermal: &wgpu::Buffer) -> Result<(), String> {
+        if thermal.size() < self.result.size() {
+            return Err("Phase field does not match fluid grid".into());
+        }
+        if self.phase_gpu.is_none() {
+            let shader = self
+                .context
+                .device
+                .create_shader_module(wgpu::ShaderModuleDescriptor {
+                    label: Some("Thermal phase to fluid mobility"),
+                    source: wgpu::ShaderSource::Wgsl(include_str!("phase.wgsl").into()),
+                });
+            let pipeline =
+                self.context
+                    .device
+                    .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+                        label: Some("Phase classification"),
+                        layout: None,
+                        module: &shader,
+                        entry_point: Some("phase"),
+                        compilation_options: Default::default(),
+                        cache: None,
+                    });
+            let uniform =
+                self.context
+                    .device
+                    .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                        label: Some("Fluid phase material"),
+                        contents: bytemuck::cast_slice(&[
+                            self.params.dims,
+                            [self.config.material_id, 0, 0, 0],
+                        ]),
+                        usage: wgpu::BufferUsages::UNIFORM,
+                    });
+            let changed = self.context.device.create_buffer(&wgpu::BufferDescriptor {
+                label: Some("Phase topology flag"),
+                size: 4,
+                usage: wgpu::BufferUsages::STORAGE
+                    | wgpu::BufferUsages::COPY_SRC
+                    | wgpu::BufferUsages::COPY_DST,
+                mapped_at_creation: false,
+            });
+            self.phase_gpu = Some(PhaseGpu {
+                pipeline,
+                uniform,
+                changed,
+            });
+        }
+        let phase = self.phase_gpu.as_ref().unwrap();
+        self.context.queue.write_buffer(&phase.changed, 0, &[0; 4]);
+        let buffers = [
+            &phase.uniform,
+            thermal,
+            volume.material_ids(),
+            &self._mask,
+            &self.result,
+            &phase.changed,
+        ];
+        let bind = self
+            .context
+            .device
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                label: Some("Phase and occupancy"),
+                layout: &phase.pipeline.get_bind_group_layout(0),
+                entries: &buffers
+                    .iter()
+                    .enumerate()
+                    .map(|(i, b)| wgpu::BindGroupEntry {
+                        binding: i as u32,
+                        resource: b.as_entire_binding(),
+                    })
+                    .collect::<Vec<_>>(),
+            });
+        let mut enc = self
+            .context
+            .device
+            .create_command_encoder(&Default::default());
+        {
+            let mut pass = enc.begin_compute_pass(&Default::default());
+            pass.set_pipeline(&phase.pipeline);
+            pass.set_bind_group(0, &bind, &[]);
+            let g = groups(self.params.dims[3]);
+            pass.dispatch_workgroups(g[0], g[1], g[2]);
+        }
+        self.context.queue.submit(Some(enc.finish()));
+        let changed = read_bytes(&self.context, &phase.changed, 0, 4)?;
+        let changed = bytemuck::pod_read_unaligned::<u32>(&changed) != 0;
+        if changed {
+            let data = read_bytes(
+                &self.context,
+                &self._mask,
+                0,
+                self.params.dims[3] as u64 * 4,
+            )?;
+            let mut mask: Vec<u32> = bytemuck::cast_slice::<u8, u32>(&data)
+                .iter()
+                .map(|v| u32::from(*v != 0))
+                .collect();
+            self.fluid_cells = mask.iter().filter(|v| **v != 0).count() as u64;
+            self.components = anchors(&mut mask, self.grid.dims, self.config.periodic);
+            self.context
+                .queue
+                .write_buffer(&self._mask, 0, bytemuck::cast_slice(&mask));
+        }
+        self.params.flags[3] = 1;
+        self.params.solve[3] = self.config.mushy_drag_rate_s_inv;
+        self.params.solve[1] = self.config.absolute_divergence_tolerance.powi(2)
+            * self.grid.cell_m.powi(4)
+            * self.fluid_cells as f32;
+        self.params.solve[2] = self.fluid_cells.max(1) as f32;
+        self.context
+            .queue
+            .write_buffer(&self._uniform, 0, bytemuck::bytes_of(&self.params));
+        let mut iterations = 0;
+        let mut residual = 0.;
+        if changed {
+            self.dispatch(&[("phase_faces", groups(self.params.faces[3]))]);
+            let mut enc = self
+                .context
+                .device
+                .create_command_encoder(&Default::default());
+            enc.copy_buffer_to_buffer(&self.velocity, 0, &self.scratch, 0, self.velocity.size());
+            self.context.queue.submit(Some(enc.finish()));
+            (iterations, residual) = self.project()?;
+        }
+        self.dispatch(&[
+            ("fields", groups(self.params.dims[3])),
+            ("diagnostics", [1, 1, 1]),
+        ]);
+        self.read_diagnostics(iterations, residual, 0.)?;
+        Ok(())
+    }
     pub fn config(&self) -> &FluidConfig {
         &self.config
     }
     pub fn is_current(&self, volume: &Volume) -> bool {
         self.input_versions == volume.inputs.versions()
+    }
+    pub(crate) fn face_buffer(&self) -> &wgpu::Buffer {
+        &self.velocity
+    }
+    pub(crate) fn max_face_speed(&self) -> f32 {
+        self.max_face_speed
     }
     pub fn result_buffer(&self) -> &wgpu::Buffer {
         &self.result
@@ -604,11 +757,9 @@ impl FluidState {
             elapsed_ms: elapsed,
             max_speed_m_s: s[0],
             max_divergence_s_inv: s[1],
-            rms_divergence_s_inv: (s[2] / self.fluid_cells as f32).sqrt(),
+            rms_divergence_s_inv: (s[2] / self.fluid_cells.max(1) as f32).sqrt(),
             kinetic_energy_j: s[3],
-            fluid_mass_kg: self.params.physical[3]
-                * self.fluid_cells as f32
-                * self.grid.cell_m.powi(3),
+            fluid_mass_kg: self.params.physical[3] * s[9] * self.grid.cell_m.powi(3),
             max_pressure_pa: s[4],
             net_flux_m3_s: s[5] * self.grid.cell_m.powi(3),
         };
@@ -785,6 +936,7 @@ fn groups(n: u32) -> [u32; 3] {
 }
 fn anchors(mask: &mut [u32], dims: [u32; 3], periodic: [bool; 3]) -> usize {
     let mut components = 0;
+    let mut roots = vec![0u32; mask.len()];
     let mut queue = VecDeque::new();
     for root in 0..mask.len() {
         if mask[root] != 1 {
@@ -792,6 +944,7 @@ fn anchors(mask: &mut [u32], dims: [u32; 3], periodic: [bool; 3]) -> usize {
         }
         components += 1;
         mask[root] = 4;
+        roots[root] = root as u32;
         queue.push_back(root);
         while let Some(i) = queue.pop_front() {
             let p = [
@@ -812,17 +965,18 @@ fn anchors(mask: &mut [u32], dims: [u32; 3], periodic: [bool; 3]) -> usize {
                     let j = q[0] + dims[0] as usize * (q[1] + dims[1] as usize * q[2]);
                     if mask[j] == 1 {
                         mask[j] = 3;
+                        roots[j] = root as u32;
                         queue.push_back(j);
                     }
                 }
             }
         }
     }
-    for v in mask {
+    for (v, root) in mask.iter_mut().zip(roots) {
         if *v == 3 {
-            *v = 1;
+            *v = 1 | (root << 2);
         } else if *v == 4 {
-            *v = 2;
+            *v = 2 | (root << 2);
         }
     }
     components

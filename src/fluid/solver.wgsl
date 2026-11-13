@@ -36,25 +36,32 @@ fn face(pos:vec3<i32>,axis:u32,star:bool)->f32 {
 fn potential(pos:vec3<i32>,kind:u32)->f32 {
     let q=wrap_cell(pos);if !valid_cell(q)||!fluid(q){return 0.0;}let v=work[index(q,p.dims.xyz)];if kind==0u{return v.x;}return v.z;
 }
+fn mobility(pos:vec3<i32>,axis:u32)->f32 {
+    if p.flags.w==0u{return 1.0;}var left=pos;left[axis]-=1;
+    if !fluid(pos)||!fluid(left){return 0.0;}
+    let f=min(output_fields[index(wrap_cell(pos),p.dims.xyz)].reserved.y,output_fields[index(wrap_cell(left),p.dims.xyz)].reserved.y);
+    let drag=p.solve.w*(1.0-f)*(1.0-f)/(f*f*f+1e-3);
+    return 1.0/(1.0+p.physical.y*drag);
+}
 fn diagonal(pos:vec3<i32>)->f32 {
     var d=0.0;
-    for(var axis=0u;axis<3u;axis++) {for(var sign=-1;sign<=1;sign+=2) {var q=pos;q[axis]+=sign;if fluid(q) {d+=1.0;}}}
-    return max(d,1.0);
+    for(var axis=0u;axis<3u;axis++) {for(var sign=-1;sign<=1;sign+=2) {var q=pos;q[axis]+=sign;if fluid(q) {var fp=pos;if sign>0 {fp[axis]+=1;}d+=mobility(fp,axis);}}}
+    if (mask[index(pos,p.dims.xyz)]&3u)==2u{return 1.0;}return max(d,1e-30);
 }
 fn laplacian(pos:vec3<i32>,kind:u32)->f32 {
     let center=potential(pos,kind);var out=0.0;
-    for(var axis=0u;axis<3u;axis++) {for(var sign=-1;sign<=1;sign+=2) {var q=pos;q[axis]+=sign;if fluid(q) {out+=center-potential(q,kind);}}}
+    for(var axis=0u;axis<3u;axis++) {for(var sign=-1;sign<=1;sign+=2) {var q=pos;q[axis]+=sign;if fluid(q) {var fp=pos;if sign>0 {fp[axis]+=1;}out+=mobility(fp,axis)*(center-potential(q,kind));}}}
     return out;
 }
 fn apply(pos:vec3<i32>,kind:u32)->f32 {
-    if mask[index(pos,p.dims.xyz)]==2u {return potential(pos,kind);}
+    if (mask[index(pos,p.dims.xyz)]&3u)==2u {return potential(pos,kind);}
     return laplacian(pos,kind);
 }
 fn divergence(pos:vec3<i32>,star:bool)->f32 {
     var sum=0.0;for(var axis=0u;axis<3u;axis++) {var q=pos;q[axis]+=1;sum+=face(q,axis,star)-face(pos,axis,star);}return sum/p.physical.x;
 }
-fn rhs(pos:vec3<i32>)->f32 {if mask[index(pos,p.dims.xyz)]==2u{return 0.0;}return -p.physical.x*p.physical.x*divergence(pos,true);}
-fn em_force(pos:vec3<i32>)->vec3<f32> {if p.flags.z==0u {return vec3<f32>(0.0);}return em[index(wrap_cell(pos),p.dims.xyz)].force.xyz;}
+fn rhs(pos:vec3<i32>)->f32 {if (mask[index(pos,p.dims.xyz)]&3u)==2u{return 0.0;}return -p.physical.x*p.physical.x*divergence(pos,true);}
+fn em_force(pos:vec3<i32>)->vec3<f32> {let q=wrap_cell(pos);if p.flags.z==0u || !valid_cell(q) {return vec3<f32>(0.0);}return em[index(q,p.dims.xyz)].force.xyz;}
 fn sample_component(position:vec3<f32>,axis:u32)->f32 {
     var offset=vec3<f32>(0.5);offset[axis]=0.0;let q=position-offset;
     let base=vec3<i32>(floor(q));let fraction=fract(q);var value=0.0;
@@ -100,13 +107,13 @@ fn viscous(@builtin(global_invocation_id) gid:vec3<u32>) {
         }}
         var left=pos;left[axis]-=1;
         let acceleration=p.acceleration[axis]+(em_force(left)[axis]+em_force(pos)[axis])/(2.0*p.physical.w);
-        out[axis]=center+p.physical.z*p.physical.y/(p.physical.x*p.physical.x)*laplace+p.physical.y*acceleration;
+        out[axis]=(center+p.physical.z*p.physical.y/(p.physical.x*p.physical.x)*laplace+p.physical.y*acceleration)*mobility(pos,axis);
     }
     velocity[i]=out;
 }
 fn old_potential(pos:vec3<i32>)->f32 {
     let q=wrap_cell(pos);if !fluid(q){return 0.0;}
-    return output_fields[index(q,p.dims.xyz)].pressure.x*p.physical.y/p.physical.w;
+    let i=index(q,p.dims.xyz);let anchor=mask[i]>>2u;return (output_fields[i].pressure.x-output_fields[anchor].pressure.x)*p.physical.y/p.physical.w;
 }
 // Apply the previous pressure before solving a small, zero-based correction.
 // Each invocation reads/writes only its own face record (including periodic duplicates).
@@ -114,7 +121,7 @@ fn old_potential(pos:vec3<i32>)->f32 {
 fn pressure_warm(@builtin(global_invocation_id) gid:vec3<u32>){
     let i=flat_id(gid);if i>=p.faces.w{return;}let pos=decode(i,p.faces.xyz);var out=predicted[i];
     for(var axis=0u;axis<3u;axis++){if open_face(pos,axis){var left=pos;left[axis]-=1;
-        out[axis]-=(old_potential(pos)-old_potential(left))/p.physical.x;
+        out[axis]-=mobility(pos,axis)*(old_potential(pos)-old_potential(left))/p.physical.x;
     }}predicted[i]=out;
 }
 @compute @workgroup_size(256)
@@ -123,7 +130,7 @@ fn pressure_guess(@builtin(global_invocation_id) gid:vec3<u32>) {
 }
 @compute @workgroup_size(256)
 fn pressure_commit(@builtin(global_invocation_id) gid:vec3<u32>){
-    let i=flat_id(gid);if i<p.dims.w && mask[i]!=0u {work[i].x+=output_fields[i].pressure.x*p.physical.y/p.physical.w;}
+    let i=flat_id(gid);if i<p.dims.w && mask[i]!=0u {work[i].x+=old_potential(decode(i,p.dims.xyz));}
 }
 @compute @workgroup_size(256)
 fn pressure_refresh(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>) {
@@ -182,38 +189,44 @@ fn search(@builtin(global_invocation_id) gid:vec3<u32>) {
 @compute @workgroup_size(256)
 fn correct(@builtin(global_invocation_id) gid:vec3<u32>) {
     let i=flat_id(gid);if i>=p.faces.w {return;}let pos=decode(i,p.faces.xyz);var out=vec4<f32>(0.0);
-    for(var axis=0u;axis<3u;axis++) {if open_face(pos,axis) {var left=pos;left[axis]-=1;out[axis]=face(pos,axis,true)-(potential(pos,0u)-potential(left,0u))/p.physical.x;}}
+    for(var axis=0u;axis<3u;axis++) {if open_face(pos,axis) {var left=pos;left[axis]-=1;out[axis]=face(pos,axis,true)-mobility(pos,axis)*(potential(pos,0u)-potential(left,0u))/p.physical.x;}}
     velocity[i]=out;
+}
+@compute @workgroup_size(256)
+fn phase_faces(@builtin(global_invocation_id) gid:vec3<u32>){
+    let i=flat_id(gid);if i>=p.faces.w{return;}let pos=decode(i,p.faces.xyz);var v=velocity[i];
+    for(var axis=0u;axis<3u;axis++){if !open_face(pos,axis){v[axis]=0.0;}}velocity[i]=v;
 }
 @compute @workgroup_size(256)
 fn fields(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>) {
     if group_id(group)>=count_groups() {return;}
-    let i=flat_id(gid);var stats=vec4<f32>(0.0);var other=vec4<f32>(0.0);var max_face=0.0;
+    let i=flat_id(gid);var stats=vec4<f32>(0.0);var other=vec4<f32>(0.0);var max_face=0.0;var melt=0.0;
     if i<p.dims.w {
         var out=Result(vec4<f32>(0.0),vec4<f32>(0.0),vec4<f32>(0.0),vec4<f32>(0.0));
         if mask[i]!=0u {
             let pos=decode(i,p.dims.xyz);var v=vec3<f32>(0.0);var face_energy=0.0;
             for(var axis=0u;axis<3u;axis++) {var q=pos;q[axis]+=1;let a=face(pos,axis,false);let b=face(q,axis,false);v[axis]=0.5*(a+b);face_energy+=0.5*(a*a+b*b);max_face=max(max_face,max(abs(face(pos,axis,false)),abs(face(q,axis,false))));}
+            melt=select(1.0,output_fields[i].reserved.y,p.flags.w!=0u);
             let speed=length(v);let div=divergence(pos,false);let pressure=work[i].x*p.physical.w/p.physical.y;let force=em_force(pos);
-            out=Result(vec4<f32>(v,speed),vec4<f32>(pressure,div,0.0,0.0),vec4<f32>(p.physical.w*p.acceleration.xyz+force,0.0),vec4<f32>(1.0,0.0,0.0,0.0));
+            out=Result(vec4<f32>(v,speed),vec4<f32>(pressure,div,0.0,0.0),vec4<f32>(p.physical.w*p.acceleration.xyz+force,0.0),vec4<f32>(1.0,melt,0.0,0.0));
             let bad=any(v!=v)||any(force!=force)||any(abs(force)>vec3<f32>(1e30))||speed>1e25||!(abs(pressure)<1e30)||!(abs(div)<1e30);
             stats=vec4<f32>(speed,abs(div),div*div,0.5*p.physical.w*face_energy*p.physical.x*p.physical.x*p.physical.x);
             other=vec4<f32>(abs(pressure),div,length(force),select(0.0,1.0,bad));
         }
         output_fields[i]=out;
     }
-    reduce[l]=stats;reduce_b[l]=other;reduce_c[l]=vec4<f32>(max_face);workgroupBarrier();
+    reduce[l]=stats;reduce_b[l]=other;reduce_c[l]=vec4<f32>(max_face,melt,0.0,0.0);workgroupBarrier();
     for(var s=128u;s>0u;s/=2u) {
-        if l<s {reduce[l]=vec4<f32>(max(reduce[l].xy,reduce[l+s].xy),reduce[l].zw+reduce[l+s].zw);reduce_b[l]=vec4<f32>(max(reduce_b[l].x,reduce_b[l+s].x),reduce_b[l].y+reduce_b[l+s].y,max(reduce_b[l].z,reduce_b[l+s].z),reduce_b[l].w+reduce_b[l+s].w);reduce_c[l]=max(reduce_c[l],reduce_c[l+s]);}workgroupBarrier();
+        if l<s {reduce[l]=vec4<f32>(max(reduce[l].xy,reduce[l+s].xy),reduce[l].zw+reduce[l+s].zw);reduce_b[l]=vec4<f32>(max(reduce_b[l].x,reduce_b[l+s].x),reduce_b[l].y+reduce_b[l+s].y,max(reduce_b[l].z,reduce_b[l+s].z),reduce_b[l].w+reduce_b[l+s].w);reduce_c[l]=vec4<f32>(max(reduce_c[l].x,reduce_c[l+s].x),reduce_c[l].y+reduce_c[l+s].y,0.0,0.0);}workgroupBarrier();
     }
     if l==0u {partials[group_id(group)]=reduce[0];partials[count_groups()+group_id(group)]=reduce_b[0];partials[2u*count_groups()+group_id(group)]=reduce_c[0];}
 }
 @compute @workgroup_size(256)
 fn diagnostics(@builtin(local_invocation_index) l:u32) {
     var a=vec4<f32>(0.0);var b=vec4<f32>(0.0);var c=vec4<f32>(0.0);
-    for(var i=l;i<count_groups();i+=256u) {c=max(c,partials[2u*count_groups()+i]);let x=partials[i];let y=partials[count_groups()+i];a=vec4<f32>(max(a.xy,x.xy),a.zw+x.zw);b=vec4<f32>(max(b.x,y.x),b.y+y.y,max(b.z,y.z),b.w+y.w);}
+    for(var i=l;i<count_groups();i+=256u) {let face_stats=partials[2u*count_groups()+i];c=vec4<f32>(max(c.x,face_stats.x),c.y+face_stats.y,0.0,0.0);let x=partials[i];let y=partials[count_groups()+i];a=vec4<f32>(max(a.xy,x.xy),a.zw+x.zw);b=vec4<f32>(max(b.x,y.x),b.y+y.y,max(b.z,y.z),b.w+y.w);}
     reduce[l]=a;reduce_b[l]=b;reduce_c[l]=c;workgroupBarrier();
-    for(var s=128u;s>0u;s/=2u) {if l<s {reduce[l]=vec4<f32>(max(reduce[l].xy,reduce[l+s].xy),reduce[l].zw+reduce[l+s].zw);reduce_b[l]=vec4<f32>(max(reduce_b[l].x,reduce_b[l+s].x),reduce_b[l].y+reduce_b[l+s].y,max(reduce_b[l].z,reduce_b[l+s].z),reduce_b[l].w+reduce_b[l+s].w);reduce_c[l]=max(reduce_c[l],reduce_c[l+s]);}workgroupBarrier();}
+    for(var s=128u;s>0u;s/=2u) {if l<s {reduce[l]=vec4<f32>(max(reduce[l].xy,reduce[l+s].xy),reduce[l].zw+reduce[l+s].zw);reduce_b[l]=vec4<f32>(max(reduce_b[l].x,reduce_b[l+s].x),reduce_b[l].y+reduce_b[l+s].y,max(reduce_b[l].z,reduce_b[l+s].z),reduce_b[l].w+reduce_b[l+s].w);reduce_c[l]=vec4<f32>(max(reduce_c[l].x,reduce_c[l+s].x),reduce_c[l].y+reduce_c[l+s].y,0.0,0.0);}workgroupBarrier();}
     if l==0u {scalars[2]=reduce[0];scalars[3]=reduce_b[0];scalars[4]=reduce_c[0];}
 }
 // In the energy bind group binding 3 contains the last accepted face velocity.
@@ -222,11 +235,11 @@ fn energy_collect(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_in
     if group_id(group)>=count_groups(){return;}let i=flat_id(gid);var sum=vec4<f32>(0.0);
     if i<p.dims.w {
         let pos=decode(i,p.dims.xyz);let volume=p.physical.x*p.physical.x*p.physical.x;let rho=p.physical.w;
-        for(var axis=0u;axis<3u;axis++){if open_face(pos,axis){
-            let now=face(pos,axis,false);let old=face(pos,axis,true);let mean=0.5*(now+old);
+        for(var axis=0u;axis<3u;axis++){
+            let now=face(pos,axis,false);let old=predicted[index(pos,p.faces.xyz)][axis];let mean=0.5*(now+old);
             var left=pos;left[axis]-=1;let f=0.5*(em_force(pos)[axis]+em_force(left)[axis]);
             sum+=vec4<f32>(0.5*rho*now*now,0.5*rho*(now-old)*(now+old),p.physical.y*f*mean,p.physical.y*rho*p.acceleration[axis]*mean)*volume;
-        }}
+        }
     }
     reduce[l]=sum;let total=sum_group(l);if l==0u {partials[group_id(group)]=total;}
 }

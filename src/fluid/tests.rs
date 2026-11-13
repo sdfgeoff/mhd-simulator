@@ -182,7 +182,12 @@ fn pressure_failure_rolls_back_and_disconnected_components_get_gauges() {
     );
     let mut mask = vec![1, 0, 1];
     assert_eq!(anchors(&mut mask, [3, 1, 1], [false; 3]), 2);
-    assert_eq!(mask, vec![2, 0, 2]);
+    assert_eq!(
+        mask.iter().map(|v| v & 3).collect::<Vec<_>>(),
+        vec![2, 0, 2]
+    );
+    assert_eq!(mask[0] >> 2, 0);
+    assert_eq!(mask[2] >> 2, 2);
     let mut mask = vec![1, 0, 1];
     assert_eq!(anchors(&mut mask, [3, 1, 1], [true, false, false]), 1);
 }
@@ -298,4 +303,55 @@ fn viscous_shear_matches_discrete_decay_and_enforces_cfl() {
     );
     assert!(fast.step(&volume).unwrap_err().contains("CFL"));
     assert_eq!(fast.time_s, 0.);
+}
+
+#[test]
+fn thermal_phase_topology_and_weighted_projection_preserve_hydrostatic_rest() {
+    let _lock = crate::gpu_test_lock();
+    let (gpu, v, mut s) = channel(
+        8,
+        FluidConfig {
+            dt_s: 1e-4,
+            acceleration_m_s2: [0., -9.81, 0.],
+            periodic: [true, false, true],
+            ..Default::default()
+        },
+    );
+    let count = s.grid.dims.iter().map(|n| *n as usize).product::<usize>();
+    let mut data = vec![crate::thermal::ThermalCell::default(); count];
+    for (i, c) in data.iter_mut().enumerate() {
+        let y = (i / s.grid.dims[0] as usize) % s.grid.dims[1] as usize;
+        c.state[1] = if y < 4 {
+            0.
+        } else {
+            0.25 + 0.75 * (y - 4) as f32 / 3.
+        };
+    }
+    let buffer = gpu
+        .context
+        .device
+        .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Known thermal phase stratification"),
+            contents: bytemuck::cast_slice(&data),
+            usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
+        });
+    s.update_phase(&v, &buffer).unwrap();
+    assert_eq!(s.fluid_cells, count as u64 / 2);
+    for _ in 0..5 {
+        s.step(&v).unwrap();
+    }
+    assert!(s.diagnostics.max_speed_m_s < 5e-6, "{:?}", s.diagnostics);
+    assert!(s.diagnostics.rms_divergence_s_inv < 5e-5);
+    let expected_mass: f32 =
+        data.iter().map(|c| c.state[1]).sum::<f32>() * 1000. * s.grid.cell_m.powi(3);
+    assert!((s.diagnostics.fluid_mass_kg / expected_mass - 1.).abs() < 1e-5);
+    data.fill(crate::thermal::ThermalCell::default());
+    gpu.context
+        .queue
+        .write_buffer(&buffer, 0, bytemuck::cast_slice(&data));
+    s.update_phase(&v, &buffer).unwrap();
+    s.step(&v).unwrap();
+    assert_eq!(s.fluid_cells, 0);
+    assert_eq!(s.diagnostics.fluid_mass_kg, 0.);
+    assert_eq!(s.diagnostics.max_speed_m_s, 0.);
 }

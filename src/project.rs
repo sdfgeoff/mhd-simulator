@@ -81,7 +81,7 @@ pub fn save(
         cad_curves: Some(model.curves.clone()),
         electromagnetics: electromagnetics.clone(),
         fluid: fluid.clone(),
-        version: 1,
+        version: 2,
         geometry,
         domain: settings.clone(),
         materials: materials.to_vec(),
@@ -124,12 +124,45 @@ pub fn save(
 pub fn load(path: &Path) -> Result<Loaded, String> {
     let mut f: File = serde_json::from_slice(&std::fs::read(path).map_err(|e| e.to_string())?)
         .map_err(|e| e.to_string())?;
-    if f.version != 1 {
+    if !matches!(f.version, 1 | 2) {
         return Err("Unsupported project version".into());
     }
     f.domain.dims()?;
     f.run.validate()?;
     crate::simulation::ensure_material_library(&mut f.materials);
+    if f.version == 1 {
+        let presets = crate::simulation::default_materials();
+        for m in &mut f.materials {
+            if let Some(p) = presets
+                .iter()
+                .find(|p| p.name.eq_ignore_ascii_case(&m.name))
+            {
+                let mut changed = false;
+                for (a, b) in [
+                    (&mut m.thermal.solidus_c, p.thermal.solidus_c),
+                    (&mut m.thermal.liquidus_c, p.thermal.liquidus_c),
+                    (
+                        &mut m.thermal.heat_capacity_j_kg_k,
+                        p.thermal.heat_capacity_j_kg_k,
+                    ),
+                    (
+                        &mut m.thermal.conductivity_w_m_k,
+                        p.thermal.conductivity_w_m_k,
+                    ),
+                    (&mut m.thermal.latent_heat_j_kg, p.thermal.latent_heat_j_kg),
+                ] {
+                    if a.is_none() && b.is_some() {
+                        *a = b;
+                        changed = true;
+                    }
+                }
+                if changed {
+                    m.notes.push_str(" Thermal defaults added during project upgrade. Solder latent heats, Sn60Pb40 heat capacity and magnet thermal conductivity are illustrative; calibrate at operating temperature.");
+                }
+            }
+        }
+    }
+
     validate_materials(&f.materials)?;
     let geometry = PathBuf::from(&f.geometry);
     let geometry = if geometry.is_absolute() {
@@ -180,6 +213,36 @@ pub fn load(path: &Path) -> Result<Loaded, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn thermal_upgrade_preserves_overrides_and_version_two_unknowns() {
+        let mut data: serde_json::Value =
+            serde_json::from_slice(&std::fs::read("assets/hotend-cad.mhd.json").unwrap()).unwrap();
+        data["geometry"] = serde_json::json!(
+            std::fs::canonicalize("assets/hotend-cad.gltf")
+                .unwrap()
+                .to_str()
+                .unwrap()
+        );
+        data["version"] = serde_json::json!(1);
+        let material = &mut data["materials"][2];
+        material["thermal"]["heat_capacity_j_kg_k"] = serde_json::json!(123.);
+        material["thermal"]["conductivity_w_m_k"] = serde_json::Value::Null;
+        std::fs::create_dir_all("artifacts").unwrap();
+        let path = Path::new("artifacts/thermal-upgrade.mhd.json");
+        std::fs::write(path, serde_json::to_vec(&data).unwrap()).unwrap();
+        let upgraded = load(path).unwrap();
+        assert_eq!(
+            upgraded.materials[2].thermal.heat_capacity_j_kg_k,
+            Some(123.)
+        );
+        assert_eq!(upgraded.materials[2].thermal.conductivity_w_m_k, Some(394.));
+        data["version"] = serde_json::json!(2);
+        std::fs::write(path, serde_json::to_vec(&data).unwrap()).unwrap();
+        assert_eq!(
+            load(path).unwrap().materials[2].thermal.conductivity_w_m_k,
+            None
+        );
+    }
     #[test]
     fn multiple_cad_bindings_roundtrip_and_guard_curve_identity() {
         let path = Path::new("assets/hotend-cad.mhd.json");

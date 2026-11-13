@@ -57,5 +57,25 @@ fn main() -> Result<(), String> {
         &config,
         &Default::default(),
         &Default::default(),
+    )?;
+    let mut heated = model.clone();
+    for b in &mut heated.bodies {
+        b.simulation.temperature_c = Some(20.);
+    }
+    heated.bodies[0].simulation.fixed_temperature_c = Some(250.);
+    let run = mhd_workbench::run::RunConfig {
+        thermal_enabled: true,
+        dt_s: 1e-3,
+        ..Default::default()
+    };
+    project::save(
+        std::path::Path::new("assets/hotend-thermal.mhd.json"),
+        &heated,
+        &settings,
+        &default_materials(),
+        SectionPlane::new(Vec3::new(0., 0., 4.)),
+        &Default::default(),
+        &Default::default(),
+        &run,
     )
 }

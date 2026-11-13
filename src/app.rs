@@ -36,6 +36,7 @@ pub fn color(id: u32) -> [u8; 3] {
 enum Analysis {
     Electromagnetics,
     Fluid,
+    Thermal,
 }
 pub struct App {
     pub model: Model,
@@ -47,6 +48,7 @@ pub struct App {
     fields: FieldState,
     em_ui: EmUi,
     fluid_ui: FluidUi,
+    thermal_ui: crate::thermal_ui::ThermalUi,
     analysis: Analysis,
     run_ui: crate::run_ui::RunUi,
     setup: bool,
@@ -109,6 +111,7 @@ impl App {
             fields: FieldState::default(),
             em_ui: EmUi::default(),
             fluid_ui: FluidUi::default(),
+            thermal_ui: Default::default(),
             analysis: Analysis::Electromagnetics,
             run_ui: Default::default(),
             setup: true,
@@ -159,6 +162,7 @@ impl App {
         self.fields = FieldState::default();
         self.em_ui.invalidate();
         self.fluid_ui.invalidate();
+        self.thermal_ui.invalidate();
         self.run_ui.invalidate();
         self.caps.clear();
         self.texture = None;
@@ -215,6 +219,7 @@ impl App {
                 self.fields = FieldState::default();
                 self.em_ui.invalidate();
                 self.fluid_ui.invalidate();
+                self.thermal_ui.invalidate();
                 self.run_ui.invalidate();
                 self.domain_pending = false;
                 self.dirty = true;
@@ -235,7 +240,12 @@ impl App {
         if self.domain_pending || self.inputs_pending {
             return;
         }
-        if !self.em_ui.config.has_sources() {
+        if self.run_ui.config.thermal_enabled {
+            self.analysis = Analysis::Thermal;
+            self.thermal_ui.show = true;
+            self.em_ui.show = false;
+            self.fluid_ui.show = false;
+        } else if !self.em_ui.config.has_sources() {
             self.analysis = Analysis::Fluid;
             self.fluid_ui.show = true;
             self.em_ui.show = false;
@@ -260,6 +270,7 @@ impl App {
             self.dirty |= self.run_ui.em_frame().is_some() || self.run_ui.fluid_frame().is_some();
             self.em_ui.invalidate();
             self.fluid_ui.invalidate();
+            self.thermal_ui.invalidate();
             self.run_ui.invalidate();
             self.fields.invalidate();
             return;
@@ -271,6 +282,7 @@ impl App {
         self.dirty |= self.run_ui.em_frame().is_some() || self.run_ui.fluid_frame().is_some();
         self.em_ui.invalidate();
         self.fluid_ui.invalidate();
+        self.thermal_ui.invalidate();
         self.run_ui.invalidate();
         let (Some(gpu), Some(volume)) = (&self.gpu, &mut self.volume) else {
             return;
@@ -311,6 +323,9 @@ impl App {
             Analysis::Fluid => self
                 .fluid_ui
                 .ready(self.run_ui.fluid_frame(), self.volume.as_ref()),
+            Analysis::Thermal => self
+                .thermal_ui
+                .ready(self.run_ui.thermal_frame(), self.volume.as_ref()),
         }
     }
     fn section_style(&self) -> Style {
@@ -368,6 +383,9 @@ impl App {
                         Analysis::Fluid => self
                             .fluid_ui
                             .view(self.run_ui.fluid_frame(), self.volume.as_ref()),
+                        Analysis::Thermal => self
+                            .thermal_ui
+                            .view(self.run_ui.thermal_frame(), self.volume.as_ref()),
                     }
                 } else {
                     None
@@ -431,6 +449,9 @@ impl App {
                     .em_ui
                     .animation_running(self.run_ui.em_frame(), self.volume.as_ref()),
                 Analysis::Fluid => self.fields_ready() && self.fluid_ui.overlay.running(),
+                Analysis::Thermal => {
+                    self.thermal_ui.kind == 12 && self.thermal_ui.overlay.running()
+                }
             };
         if let Some(gpu) = self.gpu.as_ref().filter(|_| ready) {
             let time = ui.input(|i| i.time);
@@ -451,6 +472,14 @@ impl App {
                     &gpu.context,
                     self.dirty,
                     self.run_ui.fluid_frame(),
+                ),
+                Analysis::Thermal => self.thermal_ui.update(
+                    time,
+                    self.plane,
+                    span,
+                    &gpu.context,
+                    self.dirty,
+                    self.run_ui.thermal_frame(),
                 ),
             }
         }
@@ -491,6 +520,9 @@ impl App {
                             Analysis::Fluid => self
                                 .fluid_ui
                                 .view(self.run_ui.fluid_frame(), self.volume.as_ref()),
+                            Analysis::Thermal => self
+                                .thermal_ui
+                                .view(self.run_ui.thermal_frame(), self.volume.as_ref()),
                         }
                     } else {
                         None
@@ -591,6 +623,7 @@ impl App {
                 match self.analysis {
                     Analysis::Electromagnetics => "ELECTROMAGNETIC FIELD + CAD CONTOURS",
                     Analysis::Fluid => "FLUID FIELD + CAD CONTOURS",
+                    Analysis::Thermal => "TEMPERATURE / PHASE + CAD CONTOURS",
                 }
             } else if self.voxel_overlay {
                 "VOXELS + CAD CONTOURS"
@@ -684,10 +717,18 @@ impl App {
             {
                 self.run_ui.config.dt_s = us * 1e-6;
             }
+            ui.checkbox(
+                &mut self.run_ui.config.thermal_enabled,
+                "Thermal / phase evolution",
+            );
+            if self.run_ui.config.thermal_enabled {
+                crate::thermal_ui::ThermalUi::controls(ui, &mut self.run_ui.config.thermal);
+            }
             ui.checkbox(&mut self.run_ui.config.fluid_enabled, "Fluid motion");
-            ui.small("EM participates when currents, magnets or an imposed field are configured. No electricity is required for fluid-only runs. Thermal evolution is pending.");
+            ui.small("EM participates when currents, magnets or an imposed field are configured. No electricity is required for fluid-only runs. Thermal evolution can run without electricity.");
             if self.run_ui.config.fluid_enabled {
-                self.fluid_ui.controls(ui, &self.materials);
+                self.fluid_ui
+                    .controls(ui, &self.materials, self.run_ui.config.thermal_enabled);
             }
             egui::CollapsingHeader::new("EM numerical settings").show(ui, |ui| {
                 self.em_ui.controls(ui);
@@ -719,6 +760,7 @@ impl App {
             match self.analysis {
                 Analysis::Electromagnetics => self.em_ui.kind + 2,
                 Analysis::Fluid => self.fluid_ui.kind + 2,
+                Analysis::Thermal => self.thermal_ui.kind + 2,
             }
         } else if self.voxel_overlay {
             2
@@ -733,16 +775,18 @@ impl App {
             1 => "CAD outlines",
             2 => "Voxel domain",
             id if id < 9 => crate::em_ui::label(id - 2),
-            id => crate::fluid_ui::label(id - 2),
+            id if id < 12 => crate::fluid_ui::label(id - 2),
+            id => crate::thermal_ui::label(id - 2),
         };
         egui::ComboBox::from_label("Section view")
             .selected_text(view_label(selected))
             .show_ui(ui, |ui| {
-                for id in 0..=if self.setup { 2 } else { 11 } {
+                for id in 0..=if self.setup { 2 } else { 14 } {
                     ui.add_enabled_ui(
                         id < 3
                             || (id < 9 && self.run_ui.em_frame().is_some())
-                            || (id >= 9 && self.run_ui.fluid_frame().is_some()),
+                            || (id >= 9 && id < 12 && self.run_ui.fluid_frame().is_some())
+                            || (id >= 12 && self.run_ui.thermal_frame().is_some()),
                         |ui| {
                             ui.selectable_value(&mut selected, id, view_label(id));
                         },
@@ -751,8 +795,12 @@ impl App {
             });
         if selected != previous {
             self.em_ui.show = selected >= 3 && selected < 9;
-            self.fluid_ui.show = selected >= 9;
-            if selected >= 9 {
+            self.fluid_ui.show = selected >= 9 && selected < 12;
+            self.thermal_ui.show = selected >= 12;
+            if selected >= 12 {
+                self.analysis = Analysis::Thermal;
+                self.thermal_ui.kind = selected - 2;
+            } else if selected >= 9 {
                 self.analysis = Analysis::Fluid;
                 self.fluid_ui.kind = selected - 2;
             } else if selected >= 3 {
@@ -768,6 +816,7 @@ impl App {
             self.dirty |= match self.analysis {
                 Analysis::Electromagnetics => self.em_ui.visualization_controls(ui),
                 Analysis::Fluid => self.fluid_ui.visualization_controls(ui),
+                Analysis::Thermal => self.thermal_ui.visualization_controls(ui),
             };
         } else if self.voxel_overlay {
             self.dirty |= ui
@@ -831,6 +880,7 @@ impl App {
         {
             self.em_ui.invalidate();
             self.fluid_ui.invalidate();
+            self.thermal_ui.invalidate();
             self.run_ui.invalidate();
         }
     }
@@ -861,7 +911,7 @@ impl App {
                 ui.colored_label(Color32::from_rgb(75, 196, 208), "COUPLED EM / FLUIDS");
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     if ctx.screen_rect().width() > 850. {
-                        ui.label("Moving surface / thermal pending");
+                        ui.label("Moving surface pending");
                     }
                 });
             });
@@ -944,7 +994,7 @@ impl App {
                                 + self.plane.u() * ((uv.x * 2. - 1.) * span)
                                 + self.plane.v() * ((1. - uv.y * 2.) * span);
                             if self.fields_ready() {
-                                match self.analysis {Analysis::Electromagnetics=>self.em_ui.hover_probe(ui,point.to_array(),self.run_ui.em_frame()),Analysis::Fluid=>self.fluid_ui.hover_probe(ui,point.to_array(),self.run_ui.fluid_frame())}
+                                match self.analysis {Analysis::Electromagnetics=>self.em_ui.hover_probe(ui,point.to_array(),self.run_ui.em_frame()),Analysis::Fluid=>self.fluid_ui.hover_probe(ui,point.to_array(),self.run_ui.fluid_frame()),Analysis::Thermal=>self.thermal_ui.hover_probe(ui,point.to_array(),self.run_ui.thermal_frame())}
                             }
                             let pixel =
                                 if self.voxel_overlay && !self.fields_ready() {
@@ -1002,7 +1052,7 @@ impl App {
                         );
                     }
                     if self.fields_ready() {
-                        match self.analysis {Analysis::Electromagnetics=>self.em_ui.panel(ui,&self.run_ui.timeline),Analysis::Fluid=>self.fluid_ui.panel(ui,self.run_ui.fluid_frame())}
+                        match self.analysis {Analysis::Electromagnetics=>self.em_ui.panel(ui,&self.run_ui.timeline),Analysis::Fluid=>self.fluid_ui.panel(ui,self.run_ui.fluid_frame()),Analysis::Thermal=>self.thermal_ui.panel(ui,self.run_ui.thermal_frame())}
                     }
                     self.domain_diagnostics(ui);
                     ui.separator();
@@ -1122,10 +1172,7 @@ impl App {
                 ui.monospace(format!("{} × {} × {} cells", d[0], d[1], d[2]));
                 let cells = d.iter().map(|&n| n as u64).product::<u64>();
                 let frame_mib = cells as f64 * 64. / 1048576.;
-                let frames = match self.analysis {
-                    Analysis::Electromagnetics => self.run_ui.timeline.capacity_frames,
-                    Analysis::Fluid => self.run_ui.timeline.capacity_frames,
-                };
+                let frames = self.run_ui.timeline.capacity_frames;
                 ui.small(format!(
                     "Field result: {frame_mib:.1} MiB/frame · {:.1} MiB for {} frames",
                     frame_mib * frames as f64,
@@ -1263,6 +1310,27 @@ impl App {
                     1.,
                     " °C",
                 );
+                if !self.run_ui.config.thermal_enabled {
+                    ui.small(
+                        "Enable Thermal / phase evolution in Simulation to evolve temperature.",
+                    );
+                }
+                self.inputs_pending |= optional(
+                    ui,
+                    "Hold temperature (thermostat)",
+                    &mut body.simulation.fixed_temperature_c,
+                    250.,
+                    1.,
+                    " °C",
+                );
+                self.inputs_pending |= ui
+                    .add(
+                        egui::DragValue::new(&mut body.simulation.heat_source_w_m3)
+                            .speed(1e5)
+                            .prefix("Body heating ")
+                            .suffix(" W/m³"),
+                    )
+                    .changed();
                 if let Some(m) = self
                     .materials
                     .iter()
@@ -1273,10 +1341,7 @@ impl App {
                         .temperature_c
                         .and_then(|t| m.thermal.liquid_fraction(t))
                     {
-                        ui.small(format!(
-                            "Initial liquid fraction: {:.1}% (thermal setup preview)",
-                            f * 100.
-                        ));
+                        ui.small(format!("Initial liquid fraction: {:.1}%", f * 100.));
                     }
                 }
                 self.dirty |= self.em_ui.body_source_properties(ui, i, body.closed());
@@ -1338,7 +1403,7 @@ impl App {
                 " Pa·s",
             );
             egui::CollapsingHeader::new("Thermal / phase properties").show(ui, |ui| {
-                ui.small("Setup data; heat transport and phase evolution are not implemented yet.");
+                ui.small("Thermal transport uses these values. Latent heat is required before crossing a defined melting interval.");
                 self.inputs_pending |= optional(
                     ui,
                     "Solidus / melting onset",
@@ -1627,8 +1692,8 @@ mod ui_render_tests {
         app.material_selection = 3;
         let ctx = egui::Context::default();
         let mut tick = 0;
-        for mode in 0..3 {
-            app.setup = mode != 1;
+        for mode in 0..4 {
+            app.setup = mode != 1 && mode != 3;
             if mode == 1 {
                 app.run_ui.steps = 3;
                 app.simulate();
@@ -1646,6 +1711,26 @@ mod ui_render_tests {
             }
             if mode == 2 {
                 app.file_picker.open("assets/hotend-cad.mhd.json");
+            }
+            if mode == 3 {
+                app = App::new("assets/hotend-thermal.mhd.json".into(), Some(state.clone()));
+                app.setup = false;
+                app.run_ui.steps = 3;
+                app.simulate();
+                let start = std::time::Instant::now();
+                while app.run_ui.busy() {
+                    app.run_ui.poll(&ctx, app.volume.as_ref());
+                    assert!(start.elapsed().as_secs() < 60);
+                    std::thread::sleep(std::time::Duration::from_millis(1));
+                }
+                assert!(app.run_ui.error.is_empty(), "{}", app.run_ui.error);
+                let frame = app.run_ui.thermal_frame().unwrap();
+                assert!(frame.diagnostics.max_temperature_k > 523.);
+                assert!(app.thermal_ui.ready(Some(frame), app.volume.as_ref()));
+                assert!((frame.time_s - 0.003).abs() < 1e-8);
+                app.analysis = Analysis::Thermal;
+                app.thermal_ui.kind = 10;
+                app.dirty = true;
             }
             for _ in 0..6 {
                 tick += 1;

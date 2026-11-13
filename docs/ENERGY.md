@@ -49,3 +49,7 @@ cargo test coupled_em_and_velocity_time_refine_together -- --nocapture
 ```
 
 All checks are headless. They supplement the independent EM/fluid tests and the published TEAM6 case; no duplicate CPU physics solver is introduced.
+
+## Thermal deposition
+
+With thermal evolution enabled the ledger also measures stored enthalpy, deposited Joule heat and independently measured thermal heat-balance error. Deposited heat is subtracted from the separately tracked Joule loss to avoid double counting. Boundary heat and body heaters join external work. Fluid numerical/viscous loss is not automatically deposited as heat. See [the thermal model](THERMAL.md).

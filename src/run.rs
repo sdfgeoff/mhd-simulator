@@ -1,4 +1,5 @@
 //! One physical clock and complete coupled output frames.
+use crate::thermal::{ThermalConfig, ThermalFrame, ThermalState};
 use crate::{
     domain::Volume,
     em::{EmConfig, EmFrame, EmState, Mode},
@@ -8,13 +9,18 @@ use crate::{
 };
 use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct RunConfig {
+    pub thermal_enabled: bool,
+    pub thermal: ThermalConfig,
     pub dt_s: f64,
     pub fluid_enabled: bool,
 }
 impl Default for RunConfig {
     fn default() -> Self {
         Self {
+            thermal_enabled: false,
+            thermal: Default::default(),
             dt_s: 1e-5,
             fluid_enabled: true,
         }
@@ -25,12 +31,13 @@ impl RunConfig {
         if !self.dt_s.is_finite() || self.dt_s <= 0. || !(self.dt_s as f32).is_normal() {
             Err("Choose a positive finite common timestep".into())
         } else {
-            Ok(())
+            self.thermal.validate()
         }
     }
 }
 /// One place determines effective timesteps and force wiring for all run clients.
 fn effective(
+    volume: &Volume,
     config: &RunConfig,
     em: &EmConfig,
     fluid: &FluidConfig,
@@ -41,12 +48,36 @@ fn effective(
     em.dt_s = config.dt_s;
     fluid.dt_s = config.dt_s;
     fluid.use_em_force = em.has_sources();
+    if config.thermal_enabled && config.fluid_enabled {
+        let snapshot = volume.inputs.snapshot();
+        let candidates: Vec<_> = snapshot
+            .materials
+            .iter()
+            .filter(|m| {
+                m.id != 0
+                    && m.dynamic_viscosity_pa_s.is_some()
+                    && m.thermal.solidus_c.is_some()
+                    && m.thermal.liquidus_c.is_some()
+                    && snapshot
+                        .components
+                        .iter()
+                        .any(|c| c.included && c.material_id == m.id)
+            })
+            .collect();
+        if candidates.len() > 1 {
+            return Err("Phase-driven flow currently supports one liquid material per run; multiple liquid densities need a multiphase extension".into());
+        }
+        fluid.material_id = candidates.first().map_or(0, |m| m.id);
+    }
     Ok((em, fluid))
 }
 /// Integrated energy accounting. Fluid loss includes viscosity and numerical dissipation,
 /// and is inferred from the fluid work balance, not silently deposited as heat.
 #[derive(Clone, Debug, Default)]
 pub struct EnergyLedger {
+    pub thermal_j: f64,
+    pub thermal_deposited_j: f64,
+    pub thermal_balance_error_j: f64,
     pub magnetic_j: f64,
     pub kinetic_j: f64,
     pub delta_stored_j: f64,
@@ -59,17 +90,21 @@ pub struct EnergyLedger {
 }
 impl EnergyLedger {
     pub fn accounted_defect_j(&self) -> f64 {
-        self.delta_stored_j + self.joule_j + self.induction_numerical_loss_j + self.fluid_loss_j
+        self.delta_stored_j + self.joule_j - self.thermal_deposited_j
+            + self.induction_numerical_loss_j
+            + self.fluid_loss_j
             - self.external_work_j
     }
 }
 pub struct RunFrame {
+    pub thermal: Option<ThermalFrame>,
     pub energy: EnergyLedger,
     pub time_s: f64,
     pub em: Option<EmFrame>,
     pub fluid: Option<FluidFrame>,
 }
 pub struct RunState {
+    pub thermal: Option<ThermalState>,
     pub energy: EnergyLedger,
     pub em: Option<EmState>,
     pub fluid: Option<FluidState>,
@@ -88,7 +123,7 @@ impl RunState {
         em_config: EmConfig,
         fluid_config: FluidConfig,
     ) -> Result<Self, String> {
-        let (em_config, fluid_config) = effective(&config, &em_config, &fluid_config)?;
+        let (em_config, fluid_config) = effective(volume, &config, &em_config, &fluid_config)?;
         let em_enabled = fluid_config.use_em_force;
         let fluid_present =
             config.fluid_enabled
@@ -101,8 +136,8 @@ impl RunState {
                 && volume.inputs.snapshot().materials.iter().any(|m| {
                     m.id == fluid_config.material_id && m.dynamic_viscosity_pa_s.is_some()
                 });
-        if !em_enabled && !fluid_present {
-            return Err("No active physics: assign a liquid material with density/viscosity for fluid motion, or configure a current/magnet source. Thermal evolution is not implemented yet.".into());
+        if !em_enabled && !fluid_present && !config.thermal_enabled {
+            return Err("No active physics: enable thermal evolution, assign a liquid material with density/viscosity for fluid motion, or configure a current/magnet source.".into());
         }
         let em = if em_enabled {
             Some(EmState::new(
@@ -115,7 +150,16 @@ impl RunState {
         } else {
             None
         };
-        let fluid = if fluid_present {
+        let thermal = if config.thermal_enabled {
+            Some(ThermalState::new(
+                context.clone(),
+                volume,
+                config.thermal.clone(),
+            )?)
+        } else {
+            None
+        };
+        let mut fluid = if fluid_present {
             Some(FluidState::new(
                 context,
                 volume,
@@ -128,6 +172,9 @@ impl RunState {
         } else {
             None
         };
+        if let (Some(fluid), Some(thermal)) = (&mut fluid, &thermal) {
+            fluid.update_phase(volume, thermal.result_buffer())?;
+        }
         let magnetic_j = em
             .as_ref()
             .map(|e| e.energy_step().map(|e| e.magnetic_j))
@@ -138,12 +185,14 @@ impl RunState {
             .map_or(0., |f| f.diagnostics.kinetic_energy_j as f64);
         Ok(Self {
             energy: EnergyLedger {
+                thermal_j: thermal.as_ref().map_or(0., |t| t.diagnostics.enthalpy_j),
                 magnetic_j,
                 kinetic_j,
                 ..Default::default()
             },
             em,
             fluid,
+            thermal,
             time_s: 0.,
             config,
             em_config,
@@ -160,11 +209,12 @@ impl RunState {
     ) -> bool {
         self.is_current(volume)
             && &self.config == config
-            && effective(config, em, fluid)
+            && effective(volume, config, em, fluid)
                 .is_ok_and(|(e, f)| e == self.em_config && f == self.fluid_config)
     }
     pub fn is_current(&self, volume: &Volume) -> bool {
         !self.failed
+            && self.thermal.as_ref().is_none_or(|t| t.is_current(volume))
             && self.em.as_ref().is_none_or(|s| s.is_current(volume))
             && self.fluid.as_ref().is_none_or(|s| s.is_current(volume))
     }
@@ -203,6 +253,37 @@ impl RunState {
                 }
                 fluid.step(volume)?;
             }
+            if let Some(thermal) = &mut self.thermal {
+                if self
+                    .fluid
+                    .as_ref()
+                    .is_some_and(|f| f.config().periodic.iter().any(|p| *p))
+                {
+                    return Err(
+                        "Thermal transport currently requires nonperiodic fluid boundaries".into(),
+                    );
+                }
+                thermal.step(
+                    volume,
+                    self.config.dt_s,
+                    self.em.as_ref().map(|e| crate::thermal::Source {
+                        buffer: e.result_buffer(),
+                        grid: &e.grid,
+                    }),
+                    self.fluid.as_ref().map(|f| crate::thermal::Flow {
+                        buffer: f.face_buffer(),
+                        grid: &f.grid,
+                        max_face_speed: f.max_face_speed(),
+                    }),
+                )?;
+            }
+            if let Some(thermal) = &self.thermal {
+                if let Some(fluid) = &mut self.fluid {
+                    fluid.update_phase(volume, thermal.result_buffer())?;
+                } else if self.config.fluid_enabled && thermal.diagnostics.liquid_volume_m3 > 0. {
+                    return Err("A melted material needs liquid viscosity before fluid motion can be simulated".into());
+                }
+            }
             let e = self
                 .em
                 .as_ref()
@@ -219,6 +300,13 @@ impl RunState {
             ledger.magnetic_j = e.magnetic_j;
             ledger.kinetic_j = f.kinetic_j;
             ledger.delta_stored_j += e.delta_magnetic_j + f.delta_kinetic_j;
+            if let Some(t) = &self.thermal {
+                ledger.thermal_j = t.diagnostics.enthalpy_j;
+                ledger.delta_stored_j += t.diagnostics.delta_enthalpy_j;
+                ledger.thermal_deposited_j += t.diagnostics.joule_j;
+                ledger.external_work_j += t.diagnostics.external_j;
+                ledger.thermal_balance_error_j += t.diagnostics.energy_error_j;
+            }
             ledger.joule_j += e.joule_j;
             ledger.external_work_j += e.external_j + f.acceleration_work_j;
             ledger.induction_numerical_loss_j += e.backward_euler_j;
@@ -239,6 +327,7 @@ impl RunState {
             return Err("A failed coupled tick cannot be recorded".into());
         }
         Ok(RunFrame {
+            thermal: self.thermal.as_ref().map(ThermalState::snapshot),
             energy: self.energy.clone(),
             time_s: self.time_s,
             em: self.em.as_ref().map(EmState::snapshot),
@@ -379,6 +468,7 @@ mod refinement_tests {
                 RunConfig {
                     dt_s: 40e-6 / n as f64,
                     fluid_enabled: true,
+                    ..Default::default()
                 },
                 p.electromagnetics.clone(),
                 p.fluid.clone(),
@@ -421,5 +511,132 @@ mod refinement_tests {
         let medium = norm(&samples[1], &samples[2]);
         eprintln!("Coupled velocity Δt errors vs 2.5 us: coarse={coarse:.5e}, medium={medium:.5e}");
         assert!(medium < coarse * 0.7, "coarse={coarse} medium={medium}");
+    }
+}
+
+#[cfg(test)]
+mod thermal_run_tests {
+    use super::*;
+    use crate::{
+        domain::GpuDomain,
+        simulation::{DomainSettings, ThermalProperties, default_materials},
+    };
+    fn setup(phase: bool, cooling: bool) -> (GpuDomain, Volume, Model) {
+        let gpu = GpuDomain::new().unwrap();
+        let mut m = Model::load(std::path::Path::new("assets/annulus.gltf")).unwrap();
+        m.bodies[0].simulation.material_id = 2;
+        m.bodies[0].simulation.temperature_c = Some(if phase {
+            if cooling { 1. } else { -1. }
+        } else {
+            20.
+        });
+        m.bodies[0].simulation.heat_source_w_m3 = if phase {
+            if cooling { -1e7 } else { 1e7 }
+        } else {
+            1e9
+        };
+        let mut materials = default_materials();
+        if phase {
+            materials[2].density_kg_m3 = Some(1000.);
+            materials[2].dynamic_viscosity_pa_s = Some(0.002);
+            materials[2].thermal = ThermalProperties {
+                solidus_c: Some(0.),
+                liquidus_c: Some(0.),
+                heat_capacity_j_kg_k: Some(100.),
+                conductivity_w_m_k: Some(1.),
+                latent_heat_j_kg: Some(10000.),
+            };
+        }
+        let v = gpu
+            .build(
+                &m,
+                &DomainSettings {
+                    min_mm: [-8.; 3],
+                    max_mm: [8.; 3],
+                    cell_mm: 1.,
+                },
+                &materials,
+            )
+            .unwrap();
+        (gpu, v, m)
+    }
+    #[test]
+    fn source_free_thermal_run_shares_clock_and_accounts_heat() {
+        let _lock = crate::gpu_test_lock();
+        let (gpu, v, m) = setup(false, false);
+        let config = RunConfig {
+            thermal_enabled: true,
+            fluid_enabled: false,
+            ..Default::default()
+        };
+        let mut s = RunState::new(
+            gpu.context.clone(),
+            &v,
+            &m,
+            config,
+            EmConfig::default(),
+            FluidConfig::default(),
+        )
+        .unwrap();
+        assert!(s.em.is_none() && s.fluid.is_none());
+        for _ in 0..10 {
+            s.step(&m, &v).unwrap();
+        }
+        let f = s.snapshot().unwrap();
+        assert_eq!(f.time_s, f.thermal.as_ref().unwrap().time_s);
+        assert!(f.thermal.as_ref().unwrap().diagnostics.max_temperature_k > 293.16);
+        assert!(s.energy.external_work_j > 0. && s.energy.joule_j == 0.);
+        assert!(
+            s.energy.accounted_defect_j().abs() / s.energy.external_work_j < 1e-4,
+            "{:?}",
+            s.energy
+        );
+    }
+    #[test]
+    fn phase_selects_material_automatically_and_solid_cells_do_not_flow() {
+        let _lock = crate::gpu_test_lock();
+        for cooling in [false, true] {
+            let (gpu, v, m) = setup(true, cooling);
+            let config = RunConfig {
+                thermal_enabled: true,
+                dt_s: 0.01,
+                ..Default::default()
+            };
+            let fluid = FluidConfig {
+                acceleration_m_s2: [0.; 3],
+                ..Default::default()
+            };
+            let mut s = RunState::new(
+                gpu.context.clone(),
+                &v,
+                &m,
+                config,
+                EmConfig::default(),
+                fluid,
+            )
+            .unwrap();
+            assert_eq!(s.fluid_config.material_id, 2);
+            if !cooling {
+                assert_eq!(s.fluid.as_ref().unwrap().fluid_cells, 0);
+                assert_eq!(s.fluid.as_ref().unwrap().diagnostics.fluid_mass_kg, 0.);
+            }
+            for _ in 0..if cooling { 102 } else { 3 } {
+                s.step(&m, &v).unwrap();
+            }
+            let liquid = s.thermal.as_ref().unwrap().diagnostics.liquid_volume_m3;
+            let fluid = s.fluid.as_ref().unwrap();
+            assert_eq!(fluid.time_s, s.time_s);
+            assert_eq!(s.thermal.as_ref().unwrap().time_s, s.time_s);
+            assert!(fluid.diagnostics.rms_divergence_s_inv.is_finite());
+            if cooling {
+                assert_eq!(fluid.fluid_cells, 0);
+                assert_eq!(liquid, 0.);
+            } else {
+                assert!(liquid > 0.);
+                assert!(
+                    (fluid.diagnostics.fluid_mass_kg as f64 / (liquid * 1000.) - 1.).abs() < 1e-4
+                );
+            }
+        }
     }
 }

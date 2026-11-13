@@ -7,6 +7,10 @@ pub struct SimulationProperties {
     pub included: bool,
     pub material_id: u32,
     pub temperature_c: Option<f32>,
+    #[serde(default)]
+    pub fixed_temperature_c: Option<f32>,
+    #[serde(default)]
+    pub heat_source_w_m3: f32,
 }
 impl Default for SimulationProperties {
     fn default() -> Self {
@@ -14,6 +18,8 @@ impl Default for SimulationProperties {
             included: true,
             material_id: 1,
             temperature_c: None,
+            fixed_temperature_c: None,
+            heat_source_w_m3: 0.,
         }
     }
 }
@@ -58,7 +64,7 @@ impl ThermalProperties {
 pub fn default_materials() -> Vec<Material> {
     let preset = |id, name: &str, sigma, mu, density, notes: &str, reference: &str| Material {
         id,
-        thermal: Default::default(),
+        thermal: thermal_default(id),
         name: name.into(),
         conductivity_s_m: Some(sigma),
         relative_permeability: Some(mu),
@@ -66,7 +72,7 @@ pub fn default_materials() -> Vec<Material> {
         dynamic_viscosity_pa_s: ((id == 3) || (id == 4)).then_some(0.002),
         notes: if id == 3 || id == 4 {
             format!(
-                "{notes} Liquid viscosity 0.002 Pa·s is an illustrative starting assumption; replace it at operating temperature."
+                "{notes} Liquid viscosity 0.002 Pa·s and latent heat are illustrative starting assumptions; Sn60Pb40 heat capacity is also an estimate. Replace them with operating-temperature data."
             )
         } else {
             notes.into()
@@ -127,24 +133,43 @@ pub fn default_materials() -> Vec<Material> {
             1. / 1.6e-6,
             1.,
             7500.,
-            "Representative NdFeB: resistivity 160 µΩ·cm, density 7.5 g/cm³. The solver uses μr=1 as an explicit approximation (typical recoil μr≈1.05). Set source magnetization separately per CAD body; no temperature dependence or demagnetization model.",
+            "Representative NdFeB: resistivity 160 µΩ·cm, density 7.5 g/cm³. The solver uses μr=1 as an explicit approximation (typical recoil μr≈1.05). Set source magnetization separately per CAD body; no temperature dependence or demagnetization model. Thermal conductivity 9 W/(m K) is an illustrative assumption; heat capacity 450 J/(kg K) is within the vendor range.",
             "https://www.kjmagnetics.com/neodymium-magnet-specifications.asp",
         ),
         stainless316(6),
         alumina(7),
         Material {id:8,name:"Aluminium 6061 (T6)".into(),conductivity_s_m:Some(25e6),relative_permeability:Some(1.),density_kg_m3:Some(2700.),dynamic_viscosity_pa_s:None,
             thermal:ThermalProperties {solidus_c:Some(582.),liquidus_c:Some(652.),heat_capacity_j_kg_k:Some(896.),conductivity_w_m_k:Some(167.),latent_heat_j_kg:None},
-            notes:"Representative 6061-T6 room-temperature properties: density 2700 kg/m³, conductivity 25 MS/m, heat capacity 896 J/(kg K) at 100 °C, thermal conductivity 167 W/(m K). Melting interval 582–652 °C. Unit permeability approximation. Temper/temperature dependence and thermal evolution are not yet modeled.".into(),
+            notes:"Representative 6061-T6 room-temperature properties: density 2700 kg/m³, conductivity 25 MS/m, heat capacity 896 J/(kg K) at 100 °C, thermal conductivity 167 W/(m K). Melting interval 582–652 °C. Unit permeability approximation. Temper/temperature dependence is not modeled; latent heat and liquid viscosity remain unknown.".into(),
             reference:Some("https://online.kaiseraluminum.com/depot/PublicProductInformation/Document/1006/Kaiser_Aluminum_Shapes_Soft_Alloy.pdf".into())},
     ]
 }
+fn thermal_default(id: u32) -> ThermalProperties {
+    let (cp, k, solidus, liquidus, latent) = match id {
+        0 => (Some(1005.), Some(0.026), None, None, None),
+        2 => (Some(394.), Some(394.), Some(1084.62), Some(1084.62), None),
+        3 => (Some(190.), Some(49.), Some(183.), Some(190.), Some(45000.)),
+        4 => (Some(214.), Some(60.5), Some(227.), Some(227.), Some(59000.)),
+        5 => (Some(450.), Some(9.), None, None, None),
+        6 => (Some(500.), Some(15.), Some(1375.), Some(1400.), None),
+        7 => (Some(880.), Some(30.), None, None, None),
+        _ => (None, None, None, None, None),
+    };
+    ThermalProperties {
+        solidus_c: solidus,
+        liquidus_c: liquidus,
+        heat_capacity_j_kg_k: cp,
+        conductivity_w_m_k: k,
+        latent_heat_j_kg: latent,
+    }
+}
 fn stainless316(id: u32) -> Material {
-    Material {id,thermal:Default::default(),name:"316 stainless steel".into(),conductivity_s_m:Some(1./0.75e-6),relative_permeability:Some(1.),density_kg_m3:Some(8000.),dynamic_viscosity_pa_s:None,
+    Material {id,thermal:thermal_default(id),name:"316 stainless steel".into(),conductivity_s_m:Some(1./0.75e-6),relative_permeability:Some(1.),density_kg_m3:Some(8000.),dynamic_viscosity_pa_s:None,
         notes:"Density and conductivity references at 20 °C. Unit permeability is an annealed/nonmagnetic approximation; processing can change it. No temperature dependence is applied.".into(),
         reference:Some("https://www.thyssenkrupp-materials.co.uk/stainless-steel-316-14401.html/index.html".into())}
 }
 fn alumina(id: u32) -> Material {
-    Material {id,thermal:Default::default(),name:"Alumina".into(),conductivity_s_m:Some(0.),relative_permeability:Some(1.),density_kg_m3:Some(3900.),dynamic_viscosity_pa_s:None,
+    Material {id,thermal:thermal_default(id),name:"Alumina".into(),conductivity_s_m:Some(0.),relative_permeability:Some(1.),density_kg_m3:Some(3900.),dynamic_viscosity_pa_s:None,
         notes:"Representative CoorsTek AD-995 (99.5%) density. Ideal electrical insulator and unit-permeability approximations; room-temperature resistivity exceeds 10¹⁴ Ω·cm. Grade and temperature matter; no temperature dependence is applied.".into(),
         reference:Some("https://www2.coorstek.com/media/4235/advanced-alumina.pdf".into())}
 }
@@ -263,6 +288,13 @@ pub fn validate_bodies(model: &Model, materials: &[Material]) -> Result<(), Stri
             return Err(format!("{} needs a non-air material", b.name));
         }
         if b.simulation
+            .fixed_temperature_c
+            .is_some_and(|t| !t.is_finite() || t < -273.15)
+            || !b.simulation.heat_source_w_m3.is_finite()
+        {
+            return Err(format!("Invalid thermal condition for {}", b.name));
+        }
+        if b.simulation
             .temperature_c
             .is_some_and(|v| !v.is_finite() || v < -273.15)
         {
@@ -347,6 +379,8 @@ pub struct ComponentInput {
     pub included: bool,
     pub material_id: u32,
     pub initial_temperature_k: Option<f32>,
+    pub fixed_temperature_k: Option<f32>,
+    pub heat_source_w_m3: f32,
 }
 #[derive(Clone, Debug, PartialEq)]
 pub struct SimulationSnapshot {
@@ -381,6 +415,8 @@ impl SimulationSnapshot {
                     included: b.simulation.included,
                     material_id: b.simulation.material_id,
                     initial_temperature_k: b.simulation.temperature_c.map(|v| v + 273.15),
+                    fixed_temperature_k: b.simulation.fixed_temperature_c.map(|v| v + 273.15),
+                    heat_source_w_m3: b.simulation.heat_source_w_m3,
                 })
                 .collect(),
         };
@@ -402,6 +438,12 @@ impl SimulationSnapshot {
         for c in &self.components {
             if c.material_id == 0 || !self.materials.iter().any(|m| m.id == c.material_id) {
                 return Err(format!("{} needs a non-air material", c.name));
+            }
+            if c.fixed_temperature_k
+                .is_some_and(|t| !t.is_finite() || t < 0.)
+                || !c.heat_source_w_m3.is_finite()
+            {
+                return Err(format!("Invalid SI thermal condition for {}", c.name));
             }
             if c.initial_temperature_k
                 .is_some_and(|v| !v.is_finite() || v < 0.)

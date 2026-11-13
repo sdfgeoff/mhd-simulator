@@ -123,7 +123,8 @@ impl RunUi {
                 match rx.try_recv() {
                     Ok(Event::Frame(frame)) if self.accept => {
                         let bytes = frame.em.as_ref().map_or(0, |f| f.bytes)
-                            + frame.fluid.as_ref().map_or(0, |f| f.bytes);
+                            + frame.fluid.as_ref().map_or(0, |f| f.bytes)
+                            + frame.thermal.as_ref().map_or(0, |f| f.bytes);
                         self.timeline.push(Sample {
                             time_s: frame.time_s,
                             bytes,
@@ -173,13 +174,16 @@ impl RunUi {
     pub fn fluid_frame(&self) -> Option<&crate::fluid::FluidFrame> {
         self.timeline.current().and_then(|f| f.fluid.as_ref())
     }
+    pub fn thermal_frame(&self) -> Option<&crate::thermal::ThermalFrame> {
+        self.timeline.current().and_then(|f| f.thermal.as_ref())
+    }
     pub fn controls(&mut self, ui: &mut egui::Ui) -> bool {
         let changed = self.timeline.controls(ui);
         if let Some(frame) = self.timeline.current() {
             egui::CollapsingHeader::new("Energy accounting (J)").show(ui,|ui|{
             let e=&frame.energy;
-            ui.monospace(format!("Magnetic {:.4e} · Kinetic {:.4e} · Joule generated {:.4e} · External work {:.4e}",e.magnetic_j,e.kinetic_j,e.joule_j,e.external_work_j));
-            ui.monospace(format!("Induction numerical loss {:.4e} · Fluid loss (viscous + numerical) {:.4e} · Coupling work mismatch {:.4e} · EM closure error {:.4e}",e.induction_numerical_loss_j,e.fluid_loss_j,e.coupling_defect_j,e.em_balance_error_j));
+            ui.monospace(format!("Magnetic {:.4e} · Kinetic {:.4e} · Thermal {:.4e} · Joule generated {:.4e} · Deposited heat {:.4e} · External work {:.4e}",e.magnetic_j,e.kinetic_j,e.thermal_j,e.joule_j,e.thermal_deposited_j,e.external_work_j));
+            ui.monospace(format!("Induction numerical loss {:.4e} · Fluid loss (viscous + numerical) {:.4e} · Coupling work mismatch {:.4e} · EM closure error {:.4e} · Thermal closure error {:.4e}",e.induction_numerical_loss_j,e.fluid_loss_j,e.coupling_defect_j,e.em_balance_error_j,e.thermal_balance_error_j));
             ui.small("Work/loss terms accumulate from run start. Fluid loss is inferred from its work balance; it is not deposited as heat. EM closure uses staggered operator energy, including boundary/source work.");
         });
         }

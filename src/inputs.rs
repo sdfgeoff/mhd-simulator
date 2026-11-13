@@ -4,7 +4,7 @@
 //! Material rows are indexed by material ID: values = conductivity S/m,
 //! relative permeability, density kg/m³, padding; flags.xyz indicate presence.
 //! Component rows are indexed by body: values = initial K, prescribed A, padding;
-//! flags = temperature present, current present, included, material ID.
+//! flags = initial temperature present, fixed temperature present, included, material ID.
 //! Zero placeholders require checking presence flags; solver_tables validates the
 //! properties explicitly requested by a kernel before exposing its input tables.
 use crate::{
@@ -75,10 +75,15 @@ fn component_table(context: &GpuContext, s: &SimulationSnapshot) -> wgpu::Buffer
         .components
         .iter()
         .map(|c| TableEntry {
-            values: [c.initial_temperature_k.unwrap_or(0.), 0., 0., 0.],
+            values: [
+                c.initial_temperature_k.unwrap_or(0.),
+                c.fixed_temperature_k.unwrap_or(0.),
+                c.heat_source_w_m3,
+                0.,
+            ],
             flags: [
                 c.initial_temperature_k.is_some() as u32,
-                0,
+                c.fixed_temperature_k.is_some() as u32,
                 c.included as u32,
                 c.material_id,
             ],
@@ -87,7 +92,11 @@ fn component_table(context: &GpuContext, s: &SimulationSnapshot) -> wgpu::Buffer
     if entries.is_empty() {
         entries.push(TableEntry::zeroed());
     }
-    table(context, "Component temperatures K and currents A", &entries)
+    table(
+        context,
+        "Component temperatures K and heating W/m³",
+        &entries,
+    )
 }
 impl GpuInputs {
     pub fn snapshot(&self) -> &SimulationSnapshot {
@@ -139,12 +148,13 @@ impl GpuInputs {
         Ok(InputChanges {
             assignments,
             materials: assignments || self.snapshot.materials != next.materials,
-            initial_conditions: self
-                .snapshot
-                .components
-                .iter()
-                .zip(&next.components)
-                .any(|(a, b)| a.initial_temperature_k != b.initial_temperature_k),
+            initial_conditions: self.snapshot.components.iter().zip(&next.components).any(
+                |(a, b)| {
+                    a.initial_temperature_k != b.initial_temperature_k
+                        || a.fixed_temperature_k != b.fixed_temperature_k
+                        || a.heat_source_w_m3 != b.heat_source_w_m3
+                },
+            ),
         })
     }
     pub(crate) fn update(

@@ -1,5 +1,5 @@
 pub use mhd_workbench::{
-    caps, domain, em, flow, fluid, gpu, inputs, model, plane, project, run, simulation,
+    caps, domain, em, flow, fluid, gpu, inputs, model, plane, project, run, simulation, thermal,
 };
 mod app;
 mod em_ui;
@@ -10,6 +10,7 @@ mod picking;
 mod render;
 mod run_ui;
 mod section;
+mod thermal_ui;
 mod timeline;
 mod vector_ui;
 use glam::Vec3;
@@ -69,13 +70,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             p.fluid,
         )?;
         println!(
-            "Unified run: EM={} fluid={} dt={} s",
+            "Unified run: EM={} fluid={} thermal={} dt={} s",
             state.em.is_some(),
             state.fluid.is_some(),
+            state.thermal.is_some(),
             state.config.dt_s
         );
         let mut csv = String::from(
-            "time_s,max_B_T,max_u_m_s,rms_div_u_s_inv,magnetic_j,kinetic_j,joule_generated_j,external_work_j,induction_numerical_loss_j,fluid_loss_j,coupling_defect_j,em_balance_error_j\n",
+            "time_s,max_B_T,max_u_m_s,rms_div_u_s_inv,magnetic_j,kinetic_j,joule_generated_j,external_work_j,induction_numerical_loss_j,fluid_loss_j,coupling_defect_j,em_balance_error_j,thermal_j,thermal_deposited_j,thermal_balance_error_j,maximum_temperature_c,liquid_volume_m3\n",
         );
         for i in 0..=steps {
             if i > 0 {
@@ -99,7 +101,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             );
             let e = &state.energy;
             csv.push_str(&format!(
-                "{},{},{},{},{},{},{},{},{},{},{},{}\n",
+                "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n",
                 state.time_s,
                 b,
                 u,
@@ -111,7 +113,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 e.induction_numerical_loss_j,
                 e.fluid_loss_j,
                 e.coupling_defect_j,
-                e.em_balance_error_j
+                e.em_balance_error_j,
+                e.thermal_j,
+                e.thermal_deposited_j,
+                e.thermal_balance_error_j,
+                state
+                    .thermal
+                    .as_ref()
+                    .map_or(0., |t| t.diagnostics.max_temperature_k - 273.15),
+                state
+                    .thermal
+                    .as_ref()
+                    .map_or(0., |t| t.diagnostics.liquid_volume_m3)
             ));
         }
         std::fs::create_dir_all("artifacts")?;

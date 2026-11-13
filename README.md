@@ -2,7 +2,7 @@
 
 A native Rust/wgpu workbench for preparing a 3D molten-metal jetting simulation. It imports CAD-exported meshes, builds a persistent **rasterized 3D material grid**, and lets you compare its voxel sections against the original geometry with a six-axis plane gizmo.
 
-**Applied magnetic fields and transient induction are implemented.** Inspect B, induced J, Lorentz force and Joule heating on the movable section plane. Fixed-geometry fluid velocity and pressure are also implemented, with shared animated vector overlays and two-way EM/velocity coupling on one clock. Moving liquid surfaces and thermal evolution remain future stages. [Setup and unified-run workflow](docs/RUNS.md). [Fluid guide and validation](docs/FLUIDS.md). [Electromagnetics guide, equations and validation](docs/ELECTROMAGNETICS.md).
+**Applied magnetic fields and transient induction are implemented.** Inspect B, induced J, Lorentz force and Joule heating on the movable section plane. Fixed-geometry fluid velocity and pressure are also implemented, with shared animated vector overlays and two-way EM/velocity coupling on one clock. Thermal conduction, Joule heating, latent heat and phase-driven fluid mobility are implemented; moving liquid/air surfaces are the next stage. [Thermal guide](docs/THERMAL.md). [Setup and unified-run workflow](docs/RUNS.md). [Fluid guide and validation](docs/FLUIDS.md). [Electromagnetics guide, equations and validation](docs/ELECTROMAGNETICS.md).
 
 ## Run and inspect
 

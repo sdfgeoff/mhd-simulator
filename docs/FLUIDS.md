@@ -1,6 +1,6 @@
 # Fixed-geometry fluid velocity and pressure
 
-This stage computes 3D incompressible velocity and gauge pressure inside a **fixed voxel liquid region**. It supports no-slip walls, viscosity, velocity advection, gravity/acceleration, periodic box boundaries, and evolving electromagnetic force through the [unified run](RUNS.md). It does not yet move the liquid–air interface, drain the pool, create droplets, model feedstock motion or evolve temperature. In particular, the pool's initial air-facing surface is treated as a wall in this validation stage; it is not the final open-pool boundary condition.
+This stage computes 3D incompressible velocity and gauge pressure inside a **fixed voxel liquid region**. It supports no-slip walls, viscosity, velocity advection, gravity/acceleration, periodic box boundaries, and evolving electromagnetic force through the [unified run](RUNS.md). It does not yet move the liquid–air interface, drain the pool, create droplets, model feedstock motion or move feedstock. Temperature and phase-driven mobility are available through the [thermal model](THERMAL.md). In particular, the pool's initial air-facing surface is treated as a wall in this validation stage; it is not the final open-pool boundary condition.
 
 ## Use the workbench
 
@@ -10,7 +10,7 @@ This stage computes 3D incompressible velocity and gauge pressure inside a **fix
 4. The common timeline retains a configurable frame count, default ten. Scrubbing changes all active fields, diagnostics and trails together. Animation has a separate clock and does not advance the fluid. **Hide below** defaults to 10⁻⁷ m/s for vector cues; it does not change solver data. Trail speed is a direction cue, not physical particle tracking.
 5. **Fluid driving and numerical settings** exposes acceleration, initial velocity, periodic axes, advection and pressure tolerances. Periodicity is for matching periodic geometry. EM still requires air padding and nonperiodic outer boundaries, so use the periodic channel cases as fluid-only diagnostics. Material/domain/source changes invalidate dependent results.
 
-Multiple disconnected regions of the selected material are supported with independent pressure gauges. The current fixed-region solver still selects one liquid material; temperature-based solid/liquid behavior will replace this when phase evolution is implemented. The low-level frozen-force CLI remains available for isolated verification, independently of the normal coupled workbench run.
+Multiple disconnected regions of the selected material are supported with independent pressure gauges. With thermal evolution enabled, the one liquid material is inferred from assigned phase/viscosity data, with phase-dependent pressure connectivity and mushy resistance. Without it, the manual fixed-region diagnostic is retained. The low-level frozen-force CLI remains available for isolated verification, independently of the normal coupled workbench run.
 
 ## Discretization
 
