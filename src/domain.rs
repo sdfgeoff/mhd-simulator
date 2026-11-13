@@ -36,6 +36,7 @@ pub struct Pixel {
     pub _padding: f32,
     pub inside: u32,
 }
+#[derive(Clone)]
 pub struct Volume {
     pub settings: DomainSettings,
     pub dims: [u32; 3],
@@ -726,6 +727,15 @@ impl GpuDomain {
     ) -> Result<InputChanges, String> {
         let change = volume.inputs.changes(&snapshot)?;
         if change.assignments {
+            // Keep material IDs immutable for active solver snapshots.
+            volume.materials = self.context.device.create_buffer(&wgpu::BufferDescriptor {
+                label: Some("Copy-on-write material assignments"),
+                size: volume.materials.size(),
+                usage: wgpu::BufferUsages::STORAGE
+                    | wgpu::BufferUsages::COPY_SRC
+                    | wgpu::BufferUsages::COPY_DST,
+                mapped_at_creation: false,
+            });
             let assignments: Vec<u32> = snapshot.components.iter().map(|c| c.material_id).collect();
             let uniform =
                 self.context
@@ -1185,6 +1195,7 @@ mod input_update_tests {
         assert!((entry.values[0] - 523.15).abs() < 1e-4);
         assert_eq!(entry.values[1], -12.);
         assert_eq!(entry.flags[..2], [1, 1]);
+        let old_snapshot = volume.clone();
         model.bodies[0].simulation.material_id = 6;
         let change = gpu
             .update_inputs(
@@ -1198,6 +1209,14 @@ mod input_update_tests {
             .unwrap();
         assert!(pixels.iter().any(|p| p.body == 1 && p.material == 6));
         assert!(pixels.iter().all(|p| p.body != 1 || p.material == 6));
+        let old_pixels = gpu
+            .section(&old_snapshot, SectionPlane::new(Vec3::ZERO), 4., 64)
+            .unwrap();
+        assert!(old_pixels.iter().any(|p| p.body == 1));
+        assert!(
+            old_pixels.iter().all(|p| p.body != 1 || p.material == 1),
+            "an active snapshot must keep its original assignments"
+        );
         assert_eq!(gpu.read_masks(&volume), masks);
         assert_eq!(volume.build_serial, serial);
         assert_eq!(volume.occupied, occupied);

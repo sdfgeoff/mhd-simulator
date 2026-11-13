@@ -1,5 +1,6 @@
-pub use mhd_workbench::{caps, domain, gpu, inputs, model, plane, project, simulation};
+pub use mhd_workbench::{caps, domain, em, gpu, inputs, model, plane, project, simulation};
 mod app;
+mod em_ui;
 mod gizmo;
 mod render;
 mod section;
@@ -29,6 +30,83 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         for n in &m.notices {
             println!("{n}");
         }
+        return Ok(());
+    }
+    if args.get(1).is_some_and(|a| a == "--em-check") {
+        let path = args
+            .get(2)
+            .map(String::as_str)
+            .unwrap_or("assets/hotend-em.mhd.json");
+        let steps = args
+            .get(3)
+            .map(|s| s.parse::<u32>())
+            .transpose()?
+            .unwrap_or(20);
+        let project = project::load(std::path::Path::new(path))?;
+        let gpu = domain::GpuDomain::new()?;
+        let volume = gpu.build(&project.model, &project.settings, &project.materials)?;
+        let mut state = em::EmState::new(
+            gpu.context.clone(),
+            &volume,
+            &project.model,
+            project.electromagnetics,
+            em::Mode::Induction,
+        )?;
+        let mut csv = String::from(
+            "time_s,bx_t,by_t,bz_t,jx_a_m2,jy_a_m2,jz_a_m2,fx_n_m3,fy_n_m3,fz_n_m3,heat_w_m3,net_fx_n,net_fy_n,net_fz_n,power_w,residual,iterations\n",
+        );
+        let mut body_csv = String::from("time_s,body,force_x_n,force_y_n,force_z_n,power_w\n");
+        for step in 0..=steps {
+            if step > 0 {
+                state.step(&project.model, &volume)?;
+            }
+            let p = state.probe([1., 0., 4.])?.unwrap_or_default();
+            let d = &state.diagnostics;
+            for body in &state.bodies {
+                body_csv.push_str(&format!(
+                    "{},\"{}\",{},{},{},{}\n",
+                    state.time_s,
+                    body.name.replace('"', "\"\""),
+                    body.force_n[0],
+                    body.force_n[1],
+                    body.force_n[2],
+                    body.power_w
+                ));
+            }
+            csv.push_str(&format!(
+                "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n",
+                state.time_s,
+                p.b[0],
+                p.b[1],
+                p.b[2],
+                p.j[0],
+                p.j[1],
+                p.j[2],
+                p.force_heat[0],
+                p.force_heat[1],
+                p.force_heat[2],
+                p.force_heat[3],
+                d.force_n[0],
+                d.force_n[1],
+                d.force_n[2],
+                d.power_w,
+                d.relative_residual,
+                d.iterations
+            ));
+            println!(
+                "t={:.1} us Bmax={:.4e} T Jmax={:.4e} A/m2 P={:.4e} W residual={:.2e} iter={} ({:.1} ms)",
+                state.time_s * 1e6,
+                d.maxima[0],
+                d.maxima[1],
+                d.power_w,
+                d.relative_residual,
+                d.iterations,
+                d.elapsed_ms
+            );
+        }
+        std::fs::create_dir_all("artifacts")?;
+        std::fs::write("artifacts/em-probe.csv", csv)?;
+        std::fs::write("artifacts/em-body.csv", body_csv)?;
         return Ok(());
     }
     if args.get(1).is_some_and(|a| a == "--gpu-check") {
@@ -79,7 +157,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         std::fs::write("artifacts/section.ppm", ppm)?;
         return Ok(());
     }
-    let path = args.get(1).cloned().unwrap_or("assets/hotend.gltf".into());
+    let preview = args.get(1).is_some_and(|a| a == "--em-preview");
+    let path = args
+        .get(if preview { 2 } else { 1 })
+        .cloned()
+        .unwrap_or(if preview {
+            "assets/hotend-em.mhd.json".into()
+        } else {
+            "assets/hotend.gltf".into()
+        });
+    let preview_steps = if preview {
+        Some(
+            args.get(3)
+                .map(|s| s.parse::<u32>())
+                .transpose()?
+                .unwrap_or(5),
+        )
+    } else {
+        None
+    };
     let mut setup = egui_wgpu::WgpuSetupCreateNew::default();
     setup.device_descriptor = std::sync::Arc::new(crate::gpu::device_descriptor);
     let options = eframe::NativeOptions {
@@ -94,7 +190,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     eframe::run_native(
         "MHD Workbench",
         options,
-        Box::new(move |cc| Ok(Box::new(app::App::new(path, cc.wgpu_render_state.clone())))),
+        Box::new(move |cc| {
+            let mut app = app::App::new(path, cc.wgpu_render_state.clone());
+            if let Some(n) = preview_steps {
+                app.start_em_preview(n);
+            }
+            Ok(Box::new(app))
+        }),
     )?;
     Ok(())
 }

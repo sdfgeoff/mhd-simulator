@@ -20,6 +20,8 @@ struct SavedPlane {
 }
 #[derive(Serialize, Deserialize)]
 struct File {
+    #[serde(default)]
+    electromagnetics: crate::em::EmConfig,
     version: u32,
     geometry: String,
     domain: DomainSettings,
@@ -28,6 +30,7 @@ struct File {
     plane: SavedPlane,
 }
 pub struct Loaded {
+    pub electromagnetics: crate::em::EmConfig,
     pub model: Model,
     pub settings: DomainSettings,
     pub materials: Vec<Material>,
@@ -40,6 +43,24 @@ pub fn save(
     materials: &[Material],
     plane: SectionPlane,
 ) -> Result<(), String> {
+    save_with_em(
+        path,
+        model,
+        settings,
+        materials,
+        plane,
+        &crate::em::EmConfig::default(),
+    )
+}
+pub fn save_with_em(
+    path: &Path,
+    model: &Model,
+    settings: &DomainSettings,
+    materials: &[Material],
+    plane: SectionPlane,
+    electromagnetics: &crate::em::EmConfig,
+) -> Result<(), String> {
+    electromagnetics.validate(model)?;
     if !path
         .file_name()
         .is_some_and(|n| n.to_string_lossy().ends_with(".mhd.json"))
@@ -60,6 +81,7 @@ pub fn save(
         .to_string_lossy()
         .into_owned();
     let f = File {
+        electromagnetics: electromagnetics.clone(),
         version: 1,
         geometry,
         domain: settings.clone(),
@@ -134,7 +156,9 @@ pub fn load(path: &Path) -> Result<Loaded, String> {
     if !position.is_finite() || !q.is_finite() || q.length() < 1e-6 {
         return Err("Invalid plane transform".into());
     }
+    f.electromagnetics.validate(&model)?;
     Ok(Loaded {
+        electromagnetics: f.electromagnetics,
         model,
         settings: f.domain,
         materials: f.materials,
@@ -209,5 +233,44 @@ mod material_preset_tests {
         let text = r#"{"id":2,"name":"Copper","conductivity_s_m":null,"relative_permeability":null,"density_kg_m3":null}"#;
         let old: Material = serde_json::from_str(text).unwrap();
         assert!(old.notes.is_empty() && old.reference.is_none());
+    }
+}
+
+#[cfg(test)]
+mod em_tests {
+    use super::*;
+    #[test]
+    fn electromagnetic_sources_roundtrip_and_old_projects_default_cleanly() {
+        let mut model = Model::load(Path::new("assets/hotend.gltf")).unwrap();
+        let (materials, mut config) = crate::em::hotend_example(&mut model).unwrap();
+        config.magnets.push(crate::em::Magnet {
+            body: 3,
+            magnetization_a_m: [8e5, 0., 0.],
+            subdivisions: 1,
+            smoothing_mm: 0.05,
+        });
+        let settings = DomainSettings::fit(&model);
+        let path = Path::new("artifacts/em-roundtrip.mhd.json");
+        std::fs::create_dir_all("artifacts").unwrap();
+        save_with_em(
+            path,
+            &model,
+            &settings,
+            &materials,
+            SectionPlane::new(Vec3::ZERO),
+            &config,
+        )
+        .unwrap();
+        let loaded = load(path).unwrap();
+        assert_eq!(loaded.electromagnetics, config);
+        assert_eq!(loaded.model.bodies[2].simulation.current_a, Some(100.));
+        let mut legacy: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+        legacy.as_object_mut().unwrap().remove("electromagnetics");
+        std::fs::write(path, serde_json::to_string(&legacy).unwrap()).unwrap();
+        assert_eq!(
+            load(path).unwrap().electromagnetics,
+            crate::em::EmConfig::default()
+        );
     }
 }

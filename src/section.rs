@@ -4,6 +4,7 @@ pub enum Style {
     HatchedCad,
     Outlines,
     Voxels,
+    Field,
 }
 impl Style {
     pub fn label(self) -> &'static str {
@@ -11,6 +12,7 @@ impl Style {
             Self::HatchedCad => "Hatched CAD",
             Self::Outlines => "CAD outlines",
             Self::Voxels => "Voxel cells",
+            Self::Field => "Electromagnetic field",
         }
     }
 }

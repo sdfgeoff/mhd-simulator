@@ -1,5 +1,6 @@
 pub mod caps;
 pub mod domain;
+pub mod em;
 pub mod gpu;
 pub mod inputs;
 pub mod model;

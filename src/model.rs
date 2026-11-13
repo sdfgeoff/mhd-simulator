@@ -4,7 +4,7 @@ use std::{collections::HashMap, path::Path};
 #[derive(Clone)]
 pub struct Body {
     pub name: String,
-    triangles: Vec<[Vec3; 3]>, // immutable millimetres; replace via Body::new
+    triangles: std::sync::Arc<[[Vec3; 3]]>, // immutable mm, shared by worker snapshots
     geometry_id: u64,
     bounds: (Vec3, Vec3),
     pub visible: bool,
@@ -58,7 +58,7 @@ impl Body {
             bounds,
             winding: if signed_volume < 0. { -1. } else { 1. },
             name,
-            triangles,
+            triangles: triangles.into(),
             visible: true,
             simulation: Default::default(),
             boundary_edges: edges.values().filter(|&&n| n == 1).count(),
@@ -82,7 +82,7 @@ impl Body {
         self.boundary_edges == 0 && self.nonmanifold_edges == 0
     }
 }
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Model {
     pub bodies: Vec<Body>,
     pub notices: Vec<String>,

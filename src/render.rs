@@ -21,8 +21,19 @@ struct Uniforms {
     grid_minimum: [f32; 4],
     dimensions: [u32; 4],
     palette: [[f32; 4]; 8],
+    field: [f32; 4],
+}
+#[derive(Clone, Copy)]
+pub struct FieldView<'a> {
+    pub buffer: &'a wgpu::Buffer,
+    pub kind: u32,
+    pub component: u32,
+    pub range: f32,
+    pub vectors: &'a [[Vec3; 2]],
 }
 pub struct DomainView<'a> {
+    pub field: Option<FieldView<'a>>,
+    pub source_lines: &'a [[Vec3; 2]],
     pub span: f32,
     pub bounds: Option<(Vec3, Vec3)>,
     pub grid: Option<(Vec3, f32)>,
@@ -99,6 +110,16 @@ impl Viewport {
                     count: None,
                 },
                 wgpu::BindGroupLayoutEntry {
+                    binding: 3,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Storage { read_only: true },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
                     binding: 2,
                     visibility: wgpu::ShaderStages::FRAGMENT,
                     ty: wgpu::BindingType::Buffer {
@@ -112,7 +133,7 @@ impl Viewport {
         });
         let empty = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Empty domain"),
-            contents: &[0u8; 4],
+            contents: &[0u8; 64],
             usage: wgpu::BufferUsages::STORAGE,
         });
         let bind = device.create_bind_group(&wgpu::BindGroupDescriptor {
@@ -125,6 +146,10 @@ impl Viewport {
                 },
                 wgpu::BindGroupEntry {
                     binding: 1,
+                    resource: empty.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 3,
                     resource: empty.as_entire_binding(),
                 },
                 wgpu::BindGroupEntry {
@@ -245,6 +270,7 @@ impl Viewport {
         options: crate::section::Options,
         span: f32,
         n: u32,
+        field: Option<FieldView>,
     ) -> egui::TextureId {
         let basis = glam::Mat3::from_cols(plane.u(), -plane.normal(), plane.v());
         let camera = Camera {
@@ -257,7 +283,13 @@ impl Viewport {
                 (hi - lo).max_element().max(1.)
             },
         };
-        let domain = (options.style == crate::section::Style::Voxels).then_some(DomainView {
+        let domain = matches!(
+            options.style,
+            crate::section::Style::Voxels | crate::section::Style::Field
+        )
+        .then_some(DomainView {
+            field,
+            source_lines: &[],
             span,
             bounds: None,
             grid: if options.edges {
@@ -396,6 +428,11 @@ impl Viewport {
                     ]
                 })
                 .unwrap_or([0; 4]),
+            field: domain
+                .as_ref()
+                .and_then(|d| d.field)
+                .map(|f| [f.kind as f32, f.component as f32, f.range.max(1e-30), 0.])
+                .unwrap_or([0., 0., 1., 0.]),
             palette: std::array::from_fn(|i| {
                 let c = COLORS[i % COLORS.len()];
                 [
@@ -412,6 +449,15 @@ impl Viewport {
             label: Some("Resident 3D domain"),
             layout: &self.volume_layout,
             entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 3,
+                    resource: domain
+                        .as_ref()
+                        .and_then(|d| d.field)
+                        .map(|f| f.buffer)
+                        .unwrap_or(&self.empty)
+                        .as_entire_binding(),
+                },
                 wgpu::BindGroupEntry {
                     binding: 0,
                     resource: self.uniform.as_entire_binding(),
@@ -473,6 +519,20 @@ impl Viewport {
             }
         }
         if let Some(domain) = &domain {
+            if !panel {
+                for segment in domain.source_lines {
+                    for &p in segment {
+                        lines.push(vertex(p, [1., 0.65, 0.12, 1.], 2.));
+                    }
+                }
+            }
+            if let Some(field) = domain.field {
+                for segment in field.vectors {
+                    for &p in segment {
+                        lines.push(vertex(p, [0.95, 0.97, 1., 1.], 2.));
+                    }
+                }
+            }
             if cut {
                 let o = plane.position;
                 let u = plane.u() * domain.span;
@@ -655,6 +715,124 @@ mod tests {
         buffer.slice(..).get_mapped_range().to_vec()
     }
     #[test]
+    fn electromagnetic_section_samples_gpu_fields_at_native_resolution() {
+        let _lock = crate::gpu_test_lock();
+        let mut panel = viewport();
+        let mut scene = Viewport::new(panel.state.clone());
+        let model = Model::load(std::path::Path::new("assets/annulus.gltf")).unwrap();
+        let context = crate::gpu::GpuContext::new(
+            panel.state.device.clone(),
+            panel.state.queue.clone(),
+            panel.state.adapter.get_info().name,
+        );
+        let gpu = crate::domain::GpuDomain::from_context(context.clone()).unwrap();
+        let settings = crate::simulation::DomainSettings {
+            min_mm: [-5.; 3],
+            max_mm: [5.; 3],
+            cell_mm: 0.5,
+        };
+        let volume = gpu
+            .build(&model, &settings, &crate::simulation::default_materials())
+            .unwrap();
+        let config = crate::em::EmConfig {
+            uniform: vec![crate::em::UniformField {
+                tesla: [0., 0., 0.01],
+                scale: crate::em::Waveform::Constant { value: 1. },
+            }],
+            ..Default::default()
+        };
+        let em =
+            crate::em::EmState::new(context, &volume, &model, config, crate::em::Mode::Applied)
+                .unwrap();
+        let plane = SectionPlane {
+            position: Vec3::ZERO,
+            orientation: glam::Quat::from_rotation_y(-std::f32::consts::FRAC_PI_2),
+        };
+        let mut hidden = Model::load(std::path::Path::new("assets/annulus.gltf")).unwrap();
+        for b in &mut hidden.bodies {
+            b.visible = false;
+        }
+        let basis = glam::Mat3::from_cols(plane.u(), -plane.normal(), plane.v());
+        for n in [256, 512] {
+            let field = FieldView {
+                buffer: em.result_buffer(),
+                kind: 1,
+                component: 0,
+                range: 0.02,
+                vectors: &[],
+            };
+            panel.draw_section(
+                &model,
+                &[],
+                plane,
+                Some(&volume),
+                crate::section::Options {
+                    style: crate::section::Style::Field,
+                    edges: false,
+                    material_colors: false,
+                },
+                5.,
+                n,
+                Some(field),
+            );
+            let image = read(&panel);
+            let i = (n as usize * n as usize / 2 + n as usize / 2) * 4;
+            let color = &image[i..i + 3];
+            assert!(
+                (color[0] as i32 - 128).abs() < 3
+                    && color[1] > 250
+                    && (color[2] as i32 - 128).abs() < 3,
+                "field colour {color:?}"
+            );
+            let camera = Camera {
+                rect: egui::Rect::from_min_size(egui::Pos2::ZERO, egui::Vec2::splat(n as f32)),
+                center: plane.position,
+                rotation: glam::Quat::from_mat3(&basis).inverse(),
+                scale: n as f32 / 10.,
+                size: 8.,
+            };
+            scene.draw(
+                camera,
+                plane,
+                true,
+                false,
+                &hidden,
+                &[],
+                1.,
+                Some(DomainView {
+                    span: 5.,
+                    bounds: None,
+                    grid: None,
+                    volume: Some(&volume),
+                    material_colors: false,
+                    field: Some(field),
+                    source_lines: &[],
+                }),
+            );
+            let image3d = read(&scene);
+            assert_eq!(color, &image3d[i..i + 3]);
+            panel.draw_section(
+                &model,
+                &[],
+                plane,
+                Some(&volume),
+                crate::section::Options {
+                    style: crate::section::Style::Field,
+                    edges: false,
+                    material_colors: false,
+                },
+                5.,
+                n,
+                Some(FieldView {
+                    component: 1,
+                    ..field
+                }),
+            );
+            let signed = read(&panel);
+            assert!(signed[i..i + 3].iter().all(|&v| (v as i32 - 237).abs() < 3));
+        }
+    }
+    #[test]
     fn cad_mesh_uploads_are_reused_until_geometry_is_replaced() {
         let _lock = crate::gpu_test_lock();
         let mut view = viewport();
@@ -720,7 +898,7 @@ mod tests {
                 edges: false,
                 material_colors: false,
             };
-            view.draw_section(&model, &[], plane, Some(&volume), options, 5., n);
+            view.draw_section(&model, &[], plane, Some(&volume), options, 5., n, None);
             assert_eq!(view.output_texture().width(), n);
             let image = read(&view);
             let reference = gpu.section(&volume, plane, 5., n).unwrap();
@@ -741,6 +919,8 @@ mod tests {
                 &[],
                 1.,
                 Some(DomainView {
+                    field: None,
+                    source_lines: &[],
                     span: 5.,
                     bounds: None,
                     grid: None,
@@ -790,6 +970,7 @@ mod tests {
                 },
                 5.,
                 n,
+                None,
             );
             let material = read(&view);
             assert!(material.chunks_exact(4).any(|p| p[..3] == COLORS[2]));
@@ -804,6 +985,7 @@ mod tests {
                 },
                 5.,
                 n,
+                None,
             );
             let grid = read(&view);
             assert!(
@@ -849,6 +1031,7 @@ mod tests {
                     },
                     5.,
                     n,
+                    None,
                 );
                 scene.draw(
                     camera,

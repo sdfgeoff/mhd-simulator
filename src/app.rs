@@ -1,6 +1,7 @@
 use crate::{
     caps::{self, Cap},
     domain::{GpuDomain as Gpu, Volume},
+    em_ui::EmUi,
     gizmo::{Camera, Gizmo},
     gpu::GpuContext,
     inputs::FieldState,
@@ -38,6 +39,7 @@ pub struct App {
     domain_pending: bool,
     inputs_pending: bool,
     fields: FieldState,
+    em_ui: EmUi,
     voxel_overlay: bool,
     grid_lines: bool,
     material_view: bool,
@@ -91,6 +93,7 @@ impl App {
             domain_pending: true,
             inputs_pending: false,
             fields: FieldState::default(),
+            em_ui: EmUi::default(),
             voxel_overlay: true,
             grid_lines: true,
             material_view: false,
@@ -123,9 +126,22 @@ impl App {
         }
         app
     }
+    pub fn start_em_preview(&mut self, steps: u32) {
+        if let (Some(gpu), Some(volume)) = (&self.gpu, &self.volume) {
+            self.em_ui.arrows = true;
+            self.em_ui.start(
+                crate::em::Mode::Induction,
+                steps,
+                &self.model,
+                volume,
+                &gpu.context,
+            );
+        }
+    }
     fn clear_derived(&mut self) {
         self.volume = None;
         self.fields = FieldState::default();
+        self.em_ui.invalidate();
         self.caps.clear();
         self.texture = None;
 
@@ -141,6 +157,7 @@ impl App {
                     self.settings = p.settings;
                     self.materials = p.materials;
                     self.plane = p.plane;
+                    self.em_ui.config = p.electromagnetics;
                     self.project_path = self.path.clone();
                     self.clear_derived();
                     self.gizmo = Gizmo::default();
@@ -152,6 +169,7 @@ impl App {
             match Model::load(path) {
                 Ok(m) => {
                     self.model = m;
+                    self.em_ui.config = crate::em::EmConfig::default();
                     self.settings = DomainSettings::fit(&self.model);
                     self.materials = project::default_materials();
                     self.clear_derived();
@@ -172,6 +190,7 @@ impl App {
                 self.volume = Some(volume);
                 self.inputs_pending = false;
                 self.fields = FieldState::default();
+                self.em_ui.invalidate();
                 self.domain_pending = false;
                 self.dirty = true;
                 self.error.clear();
@@ -179,8 +198,22 @@ impl App {
             Err(e) => self.error = e,
         }
     }
+    fn apply_em_demo(&mut self) {
+        match crate::em::hotend_example(&mut self.model) {
+            Ok((materials, config)) => {
+                self.materials = materials;
+                self.em_ui.config = config;
+                self.inputs_pending = true;
+                self.notice="Example inputs: illustrative solder conductivity; chamber uses 316 preset. Coil/magnet CAD envelopes are nonconducting; closed wire paths provide current.".into();
+                self.em_ui.invalidate();
+                self.dirty = true;
+            }
+            Err(e) => self.em_ui.error = e,
+        }
+    }
     fn sync_inputs(&mut self) {
         if self.domain_pending {
+            self.em_ui.invalidate();
             self.fields.invalidate();
             return;
         }
@@ -188,6 +221,7 @@ impl App {
             return;
         }
         self.fields.invalidate();
+        self.em_ui.invalidate();
         let (Some(gpu), Some(volume)) = (&self.gpu, &mut self.volume) else {
             return;
         };
@@ -217,7 +251,9 @@ impl App {
         self.dirty = true;
     }
     fn section_style(&self) -> Style {
-        if self.voxel_overlay {
+        if self.em_ui.ready(self.volume.as_ref()) {
+            Style::Field
+        } else if self.voxel_overlay {
             Style::Voxels
         } else if self.hatched {
             Style::HatchedCad
@@ -230,6 +266,7 @@ impl App {
         let (lo, hi) = self.model.bounds();
         let span = self.section_span();
         let style = self.section_style();
+        self.em_ui.update_vectors(self.plane, span);
         self.caps = self
             .model
             .bodies
@@ -255,6 +292,7 @@ impl App {
                 },
                 span,
                 self.panel_pixels.max(32),
+                self.em_ui.view(self.volume.as_ref()),
             ));
         }
         self.section_time = started.elapsed().as_secs_f64() * 1000.;
@@ -310,25 +348,29 @@ impl App {
                 &self.model,
                 &self.caps,
                 ui.ctx().pixels_per_point(),
-                self.voxel_overlay.then_some(crate::render::DomainView {
-                    volume: self.volume.as_ref(),
-                    material_colors: self.material_view,
-                    span: section_span,
-                    grid: if self.voxel_overlay && self.grid_lines {
-                        self.volume
-                            .as_ref()
-                            .map(|v| (Vec3::from(v.settings.min_mm), v.settings.cell_mm))
-                    } else {
-                        None
+                (self.voxel_overlay || self.em_ui.ready(self.volume.as_ref())).then_some(
+                    crate::render::DomainView {
+                        field: self.em_ui.view(self.volume.as_ref()),
+                        source_lines: &self.em_ui.source_lines,
+                        volume: self.volume.as_ref(),
+                        material_colors: self.material_view,
+                        span: section_span,
+                        grid: if self.voxel_overlay && self.grid_lines {
+                            self.volume
+                                .as_ref()
+                                .map(|v| (Vec3::from(v.settings.min_mm), v.settings.cell_mm))
+                        } else {
+                            None
+                        },
+                        bounds: if self.voxel_overlay {
+                            self.volume
+                                .as_ref()
+                                .map(|v| (Vec3::from(v.settings.min_mm), v.max()))
+                        } else {
+                            None
+                        },
                     },
-                    bounds: if self.voxel_overlay {
-                        self.volume
-                            .as_ref()
-                            .map(|v| (Vec3::from(v.settings.min_mm), v.max()))
-                    } else {
-                        None
-                    },
-                }),
+                ),
             );
             painter.image(
                 texture,
@@ -357,7 +399,9 @@ impl App {
         painter.text(
             rect.left_top() + Vec2::splat(16.),
             egui::Align2::LEFT_TOP,
-            if self.voxel_overlay {
+            if self.em_ui.ready(self.volume.as_ref()) {
+                "ELECTROMAGNETIC FIELD + CAD CONTOURS"
+            } else if self.voxel_overlay {
                 "VOXELS + CAD CONTOURS"
             } else if self.hatched {
                 "CAD / HATCHED SECTION"
@@ -382,12 +426,13 @@ impl App {
         ui.text_edit_singleline(&mut self.project_path);
         ui.horizontal(|ui| {
             if ui.button("Save project").clicked() {
-                match project::save(
+                match project::save_with_em(
                     std::path::Path::new(&self.project_path),
                     &self.model,
                     &self.settings,
                     &self.materials,
                     self.plane,
+                    &self.em_ui.config,
                 ) {
                     Ok(()) => self.notice = "Project saved".into(),
                     Err(e) => self.error = e,
@@ -418,14 +463,37 @@ impl App {
             "Arrows translate along world X/Y/Z. Rings rotate around those axes at the pivot.",
         );
         ui.horizontal(|ui| {
-            self.dirty |= ui
-                .selectable_value(&mut self.voxel_overlay, false, "CAD")
-                .changed();
-            self.dirty |= ui
-                .selectable_value(&mut self.voxel_overlay, true, "Voxel domain")
-                .changed();
+            let fields = self.em_ui.ready(self.volume.as_ref());
+            if ui
+                .selectable_label(!fields && !self.voxel_overlay, "CAD")
+                .clicked()
+            {
+                self.voxel_overlay = false;
+                self.em_ui.show = false;
+                self.dirty = true;
+            }
+            if ui
+                .selectable_label(!fields && self.voxel_overlay, "Voxel domain")
+                .clicked()
+            {
+                self.voxel_overlay = true;
+                self.em_ui.show = false;
+                self.dirty = true;
+            }
+            if ui
+                .add_enabled_ui(self.em_ui.state.is_some(), |ui| {
+                    ui.selectable_label(fields, "Fields")
+                })
+                .inner
+                .clicked()
+            {
+                self.em_ui.show = true;
+                self.dirty = true;
+            }
         });
-        if self.voxel_overlay {
+        if self.em_ui.ready(self.volume.as_ref()) {
+            ui.small("Choose the field and range under Electromagnetics.");
+        } else if self.voxel_overlay {
             self.dirty |= ui
                 .checkbox(&mut self.grid_lines, "Subtle cell edges")
                 .changed();
@@ -493,10 +561,25 @@ impl App {
         ui.add_space(10.);
         ui.separator();
         self.property_controls(ui);
+        let (changed, demo) = self.em_ui.controls(
+            ui,
+            &self.model,
+            if !self.domain_pending && !self.inputs_pending {
+                self.volume.as_ref()
+            } else {
+                None
+            },
+            self.gpu.as_ref().map(|g| &g.context),
+        );
+        self.dirty |= changed;
+        if demo {
+            self.apply_em_demo();
+        }
     }
 }
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        self.dirty |= self.em_ui.poll(ctx, self.volume.as_ref());
         ctx.set_visuals(egui::Visuals::dark());
         egui::TopBottomPanel::top("header").show(ctx, |ui| {
             ui.add_space(9.);
@@ -505,11 +588,11 @@ impl eframe::App for App {
                 ui.add_space(20.);
                 ui.colored_label(
                     Color32::from_rgb(75, 196, 208),
-                    "RASTERIZED MATERIAL DOMAIN",
+                    "STATIONARY ELECTROMAGNETICS",
                 );
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     if ctx.screen_rect().width() > 850. {
-                        ui.label("Domain preparation · No physics yet");
+                        ui.label("Stationary EM · fluid/thermal pending");
                     }
                 });
             });
@@ -572,26 +655,30 @@ impl eframe::App for App {
                             let point = self.plane.position
                                 + self.plane.u() * ((uv.x * 2. - 1.) * span)
                                 + self.plane.v() * ((1. - uv.y * 2.) * span);
-                            let pixel = if self.voxel_overlay {
-                                self.gpu
-                                    .as_ref()
-                                    .zip(self.volume.as_ref())
-                                    .and_then(|(gpu, v)| {
-                                        gpu.section(
-                                            v,
-                                            SectionPlane {
-                                                position: point,
-                                                ..self.plane
-                                            },
-                                            0.,
-                                            1,
-                                        )
-                                        .ok()
-                                    })
-                                    .and_then(|p| p.into_iter().next())
-                            } else {
-                                None
-                            };
+                            if self.em_ui.ready(self.volume.as_ref()) {
+                                self.em_ui.hover_probe(ui, point.to_array());
+                            }
+                            let pixel =
+                                if self.voxel_overlay && !self.em_ui.ready(self.volume.as_ref()) {
+                                    self.gpu
+                                        .as_ref()
+                                        .zip(self.volume.as_ref())
+                                        .and_then(|(gpu, v)| {
+                                            gpu.section(
+                                                v,
+                                                SectionPlane {
+                                                    position: point,
+                                                    ..self.plane
+                                                },
+                                                0.,
+                                                1,
+                                            )
+                                            .ok()
+                                        })
+                                        .and_then(|p| p.into_iter().next())
+                                } else {
+                                    None
+                                };
                             if let Some(pixel) = pixel {
                                 if pixel.inside == 0 {
                                     ui.label("Outside the built domain");
@@ -615,7 +702,9 @@ impl eframe::App for App {
                     } else {
                         ui.label("No built volume available.");
                     }
-                    if self.voxel_overlay {
+                    if self.em_ui.ready(self.volume.as_ref()) {
+                        ui.small("B interpolates grid samples; J/force/heat show cell values.");
+                    } else if self.voxel_overlay {
                         ui.small(
                             "Air = 0 · Overlap = 255 · CAD visibility does not change the domain.",
                         );
@@ -624,6 +713,7 @@ impl eframe::App for App {
                             "CAD geometry; voxel diagnostics below refer to the built domain.",
                         );
                     }
+                    self.em_ui.panel(ui);
                     self.domain_diagnostics(ui);
                     ui.separator();
                     if !self.error.is_empty() {
@@ -778,7 +868,7 @@ impl App {
     }
     fn property_controls(&mut self, ui: &mut egui::Ui) {
         ui.heading("Simulation properties");
-        ui.small("Materials, initial temperatures and prescribed currents. Field and thermal solvers are not yet present.");
+        ui.small("Material and initial-temperature inputs. Wire paths and drive waveforms are under Electromagnetics.");
         for (i, b) in self.model.bodies.iter_mut().enumerate() {
             egui::CollapsingHeader::new(&b.name)
                 .id_salt(("component", i))
@@ -822,7 +912,7 @@ impl App {
                         1.,
                         " A",
                     );
-                    ui.small("Inputs update GPU tables; no physical fields have been calculated.");
+                    ui.small("Component current alone does not define a wire path. Connect it to a wire source, or specify the wire waveform directly.");
                 });
         }
         egui::CollapsingHeader::new("Material library").show(ui, |ui| {

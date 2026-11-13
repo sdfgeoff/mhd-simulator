@@ -31,6 +31,7 @@ pub struct InputChanges {
     pub excitation: bool,
     pub assignments: bool,
 }
+#[derive(Clone)]
 pub struct GpuInputs {
     snapshot: SimulationSnapshot,
     versions: InputVersions,
