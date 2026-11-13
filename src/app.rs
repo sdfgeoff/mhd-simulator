@@ -1,6 +1,6 @@
 use crate::{
     caps::{self, Cap},
-    domain::{GpuDomain as Gpu, Pixel, Volume},
+    domain::{GpuDomain as Gpu, Volume},
     gizmo::{Camera, Gizmo},
     model::Model,
     plane::SectionPlane,
@@ -38,7 +38,6 @@ pub struct App {
     material_view: bool,
     project_path: String,
     notice: String,
-    section_pixels: Vec<Pixel>,
     section_renderer: Option<SectionRenderer>,
     panel_pixels: u32,
     path: String,
@@ -53,12 +52,10 @@ pub struct App {
     gizmo: Gizmo,
     show_gizmo: bool,
     hatched: bool,
-    resolution: u32,
     texture: Option<egui::TextureId>,
     caps: Vec<Cap>,
     dirty: bool,
     section_time: f64,
-    overlaps: usize,
 }
 impl App {
     pub fn new(path: String, state: Option<egui_wgpu::RenderState>) -> Self {
@@ -67,7 +64,7 @@ impl App {
             Err(e) => (Model::default(), e),
         };
         let (lo, hi) = model.bounds();
-        let (gpu, gpu_error) = match Gpu::new() {
+        let (gpu, gpu_error) = match state.as_ref().map(Gpu::from_state).unwrap_or_else(Gpu::new) {
             Ok(g) => (Some(g), String::new()),
             Err(e) => (None, e),
         };
@@ -82,7 +79,6 @@ impl App {
             material_view: false,
             project_path: "project.mhd.json".into(),
             notice: String::new(),
-            section_pixels: Vec::new(),
             section_renderer: state.clone().map(SectionRenderer::new),
             panel_pixels: 0,
             model,
@@ -98,12 +94,10 @@ impl App {
             gizmo: Gizmo::default(),
             show_gizmo: true,
             hatched: true,
-            resolution: 512,
             texture: None,
             caps: Vec::new(),
             dirty: true,
             section_time: 0.,
-            overlaps: 0,
         };
         if app.path.ends_with(".json") {
             app.load();
@@ -116,11 +110,7 @@ impl App {
         self.volume = None;
         self.caps.clear();
         self.texture = None;
-        self.section_pixels.clear();
 
-        if let Some(view) = &mut self.viewport {
-            view.set_section(&[0, 0, 0, 0], 1);
-        }
         self.dirty = true;
     }
     fn load(&mut self) {
@@ -209,55 +199,20 @@ impl App {
                 }
             })
             .collect();
-        self.section_pixels.clear();
-        self.overlaps = 0;
-        let mut cells = Vec::new();
-        if style == Style::Voxels {
-            let (Some(gpu), Some(volume)) = (&self.gpu, &self.volume) else {
-                self.texture = None;
-                return;
-            };
-            match gpu.section(volume, self.plane, span, self.resolution) {
-                Ok(pixels) => {
-                    self.overlaps = pixels.iter().filter(|p| p.body == 255).count();
-                    self.section_pixels = pixels;
-                }
-                Err(e) => {
-                    self.texture = None;
-                    self.error = e;
-                    return;
-                }
-            }
-            match gpu.intersected_cells(volume, self.plane) {
-                Ok(c) => cells = c,
-                Err(e) => {
-                    self.texture = None;
-                    self.error = e;
-                    return;
-                }
-            }
-        }
         if let Some(renderer) = &mut self.section_renderer {
-            if self.panel_pixels > 0 {
-                renderer.set_panel_resolution(self.panel_pixels);
-            }
-            self.texture = Some(renderer.draw(
+            self.texture = Some(renderer.draw_section(
                 &self.model,
                 &self.caps,
                 self.plane,
                 self.volume.as_ref(),
-                &cells,
                 SectionOptions {
                     style,
                     edges: self.grid_lines,
                     material_colors: self.material_view,
                 },
                 span,
-                self.resolution,
+                self.panel_pixels.max(32),
             ));
-            if let (Some(viewport), Some(view)) = (&mut self.viewport, renderer.view()) {
-                viewport.set_shared_section(view);
-            }
         }
         self.section_time = started.elapsed().as_secs_f64() * 1000.;
     }
@@ -312,7 +267,9 @@ impl App {
                 &self.model,
                 &self.caps,
                 ui.ctx().pixels_per_point(),
-                Some(crate::render::DomainView {
+                self.voxel_overlay.then_some(crate::render::DomainView {
+                    volume: self.volume.as_ref(),
+                    material_colors: self.material_view,
                     span: section_span,
                     grid: if self.voxel_overlay && self.grid_lines {
                         self.volume
@@ -485,15 +442,6 @@ impl App {
                 self.dirty = true;
             }
         });
-        egui::ComboBox::from_label("Section fill pixels")
-            .selected_text(self.resolution.to_string())
-            .show_ui(ui, |ui| {
-                for n in [128, 256, 512, 1024] {
-                    self.dirty |= ui
-                        .selectable_value(&mut self.resolution, n, n.to_string())
-                        .changed();
-                }
-            });
         if ui.button("Reset camera").clicked() {
             self.yaw = -0.7;
             self.pitch = 0.45;
@@ -533,10 +481,7 @@ impl eframe::App for App {
                         .unwrap_or("Compute unavailable".into()),
                 );
                 ui.separator();
-                ui.small(format!(
-                    "Section update: {:.1} ms · {} overlap samples",
-                    self.section_time, self.overlaps
-                ));
+                ui.small(format!("Section update: {:.1} ms", self.section_time));
             });
         });
         egui::SidePanel::left("controls")
@@ -556,7 +501,7 @@ impl eframe::App for App {
                     ui.add_space(12.);
                     ui.heading("04 / Section");
                     ui.label(self.section_style().label());
-                    ui.small("Shared fill/style; grid drawn at each view's pixel resolution");
+                    ui.small("Rendered directly at viewport resolution");
                     let panel_pixels = (ui.available_width().min(320.) * ctx.pixels_per_point())
                         .round()
                         .clamp(32., 4096.) as u32;
@@ -573,16 +518,37 @@ impl eframe::App for App {
                     }
                     if let Some(t) = self.texture {
                         let response = ui.add(
-                            egui::Image::new((t, Vec2::splat(self.resolution as f32)))
+                            egui::Image::new((t, Vec2::splat(self.panel_pixels as f32)))
                                 .bg_fill(Color32::from_rgb(14, 21, 32))
                                 .fit_to_exact_size(Vec2::splat(ui.available_width().min(320.))),
                         );
                         if let Some(pointer) = response.hover_pos() {
                             let uv = (pointer - response.rect.min) / response.rect.size();
-                            let n = self.resolution as usize;
-                            let x = (uv.x * n as f32).floor().clamp(0., n as f32 - 1.) as usize;
-                            let y = (uv.y * n as f32).floor().clamp(0., n as f32 - 1.) as usize;
-                            if let Some(pixel) = self.section_pixels.get((n - 1 - y) * n + x) {
+                            let span = self.section_span();
+                            let point = self.plane.position
+                                + self.plane.u() * ((uv.x * 2. - 1.) * span)
+                                + self.plane.v() * ((1. - uv.y * 2.) * span);
+                            let pixel = if self.voxel_overlay {
+                                self.gpu
+                                    .as_ref()
+                                    .zip(self.volume.as_ref())
+                                    .and_then(|(gpu, v)| {
+                                        gpu.section(
+                                            v,
+                                            SectionPlane {
+                                                position: point,
+                                                ..self.plane
+                                            },
+                                            0.,
+                                            1,
+                                        )
+                                        .ok()
+                                    })
+                                    .and_then(|p| p.into_iter().next())
+                            } else {
+                                None
+                            };
+                            if let Some(pixel) = pixel {
                                 if pixel.inside == 0 {
                                     ui.label("Outside the built domain");
                                 } else {

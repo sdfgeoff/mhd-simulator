@@ -39,12 +39,6 @@ struct Physical {
     values: [f32; 4],
     flags: [u32; 4],
 }
-#[derive(Clone, Copy, Debug)]
-pub struct Cell {
-    pub index: [u32; 3],
-    pub body: u32,
-    pub material: u32,
-}
 pub struct Volume {
     pub settings: DomainSettings,
     pub dims: [u32; 3],
@@ -56,8 +50,8 @@ pub struct Volume {
     pub persistent_bytes: u64,
     pub material_names: Vec<(u32, String)>,
     pub build_serial: u64,
-    masks: wgpu::Buffer,
-    materials: wgpu::Buffer,
+    pub(crate) masks: wgpu::Buffer,
+    pub(crate) materials: wgpu::Buffer,
     _properties: wgpu::Buffer,
 }
 impl Volume {
@@ -81,7 +75,6 @@ pub struct GpuDomain {
     finalize: wgpu::ComputePipeline,
     coverage: wgpu::ComputePipeline,
     slice: wgpu::ComputePipeline,
-    cells: wgpu::ComputePipeline,
     pub name: String,
     serial: std::cell::Cell<u64>,
 }
@@ -129,205 +122,202 @@ impl GpuDomain {
                 )
                 .await
                 .map_err(|e| e.to_string())?;
-            let raster_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                label: None,
-                entries: &[buffer_entry(
-                    0,
-                    wgpu::BufferBindingType::Uniform,
-                    true,
-                    wgpu::ShaderStages::VERTEX_FRAGMENT,
-                )],
-            });
-            let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                label: None,
-                bind_group_layouts: &[&raster_layout],
-                push_constant_ranges: &[],
-            });
-            let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-                label: Some("Rasterized volume parity"),
-                source: wgpu::ShaderSource::Wgsl(include_str!("voxel-raster.wgsl").into()),
-            });
-            let pipeline = |fill: bool| {
-                let face = wgpu::StencilFaceState {
-                    compare: if fill {
-                        wgpu::CompareFunction::NotEqual
-                    } else {
-                        wgpu::CompareFunction::Always
-                    },
-                    fail_op: wgpu::StencilOperation::Keep,
-                    depth_fail_op: wgpu::StencilOperation::Keep,
-                    pass_op: if fill {
-                        wgpu::StencilOperation::Keep
-                    } else {
-                        wgpu::StencilOperation::Invert
-                    },
-                };
-                device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-                    label: Some(if fill {
-                        "Fill odd crossings"
-                    } else {
-                        "Toggle crossing stencil"
-                    }),
-                    layout: Some(&layout),
-                    vertex: wgpu::VertexState {
-                        module: &shader,
-                        entry_point: Some(if fill { "quad" } else { "surface" }),
-                        compilation_options: Default::default(),
-                        buffers: if fill {
-                            &[]
-                        } else {
-                            &[wgpu::VertexBufferLayout {
-                                array_stride: 12,
-                                step_mode: wgpu::VertexStepMode::Vertex,
-                                attributes: &wgpu::vertex_attr_array![0=>Float32x3],
-                            }]
-                        },
-                    },
-                    fragment: Some(wgpu::FragmentState {
-                        module: &shader,
-                        entry_point: Some(if fill { "filled" } else { "crossing" }),
-                        compilation_options: Default::default(),
-                        targets: &[Some(wgpu::ColorTargetState {
-                            format: wgpu::TextureFormat::R8Unorm,
-                            blend: None,
-                            write_mask: if fill {
-                                wgpu::ColorWrites::ALL
-                            } else {
-                                wgpu::ColorWrites::empty()
-                            },
-                        })],
-                    }),
-                    primitive: wgpu::PrimitiveState {
-                        cull_mode: None,
-                        ..Default::default()
-                    },
-                    depth_stencil: Some(wgpu::DepthStencilState {
-                        format: wgpu::TextureFormat::Depth24PlusStencil8,
-                        depth_write_enabled: false,
-                        depth_compare: wgpu::CompareFunction::Always,
-                        stencil: wgpu::StencilState {
-                            front: face,
-                            back: face,
-                            read_mask: 255,
-                            write_mask: if fill { 0 } else { 255 },
-                        },
-                        bias: Default::default(),
-                    }),
-                    multisample: Default::default(),
-                    multiview: None,
-                    cache: None,
-                })
+            Self::from_device(device, queue, name)
+        })
+    }
+    pub fn from_state(state: &egui_wgpu::RenderState) -> Result<Self, String> {
+        Self::from_device(
+            state.device.clone(),
+            state.queue.clone(),
+            state.adapter.get_info().name,
+        )
+    }
+    fn from_device(device: wgpu::Device, queue: wgpu::Queue, name: String) -> Result<Self, String> {
+        let raster_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            label: None,
+            entries: &[buffer_entry(
+                0,
+                wgpu::BufferBindingType::Uniform,
+                true,
+                wgpu::ShaderStages::VERTEX_FRAGMENT,
+            )],
+        });
+        let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: None,
+            bind_group_layouts: &[&raster_layout],
+            push_constant_ranges: &[],
+        });
+        let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("Rasterized volume parity"),
+            source: wgpu::ShaderSource::Wgsl(include_str!("voxel-raster.wgsl").into()),
+        });
+        let pipeline = |fill: bool| {
+            let face = wgpu::StencilFaceState {
+                compare: if fill {
+                    wgpu::CompareFunction::NotEqual
+                } else {
+                    wgpu::CompareFunction::Always
+                },
+                fail_op: wgpu::StencilOperation::Keep,
+                depth_fail_op: wgpu::StencilOperation::Keep,
+                pass_op: if fill {
+                    wgpu::StencilOperation::Keep
+                } else {
+                    wgpu::StencilOperation::Invert
+                },
             };
-            let crossing = pipeline(false);
-            let fill = pipeline(true);
-            let visibility = wgpu::ShaderStages::COMPUTE;
-            let build_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                label: None,
-                entries: &[
-                    buffer_entry(0, wgpu::BufferBindingType::Uniform, true, visibility),
-                    wgpu::BindGroupLayoutEntry {
-                        binding: 1,
-                        visibility,
-                        ty: wgpu::BindingType::Texture {
-                            sample_type: wgpu::TextureSampleType::Float { filterable: false },
-                            view_dimension: wgpu::TextureViewDimension::D2Array,
-                            multisampled: false,
-                        },
-                        count: None,
-                    },
-                    buffer_entry(
-                        2,
-                        wgpu::BufferBindingType::Storage { read_only: false },
-                        false,
-                        visibility,
-                    ),
-                    buffer_entry(
-                        3,
-                        wgpu::BufferBindingType::Storage { read_only: false },
-                        false,
-                        visibility,
-                    ),
-                    buffer_entry(
-                        4,
-                        wgpu::BufferBindingType::Storage { read_only: true },
-                        false,
-                        visibility,
-                    ),
-                    buffer_entry(
-                        5,
-                        wgpu::BufferBindingType::Storage { read_only: false },
-                        false,
-                        visibility,
-                    ),
-                    buffer_entry(
-                        6,
-                        wgpu::BufferBindingType::Storage { read_only: true },
-                        false,
-                        visibility,
-                    ),
-                ],
-            });
-            let cl = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                label: None,
-                bind_group_layouts: &[&build_layout],
-                push_constant_ranges: &[],
-            });
-            let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-                label: Some("Voxel merge and material assignment"),
-                source: wgpu::ShaderSource::Wgsl(include_str!("voxel-build.wgsl").into()),
-            });
-            let compute = |entry| {
-                device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-                    label: Some(entry),
-                    layout: Some(&cl),
+            device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+                label: Some(if fill {
+                    "Fill odd crossings"
+                } else {
+                    "Toggle crossing stencil"
+                }),
+                layout: Some(&layout),
+                vertex: wgpu::VertexState {
                     module: &shader,
-                    entry_point: Some(entry),
+                    entry_point: Some(if fill { "quad" } else { "surface" }),
                     compilation_options: Default::default(),
-                    cache: None,
-                })
-            };
-            let merge = compute("merge");
-            let finalize = compute("finalize");
-            let coverage = compute("coverage");
-            let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-                label: Some("Persistent volume slice"),
-                source: wgpu::ShaderSource::Wgsl(include_str!("voxel-section.wgsl").into()),
-            });
-            let slice = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-                label: Some("Volume lookup"),
-                layout: None,
-                module: &shader,
-                entry_point: Some("main"),
-                compilation_options: Default::default(),
+                    buffers: if fill {
+                        &[]
+                    } else {
+                        &[wgpu::VertexBufferLayout {
+                            array_stride: 12,
+                            step_mode: wgpu::VertexStepMode::Vertex,
+                            attributes: &wgpu::vertex_attr_array![0=>Float32x3],
+                        }]
+                    },
+                },
+                fragment: Some(wgpu::FragmentState {
+                    module: &shader,
+                    entry_point: Some(if fill { "filled" } else { "crossing" }),
+                    compilation_options: Default::default(),
+                    targets: &[Some(wgpu::ColorTargetState {
+                        format: wgpu::TextureFormat::R8Unorm,
+                        blend: None,
+                        write_mask: if fill {
+                            wgpu::ColorWrites::ALL
+                        } else {
+                            wgpu::ColorWrites::empty()
+                        },
+                    })],
+                }),
+                primitive: wgpu::PrimitiveState {
+                    cull_mode: None,
+                    ..Default::default()
+                },
+                depth_stencil: Some(wgpu::DepthStencilState {
+                    format: wgpu::TextureFormat::Depth24PlusStencil8,
+                    depth_write_enabled: false,
+                    depth_compare: wgpu::CompareFunction::Always,
+                    stencil: wgpu::StencilState {
+                        front: face,
+                        back: face,
+                        read_mask: 255,
+                        write_mask: if fill { 0 } else { 255 },
+                    },
+                    bias: Default::default(),
+                }),
+                multisample: Default::default(),
+                multiview: None,
                 cache: None,
-            });
-            let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-                label: Some("Intersected voxel slab"),
-                source: wgpu::ShaderSource::Wgsl(include_str!("voxel-cells.wgsl").into()),
-            });
-            let cells = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-                label: Some("Enumerate plane-intersected cells"),
-                layout: None,
-                module: &shader,
-                entry_point: Some("main"),
-                compilation_options: Default::default(),
-                cache: None,
-            });
-            Ok(Self {
-                device,
-                queue,
-                raster_layout,
-                build_layout,
-                crossing,
-                fill,
-                merge,
-                finalize,
-                coverage,
-                slice,
-                cells,
-                name,
-                serial: std::cell::Cell::new(0),
             })
+        };
+        let crossing = pipeline(false);
+        let fill = pipeline(true);
+        let visibility = wgpu::ShaderStages::COMPUTE;
+        let build_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            label: None,
+            entries: &[
+                buffer_entry(0, wgpu::BufferBindingType::Uniform, true, visibility),
+                wgpu::BindGroupLayoutEntry {
+                    binding: 1,
+                    visibility,
+                    ty: wgpu::BindingType::Texture {
+                        sample_type: wgpu::TextureSampleType::Float { filterable: false },
+                        view_dimension: wgpu::TextureViewDimension::D2Array,
+                        multisampled: false,
+                    },
+                    count: None,
+                },
+                buffer_entry(
+                    2,
+                    wgpu::BufferBindingType::Storage { read_only: false },
+                    false,
+                    visibility,
+                ),
+                buffer_entry(
+                    3,
+                    wgpu::BufferBindingType::Storage { read_only: false },
+                    false,
+                    visibility,
+                ),
+                buffer_entry(
+                    4,
+                    wgpu::BufferBindingType::Storage { read_only: true },
+                    false,
+                    visibility,
+                ),
+                buffer_entry(
+                    5,
+                    wgpu::BufferBindingType::Storage { read_only: false },
+                    false,
+                    visibility,
+                ),
+                buffer_entry(
+                    6,
+                    wgpu::BufferBindingType::Storage { read_only: true },
+                    false,
+                    visibility,
+                ),
+            ],
+        });
+        let cl = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: None,
+            bind_group_layouts: &[&build_layout],
+            push_constant_ranges: &[],
+        });
+        let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("Voxel merge and material assignment"),
+            source: wgpu::ShaderSource::Wgsl(include_str!("voxel-build.wgsl").into()),
+        });
+        let compute = |entry| {
+            device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+                label: Some(entry),
+                layout: Some(&cl),
+                module: &shader,
+                entry_point: Some(entry),
+                compilation_options: Default::default(),
+                cache: None,
+            })
+        };
+        let merge = compute("merge");
+        let finalize = compute("finalize");
+        let coverage = compute("coverage");
+        let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("Persistent volume slice"),
+            source: wgpu::ShaderSource::Wgsl(include_str!("voxel-section.wgsl").into()),
+        });
+        let slice = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+            label: Some("Volume lookup"),
+            layout: None,
+            module: &shader,
+            entry_point: Some("main"),
+            compilation_options: Default::default(),
+            cache: None,
+        });
+        Ok(Self {
+            device,
+            queue,
+            raster_layout,
+            build_layout,
+            crossing,
+            fill,
+            merge,
+            finalize,
+            coverage,
+            slice,
+            name,
+            serial: std::cell::Cell::new(0),
         })
     }
     fn read(&self, buffer: &wgpu::Buffer, bytes: u64) -> Result<Vec<u8>, String> {
@@ -749,8 +739,8 @@ impl GpuDomain {
         span: f32,
         n: u32,
     ) -> Result<Vec<Pixel>, String> {
-        if !(8..=1024).contains(&n) {
-            return Err("Slice resolution must be 8..1024".into());
+        if !(1..=1024).contains(&n) {
+            return Err("Slice resolution must be 1..1024".into());
         }
         let p = Slice {
             origin: plane.position.extend(0.).to_array(),
@@ -810,93 +800,6 @@ impl GpuDomain {
         }
         self.queue.submit(Some(encoder.finish()));
         Ok(bytemuck::cast_slice(&self.read(&output, bytes)?).to_vec())
-    }
-    pub fn intersected_cells(
-        &self,
-        volume: &Volume,
-        plane: SectionPlane,
-    ) -> Result<Vec<Cell>, String> {
-        let n = plane.normal().abs();
-        let k = if n.x >= n.y && n.x >= n.z {
-            0usize
-        } else if n.y >= n.z {
-            1
-        } else {
-            2
-        };
-        let a = (k + 1) % 3;
-        let b = (k + 2) % 3;
-        let count = volume.dims[a] as u64 * volume.dims[b] as u64 * 4;
-        let bytes = count * 16;
-        if bytes > self.device.limits().max_storage_buffer_binding_size as u64 {
-            return Err("Section cell slab exceeds the GPU buffer limit".into());
-        }
-        let p = Slice {
-            origin: plane.position.extend(0.).to_array(),
-            u: plane.u().extend(0.).to_array(),
-            v: plane.v().extend(0.).to_array(),
-            minimum: [
-                volume.settings.min_mm[0],
-                volume.settings.min_mm[1],
-                volume.settings.min_mm[2],
-                volume.settings.cell_mm,
-            ],
-            dimensions: [volume.dims[0], volume.dims[1], volume.dims[2], 0],
-            options: [k as u32, 0, 0, 0],
-        };
-        let uniform = self
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Cell slab plane"),
-                contents: bytemuck::bytes_of(&p),
-                usage: wgpu::BufferUsages::UNIFORM,
-            });
-        let output = self.device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("Plane-intersected cell records"),
-            size: bytes,
-            usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
-            mapped_at_creation: false,
-        });
-        let bind = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: None,
-            layout: &self.cells.get_bind_group_layout(0),
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: uniform.as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: volume.masks.as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 2,
-                    resource: volume.materials.as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 3,
-                    resource: output.as_entire_binding(),
-                },
-            ],
-        });
-        let mut encoder = self.device.create_command_encoder(&Default::default());
-        {
-            let mut pass = encoder.begin_compute_pass(&Default::default());
-            pass.set_pipeline(&self.cells);
-            pass.set_bind_group(0, &bind, &[]);
-            pass.dispatch_workgroups(volume.dims[a].div_ceil(8), volume.dims[b].div_ceil(8), 1);
-        }
-        self.queue.submit(Some(encoder.finish()));
-        let raw = self.read(&output, bytes)?;
-        Ok(bytemuck::cast_slice::<u8, [u32; 4]>(&raw)
-            .iter()
-            .filter(|r| r[3] != 0)
-            .map(|r| Cell {
-                index: [r[0], r[1], r[2]],
-                body: r[3] & 255,
-                material: r[3] >> 8,
-            })
-            .collect())
     }
     #[cfg(test)]
     pub fn read_masks(&self, v: &Volume) -> Vec<u32> {

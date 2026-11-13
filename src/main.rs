@@ -84,7 +84,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Ok(());
     }
     let path = args.get(1).cloned().unwrap_or("assets/hotend.gltf".into());
+    let mut setup = egui_wgpu::WgpuSetupCreateNew::default();
+    setup.device_descriptor = std::sync::Arc::new(|adapter| {
+        let limits = adapter.limits();
+        wgpu::DeviceDescriptor {
+            label: Some("Shared rendering and simulation device"),
+            required_limits: wgpu::Limits {
+                max_texture_dimension_2d: limits.max_texture_dimension_2d,
+                max_texture_array_layers: limits.max_texture_array_layers,
+                max_storage_buffer_binding_size: limits.max_storage_buffer_binding_size,
+                max_buffer_size: limits.max_buffer_size,
+                ..Default::default()
+            },
+            ..Default::default()
+        }
+    });
     let options = eframe::NativeOptions {
+        wgpu_options: egui_wgpu::WgpuConfiguration {
+            wgpu_setup: egui_wgpu::WgpuSetup::CreateNew(setup),
+            ..Default::default()
+        },
         renderer: eframe::Renderer::Wgpu,
         viewport: eframe::egui::ViewportBuilder::default().with_inner_size([1100., 660.]),
         ..Default::default()

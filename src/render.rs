@@ -19,17 +19,19 @@ struct Uniforms {
     normal: [f32; 4],
     settings: [f32; 4],
     grid_minimum: [f32; 4],
+    dimensions: [u32; 4],
+    palette: [[f32; 4]; 8],
 }
-pub struct DomainView {
+pub struct DomainView<'a> {
     pub span: f32,
     pub bounds: Option<(Vec3, Vec3)>,
     pub grid: Option<(Vec3, f32)>,
+    pub volume: Option<&'a crate::domain::Volume>,
+    pub material_colors: bool,
 }
 pub struct Viewport {
-    slice_texture: wgpu::Texture,
-    slice_sampler: wgpu::Sampler,
-    slice_layout: wgpu::BindGroupLayout,
-    slice_size: u32,
+    volume_layout: wgpu::BindGroupLayout,
+    empty: wgpu::Buffer,
     state: egui_wgpu::RenderState,
     triangle: wgpu::RenderPipeline,
     line: wgpu::RenderPipeline,
@@ -39,6 +41,8 @@ pub struct Viewport {
         wgpu::Texture,
         wgpu::Texture,
         wgpu::TextureView,
+        wgpu::TextureView,
+        wgpu::Texture,
         wgpu::TextureView,
     )>,
     size: [u32; 2],
@@ -80,28 +84,29 @@ impl Viewport {
                 wgpu::BindGroupLayoutEntry {
                     binding: 1,
                     visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Texture {
-                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
-                        view_dimension: wgpu::TextureViewDimension::D2,
-                        multisampled: false,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Storage { read_only: true },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
                     },
                     count: None,
                 },
                 wgpu::BindGroupLayoutEntry {
                     binding: 2,
                     visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Storage { read_only: true },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
                     count: None,
                 },
             ],
         });
-        let slice_texture = make_slice(device, 1);
-        let slice_view = slice_texture.create_view(&Default::default());
-        let slice_sampler = device.create_sampler(&wgpu::SamplerDescriptor {
-            mag_filter: wgpu::FilterMode::Linear,
-            min_filter: wgpu::FilterMode::Linear,
-            mipmap_filter: wgpu::FilterMode::Linear,
-            ..Default::default()
+        let empty = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Empty domain"),
+            contents: &[0u8; 4],
+            usage: wgpu::BufferUsages::STORAGE,
         });
         let bind = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: None,
@@ -113,11 +118,11 @@ impl Viewport {
                 },
                 wgpu::BindGroupEntry {
                     binding: 1,
-                    resource: wgpu::BindingResource::TextureView(&slice_view),
+                    resource: empty.as_entire_binding(),
                 },
                 wgpu::BindGroupEntry {
                     binding: 2,
-                    resource: wgpu::BindingResource::Sampler(&slice_sampler),
+                    resource: empty.as_entire_binding(),
                 },
             ],
         });
@@ -127,15 +132,13 @@ impl Viewport {
             push_constant_ranges: &[],
         });
         let make = |lines: bool| {
-            device.create_render_pipeline(&wgpu::RenderPipelineDescriptor{label:Some(if lines{"Section outlines"}else{"Depth-tested CAD"}),layout:Some(&pipeline_layout),vertex:wgpu::VertexState{module:&shader,entry_point:Some("vertex"),compilation_options:Default::default(),buffers:&[wgpu::VertexBufferLayout{array_stride:std::mem::size_of::<Vertex>()as u64,step_mode:wgpu::VertexStepMode::Vertex,attributes:&wgpu::vertex_attr_array![0=>Float32x3,1=>Float32x4,2=>Float32x2,3=>Float32]}]},fragment:Some(wgpu::FragmentState{module:&shader,entry_point:Some("fragment"),compilation_options:Default::default(),targets:&[Some(wgpu::ColorTargetState{format:wgpu::TextureFormat::Rgba8UnormSrgb,blend:Some(wgpu::BlendState::PREMULTIPLIED_ALPHA_BLENDING),write_mask:wgpu::ColorWrites::ALL})]}),primitive:wgpu::PrimitiveState{topology:if lines{wgpu::PrimitiveTopology::LineList}else{wgpu::PrimitiveTopology::TriangleList},cull_mode:if lines{None}else{Some(wgpu::Face::Back)},..Default::default()},depth_stencil:Some(wgpu::DepthStencilState{format:wgpu::TextureFormat::Depth32Float,depth_write_enabled:!lines,depth_compare:wgpu::CompareFunction::LessEqual,stencil:Default::default(),bias:wgpu::DepthBiasState{constant:if lines{-2}else{0},..Default::default()}}),multisample:Default::default(),multiview:None,cache:None})
+            device.create_render_pipeline(&wgpu::RenderPipelineDescriptor{label:Some(if lines{"Section outlines"}else{"Depth-tested CAD"}),layout:Some(&pipeline_layout),vertex:wgpu::VertexState{module:&shader,entry_point:Some("vertex"),compilation_options:Default::default(),buffers:&[wgpu::VertexBufferLayout{array_stride:std::mem::size_of::<Vertex>()as u64,step_mode:wgpu::VertexStepMode::Vertex,attributes:&wgpu::vertex_attr_array![0=>Float32x3,1=>Float32x4,2=>Float32x2,3=>Float32]}]},fragment:Some(wgpu::FragmentState{module:&shader,entry_point:Some("fragment"),compilation_options:Default::default(),targets:&[Some(wgpu::ColorTargetState{format:wgpu::TextureFormat::Rgba8UnormSrgb,blend:Some(wgpu::BlendState::PREMULTIPLIED_ALPHA_BLENDING),write_mask:wgpu::ColorWrites::ALL})]}),primitive:wgpu::PrimitiveState{topology:if lines{wgpu::PrimitiveTopology::LineList}else{wgpu::PrimitiveTopology::TriangleList},cull_mode:if lines{None}else{Some(wgpu::Face::Back)},..Default::default()},depth_stencil:Some(wgpu::DepthStencilState{format:wgpu::TextureFormat::Depth32Float,depth_write_enabled:!lines,depth_compare:wgpu::CompareFunction::LessEqual,stencil:Default::default(),bias:wgpu::DepthBiasState{constant:if lines{-2}else{0},..Default::default()}}),multisample:wgpu::MultisampleState{count:4,..Default::default()},multiview:None,cache:None})
         };
         let triangle = make(false);
         let line = make(true);
         Self {
-            slice_texture,
-            slice_sampler,
-            slice_layout: layout,
-            slice_size: 1,
+            volume_layout: layout,
+            empty,
             state,
             triangle,
             line,
@@ -145,74 +148,6 @@ impl Viewport {
             size: [0, 0],
             texture: None,
         }
-    }
-    pub fn set_section(&mut self, pixels: &[u8], n: u32) {
-        if pixels.len() != n as usize * n as usize * 4 {
-            return;
-        }
-        if self.slice_size != n {
-            self.slice_texture = make_slice(&self.state.device, n);
-            self.slice_size = n;
-            let view = self.slice_texture.create_view(&Default::default());
-            self.bind = self
-                .state
-                .device
-                .create_bind_group(&wgpu::BindGroupDescriptor {
-                    label: None,
-                    layout: &self.slice_layout,
-                    entries: &[
-                        wgpu::BindGroupEntry {
-                            binding: 0,
-                            resource: self.uniform.as_entire_binding(),
-                        },
-                        wgpu::BindGroupEntry {
-                            binding: 1,
-                            resource: wgpu::BindingResource::TextureView(&view),
-                        },
-                        wgpu::BindGroupEntry {
-                            binding: 2,
-                            resource: wgpu::BindingResource::Sampler(&self.slice_sampler),
-                        },
-                    ],
-                });
-        }
-        self.state.queue.write_texture(
-            self.slice_texture.as_image_copy(),
-            pixels,
-            wgpu::TexelCopyBufferLayout {
-                offset: 0,
-                bytes_per_row: Some(n * 4),
-                rows_per_image: None,
-            },
-            wgpu::Extent3d {
-                width: n,
-                height: n,
-                depth_or_array_layers: 1,
-            },
-        );
-    }
-    pub fn set_shared_section(&mut self, view: &wgpu::TextureView) {
-        self.bind = self
-            .state
-            .device
-            .create_bind_group(&wgpu::BindGroupDescriptor {
-                label: Some("Shared section image in 3D"),
-                layout: &self.slice_layout,
-                entries: &[
-                    wgpu::BindGroupEntry {
-                        binding: 0,
-                        resource: self.uniform.as_entire_binding(),
-                    },
-                    wgpu::BindGroupEntry {
-                        binding: 1,
-                        resource: wgpu::BindingResource::TextureView(view),
-                    },
-                    wgpu::BindGroupEntry {
-                        binding: 2,
-                        resource: wgpu::BindingResource::Sampler(&self.slice_sampler),
-                    },
-                ],
-            });
     }
     #[cfg(test)]
     pub(crate) fn output_texture(&self) -> &wgpu::Texture {
@@ -229,6 +164,74 @@ impl Viewport {
         pixels_per_point: f32,
         domain: Option<DomainView>,
     ) -> egui::TextureId {
+        self.draw_view(
+            camera,
+            plane,
+            cut,
+            hatched,
+            model,
+            caps,
+            pixels_per_point,
+            domain,
+            false,
+        )
+    }
+    pub fn draw_section(
+        &mut self,
+        model: &Model,
+        caps: &[Cap],
+        plane: SectionPlane,
+        volume: Option<&crate::domain::Volume>,
+        options: crate::section::Options,
+        span: f32,
+        n: u32,
+    ) -> egui::TextureId {
+        let basis = glam::Mat3::from_cols(plane.u(), -plane.normal(), plane.v());
+        let camera = Camera {
+            rect: egui::Rect::from_min_size(egui::Pos2::ZERO, egui::Vec2::splat(n as f32)),
+            center: plane.position,
+            rotation: glam::Quat::from_mat3(&basis).inverse(),
+            scale: n as f32 / (2. * span),
+            size: {
+                let (lo, hi) = model.bounds();
+                (hi - lo).max_element().max(1.)
+            },
+        };
+        let domain = (options.style == crate::section::Style::Voxels).then_some(DomainView {
+            span,
+            bounds: None,
+            grid: if options.edges {
+                volume.map(|v| (Vec3::from(v.settings.min_mm), v.settings.cell_mm))
+            } else {
+                None
+            },
+            volume,
+            material_colors: options.material_colors,
+        });
+        self.draw_view(
+            camera,
+            plane,
+            true,
+            options.style == crate::section::Style::HatchedCad,
+            model,
+            caps,
+            1.,
+            domain,
+            true,
+        )
+    }
+    fn draw_view(
+        &mut self,
+        camera: Camera,
+        plane: SectionPlane,
+        cut: bool,
+        hatched: bool,
+        model: &Model,
+        caps: &[Cap],
+        pixels_per_point: f32,
+        domain: Option<DomainView>,
+        panel: bool,
+    ) -> egui::TextureId {
         let device = &self.state.device;
         let queue = &self.state.queue;
         let size = [
@@ -240,7 +243,7 @@ impl Viewport {
                 .clamp(8., 4096.) as u32,
         ];
         if size != self.size {
-            let create = |format, usage| {
+            let create = |format, usage, sample_count| {
                 device.create_texture(&wgpu::TextureDescriptor {
                     label: Some("CAD viewport target"),
                     size: wgpu::Extent3d {
@@ -249,7 +252,7 @@ impl Viewport {
                         depth_or_array_layers: 1,
                     },
                     mip_level_count: 1,
-                    sample_count: 1,
+                    sample_count,
                     dimension: wgpu::TextureDimension::D2,
                     format,
                     usage,
@@ -261,10 +264,12 @@ impl Viewport {
                 wgpu::TextureUsages::RENDER_ATTACHMENT
                     | wgpu::TextureUsages::TEXTURE_BINDING
                     | wgpu::TextureUsages::COPY_SRC,
+                1,
             );
             let depth = create(
                 wgpu::TextureFormat::Depth32Float,
                 wgpu::TextureUsages::RENDER_ATTACHMENT,
+                4,
             );
             let cv = color.create_view(&Default::default());
             let dv = depth.create_view(&Default::default());
@@ -280,7 +285,13 @@ impl Viewport {
                 self.texture =
                     Some(renderer.register_native_texture(device, &cv, wgpu::FilterMode::Linear));
             }
-            self.target = Some((color, depth, cv, dv));
+            let msaa = create(
+                wgpu::TextureFormat::Rgba8UnormSrgb,
+                wgpu::TextureUsages::RENDER_ATTACHMENT,
+                4,
+            );
+            let mv = msaa.create_view(&Default::default());
+            self.target = Some((color, depth, cv, dv, msaa, mv));
             self.size = size;
         }
         let params = Uniforms {
@@ -303,11 +314,61 @@ impl Viewport {
             ],
             grid_minimum: domain
                 .as_ref()
-                .and_then(|d| d.grid)
-                .map(|(m, _)| m.extend(0.).to_array())
-                .unwrap_or([0.; 4]),
+                .and_then(|d| d.volume)
+                .map(|v| {
+                    Vec3::from(v.settings.min_mm)
+                        .extend(v.settings.cell_mm)
+                        .to_array()
+                })
+                .unwrap_or([0., 0., 0., 1.]),
+            dimensions: domain
+                .as_ref()
+                .and_then(|d| d.volume)
+                .map(|v| {
+                    [
+                        v.dims[0],
+                        v.dims[1],
+                        v.dims[2],
+                        u32::from(domain.as_ref().unwrap().material_colors),
+                    ]
+                })
+                .unwrap_or([0; 4]),
+            palette: std::array::from_fn(|i| {
+                let c = COLORS[i % COLORS.len()];
+                [
+                    linear(c[0] as f32 / 255.),
+                    linear(c[1] as f32 / 255.),
+                    linear(c[2] as f32 / 255.),
+                    1.,
+                ]
+            }),
         };
         queue.write_buffer(&self.uniform, 0, bytemuck::bytes_of(&params));
+        let volume = domain.as_ref().and_then(|d| d.volume);
+        self.bind = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("Resident 3D domain"),
+            layout: &self.volume_layout,
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: self.uniform.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: volume
+                        .map(|v| &v.masks)
+                        .unwrap_or(&self.empty)
+                        .as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 2,
+                    resource: volume
+                        .map(|v| &v.materials)
+                        .unwrap_or(&self.empty)
+                        .as_entire_binding(),
+                },
+            ],
+        });
         let mut vertices = Vec::new();
         let mut lines = Vec::new();
         let vertex = |p: Vec3, c: [f32; 4], mode: f32| {
@@ -321,7 +382,7 @@ impl Viewport {
         };
         for (i, body) in model.bodies.iter().enumerate().filter(|(_, b)| b.visible) {
             let c = COLORS[i % COLORS.len()].map(|v| v as f32 / 255.);
-            for t in &body.triangles {
+            for t in body.triangles.iter().filter(|_| !panel) {
                 let mut t = *t;
                 if body.winding < 0. {
                     t.swap(1, 2);
@@ -345,9 +406,9 @@ impl Viewport {
                 if let Some(cap) = caps.get(i) {
                     if hatched && domain.is_none() {
                         let color = [
-                            c[0] * 0.45 + 0.55,
-                            c[1] * 0.45 + 0.55,
-                            c[2] * 0.45 + 0.55,
+                            linear(c[0] * 0.45 + 0.55),
+                            linear(c[1] * 0.45 + 0.55),
+                            linear(c[2] * 0.45 + 0.55),
                             1.,
                         ];
                         for t in &cap.triangles {
@@ -360,11 +421,9 @@ impl Viewport {
                             }
                         }
                     }
-                    if domain.is_none() {
-                        for segment in &cap.contours {
-                            for &p in segment {
-                                lines.push(vertex(p, [0.7, 0.85, 0.9, 1.], 2.));
-                            }
+                    for segment in &cap.contours {
+                        for &p in segment {
+                            lines.push(vertex(p, [0.7, 0.85, 0.9, 1.], 2.));
                         }
                     }
                 }
@@ -409,7 +468,7 @@ impl Viewport {
         }
         let contour_count = lines.len() as u32;
         let (lo, _) = model.bounds();
-        for i in -5..=5 {
+        for i in (-5..=5).filter(|_| !panel) {
             let a = i as f32 * camera.size * 0.1;
             let z = lo.z - camera.size * 0.04;
             for (p, q) in [
@@ -429,20 +488,24 @@ impl Viewport {
         let buffer = |v: &[Vertex]| {
             device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("CAD draw vertices"),
-                contents: bytemuck::cast_slice(v),
+                contents: if v.is_empty() {
+                    &[0u8; std::mem::size_of::<Vertex>()]
+                } else {
+                    bytemuck::cast_slice(v)
+                },
                 usage: wgpu::BufferUsages::VERTEX,
             })
         };
         let vb = (!vertices.is_empty()).then(|| buffer(&vertices));
         let lb = buffer(&lines);
-        let (_, _, color, depth) = self.target.as_ref().unwrap();
+        let (_, _, color, depth, _, msaa) = self.target.as_ref().unwrap();
         let mut encoder = device.create_command_encoder(&Default::default());
         {
             let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("CAD with depth"),
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: color,
-                    resolve_target: None,
+                    view: msaa,
+                    resolve_target: Some(color),
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(wgpu::Color {
                             r: 0.0045,
@@ -540,6 +603,200 @@ mod tests {
         buffer.slice(..).get_mapped_range().to_vec()
     }
     #[test]
+    fn direct_voxel_fragments_match_resident_grid_at_two_viewport_sizes() {
+        let _gpu_lock = crate::gpu_test_lock();
+        let mut view = viewport();
+        let gpu = crate::domain::GpuDomain::from_state(&view.state).unwrap();
+        let mut scene = Viewport::new(view.state.clone());
+        let mut model = Model::load(std::path::Path::new("assets/annulus.gltf")).unwrap();
+        model.bodies[0].simulation.material_id = 3;
+        let settings = crate::project::DomainSettings {
+            min_mm: [-4., -4., -5.],
+            max_mm: [4., 4., 5.],
+            cell_mm: 0.25,
+        };
+        let volume = gpu
+            .build(&model, &settings, &crate::project::default_materials())
+            .unwrap();
+        let serial = volume.build_serial;
+        // Isolate the clipping shader from CAD surface coverage along the cut boundary.
+        let mut hidden_cad = Model::load(std::path::Path::new("assets/annulus.gltf")).unwrap();
+        for body in &mut hidden_cad.bodies {
+            body.visible = false;
+        }
+        let plane = SectionPlane {
+            position: Vec3::new(0.031, 0.017, 0.043),
+            orientation: glam::Quat::from_euler(glam::EulerRot::XYZ, 0.23, 0.41, 0.13),
+        };
+        for n in [256, 512] {
+            let options = crate::section::Options {
+                style: crate::section::Style::Voxels,
+                edges: false,
+                material_colors: false,
+            };
+            view.draw_section(&model, &[], plane, Some(&volume), options, 5., n);
+            assert_eq!(view.output_texture().width(), n);
+            let image = read(&view);
+            let reference = gpu.section(&volume, plane, 5., n).unwrap();
+            let basis = glam::Mat3::from_cols(plane.u(), -plane.normal(), plane.v());
+            let camera = Camera {
+                rect: egui::Rect::from_min_size(egui::Pos2::ZERO, egui::Vec2::splat(n as f32)),
+                center: plane.position,
+                rotation: glam::Quat::from_mat3(&basis).inverse(),
+                scale: n as f32 / 10.,
+                size: 8.,
+            };
+            scene.draw(
+                camera,
+                plane,
+                true,
+                false,
+                &hidden_cad,
+                &[],
+                1.,
+                Some(DomainView {
+                    span: 5.,
+                    bounds: None,
+                    grid: None,
+                    volume: Some(&volume),
+                    material_colors: false,
+                }),
+            );
+            let image_3d = read(&scene);
+            let mut checked = 0;
+            for y in 2..n as usize - 2 {
+                for x in 2..n as usize - 2 {
+                    let i = (n as usize - 1 - y) * n as usize + x;
+                    let occupied = reference[i].body != 0;
+                    // Skip antialiased cell/shape transitions, whose subpixel samples may straddle two cells.
+                    if [i - 1, i + 1, i - n as usize, i + n as usize]
+                        .iter()
+                        .any(|&j| (reference[j].body != 0) != occupied)
+                    {
+                        continue;
+                    }
+                    let rgba = &image[(y * n as usize + x) * 4..][..4];
+                    assert_eq!(
+                        rgba[..3].iter().copied().max().unwrap() > 100,
+                        occupied,
+                        "native voxel lookup at {n}px ({x},{y})"
+                    );
+                    if occupied {
+                        assert!((rgba[0] as i32 - COLORS[0][0] as i32).abs() <= 1);
+                        assert_eq!(
+                            rgba,
+                            &image_3d[(y * n as usize + x) * 4..][..4],
+                            "3D and panel voxel fragments must agree"
+                        );
+                    }
+                    checked += 1;
+                }
+            }
+            assert!(checked > n as usize * n as usize / 2);
+            view.draw_section(
+                &model,
+                &[],
+                plane,
+                Some(&volume),
+                crate::section::Options {
+                    material_colors: true,
+                    ..options
+                },
+                5.,
+                n,
+            );
+            let material = read(&view);
+            assert!(material.chunks_exact(4).any(|p| p[..3] == COLORS[2]));
+            view.draw_section(
+                &model,
+                &[],
+                plane,
+                Some(&volume),
+                crate::section::Options {
+                    edges: true,
+                    ..options
+                },
+                5.,
+                n,
+            );
+            let grid = read(&view);
+            assert!(
+                grid.iter().zip(image.iter()).any(|(a, b)| a != b),
+                "native grid must change occupied fragments"
+            );
+        }
+        assert_eq!(volume.build_serial, serial);
+    }
+    #[test]
+    fn direct_cad_section_and_3d_face_use_same_shader_and_viewport_pixels() {
+        let _gpu_lock = crate::gpu_test_lock();
+        let mut panel = viewport();
+        let mut scene = Viewport::new(panel.state.clone());
+        let model = Model::load(std::path::Path::new("assets/annulus.gltf")).unwrap();
+        let plane = SectionPlane {
+            position: Vec3::ZERO,
+            orientation: glam::Quat::from_rotation_y(-std::f32::consts::FRAC_PI_2),
+        };
+        let caps = vec![crate::caps::build(&model.bodies[0], plane, 1e-5)];
+        for n in [256, 512] {
+            let basis = glam::Mat3::from_cols(plane.u(), -plane.normal(), plane.v());
+            let camera = Camera {
+                rect: egui::Rect::from_min_size(egui::Pos2::ZERO, egui::Vec2::splat(n as f32)),
+                center: plane.position,
+                rotation: glam::Quat::from_mat3(&basis).inverse(),
+                scale: n as f32 / 10.,
+                size: 8.,
+            };
+            for style in [
+                crate::section::Style::HatchedCad,
+                crate::section::Style::Outlines,
+            ] {
+                panel.draw_section(
+                    &model,
+                    &caps,
+                    plane,
+                    None,
+                    crate::section::Options {
+                        style,
+                        edges: false,
+                        material_colors: false,
+                    },
+                    5.,
+                    n,
+                );
+                scene.draw(
+                    camera,
+                    plane,
+                    true,
+                    style == crate::section::Style::HatchedCad,
+                    &model,
+                    &caps,
+                    1.,
+                    None,
+                );
+                let a = read(&panel);
+                let b = read(&scene);
+                // Annular interior avoids background/editor grid and surface boundary pixels.
+                let y = n as usize / 2;
+                for x in n as usize * 7 / 10..n as usize * 77 / 100 {
+                    if style == crate::section::Style::HatchedCad {
+                        assert_eq!(
+                            &a[(y * n as usize + x) * 4..][..3],
+                            &b[(y * n as usize + x) * 4..][..3]
+                        );
+                    } else {
+                        assert!(
+                            a[(y * n as usize + x) * 4] < 100 && b[(y * n as usize + x) * 4] < 100
+                        );
+                    }
+                }
+                assert_eq!(panel.output_texture().width(), n);
+                let center = (n as usize / 2 * n as usize + n as usize / 2) * 4;
+                assert!(a[center] < 100, "CAD cavity must stay open");
+            }
+        }
+    }
+    #[test]
     fn gpu_hatched_caps_preserve_cavity_and_outline_mode_removes_fill() {
         let _gpu_lock = crate::gpu_test_lock();
         let mut view = viewport();
@@ -590,19 +847,10 @@ mod tests {
     }
 }
 
-fn make_slice(device: &wgpu::Device, n: u32) -> wgpu::Texture {
-    device.create_texture(&wgpu::TextureDescriptor {
-        label: Some("Voxel section overlay"),
-        size: wgpu::Extent3d {
-            width: n,
-            height: n,
-            depth_or_array_layers: 1,
-        },
-        mip_level_count: 1,
-        sample_count: 1,
-        dimension: wgpu::TextureDimension::D2,
-        format: wgpu::TextureFormat::Rgba8UnormSrgb,
-        usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
-        view_formats: &[],
-    })
+fn linear(c: f32) -> f32 {
+    if c <= 0.04045 {
+        c / 12.92
+    } else {
+        ((c + 0.055) / 1.055).powf(2.4)
+    }
 }
