@@ -52,6 +52,8 @@ cargo run --example make_multi_source
 
 Geometry/import/display coordinates remain millimetres. Solver coordinates are metres, time is seconds, A has units T·m, B is T, J is A/m², force density is N/m³ and heating density is W/m³. Input conversion is the existing `SimulationSnapshot` boundary.
 
+The [energy guide](ENERGY.md) describes air-only gauge regularization, discrete work/heat accounting and the analytic rotating-sphere check.
+
 The low-frequency model neglects displacement current. In temporal gauge, electric field is E = −∂A/∂t. Magnetic flux density is B = curl A. The stationary constitutive law is J = σE. In a coupled run it becomes J = σ(E + u×B); the lagged velocity feedback and its edge projection are described in [RUNS.md](RUNS.md). The vector-potential formulation and temporal gauge are described in the [openCFS magnetic PDE documentation](https://opencfs.gitlab.io/userdocu/PDEExplanations/Singlefield/MagneticPDE/).
 
 A is stored along oriented grid edges and B on faces. Let C be the dimensionless oriented edge-to-face incidence matrix, h the uniform cell spacing, Σ the diagonal edge conductivity, and N the face inverse relative permeability. Conductivity is the mean of the four adjacent cell values at an edge; inverse permeability is averaged across a face. All are positive-semidefinite/positive as required by the solve. C and its exact transpose are shared by all material interfaces; no fake air conductivity is introduced.

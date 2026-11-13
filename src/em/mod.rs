@@ -49,6 +49,17 @@ pub struct BodyDiagnostic {
     pub force_n: [f32; 3],
     pub power_w: f32,
 }
+/// Per-step energy integrals of the actual staggered operator (joules).
+#[derive(Clone, Debug, Default)]
+pub struct EnergyStep {
+    pub magnetic_j: f64,
+    pub delta_magnetic_j: f64,
+    pub joule_j: f64,
+    pub mechanical_j: f64,
+    pub external_j: f64,
+    pub backward_euler_j: f64,
+    pub balance_error_j: f64,
+}
 pub struct EmState {
     pub bodies: Vec<BodyDiagnostic>,
     body_collect: wgpu::ComputePipeline,
@@ -280,9 +291,10 @@ impl EmState {
                 label: Some("Implicit edge induction and GPU PCG"),
                 source: wgpu::ShaderSource::Wgsl(
                     format!(
-                        "{}\n{}",
+                        "{}\n{}\n{}",
                         include_str!("common.wgsl"),
-                        include_str!("induction.wgsl")
+                        include_str!("induction.wgsl"),
+                        include_str!("energy.wgsl")
                     )
                     .into(),
                 ),
@@ -332,6 +344,8 @@ impl EmState {
             "set_boundary",
             "begin_step",
             "commit_step",
+            "energy_collect",
+            "energy_reduce",
         ] {
             pipelines.insert(
                 name,
@@ -842,6 +856,34 @@ impl EmState {
         .to_vec())
     }
     /// Immutable field snapshot for analysis playback; solver state remains at its latest time.
+    pub fn energy_step(&self) -> Result<EnergyStep, String> {
+        self.dispatch(&[
+            ("energy_collect", self.edge_groups()),
+            ("energy_reduce", [1, 1, 1]),
+        ]);
+        let v = self.read_f32(&self.scalars, 0, 8)?;
+        if v.iter().any(|v| !v.is_finite()) {
+            return Err("Nonfinite EM energy integral".into());
+        }
+        let mut e = EnergyStep {
+            magnetic_j: v[0] as f64,
+            delta_magnetic_j: v[1] as f64,
+            backward_euler_j: v[2] as f64,
+            joule_j: v[3] as f64,
+            mechanical_j: v[4] as f64,
+            external_j: v[5] as f64,
+            balance_error_j: 0.,
+        };
+        if self.time_s == 0. {
+            return Ok(EnergyStep {
+                magnetic_j: e.magnetic_j,
+                ..Default::default()
+            });
+        }
+        e.balance_error_j =
+            e.external_j - e.delta_magnetic_j - e.backward_euler_j - e.joule_j - e.mechanical_j;
+        Ok(e)
+    }
     pub fn snapshot(&self) -> EmFrame {
         let result = self.context.device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("Recorded analysis fields"),

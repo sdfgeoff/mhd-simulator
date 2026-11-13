@@ -216,3 +216,22 @@ fn diagnostics(@builtin(local_invocation_index) l:u32) {
     for(var s=128u;s>0u;s/=2u) {if l<s {reduce[l]=vec4<f32>(max(reduce[l].xy,reduce[l+s].xy),reduce[l].zw+reduce[l+s].zw);reduce_b[l]=vec4<f32>(max(reduce_b[l].x,reduce_b[l+s].x),reduce_b[l].y+reduce_b[l+s].y,max(reduce_b[l].z,reduce_b[l+s].z),reduce_b[l].w+reduce_b[l+s].w);reduce_c[l]=max(reduce_c[l],reduce_c[l+s]);}workgroupBarrier();}
     if l==0u {scalars[2]=reduce[0];scalars[3]=reduce_b[0];scalars[4]=reduce_c[0];}
 }
+// In the energy bind group binding 3 contains the last accepted face velocity.
+@compute @workgroup_size(256)
+fn energy_collect(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>){
+    if group_id(group)>=count_groups(){return;}let i=flat_id(gid);var sum=vec4<f32>(0.0);
+    if i<p.dims.w {
+        let pos=decode(i,p.dims.xyz);let volume=p.physical.x*p.physical.x*p.physical.x;let rho=p.physical.w;
+        for(var axis=0u;axis<3u;axis++){if open_face(pos,axis){
+            let now=face(pos,axis,false);let old=face(pos,axis,true);let mean=0.5*(now+old);
+            var left=pos;left[axis]-=1;let f=0.5*(em_force(pos)[axis]+em_force(left)[axis]);
+            sum+=vec4<f32>(0.5*rho*now*now,0.5*rho*(now-old)*(now+old),p.physical.y*f*mean,p.physical.y*rho*p.acceleration[axis]*mean)*volume;
+        }}
+    }
+    reduce[l]=sum;let total=sum_group(l);if l==0u {partials[group_id(group)]=total;}
+}
+@compute @workgroup_size(256)
+fn energy_reduce(@builtin(local_invocation_index) l:u32){
+    var sum=vec4<f32>(0.0);for(var i=l;i<count_groups();i+=256u){sum+=partials[i];}
+    reduce[l]=sum;let total=sum_group(l);if l==0u {scalars[0]=total;}
+}

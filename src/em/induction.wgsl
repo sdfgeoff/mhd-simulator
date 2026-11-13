@@ -48,6 +48,22 @@ fn adjoint(e:vec4<u32>,kind:u32,contrast:bool)->f32 {
     var qa=p;qa[a]-=1;var qb=p;qb[b]-=1;
     return face_term(b,p,kind,contrast)-face_term(b,qa,kind,contrast)-face_term(a,p,kind,contrast)+face_term(a,qb,kind,contrast);
 }
+// Remove only the pure-gauge nullspace supported on strictly nonconducting nodes.
+// Each selected node touches zero-conductivity edges, so this cannot change J or curl A.
+fn air_node(p:vec3<i32>)->bool {
+    if any(p<=vec3<i32>(0)) || any(p>=vec3<i32>(scene.dims.xyz)){return false;}
+    for(var x=0;x<2;x++){for(var y=0;y<2;y++){for(var z=0;z<2;z++){
+        if cell_properties(p-vec3<i32>(x,y,z)).x>0.0{return false;}
+    }}}return true;
+}
+fn node_div(p:vec3<i32>,kind:u32)->f32 {
+    var value=0.0;for(var a=0u;a<3u;a++){var q=p;q[a]-=1;value+=a_edge(a,p,kind)-a_edge(a,q,kind);}return value;
+}
+fn gauge(e:vec4<u32>,kind:u32)->f32 {
+    let flags=source[edge_index(e.w,vec3<i32>(e.xyz))+scene.edges.w].yz;
+    let p=vec3<i32>(e.xyz);var upper=p;upper[e.w]+=1;
+    var value=0.0;if flags.x>0.5 {value+=node_div(p,kind);}if flags.y>0.5 {value-=node_div(upper,kind);}return value;
+}
 fn mass(i:u32)->f32 {if scene.control.y==1u{return 0.0;}return scene.physical.y*source[i].z*scene.physical.z*scene.physical.z/scene.physical.x;}
 fn diagonal(i:u32)->f32 {return max(source[i].w+mass(i),1e-30);}
 fn group_id(w:vec3<u32>)->u32{return w.x+w.y*65535u;}
@@ -63,7 +79,10 @@ fn coefficients(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invo
         var qa=p;qa[a]-=1;var qb=p;qb[b]-=1;
         var diag=nu_face(b,p)+nu_face(b,qa)+nu_face(a,p)+nu_face(a,qb);
         if boundary(e){diag=1.0;if sigma>0.0{v.x=1.0;}}
-        source[i].z=sigma;source[i].w=diag;
+        var upper=p;upper[e.w]+=1;
+        let lower_air=select(0.0,1.0,air_node(p));let upper_air=select(0.0,1.0,air_node(upper));
+        source[i+scene.edges.w]=vec4<f32>(0.0,lower_air,upper_air,0.0);
+        source[i].z=sigma;source[i].w=diag+lower_air+upper_air;
     }
     reduction[l]=v;let sum=sum_group(l);if l==0u && group_id(group)<(scene.edges.w+255u)/256u{partials[group_id(group)]=sum;}
 }
@@ -76,7 +95,7 @@ fn prepare(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invocatio
     let i=flat_id(gid);var v=vec4<f32>(0.0);
     if i<scene.edges.w {
         let e=edge_decode(i);
-        var r=mass(i)*scene.physical.x*source[i+scene.edges.w].x-mass(i)*(source[i].x-source[i].y)+adjoint(e,2u,true)-adjoint(e,4u,false);
+        var r=mass(i)*scene.physical.x*source[i+scene.edges.w].x-mass(i)*(source[i].x-source[i].y)+adjoint(e,2u,true)-adjoint(e,4u,false)-gauge(e,4u);
         if boundary(e){r=0.0;}
         let z=r/diagonal(i);work[i].y=r;work[i].z=z;work[i].w=0.0;v=vec4<f32>(r*z,r*r,0.0,0.0);
     }
@@ -91,7 +110,7 @@ fn initial_reduce(@builtin(local_invocation_index) l:u32){
 fn apply_operator(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>){
     let i=flat_id(gid);var dot=0.0;
     if i<scene.edges.w && scalars[1].w==0.0 {
-        let e=edge_decode(i);var q=adjoint(e,1u,false)+mass(i)*work[i].z;if boundary(e){q=work[i].z;}work[i].w=q;dot=work[i].z*q;
+        let e=edge_decode(i);var q=adjoint(e,1u,false)+gauge(e,1u)+mass(i)*work[i].z;if boundary(e){q=work[i].z;}work[i].w=q;dot=work[i].z*q;
     }
     reduction[l]=vec4<f32>(dot,0.0,0.0,0.0);let sum=sum_group(l);if l==0u && group_id(group)<(scene.edges.w+255u)/256u{partials[group_id(group)]=sum;}
 }
@@ -157,7 +176,7 @@ fn true_residual(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_inv
     let i=flat_id(gid);var v=vec4<f32>(0.0);
     if i<scene.edges.w {
         let e=edge_decode(i);
-        var r=mass(i)*scene.physical.x*source[i+scene.edges.w].x-mass(i)*(work[i].x+(source[i].x-source[i].y))+adjoint(e,2u,true)-adjoint(e,4u,false)-adjoint(e,0u,false);
+        var r=mass(i)*scene.physical.x*source[i+scene.edges.w].x-mass(i)*(work[i].x+(source[i].x-source[i].y))+adjoint(e,2u,true)-adjoint(e,4u,false)-gauge(e,4u)-adjoint(e,0u,false)-gauge(e,0u);
         if boundary(e){r=0.0;}
         work[i].y=r;work[i].z=r/diagonal(i);v=vec4<f32>(r*r/diagonal(i),r*r,0.0,0.0);
     }

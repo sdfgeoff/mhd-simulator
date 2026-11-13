@@ -43,12 +43,34 @@ fn effective(
     fluid.use_em_force = em.has_sources();
     Ok((em, fluid))
 }
+/// Integrated energy accounting. Fluid loss includes viscosity and numerical dissipation,
+/// and is inferred from the fluid work balance, not silently deposited as heat.
+#[derive(Clone, Debug, Default)]
+pub struct EnergyLedger {
+    pub magnetic_j: f64,
+    pub kinetic_j: f64,
+    pub delta_stored_j: f64,
+    pub joule_j: f64,
+    pub external_work_j: f64,
+    pub induction_numerical_loss_j: f64,
+    pub fluid_loss_j: f64,
+    pub coupling_defect_j: f64,
+    pub em_balance_error_j: f64,
+}
+impl EnergyLedger {
+    pub fn accounted_defect_j(&self) -> f64 {
+        self.delta_stored_j + self.joule_j + self.induction_numerical_loss_j + self.fluid_loss_j
+            - self.external_work_j
+    }
+}
 pub struct RunFrame {
+    pub energy: EnergyLedger,
     pub time_s: f64,
     pub em: Option<EmFrame>,
     pub fluid: Option<FluidFrame>,
 }
 pub struct RunState {
+    pub energy: EnergyLedger,
     pub em: Option<EmState>,
     pub fluid: Option<FluidState>,
     pub time_s: f64,
@@ -106,7 +128,20 @@ impl RunState {
         } else {
             None
         };
+        let magnetic_j = em
+            .as_ref()
+            .map(|e| e.energy_step().map(|e| e.magnetic_j))
+            .transpose()?
+            .unwrap_or(0.);
+        let kinetic_j = fluid
+            .as_ref()
+            .map_or(0., |f| f.diagnostics.kinetic_energy_j as f64);
         Ok(Self {
+            energy: EnergyLedger {
+                magnetic_j,
+                kinetic_j,
+                ..Default::default()
+            },
             em,
             fluid,
             time_s: 0.,
@@ -168,6 +203,28 @@ impl RunState {
                 }
                 fluid.step(volume)?;
             }
+            let e = self
+                .em
+                .as_ref()
+                .map(EmState::energy_step)
+                .transpose()?
+                .unwrap_or_default();
+            let f = self
+                .fluid
+                .as_ref()
+                .map(FluidState::energy_step)
+                .transpose()?
+                .unwrap_or_default();
+            let ledger = &mut self.energy;
+            ledger.magnetic_j = e.magnetic_j;
+            ledger.kinetic_j = f.kinetic_j;
+            ledger.delta_stored_j += e.delta_magnetic_j + f.delta_kinetic_j;
+            ledger.joule_j += e.joule_j;
+            ledger.external_work_j += e.external_j + f.acceleration_work_j;
+            ledger.induction_numerical_loss_j += e.backward_euler_j;
+            ledger.fluid_loss_j += f.em_work_j + f.acceleration_work_j - f.delta_kinetic_j;
+            ledger.coupling_defect_j += f.em_work_j - e.mechanical_j;
+            ledger.em_balance_error_j += e.balance_error_j;
             Ok(())
         })();
         if result.is_err() {
@@ -182,6 +239,7 @@ impl RunState {
             return Err("A failed coupled tick cannot be recorded".into());
         }
         Ok(RunFrame {
+            energy: self.energy.clone(),
             time_s: self.time_s,
             em: self.em.as_ref().map(EmState::snapshot),
             fluid: self.fluid.as_ref().map(FluidState::snapshot),
@@ -298,6 +356,7 @@ mod tests {
         assert_eq!(state.time_s, 0.);
         assert!(!state.is_current(&volume));
         assert!(state.snapshot().is_err());
+        assert_eq!(state.energy.delta_stored_j, 0.);
         assert!(state.step(&p.model, &volume).is_err());
     }
 }
@@ -329,6 +388,12 @@ mod refinement_tests {
                 s.step(&p.model, &volume)
                     .unwrap_or_else(|e| panic!("n={n} step={i}: {e}"));
             }
+            let ledger = &s.energy;
+            let independent = ledger.coupling_defect_j - ledger.em_balance_error_j;
+            assert!(
+                (ledger.accounted_defect_j() - independent).abs() < 1e-11,
+                "{ledger:?}"
+            );
             let f = s.fluid.as_ref().unwrap();
             let data = crate::gpu::read_bytes(
                 &gpu.context,

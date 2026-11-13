@@ -521,3 +521,139 @@ fn multiple_cad_currents_and_magnets_superpose_with_independent_drives() {
     induction.step(&model, &volume).unwrap();
     assert!(induction.diagnostics.maxima[0] > 0.);
 }
+
+#[test]
+fn rotating_sphere_matches_analytic_torque_and_motional_energy_balance() {
+    // Low-Rm sphere, Ω perpendicular to B: |τ|=2πσΩB²R⁵/15, P=|τ|Ω.
+    // See NASA/GE 1974 report, section 4.6.2 (controlled spin), linked in docs/ENERGY.md.
+    let _lock = crate::gpu_test_lock();
+    let gpu = GpuDomain::new().unwrap();
+    let radius_mm = 3.;
+    let radius = radius_mm * 1e-3f32;
+    let omega = 10f32;
+    let b = 0.05f32;
+    let sigma = 1e6f32;
+    let expected_power =
+        2. * std::f32::consts::PI / 15. * sigma * omega.powi(2) * b.powi(2) * radius.powi(5);
+    let mut errors = Vec::new();
+    for n in [4, 8] {
+        let mut model = Model::default();
+        let mut body = crate::model::Body::new(
+            "Rotating conducting sphere".into(),
+            sphere(radius_mm, 64, 32),
+        )
+        .unwrap();
+        body.simulation.material_id = 2;
+        model.bodies.push(body);
+        let mut materials = default_materials();
+        materials[2].conductivity_s_m = Some(sigma);
+        let volume = gpu
+            .build(
+                &model,
+                &DomainSettings {
+                    min_mm: [-6.; 3],
+                    max_mm: [6.; 3],
+                    cell_mm: radius_mm / n as f32,
+                },
+                &materials,
+            )
+            .unwrap();
+        let mut cfg = EmConfig {
+            dt_s: 5e-6 * (4. / n as f64).powi(2),
+            relative_tolerance: 1e-5,
+            max_iterations: 3000,
+            ..Default::default()
+        };
+        cfg.uniform.push(UniformField {
+            tesla: [0., 0., b],
+            scale: Waveform::Constant { value: 1. },
+        });
+        let mut state =
+            EmState::new(gpu.context.clone(), &volume, &model, cfg, Mode::Induction).unwrap();
+        let grid = state.grid.clone();
+        let count = grid.dims.iter().map(|v| *v as usize).product::<usize>();
+        let mut velocities = vec![crate::fluid::FluidCell::default(); count];
+        for (i, v) in velocities.iter_mut().enumerate() {
+            let p = glam::Vec3::from(grid.origin_m)
+                + glam::Vec3::new(
+                    (i % grid.dims[0] as usize) as f32 + 0.5,
+                    ((i / grid.dims[0] as usize) % grid.dims[1] as usize) as f32 + 0.5,
+                    (i / (grid.dims[0] * grid.dims[1]) as usize) as f32 + 0.5,
+                ) * grid.cell_m;
+            v.velocity = [0., -omega * p.z, omega * p.y, 0.];
+            v.reserved[0] = 1.;
+        }
+        let velocity = gpu
+            .context
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Analytic rigid rotation"),
+                contents: bytemuck::cast_slice(&velocities),
+                usage: wgpu::BufferUsages::STORAGE,
+            });
+        eprintln!("Starting sphere R/h={n}");
+        for step in 0..20 * (n / 4) * (n / 4) {
+            state.set_velocity(&volume, &velocity, &grid).unwrap();
+            state
+                .step(&model, &volume)
+                .unwrap_or_else(|e| panic!("R/h={n} step={step}: {e}"));
+        }
+        let e = state.energy_step().unwrap();
+        let power = e.joule_j / state.config.dt_s;
+        let error = (power / expected_power as f64 - 1.).abs();
+        errors.push(error);
+        eprintln!(
+            "sphere R/h={n}: P={power:.6e} analytic={expected_power:.6e} error={error:.3e} energy={e:?}"
+        );
+        assert!(e.mechanical_j < 0. && e.joule_j > 0.);
+        assert!((e.mechanical_j / e.joule_j + 1.).abs() < 2e-3);
+        assert!(e.balance_error_j.abs() / e.joule_j < 0.002, "{e:?}");
+        let fields = state.all_fields();
+        let torque: f64 = fields
+            .iter()
+            .zip(&velocities)
+            .map(|(f, v)| {
+                let z = -v.velocity[1] / omega;
+                let y = v.velocity[2] / omega;
+                (y * f.force_heat[2] - z * f.force_heat[1]) as f64 * grid.cell_m.powi(3) as f64
+            })
+            .sum();
+        assert!(
+            (torque * omega as f64 / power + 1.).abs() < 3e-3,
+            "torque={torque} P={power}"
+        );
+    }
+    assert!(errors[1] < 0.025 && errors[1] < errors[0], "{errors:?}");
+}
+
+#[test]
+fn driven_induction_accounts_external_work_heat_and_backward_euler_loss() {
+    let _lock = crate::gpu_test_lock();
+    let (gpu, volume, model) = setup(20);
+    let mut config = EmConfig::default();
+    config.uniform.push(UniformField {
+        tesla: [0., 0., 0.01],
+        scale: Waveform::Sine {
+            amplitude: 1.,
+            frequency_hz: 1000.,
+            phase_rad: 0.,
+        },
+    });
+    let mut s = EmState::new(
+        gpu.context.clone(),
+        &volume,
+        &model,
+        config,
+        Mode::Induction,
+    )
+    .unwrap();
+    for _ in 0..5 {
+        s.step(&model, &volume).unwrap();
+        let e = s.energy_step().unwrap();
+        eprintln!("driven EM energy: {e:?}");
+        let scale = e.external_j.abs() + e.delta_magnetic_j.abs() + e.joule_j + e.backward_euler_j;
+        assert!(e.joule_j > 0. && e.external_j > 0. && e.backward_euler_j > 0.);
+        assert!(e.balance_error_j.abs() / scale < 1e-4, "{e:?}");
+        assert!((e.joule_j / (s.diagnostics.power_w as f64 * s.config.dt_s) - 1.).abs() < 1e-5);
+    }
+}

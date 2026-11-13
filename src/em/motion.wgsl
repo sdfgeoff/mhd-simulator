@@ -20,5 +20,5 @@ fn motion(@builtin(global_invocation_id) gid:vec3<u32>){
             if velocity[c].mask.x>0.5{weighted+=s*cross(velocity[c].v.xyz,magnetic[c].b.xyz)[e.w];}
         }
     }}
-    source[i+scene.edges.w]=vec4<f32>(weighted/max(sigma,1e-30),0.0,0.0,0.0);
+    source[i+scene.edges.w].x=weighted/max(sigma,1e-30);
 }

@@ -21,6 +21,8 @@ This is first-order partitioned coupling with lagged velocity/field feedback, no
 
 Low-level stationary EM and frozen-force fluid APIs/CLI checks remain useful isolated numerical diagnostics. The workbench's normal Simulate action always uses the common run; it does not require selecting an EM snapshot for fluid forcing.
 
+See [energy accounting and analytic coupling benchmarks](ENERGY.md) for the measured work/heat/loss terms and their limitations.
+
 ## Headless verification
 
 ```sh

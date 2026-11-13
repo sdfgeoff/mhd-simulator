@@ -175,6 +175,14 @@ impl RunUi {
     }
     pub fn controls(&mut self, ui: &mut egui::Ui) -> bool {
         let changed = self.timeline.controls(ui);
+        if let Some(frame) = self.timeline.current() {
+            egui::CollapsingHeader::new("Energy accounting (J)").show(ui,|ui|{
+            let e=&frame.energy;
+            ui.monospace(format!("Magnetic {:.4e} · Kinetic {:.4e} · Joule generated {:.4e} · External work {:.4e}",e.magnetic_j,e.kinetic_j,e.joule_j,e.external_work_j));
+            ui.monospace(format!("Induction numerical loss {:.4e} · Fluid loss (viscous + numerical) {:.4e} · Coupling work mismatch {:.4e} · EM closure error {:.4e}",e.induction_numerical_loss_j,e.fluid_loss_j,e.coupling_defect_j,e.em_balance_error_j));
+            ui.small("Work/loss terms accumulate from run start. Fluid loss is inferred from its work balance; it is not deposited as heat. EM closure uses staggered operator energy, including boundary/source work.");
+        });
+        }
         if self.busy() {
             ui.horizontal(|ui| {
                 ui.spinner();

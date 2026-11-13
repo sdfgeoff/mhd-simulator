@@ -84,6 +84,13 @@ pub struct FluidCell {
     pub force: [f32; 4],
     pub reserved: [f32; 4],
 }
+#[derive(Clone, Debug, Default)]
+pub struct EnergyStep {
+    pub kinetic_j: f64,
+    pub delta_kinetic_j: f64,
+    pub em_work_j: f64,
+    pub acceleration_work_j: f64,
+}
 pub struct ForceField<'a> {
     pub buffer: &'a wgpu::Buffer,
     pub grid: &'a GridSi,
@@ -123,6 +130,7 @@ pub struct FluidState {
     checkpoint: wgpu::Buffer,
     _force: wgpu::Buffer,
     bind: wgpu::BindGroup,
+    energy_bind: wgpu::BindGroup,
     pipelines: HashMap<&'static str, wgpu::ComputePipeline>,
     force_max: f32,
     max_face_speed: f32,
@@ -350,6 +358,8 @@ impl FluidState {
             "correct",
             "fields",
             "diagnostics",
+            "energy_collect",
+            "energy_reduce",
         ];
         let layout = context
             .device
@@ -417,6 +427,23 @@ impl FluidState {
                     })
                     .collect::<Vec<_>>(),
             });
+        let energy_buffers = [
+            &uniform, &mask, &velocity, &previous, &work, &partials, &scalars, &result, &force,
+        ];
+        let energy_bind = context
+            .device
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                label: Some("Fluid work integrals"),
+                layout: &layout,
+                entries: &energy_buffers
+                    .iter()
+                    .enumerate()
+                    .map(|(i, b)| wgpu::BindGroupEntry {
+                        binding: i as u32,
+                        resource: b.as_entire_binding(),
+                    })
+                    .collect::<Vec<_>>(),
+            });
         let mut state = Self {
             context,
             grid,
@@ -441,6 +468,7 @@ impl FluidState {
             checkpoint,
             _force: force,
             bind,
+            energy_bind,
             pipelines,
             force_max: 0.,
             max_face_speed: 0.,
@@ -654,6 +682,33 @@ impl FluidState {
     }
     pub fn probe(&self, point_mm: [f32; 3]) -> Result<Option<FluidCell>, String> {
         probe_cell(&self.context, &self.grid, &self.result, point_mm)
+    }
+    pub fn energy_step(&self) -> Result<EnergyStep, String> {
+        let mut encoder = self
+            .context
+            .device
+            .create_command_encoder(&Default::default());
+        {
+            let mut pass = encoder.begin_compute_pass(&Default::default());
+            pass.set_bind_group(0, &self.energy_bind, &[]);
+            pass.set_pipeline(&self.pipelines["energy_collect"]);
+            let g = groups(self.params.dims[3]);
+            pass.dispatch_workgroups(g[0], g[1], g[2]);
+            pass.set_pipeline(&self.pipelines["energy_reduce"]);
+            pass.dispatch_workgroups(1, 1, 1);
+        }
+        self.context.queue.submit(Some(encoder.finish()));
+        let data = read_bytes(&self.context, &self.scalars, 0, 16)?;
+        let v = bytemuck::cast_slice::<u8, f32>(&data);
+        if v.iter().any(|v| !v.is_finite()) {
+            return Err("Nonfinite fluid work integral".into());
+        }
+        Ok(EnergyStep {
+            kinetic_j: v[0] as f64,
+            delta_kinetic_j: v[1] as f64,
+            em_work_j: v[2] as f64,
+            acceleration_work_j: v[3] as f64,
+        })
     }
     pub fn snapshot(&self) -> FluidFrame {
         let result = self.context.device.create_buffer(&wgpu::BufferDescriptor {

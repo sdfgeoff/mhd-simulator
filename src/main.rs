@@ -74,7 +74,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             state.fluid.is_some(),
             state.config.dt_s
         );
-        let mut csv = String::from("time_s,max_B_T,max_u_m_s,rms_div_u_s_inv\n");
+        let mut csv = String::from(
+            "time_s,max_B_T,max_u_m_s,rms_div_u_s_inv,magnetic_j,kinetic_j,joule_generated_j,external_work_j,induction_numerical_loss_j,fluid_loss_j,coupling_defect_j,em_balance_error_j\n",
+        );
         for i in 0..=steps {
             if i > 0 {
                 state.step(&p.model, &volume)?;
@@ -95,7 +97,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 u,
                 d
             );
-            csv.push_str(&format!("{},{},{},{}\n", state.time_s, b, u, d));
+            let e = &state.energy;
+            csv.push_str(&format!(
+                "{},{},{},{},{},{},{},{},{},{},{},{}\n",
+                state.time_s,
+                b,
+                u,
+                d,
+                e.magnetic_j,
+                e.kinetic_j,
+                e.joule_j,
+                e.external_work_j,
+                e.induction_numerical_loss_j,
+                e.fluid_loss_j,
+                e.coupling_defect_j,
+                e.em_balance_error_j
+            ));
         }
         std::fs::create_dir_all("artifacts")?;
         std::fs::write("artifacts/run-diagnostics.csv", csv)?;
