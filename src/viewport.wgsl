@@ -1,4 +1,4 @@
-struct Uniforms { camera:mat4x4<f32>, origin:vec4<f32>, normal:vec4<f32>, settings:vec4<f32> }
+struct Uniforms { camera:mat4x4<f32>, origin:vec4<f32>, normal:vec4<f32>, settings:vec4<f32>,grid_minimum:vec4<f32> }
 @group(0) @binding(0) var<uniform> scene:Uniforms;
 @group(0) @binding(1) var section:texture_2d<f32>;
 @group(0) @binding(2) var section_sampler:sampler;
@@ -9,7 +9,8 @@ struct Output { @builtin(position) position:vec4<f32>, @location(0) world:vec3<f
     let coordinate=(v.uv.x+v.uv.y)*0.70710678/scene.settings.y;
     let width=max(fwidth(coordinate),0.002);
     let uv_dx=dpdx(v.uv);let uv_dy=dpdy(v.uv);
-    if v.mode>2.5{let c=textureSampleGrad(section,section_sampler,v.uv,uv_dx,uv_dy);if c.a<0.001{discard;}return c;}
+    let grid_ink=voxel_grid_coverage(v.world,scene.grid_minimum.xyz,scene.settings.w);
+    if v.mode>2.5{let c=textureSampleGrad(section,section_sampler,v.uv,uv_dx,uv_dy);if c.a<0.001{discard;}return apply_voxel_grid(c,grid_ink,scene.settings.z);}
     if scene.settings.x>0.5 && v.mode<0.5 && dot(v.world-scene.origin.xyz,scene.normal.xyz)>0.0 {discard;}
     if v.mode>0.5 && v.mode<1.5 {
         let distance=abs(fract(coordinate)-0.5);

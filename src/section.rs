@@ -9,6 +9,7 @@ use crate::{
 use bytemuck::{Pod, Zeroable};
 use eframe::egui;
 use glam::{Vec2, Vec3};
+#[cfg(test)]
 use std::collections::BTreeSet;
 use wgpu::util::DeviceExt;
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -150,13 +151,6 @@ fn geometry(
         if let Some(v) = volume {
             let h = v.settings.cell_mm;
             let min = Vec3::from(v.settings.min_mm);
-            let mut edges = BTreeSet::new();
-            let key = |p: Vec2| {
-                [
-                    (p.x / (h * 1e-5)).round() as i64,
-                    (p.y / (h * 1e-5)).round() as i64,
-                ]
-            };
             for cell in cells {
                 let p = footprint(
                     min + Vec3::new(
@@ -184,32 +178,6 @@ fn geometry(
                             mode: 0.,
                         });
                     }
-                }
-                if options.edges {
-                    for i in 0..p.len() {
-                        let a = p[i];
-                        let b = p[(i + 1) % p.len()];
-                        let ka = key(a);
-                        let kb = key(b);
-                        let pair = if ka < kb { (ka, kb) } else { (kb, ka) };
-                        edges.insert(pair);
-                    }
-                }
-            }
-            // Suppress subpixel grids instead of turning fine cells into dark bands.
-            let cell_pixels = h * res as f32 / (2. * span);
-            let opacity = ((cell_pixels - 1.5) / 1.5).clamp(0., 1.) * 0.18;
-            if opacity > 0. {
-                let scale = h * 1e-5;
-                for (a, b) in edges {
-                    line(
-                        &mut out,
-                        Vec2::new(a[0] as f32, a[1] as f32) * scale,
-                        Vec2::new(b[0] as f32, b[1] as f32) * scale,
-                        2. * span / res as f32 * 0.65,
-                        [0.8, 0.9, 1., opacity],
-                        span,
-                    );
                 }
             }
         }
@@ -255,6 +223,11 @@ fn geometry(
 }
 pub struct SectionRenderer {
     state: egui_wgpu::RenderState,
+    panel_pipeline: wgpu::RenderPipeline,
+    panel_uniform: wgpu::Buffer,
+    panel_target: Option<wgpu::Texture>,
+    panel_size: u32,
+    requested_panel_size: u32,
     pipeline: wgpu::RenderPipeline,
     uniform: wgpu::Buffer,
     bind: wgpu::BindGroup,
@@ -327,7 +300,54 @@ impl SectionRenderer {
             mag_filter: wgpu::FilterMode::Linear,
             ..Default::default()
         });
+        let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("Native-pixel section panel"),
+            source: wgpu::ShaderSource::Wgsl(
+                format!(
+                    "{}\n{}",
+                    include_str!("voxel-grid.wgsl"),
+                    include_str!("section-panel.wgsl")
+                )
+                .into(),
+            ),
+        });
+        let panel_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("Panel grid at framebuffer resolution"),
+            layout: None,
+            vertex: wgpu::VertexState {
+                module: &shader,
+                entry_point: Some("vertex"),
+                compilation_options: Default::default(),
+                buffers: &[],
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &shader,
+                entry_point: Some("fragment"),
+                compilation_options: Default::default(),
+                targets: &[Some(wgpu::ColorTargetState {
+                    format: wgpu::TextureFormat::Rgba8UnormSrgb,
+                    blend: None,
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+            }),
+            primitive: Default::default(),
+            depth_stencil: None,
+            multisample: Default::default(),
+            multiview: None,
+            cache: None,
+        });
+        let panel_uniform = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Panel world/grid transform"),
+            size: 80,
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
         Self {
+            panel_pipeline,
+            panel_uniform,
+            panel_target: None,
+            panel_size: 0,
+            requested_panel_size: 0,
             state,
             pipeline,
             uniform,
@@ -339,6 +359,9 @@ impl SectionRenderer {
             size: 0,
             id: None,
         }
+    }
+    pub fn set_panel_resolution(&mut self, n: u32) {
+        self.requested_panel_size = n.clamp(32, 4096);
     }
     pub fn view(&self) -> Option<&wgpu::TextureView> {
         self.target.as_ref().map(|t| &t.1)
@@ -394,20 +417,46 @@ impl SectionRenderer {
                 usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
                 view_formats: &[],
             });
+            self.target = Some((texture, all, base, msaa));
+            self.size = n;
+        }
+        let panel_n = if self.requested_panel_size == 0 {
+            n
+        } else {
+            self.requested_panel_size
+        };
+        if self.panel_size != panel_n {
+            let texture = device.create_texture(&wgpu::TextureDescriptor {
+                label: Some("Panel native-pixel image"),
+                size: wgpu::Extent3d {
+                    width: panel_n,
+                    height: panel_n,
+                    depth_or_array_layers: 1,
+                },
+                mip_level_count: 1,
+                sample_count: 1,
+                dimension: wgpu::TextureDimension::D2,
+                format: wgpu::TextureFormat::Rgba8UnormSrgb,
+                usage: wgpu::TextureUsages::RENDER_ATTACHMENT
+                    | wgpu::TextureUsages::TEXTURE_BINDING
+                    | wgpu::TextureUsages::COPY_SRC,
+                view_formats: &[],
+            });
+            let view = texture.create_view(&Default::default());
             let mut renderer = self.state.renderer.write();
             if let Some(id) = self.id {
                 renderer.update_egui_texture_from_wgpu_texture(
                     device,
-                    &all,
+                    &view,
                     wgpu::FilterMode::Linear,
                     id,
                 );
             } else {
                 self.id =
-                    Some(renderer.register_native_texture(device, &all, wgpu::FilterMode::Linear));
+                    Some(renderer.register_native_texture(device, &view, wgpu::FilterMode::Linear));
             }
-            self.target = Some((texture, all, base, msaa));
-            self.size = n;
+            self.panel_target = Some(texture);
+            self.panel_size = panel_n;
         }
         let (lo, hi) = model.bounds();
         queue.write_buffer(
@@ -491,6 +540,68 @@ impl SectionRenderer {
             pass.set_bind_group(0, &bind, &[]);
             pass.draw(0..3, 0..1);
         }
+        let grid = volume
+            .map(|v| (Vec3::from(v.settings.min_mm), v.settings.cell_mm))
+            .unwrap_or((Vec3::ZERO, 1.));
+        let panel_data = [
+            plane.position.extend(0.).to_array(),
+            (plane.u() * span).extend(0.).to_array(),
+            (plane.v() * span).extend(0.).to_array(),
+            grid.0.extend(grid.1).to_array(),
+            [
+                if options.style == Style::Voxels && options.edges {
+                    1.
+                } else {
+                    0.
+                },
+                0.,
+                0.,
+                0.,
+            ],
+        ];
+        queue.write_buffer(&self.panel_uniform, 0, bytemuck::cast_slice(&panel_data));
+        let bind = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: None,
+            layout: &self.panel_pipeline.get_bind_group_layout(0),
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: self.panel_uniform.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: wgpu::BindingResource::TextureView(&self.target.as_ref().unwrap().1),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 2,
+                    resource: wgpu::BindingResource::Sampler(&self.sampler),
+                },
+            ],
+        });
+        let target = self
+            .panel_target
+            .as_ref()
+            .unwrap()
+            .create_view(&Default::default());
+        {
+            let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: Some("Native-resolution analytic panel grid"),
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                    view: &target,
+                    resolve_target: None,
+                    ops: wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(wgpu::Color::TRANSPARENT),
+                        store: wgpu::StoreOp::Store,
+                    },
+                })],
+                depth_stencil_attachment: None,
+                timestamp_writes: None,
+                occlusion_query_set: None,
+            });
+            pass.set_pipeline(&self.panel_pipeline);
+            pass.set_bind_group(0, &bind, &[]);
+            pass.draw(0..3, 0..1);
+        }
         queue.submit(Some(encoder.finish()));
         self.id.unwrap()
     }
@@ -504,7 +615,7 @@ mod tests {
         project::{DomainSettings, default_materials},
     };
     use glam::{EulerRot, Quat};
-    fn state() -> egui_wgpu::RenderState {
+    pub(super) fn state() -> egui_wgpu::RenderState {
         pollster::block_on(async {
             let instance = wgpu::Instance::default();
             let adapter = instance.request_adapter(&Default::default()).await.unwrap();
@@ -524,10 +635,10 @@ mod tests {
             }
         })
     }
-    fn read(renderer: &SectionRenderer) -> Vec<u8> {
-        read_texture(&renderer.state, &renderer.target.as_ref().unwrap().0)
+    pub(super) fn read(renderer: &SectionRenderer) -> Vec<u8> {
+        read_texture(&renderer.state, renderer.panel_target.as_ref().unwrap())
     }
-    fn read_texture(state: &egui_wgpu::RenderState, texture: &wgpu::Texture) -> Vec<u8> {
+    pub(super) fn read_texture(state: &egui_wgpu::RenderState, texture: &wgpu::Texture) -> Vec<u8> {
         let device = &state.device;
         let n = texture.size().width;
         let height = texture.size().height;
@@ -778,6 +889,7 @@ mod tests {
             Some(crate::render::DomainView {
                 span: 4.,
                 bounds: None,
+                grid: None,
             }),
         );
         let a = read(&flat);
@@ -795,5 +907,136 @@ mod tests {
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod grid_resolution_tests {
+    use super::*;
+    #[test]
+    fn grid_is_native_resolution_and_independent_of_fill_texture() {
+        let _gpu_lock = crate::gpu_test_lock();
+        let state = super::tests::state();
+        let mut flat = SectionRenderer::new(state.clone());
+        flat.set_panel_resolution(512);
+        let mut viewport = crate::render::Viewport::new(state.clone());
+        let model = Model::load(std::path::Path::new("assets/annulus.gltf")).unwrap();
+        let plane = SectionPlane {
+            position: Vec3::ZERO,
+            orientation: glam::Quat::from_rotation_y(-std::f32::consts::FRAC_PI_2),
+        };
+        let caps = vec![crate::caps::build(&model.bodies[0], plane, 1e-5)];
+        let gpu = crate::domain::GpuDomain::new().unwrap();
+        let settings = crate::project::DomainSettings {
+            min_mm: [-4., -4., -5.],
+            max_mm: [4., 4., 5.],
+            cell_mm: 0.5,
+        };
+        let volume = gpu
+            .build(&model, &settings, &crate::project::default_materials())
+            .unwrap();
+        let cells = gpu.intersected_cells(&volume, plane).unwrap();
+        let options = Options {
+            style: Style::Voxels,
+            edges: true,
+            material_colors: false,
+        };
+        flat.draw(&model, &caps, plane, Some(&volume), &cells, options, 4., 64);
+        assert_eq!(flat.panel_size, 512);
+        assert_eq!(flat.size, 64);
+        let low = super::tests::read(&flat);
+        viewport.set_shared_section(flat.view().unwrap());
+        let camera = crate::gizmo::Camera {
+            rect: egui::Rect::from_min_size(egui::Pos2::ZERO, egui::Vec2::splat(512.)),
+            center: plane.position,
+            rotation: glam::Quat::from_mat3(
+                &glam::Mat3::from_cols(plane.u(), -plane.normal(), plane.v()).transpose(),
+            ),
+            scale: 64.,
+            size: 8.,
+        };
+        viewport.draw(
+            camera,
+            plane,
+            true,
+            false,
+            &model,
+            &caps,
+            1.,
+            Some(crate::render::DomainView {
+                span: 4.,
+                bounds: None,
+                grid: Some((Vec3::from(settings.min_mm), settings.cell_mm)),
+            }),
+        );
+        let native = super::tests::read_texture(&state, viewport.output_texture());
+        flat.draw(
+            &model,
+            &caps,
+            plane,
+            Some(&volume),
+            &cells,
+            options,
+            4.,
+            512,
+        );
+        let high = super::tests::read(&flat);
+        let y = 240;
+        let brightness = |image: &[u8], x: usize| {
+            image[(y * 512 + x) * 4..(y * 512 + x) * 4 + 3]
+                .iter()
+                .map(|&v| v as i32)
+                .sum::<i32>()
+        };
+        assert!(
+            brightness(&low, 384) > brightness(&low, 400) + 10,
+            "Grid line at the true u=2 mm cell face must remain visible with a 64px fill"
+        );
+        for x in 377..391 {
+            let i = (y * 512 + x) * 4;
+            for c in 0..3 {
+                assert!(
+                    (low[i + c] as i16 - high[i + c] as i16).abs() <= 2,
+                    "Fill resolution changed native grid at x={x}"
+                );
+                assert!(
+                    (low[i + c] as i16 - native[i + c] as i16).abs() <= 2,
+                    "3D and panel grid differ at x={x}"
+                );
+            }
+        }
+        let zoom_camera = crate::gizmo::Camera {
+            center: plane.position + plane.u() * 2. + plane.v() * 0.25,
+            scale: 128.,
+            ..camera
+        };
+        viewport.draw(
+            zoom_camera,
+            plane,
+            true,
+            false,
+            &model,
+            &caps,
+            1.,
+            Some(crate::render::DomainView {
+                span: 4.,
+                bounds: None,
+                grid: Some((Vec3::from(settings.min_mm), settings.cell_mm)),
+            }),
+        );
+        let zoomed = super::tests::read_texture(&state, viewport.output_texture());
+        for offset in -4i32..=4 {
+            let source = (240 * 512 + (384 + offset) as usize) * 4;
+            let zoom = (256 * 512 + (256 + offset) as usize) * 4;
+            for c in 0..3 {
+                assert!(
+                    (low[source + c] as i16 - zoomed[zoom + c] as i16).abs() <= 2,
+                    "Zoom changed grid pixel width at offset {offset}"
+                );
+            }
+        }
+        // The cached fill contains no lattice; only each destination shader adds it.
+        let cached = super::tests::read_texture(&state, &flat.target.as_ref().unwrap().0);
+        assert!((brightness(&cached, 384) - brightness(&cached, 400)).abs() <= 2);
     }
 }

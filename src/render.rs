@@ -18,10 +18,12 @@ struct Uniforms {
     origin: [f32; 4],
     normal: [f32; 4],
     settings: [f32; 4],
+    grid_minimum: [f32; 4],
 }
 pub struct DomainView {
     pub span: f32,
     pub bounds: Option<(Vec3, Vec3)>,
+    pub grid: Option<(Vec3, f32)>,
 }
 pub struct Viewport {
     slice_texture: wgpu::Texture,
@@ -47,7 +49,14 @@ impl Viewport {
         let device = &state.device;
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("CAD depth + hatching"),
-            source: wgpu::ShaderSource::Wgsl(include_str!("viewport.wgsl").into()),
+            source: wgpu::ShaderSource::Wgsl(
+                format!(
+                    "{}\n{}",
+                    include_str!("voxel-grid.wgsl"),
+                    include_str!("viewport.wgsl")
+                )
+                .into(),
+            ),
         });
         let uniform = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("Camera and plane"),
@@ -278,7 +287,25 @@ impl Viewport {
             camera: camera.matrix().to_cols_array_2d(),
             origin: plane.position.extend(0.).to_array(),
             normal: plane.normal().extend(0.).to_array(),
-            settings: [if cut { 1. } else { 0. }, camera.size * 0.023, 0., 0.],
+            settings: [
+                if cut { 1. } else { 0. },
+                camera.size * 0.023,
+                if domain.as_ref().is_some_and(|d| d.grid.is_some()) {
+                    1.
+                } else {
+                    0.
+                },
+                domain
+                    .as_ref()
+                    .and_then(|d| d.grid)
+                    .map(|(_, h)| h)
+                    .unwrap_or(1.),
+            ],
+            grid_minimum: domain
+                .as_ref()
+                .and_then(|d| d.grid)
+                .map(|(m, _)| m.extend(0.).to_array())
+                .unwrap_or([0.; 4]),
         };
         queue.write_buffer(&self.uniform, 0, bytemuck::bytes_of(&params));
         let mut vertices = Vec::new();

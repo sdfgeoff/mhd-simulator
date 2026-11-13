@@ -40,6 +40,7 @@ pub struct App {
     notice: String,
     section_pixels: Vec<Pixel>,
     section_renderer: Option<SectionRenderer>,
+    panel_pixels: u32,
     path: String,
     error: String,
     gpu: Option<Gpu>,
@@ -83,6 +84,7 @@ impl App {
             notice: String::new(),
             section_pixels: Vec::new(),
             section_renderer: state.clone().map(SectionRenderer::new),
+            panel_pixels: 0,
             model,
             path,
             error: format!("{error}{gpu_error}"),
@@ -236,6 +238,9 @@ impl App {
             }
         }
         if let Some(renderer) = &mut self.section_renderer {
+            if self.panel_pixels > 0 {
+                renderer.set_panel_resolution(self.panel_pixels);
+            }
             self.texture = Some(renderer.draw(
                 &self.model,
                 &self.caps,
@@ -309,6 +314,13 @@ impl App {
                 ui.ctx().pixels_per_point(),
                 Some(crate::render::DomainView {
                     span: section_span,
+                    grid: if self.voxel_overlay && self.grid_lines {
+                        self.volume
+                            .as_ref()
+                            .map(|v| (Vec3::from(v.settings.min_mm), v.settings.cell_mm))
+                    } else {
+                        None
+                    },
                     bounds: if self.voxel_overlay {
                         self.volume
                             .as_ref()
@@ -473,7 +485,7 @@ impl App {
                 self.dirty = true;
             }
         });
-        egui::ComboBox::from_label("Section pixels")
+        egui::ComboBox::from_label("Section fill pixels")
             .selected_text(self.resolution.to_string())
             .show_ui(ui, |ui| {
                 for n in [128, 256, 512, 1024] {
@@ -544,7 +556,14 @@ impl eframe::App for App {
                     ui.add_space(12.);
                     ui.heading("04 / Section");
                     ui.label(self.section_style().label());
-                    ui.small("Same section image as the 3D cut face");
+                    ui.small("Shared fill/style; grid drawn at each view's pixel resolution");
+                    let panel_pixels = (ui.available_width().min(320.) * ctx.pixels_per_point())
+                        .round()
+                        .clamp(32., 4096.) as u32;
+                    if panel_pixels != self.panel_pixels {
+                        self.panel_pixels = panel_pixels;
+                        self.dirty = true;
+                    }
                     ui.add_space(8.);
                     if self.voxel_overlay && self.domain_pending {
                         ui.colored_label(
