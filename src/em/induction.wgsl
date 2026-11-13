@@ -17,6 +17,10 @@ fn cell_properties(p:vec3<i32>)->vec2<f32> {
     if !valid(p,scene.dims.xyz)||scene.control.z==1u {return vec2<f32>(0.0,1.0);}
     let i=u32(p.x)+scene.dims.x*(u32(p.y)+scene.dims.y*u32(p.z));let id=materials[i];
     if id==0u{return vec2<f32>(0.0,1.0);}
+    if (id&0x80000000u)!=0u {
+        let alpha=f32((id>>8u)&0x7fffffu)/8388607.0;let value=properties[id&255u].values.xy;
+        return vec2<f32>(alpha*value.x,mix(1.0,value.y,alpha));
+    }
     return properties[id].values.xy;
 }
 fn nu_face(axis:u32,p:vec3<i32>)->f32 {

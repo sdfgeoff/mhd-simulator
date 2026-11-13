@@ -18,3 +18,5 @@ pub(crate) fn gpu_test_lock() -> std::sync::MutexGuard<'static, ()> {
 pub mod run;
 
 pub mod thermal;
+
+pub mod surface;

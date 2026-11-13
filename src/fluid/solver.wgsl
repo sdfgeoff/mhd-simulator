@@ -1,4 +1,4 @@
-struct Params {dims:vec4<u32>,faces:vec4<u32>,flags:vec4<u32>,physical:vec4<f32>,acceleration:vec4<f32>,initial:vec4<f32>,solve:vec4<f32>}
+struct Params {dims:vec4<u32>,faces:vec4<u32>,flags:vec4<u32>,physical:vec4<f32>,acceleration:vec4<f32>,initial:vec4<f32>,solve:vec4<f32>,surface:vec4<f32>}
 struct Result {velocity:vec4<f32>,pressure:vec4<f32>,force:vec4<f32>,reserved:vec4<f32>}
 @group(0) @binding(0) var<uniform> p:Params;
 @group(0) @binding(1) var<storage,read> mask:array<u32>;
@@ -36,12 +36,23 @@ fn face(pos:vec3<i32>,axis:u32,star:bool)->f32 {
 fn potential(pos:vec3<i32>,kind:u32)->f32 {
     let q=wrap_cell(pos);if !valid_cell(q)||!fluid(q){return 0.0;}let v=work[index(q,p.dims.xyz)];if kind==0u{return v.x;}return v.z;
 }
+fn occupancy(pos:vec3<i32>)->f32 {let q=wrap_cell(pos);if !valid_cell(q){return 0.0;}return output_fields[index(q,p.dims.xyz)].reserved.z;}
+fn density(pos:vec3<i32>)->f32 {return mix(p.surface.y,p.physical.w,occupancy(pos));}
+fn face_density(pos:vec3<i32>,axis:u32)->f32 {var left=pos;left[axis]-=1;return 0.5*(density(left)+density(pos));}
 fn mobility(pos:vec3<i32>,axis:u32)->f32 {
-    if p.flags.w==0u{return 1.0;}var left=pos;left[axis]-=1;
+    var beta=1.0;var left=pos;left[axis]-=1;
+    if p.surface.x>0.5 {beta=p.physical.w/face_density(pos,axis);}
+    if p.flags.w==0u{return beta;}
     if !fluid(pos)||!fluid(left){return 0.0;}
     let f=min(output_fields[index(wrap_cell(pos),p.dims.xyz)].reserved.y,output_fields[index(wrap_cell(left),p.dims.xyz)].reserved.y);
     let drag=p.solve.w*(1.0-f)*(1.0-f)/(f*f*f+1e-3);
-    return 1.0/(1.0+p.physical.y*drag);
+    return beta/(1.0+p.physical.y*drag);
+}
+fn capillary_force(pos:vec3<i32>,axis:u32)->f32 {
+ if p.surface.x<0.5 || !open_face(pos,axis){return 0.0;}var left=pos;left[axis]-=1;
+ let al=occupancy(left);let ar=occupancy(pos);let kl=output_fields[index(wrap_cell(left),p.dims.xyz)].reserved.w;let kr=output_fields[index(wrap_cell(pos),p.dims.xyz)].reserved.w;
+ let wl=al*(1.0-al);let wr=ar*(1.0-ar);let k=select(0.5*(kl+kr),(wl*kl+wr*kr)/max(wl+wr,1e-20),wl+wr>1e-6);
+ return p.surface.z*k*(ar-al)/p.physical.x;
 }
 fn diagonal(pos:vec3<i32>)->f32 {
     var d=0.0;
@@ -106,8 +117,15 @@ fn viscous(@builtin(global_invocation_id) gid:vec3<u32>) {
             if !open_face(q,axis)&&d!=axis {neighbor=-center;}laplace+=neighbor-center;
         }}
         var left=pos;left[axis]-=1;
-        let acceleration=p.acceleration[axis]+(em_force(left)[axis]+em_force(pos)[axis])/(2.0*p.physical.w);
-        out[axis]=(center+p.physical.z*p.physical.y/(p.physical.x*p.physical.x)*laplace+p.physical.y*acceleration)*mobility(pos,axis);
+        var rho=p.physical.w;var capillary=0.0;var viscosity=p.physical.z;
+        if p.surface.x>0.5 {
+            rho=face_density(pos,axis);let al=occupancy(left);let ar=occupancy(pos);
+            capillary=capillary_force(pos,axis)/rho;
+            viscosity*=0.5*(al+ar);
+        }
+        let acceleration=p.acceleration[axis]+(em_force(left)[axis]+em_force(pos)[axis])/(2.0*rho)+capillary;
+        var beta=mobility(pos,axis);if p.surface.x>0.5{beta*=rho/p.physical.w;}
+        out[axis]=(center+viscosity*p.physical.y/(p.physical.x*p.physical.x)*laplace+p.physical.y*acceleration)*beta;
     }
     velocity[i]=out;
 }
@@ -203,14 +221,17 @@ fn fields(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invocation
     let i=flat_id(gid);var stats=vec4<f32>(0.0);var other=vec4<f32>(0.0);var max_face=0.0;var melt=0.0;
     if i<p.dims.w {
         var out=Result(vec4<f32>(0.0),vec4<f32>(0.0),vec4<f32>(0.0),vec4<f32>(0.0));
+        if p.surface.x>0.5 {out.reserved=vec4<f32>(0.0,output_fields[i].reserved.yzw);}
         if mask[i]!=0u {
             let pos=decode(i,p.dims.xyz);var v=vec3<f32>(0.0);var face_energy=0.0;
             for(var axis=0u;axis<3u;axis++) {var q=pos;q[axis]+=1;let a=face(pos,axis,false);let b=face(q,axis,false);v[axis]=0.5*(a+b);face_energy+=0.5*(a*a+b*b);max_face=max(max_face,max(abs(face(pos,axis,false)),abs(face(q,axis,false))));}
-            melt=select(1.0,output_fields[i].reserved.y,p.flags.w!=0u);
+            let old_reserved=output_fields[i].reserved;
+            melt=select(1.0,old_reserved.y,p.flags.w!=0u);
+            if p.surface.x>0.5{melt*=old_reserved.z;}
             let speed=length(v);let div=divergence(pos,false);let pressure=work[i].x*p.physical.w/p.physical.y;let force=em_force(pos);
-            out=Result(vec4<f32>(v,speed),vec4<f32>(pressure,div,0.0,0.0),vec4<f32>(p.physical.w*p.acceleration.xyz+force,0.0),vec4<f32>(1.0,melt,0.0,0.0));
+            out=Result(vec4<f32>(v,speed),vec4<f32>(pressure,div,0.0,0.0),vec4<f32>(p.physical.w*p.acceleration.xyz+force,0.0),vec4<f32>(1.0,select(1.0,old_reserved.y,p.flags.w!=0u),old_reserved.zw));
             let bad=any(v!=v)||any(force!=force)||any(abs(force)>vec3<f32>(1e30))||speed>1e25||!(abs(pressure)<1e30)||!(abs(div)<1e30);
-            stats=vec4<f32>(speed,abs(div),div*div,0.5*p.physical.w*face_energy*p.physical.x*p.physical.x*p.physical.x);
+            stats=vec4<f32>(speed,abs(div),div*div,0.5*select(p.physical.w,density(pos),p.surface.x>0.5)*face_energy*p.physical.x*p.physical.x*p.physical.x);
             other=vec4<f32>(abs(pressure),div,length(force),select(0.0,1.0,bad));
         }
         output_fields[i]=out;
@@ -232,19 +253,24 @@ fn diagnostics(@builtin(local_invocation_index) l:u32) {
 // In the energy bind group binding 3 contains the last accepted face velocity.
 @compute @workgroup_size(256)
 fn energy_collect(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>){
-    if group_id(group)>=count_groups(){return;}let i=flat_id(gid);var sum=vec4<f32>(0.0);
+    if group_id(group)>=count_groups(){return;}let i=flat_id(gid);var sum=vec4<f32>(0.0);var capillary_work=0.0;
     if i<p.dims.w {
-        let pos=decode(i,p.dims.xyz);let volume=p.physical.x*p.physical.x*p.physical.x;let rho=p.physical.w;
+        let pos=decode(i,p.dims.xyz);let volume=p.physical.x*p.physical.x*p.physical.x;
         for(var axis=0u;axis<3u;axis++){
+            let rho=select(p.physical.w,face_density(pos,axis),p.surface.x>0.5);
             let now=face(pos,axis,false);let old=predicted[index(pos,p.faces.xyz)][axis];let mean=0.5*(now+old);
             var left=pos;left[axis]-=1;let f=0.5*(em_force(pos)[axis]+em_force(left)[axis]);
+            capillary_work+=p.physical.y*capillary_force(pos,axis)*mean*volume;
             sum+=vec4<f32>(0.5*rho*now*now,0.5*rho*(now-old)*(now+old),p.physical.y*f*mean,p.physical.y*rho*p.acceleration[axis]*mean)*volume;
         }
     }
-    reduce[l]=sum;let total=sum_group(l);if l==0u {partials[group_id(group)]=total;}
+    reduce_b[l]=vec4<f32>(capillary_work,0.0,0.0,0.0);reduce[l]=sum;let total=sum_group(l);
+    for(var s=128u;s>0u;s/=2u){if l<s{reduce_b[l]+=reduce_b[l+s];}workgroupBarrier();}
+    if l==0u {partials[group_id(group)]=total;partials[count_groups()+group_id(group)]=reduce_b[0];}
 }
 @compute @workgroup_size(256)
 fn energy_reduce(@builtin(local_invocation_index) l:u32){
-    var sum=vec4<f32>(0.0);for(var i=l;i<count_groups();i+=256u){sum+=partials[i];}
-    reduce[l]=sum;let total=sum_group(l);if l==0u {scalars[0]=total;}
+ var sum=vec4<f32>(0.0);var cap=vec4<f32>(0.0);for(var i=l;i<count_groups();i+=256u){sum+=partials[i];cap+=partials[count_groups()+i];}
+ reduce_b[l]=cap;reduce[l]=sum;let total=sum_group(l);for(var s=128u;s>0u;s/=2u){if l<s{reduce_b[l]+=reduce_b[l+s];}workgroupBarrier();}
+ if l==0u{scalars[0]=total;scalars[1]=reduce_b[0];}
 }

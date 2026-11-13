@@ -18,9 +18,10 @@ fn group(g:vec3<u32>)->u32{return g.x+g.y*65535u;}
 fn point(i:u32)->vec3<i32>{return vec3<i32>(i32(i%p.dims.x),i32((i/p.dims.x)%p.dims.y),i32(i/(p.dims.x*p.dims.y)));}
 fn inside(q:vec3<i32>)->bool{return all(q>=vec3<i32>(0))&&all(q<vec3<i32>(p.dims.xyz));}
 fn index(q:vec3<i32>)->u32{return u32(q.x)+p.dims.x*(u32(q.y)+p.dims.y*u32(q.z));}
-fn row(i:u32)->vec4<f32>{return catalog[ids[i]*2u];}
-fn transition(i:u32)->vec4<f32>{return catalog[ids[i]*2u+1u];}
-fn body(i:u32)->u32{return p.control.y+2u*firstTrailingBit(bodies[i]);}
+fn material_id(i:u32)->u32 {let id=ids[i];return select(id,id&255u,(id&0x80000000u)!=0u);}
+fn row(i:u32)->vec4<f32>{return catalog[material_id(i)*2u];}
+fn transition(i:u32)->vec4<f32>{return catalog[material_id(i)*2u+1u];}
+fn body(i:u32)->u32{if bodies[i]==0u{return p.control.y;}return p.control.y+2u+2u*firstTrailingBit(bodies[i]);}
 fn enthalpy(i:u32,t:f32)->f32 {
     let m=row(i);let phase=transition(i);var f=0.0;
     if phase.z>0.5 {if phase.x==phase.y {f=select(0.0,1.0,t>phase.x);}else{f=clamp((t-phase.x)/(phase.y-phase.x),0.0,1.0);}}
@@ -41,11 +42,11 @@ fn invert(i:u32,h:f32)->vec3<f32>{
     if !(t>=0.0) || !(t<1e8) || !(abs(h)<1e30) {bad=1.0;}
     return vec3<f32>(t,f,bad);
 }
-fn boundary_rate(b:vec4<f32>,k:f32,t:f32)->f32 {
+fn boundary_rate(b:vec4<f32>,k:f32,t:f32,a:f32)->f32 {
     if b.x<0.5{return 0.0;}
     if b.x<1.5{return 2.0*k*(b.y-t)/(p.step.y*p.step.y);}
-    if b.x<2.5{return b.y/p.step.y;}
-    return b.y*(b.z-t)/p.step.y;
+    if b.x<2.5{return a*b.y/p.step.y;}
+    return a*b.y*(b.z-t)/p.step.y;
 }
 @compute @workgroup_size(256)
 fn initialize(@builtin(global_invocation_id) gid:vec3<u32>){
@@ -60,16 +61,16 @@ fn initialize(@builtin(global_invocation_id) gid:vec3<u32>){
 fn reset_budget(@builtin(global_invocation_id) gid:vec3<u32>){let i=flat(gid);if i<p.dims.w{cells_in[i].budget=vec4<f32>(0.0);cells_in[i].valid.z=cells_in[i].state.z;cells_in[i].valid.w=cells_in[i].valid.y;}}
 @compute @workgroup_size(256)
 fn integrate(@builtin(global_invocation_id) gid:vec3<u32>){
-    let i=flat(gid);if i>=p.dims.w{return;}var c=cells_in[i];if c.state.w<0.5 {cells_out[i]=c;return;}
+    let i=flat(gid);if i>=p.dims.w{return;}var c=cells_in[i];if c.state.w<=0.0 {cells_out[i]=c;return;}
     let q=point(i);let m=row(i);let t=c.state.x;let dx=p.step.y;let dt=p.step.x;
     var conduction=0.0;var external_heat=0.0;var advection=0.0;
     for(var axis=0u;axis<3u;axis++){for(var side=0u;side<2u;side++){
         var neighbor=q;neighbor[axis]+=select(-1,1,side==1u);
-        if !inside(neighbor) {external_heat+=boundary_rate(p.boundary[axis*2u+side],m.z,t);}
+        if !inside(neighbor) {external_heat+=boundary_rate(p.boundary[axis*2u+side],m.z*c.state.w,t,c.state.w);}
         else {let j=index(neighbor);
-            if cells_in[j].state.w<0.5 {external_heat+=boundary_rate(p.exposed,m.z,t);}
+            if cells_in[j].state.w<=0.0 {external_heat+=boundary_rate(p.exposed,m.z*c.state.w,t,c.state.w);}
             else {
-                let k=row(j).z;conduction+=2.0*m.z*k/max(m.z+k,1e-30)*(cells_in[j].state.x-t)/(dx*dx);
+                let ki=m.z*c.state.w;let k=row(j).z*cells_in[j].state.w;conduction+=2.0*ki*k/max(ki+k,1e-30)*(cells_in[j].state.x-t)/(dx*dx);
                 if p.control.w!=0u {
                     var face=q;if side==1u {face[axis]+=1;}
                     let fd=p.dims.xyz+vec3<u32>(1);let fi=u32(face.x)+fd.x*(u32(face.y)+fd.y*u32(face.z));let u=velocity[fi][axis];
@@ -80,14 +81,14 @@ fn integrate(@builtin(global_invocation_id) gid:vec3<u32>){
         }
     }}
     var joule=0.0;if p.control.z!=0u {joule=em[i*4u+2u].w;}
-    let b=body(i);external_heat+=catalog[b].z;
+    let b=body(i);external_heat+=catalog[b].z*c.state.w;
     let increment=dt*(conduction+advection+external_heat+joule)-c.valid.y;
     var h=c.state.z+increment;var pinned=false;
     if catalog[b+1u].x>0.5 {
-        let fixed=enthalpy(i,catalog[b].y);let transition_data=transition(i);
-        let plateau=transition_data.z==1.0 && transition_data.x==transition_data.y && catalog[b].y==transition_data.x && h>=fixed && h<=fixed+m.x*m.w;
+        let fixed=enthalpy(i,catalog[b].y)*c.state.w;let transition_data=transition(i);
+        let plateau=transition_data.z==1.0 && transition_data.x==transition_data.y && catalog[b].y==transition_data.x && h>=fixed && h<=fixed+m.x*m.w*c.state.w;
         if !plateau {
-            let adjusted=select(fixed,clamp(h,fixed,fixed+m.x*m.w),transition_data.z==1.0 && transition_data.x==transition_data.y && catalog[b].y==transition_data.x);
+            let adjusted=select(fixed,clamp(h,fixed,fixed+m.x*m.w*c.state.w),transition_data.z==1.0 && transition_data.x==transition_data.y && catalog[b].y==transition_data.x);
             external_heat+=(adjusted-c.state.z+c.valid.y)/dt-(conduction+advection+external_heat+joule);h=adjusted;pinned=true;
         }
     }
@@ -100,33 +101,33 @@ fn integrate(@builtin(global_invocation_id) gid:vec3<u32>){
 // Relaxed GPU arithmetic can algebraically cancel an in-expression Kahan correction.
 @compute @workgroup_size(256)
 fn enthalpy_difference(@builtin(global_invocation_id) gid:vec3<u32>){
-    let i=flat(gid);if i>=p.dims.w || cells_out[i].state.w<0.5{return;}
+    let i=flat(gid);if i>=p.dims.w || cells_out[i].state.w<=0.0{return;}
     cells_out[i].flux.z=cells_out[i].state.z-cells_in[i].state.z;
     cells_out[i].budget.z=cells_out[i].state.z-cells_out[i].valid.z;
 }
 @compute @workgroup_size(256)
 fn compensate(@builtin(global_invocation_id) gid:vec3<u32>){
-    let i=flat(gid);if i>=p.dims.w || cells_out[i].state.w<0.5{return;}
+    let i=flat(gid);if i>=p.dims.w || cells_out[i].state.w<=0.0{return;}
     var c=cells_out[i];var correction=c.flux.z-c.valid.y;
     if c.flux.w>0.5 {correction=0.0;}
-    c.valid.y=correction;let phase=invert(i,c.state.z-correction);c.state.x=phase.x;c.state.y=phase.y;
+    c.valid.y=correction;let phase=invert(i,(c.state.z-correction)/c.state.w);c.state.x=phase.x;c.state.y=phase.y;
     c.budget.z+=(c.valid.w-correction);c.budget.w+=phase.z;cells_out[i]=c;
 }
 @compute @workgroup_size(256)
 fn flux(@builtin(global_invocation_id) gid:vec3<u32>){
-    let i=flat(gid);if i>=p.dims.w || cells_in[i].state.w<0.5{return;}let q=point(i);let t=cells_in[i].state.x;let k=row(i).z;var qflux=vec3<f32>(0.0);
+    let i=flat(gid);if i>=p.dims.w || cells_in[i].state.w<=0.0{return;}let q=point(i);let t=cells_in[i].state.x;let a=cells_in[i].state.w;let k=row(i).z*a;var qflux=vec3<f32>(0.0);
     for(var axis=0u;axis<3u;axis++){for(var side=0u;side<2u;side++){
         var neighbor=q;neighbor[axis]+=select(-1,1,side==1u);var rate=0.0;
-        if !inside(neighbor){rate=boundary_rate(p.boundary[axis*2u+side],k,t);}
-        else {let j=index(neighbor);if cells_in[j].state.w<0.5{rate=boundary_rate(p.exposed,k,t);}else {let k2=row(j).z;rate=2.0*k*k2/max(k+k2,1e-30)*(cells_in[j].state.x-t)/(p.step.y*p.step.y);}}
+        if !inside(neighbor){rate=boundary_rate(p.boundary[axis*2u+side],k,t,a);}
+        else {let j=index(neighbor);if cells_in[j].state.w<=0.0{rate=boundary_rate(p.exposed,k,t,a);}else {let k2=row(j).z*cells_in[j].state.w;rate=2.0*k*k2/max(k+k2,1e-30)*(cells_in[j].state.x-t)/(p.step.y*p.step.y);}}
         qflux[axis]+=select(1.0,-1.0,side==1u)*rate*p.step.y*0.5;
     }}cells_in[i].flux=vec4<f32>(qflux,length(qflux));
 }
 @compute @workgroup_size(256)
 fn collect(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) g:vec3<u32>){
     let i=flat(gid);var sum=vec4<f32>(0.0);var bound=vec4<f32>(1e30,0.0,0.0,0.0);var extra=vec4<f32>(0.0);
-    if i<p.dims.w && cells_in[i].state.w>0.5 {let c=cells_in[i];let volume=p.step.y*p.step.y*p.step.y;
-        sum=vec4<f32>(c.state.z,c.budget.xy,c.state.y)*volume;extra=vec4<f32>(vec3<f32>(c.budget.z,c.valid.y,0.0)*volume,c.flux.w);bound=vec4<f32>(c.state.x,c.state.x,1.0,c.budget.w);
+    if i<p.dims.w && cells_in[i].state.w>0.0 {let c=cells_in[i];let volume=p.step.y*p.step.y*p.step.y;
+        sum=vec4<f32>(c.state.z,c.budget.xy,c.state.y*c.state.w)*volume;extra=vec4<f32>(vec3<f32>(c.budget.z,c.valid.y,0.0)*volume,c.flux.w);bound=vec4<f32>(c.state.x,c.state.x,1.0,c.budget.w);
     }
     reduction[l]=sum;extremes[l]=bound;corrections[l]=extra;workgroupBarrier();
     for(var s=128u;s>0u;s/=2u){if l<s{reduction[l]+=reduction[l+s];corrections[l]=vec4<f32>(corrections[l].xyz+corrections[l+s].xyz,max(corrections[l].w,corrections[l+s].w));extremes[l]=vec4<f32>(min(extremes[l].x,extremes[l+s].x),max(extremes[l].y,extremes[l+s].y),extremes[l].zw+extremes[l+s].zw);}workgroupBarrier();}
@@ -139,4 +140,12 @@ fn reduce(@builtin(local_invocation_index) l:u32){
     reduction[l]=sum;extremes[l]=bound;corrections[l]=extra;workgroupBarrier();
     for(var s=128u;s>0u;s/=2u){if l<s{reduction[l]+=reduction[l+s];corrections[l]=vec4<f32>(corrections[l].xyz+corrections[l+s].xyz,max(corrections[l].w,corrections[l+s].w));extremes[l]=vec4<f32>(min(extremes[l].x,extremes[l+s].x),max(extremes[l].y,extremes[l+s].y),extremes[l].zw+extremes[l+s].zw);}workgroupBarrier();}
     if l==0u {stats[groups()*3u]=reduction[0];stats[groups()*3u+1u]=extremes[0];stats[groups()*3u+2u]=corrections[0];}
+}
+
+@compute @workgroup_size(256)
+fn surface_recover(@builtin(global_invocation_id) gid:vec3<u32>){
+ let i=flat(gid);if i>=p.dims.w{return;}var c=cells_in[i];
+ if c.state.w<=0.0 {c=Cell(vec4<f32>(0.0),vec4<f32>(0.0),vec4<f32>(0.0),vec4<f32>(0.0));}
+ else {let phase=invert(i,(c.state.z-c.valid.y)/c.state.w);c.state.x=phase.x;c.state.y=phase.y;c.budget.w=phase.z;c.valid.x=1.0;}
+ cells_in[i]=c;
 }

@@ -52,13 +52,40 @@ impl FluidUi {
         materials: &[Material],
         phase_driven: bool,
     ) -> bool {
-        ui.label(if phase_driven {
-            "Phase-driven flow · fixed material boundary"
+        let mut changed = ui
+            .checkbox(
+                &mut self.config.surface.enabled,
+                "Moving liquid / air interface",
+            )
+            .changed();
+        if self.config.surface.enabled {
+            ui.small("Imported liquid is the initial distribution; other CAD solids remain walls. Low-density air participates in pressure and motion.");
+            changed |= ui
+                .add(
+                    egui::DragValue::new(&mut self.config.surface.tension_n_m)
+                        .range(0. ..=10.)
+                        .speed(0.01)
+                        .prefix("Surface tension ")
+                        .suffix(" N/m"),
+                )
+                .changed();
+            changed |= ui
+                .add(
+                    egui::DragValue::new(&mut self.config.surface.air_density_kg_m3)
+                        .range(0.01..=1000.)
+                        .speed(0.1)
+                        .prefix("Air density ")
+                        .suffix(" kg/m³"),
+                )
+                .changed();
+            ui.small("0.5 N/m is an illustrative initial surface tension. Refine the grid/timestep for interface motion.");
         } else {
-            "Fixed liquid region · impermeable/no-slip walls"
-        });
-        ui.small(if phase_driven {"Melting and freezing change fluid mobility inside the imported material. Moving liquid/air boundaries are the next stage."}else{"Velocity and pressure inside the initial liquid geometry. Moving surfaces and ejection are not enabled."});
-        let mut changed = false;
+            ui.label(if phase_driven {
+                "Phase-driven flow · fixed material boundary"
+            } else {
+                "Fixed liquid region · impermeable/no-slip walls"
+            });
+        }
         ui.scope(|ui| {
             if phase_driven {ui.label("Liquid regions and mobility follow thermal phase.");}else{
             let selected_material=self.config.material_id;
@@ -96,6 +123,7 @@ impl FluidUi {
             .map(|f| match self.kind {
                 7 => f.diagnostics.max_speed_m_s,
                 8 => f.diagnostics.max_pressure_pa,
+                13 => 1.,
                 _ => f.diagnostics.max_divergence_s_inv,
             })
             .unwrap_or(1.)
@@ -200,7 +228,7 @@ impl FluidUi {
             ui,
             self.scale(Some(frame)),
             unit(self.kind),
-            self.kind >= 8 || self.component > 0,
+            matches!(self.kind, 8 | 9) || self.component > 0,
         );
         if self.kind == 8 {
             ui.small("Gauge pressure: one zero reference per connected fluid region.");
@@ -239,6 +267,7 @@ pub fn label(kind: u32) -> &'static str {
     match kind {
         7 => "Fluid velocity",
         8 => "Fluid pressure (gauge)",
+        13 => "Liquid occupancy",
         _ => "Velocity divergence",
     }
 }
@@ -246,6 +275,7 @@ fn unit(kind: u32) -> &'static str {
     match kind {
         7 => "m/s",
         8 => "Pa",
+        13 => "fraction",
         _ => "s⁻¹",
     }
 }

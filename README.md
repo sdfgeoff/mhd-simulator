@@ -2,7 +2,7 @@
 
 A native Rust/wgpu workbench for preparing a 3D molten-metal jetting simulation. It imports CAD-exported meshes, builds a persistent **rasterized 3D material grid**, and lets you compare its voxel sections against the original geometry with a six-axis plane gizmo.
 
-**Applied magnetic fields and transient induction are implemented.** Inspect B, induced J, Lorentz force and Joule heating on the movable section plane. Fixed-geometry fluid velocity and pressure are also implemented, with shared animated vector overlays and two-way EM/velocity coupling on one clock. Thermal conduction, Joule heating, latent heat and phase-driven fluid mobility are implemented; moving liquid/air surfaces are the next stage. [Thermal guide](docs/THERMAL.md). [Setup and unified-run workflow](docs/RUNS.md). [Fluid guide and validation](docs/FLUIDS.md). [Electromagnetics guide, equations and validation](docs/ELECTROMAGNETICS.md).
+**Applied magnetic fields and transient induction are implemented.** Inspect B, induced J, Lorentz force and Joule heating on the movable section plane. Fixed-geometry fluid velocity and pressure are also implemented, with shared animated vector overlays and two-way EM/velocity coupling on one clock. Thermal conduction, Joule heating, latent heat and phase-driven fluid mobility are implemented; moving liquid/air surfaces and capillarity are available as the first conservative interface stage. [Moving-surface workflow and limits](docs/SURFACES.md). [Thermal guide](docs/THERMAL.md). [Setup and unified-run workflow](docs/RUNS.md). [Fluid guide and validation](docs/FLUIDS.md). [Electromagnetics guide, equations and validation](docs/ELECTROMAGNETICS.md).
 
 ## Run and inspect
 
@@ -76,8 +76,8 @@ Tests cover analytic hollow-cylinder volume convergence, rotated solids, a 256³
 
 `vendor/step-io` is the upstream pure-Rust STEP reader at commit `2d7bd2a9d55fe9a4c8b12e3a8f39bcafe2575300` (0.3.0). `vendor/step-loupe` is an upstream reference checkout, not linked into the app. Their licences/notices are retained; see `THIRD_PARTY.md`.
 
-1. Moving liquid–air interfaces, balanced surface tension and improved fractional wall treatment.
-2. Time-dependent coupling to the moving liquid, then thermal evolution as required.
+1. Sharper interface transport, fractional wall treatment and wetting/contact-angle physics; validate nozzle breakup.
+2. Calibrated molten material/thermal properties and stronger interface/coupling convergence.
 3. Tighter spatial/time convergence and faster EM preconditioning for larger grids.
 4. Robust pure-Rust STEP face tessellation.
 

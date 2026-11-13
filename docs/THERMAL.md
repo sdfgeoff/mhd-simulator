@@ -5,7 +5,7 @@
 1. In Setup, assign materials and initial object temperatures. The material editor contains density, heat capacity, thermal conductivity, solidus/liquidus and latent heat. Objects can also impose a fixed temperature or volumetric heater (W/m³).
 2. In Simulation, enable **Thermal / phase evolution**. Set the common timestep and thermal boundaries: insulated, specified temperature, inward heat flux or convection. Six domain faces and exposed CAD/air faces are independently configured. No electrical source is required.
 3. Enable Fluid motion to let temperature select the liquid material automatically. Exactly one assigned material with melting data and liquid viscosity is supported by this uniform-density flow solver. Solid cells stop; partially molten cells resist motion. With thermal evolution disabled, the manual fixed-liquid-region diagnostic remains available.
-4. Simulate and select Temperature, Liquid fraction or Heat flux in Section view. Both viewports, probes and all physics use the common timeline. `assets/hotend-thermal.mhd.json` is a source-free example: a 250 °C chamber heats initially 20 °C solder. The example's liquid/air geometry is still fixed in this stage.
+4. Simulate and select Temperature, Liquid fraction or Heat flux in Section view. Both viewports, probes and all physics use the common timeline. `assets/hotend-thermal.mhd.json` is a source-free example: a 250 °C chamber heats initially 20 °C solder. Its liquid/air geometry stays fixed unless Moving liquid / air interface is enabled; [the interface guide](SURFACES.md) describes co-transport of material and enthalpy.
 
 ## Numerical model
 
@@ -22,7 +22,7 @@ A common tick advances induction, fluid, then thermal energy and phase. Joule he
 1. Insulated cosine conduction matches the discrete eigenmode; continuum RMS error falls from 0.00227 K to 0.000571 K at 16/32 cells.
 2. A one-phase Stefan melting front at 64/128 cells has relative front error 0.197%/0.0243%; supplied boundary heat closes against enthalpy.
 3. Tests cover pure latent plateaus, alloy melt/freeze flow transitions, missing-data rollback, prescribed Joule input, sub-ULP heat accumulation, phase-weighted hydrostatics, source-free common runs and offscreen thermal UI rendering.
-4. Air heat capacity/transport, radiation, thermal expansion, temperature-dependent electromagnetic/transport coefficients and moving feedstock are absent. Density, cp, conductivity and latent heat are constants. Thermal/phase flow currently uses nonperiodic boundaries. The liquid/air surface is fixed until the next interface stage.
+4. Air heat capacity/transport, radiation, thermal expansion, temperature-dependent electromagnetic/transport coefficients and moving feedstock are absent. Density, cp, conductivity and latent heat are constants. Thermal/phase flow currently uses nonperiodic boundaries. The liquid/air surface can move when the [interface option](SURFACES.md) is enabled.
 
 ## Default data
 

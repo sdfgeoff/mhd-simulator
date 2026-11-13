@@ -628,6 +628,19 @@ impl EmState {
     }
     /// Prepare lagged motional EMF from the current fluid velocity and total B.
     /// The next induction step enforces the same discrete current continuity as at rest.
+    /// Rebuild edge material coefficients after a conservative interface update.
+    pub fn update_material_geometry(&mut self) -> Result<(), String> {
+        self.dispatch(&[
+            ("coefficients", self.edge_groups()),
+            ("coefficient_check", [1, 1, 1]),
+        ]);
+        if self.read_f32(&self.scalars, 0, 4)?[0] > 0. {
+            return Err(
+                "Moving conductor reached the EM outer boundary; enlarge the domain".into(),
+            );
+        }
+        Ok(())
+    }
     pub fn set_velocity(
         &mut self,
         volume: &Volume,

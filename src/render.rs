@@ -22,6 +22,8 @@ struct Uniforms {
     dimensions: [u32; 4],
     palette: [[f32; 4]; 8],
     field: [f32; 4],
+    inverse_camera: [[f32; 4]; 4],
+    liquid: [f32; 4],
 }
 #[derive(Clone, Copy)]
 pub struct FieldView<'a> {
@@ -33,6 +35,8 @@ pub struct FieldView<'a> {
     pub trails: Option<crate::flow::TrailDraw<'a>>,
 }
 pub struct DomainView<'a> {
+    pub cad: bool,
+    pub surface: Option<(&'a wgpu::Buffer, u32)>,
     pub field: Option<FieldView<'a>>,
     pub source_lines: &'a [[Vec3; 2]],
     pub span: f32,
@@ -55,6 +59,7 @@ pub struct Viewport {
     triangle: wgpu::RenderPipeline,
     line: wgpu::RenderPipeline,
     trail: wgpu::RenderPipeline,
+    liquid: wgpu::RenderPipeline,
     uniform: wgpu::Buffer,
     bind: wgpu::BindGroup,
     target: Option<(
@@ -102,6 +107,16 @@ impl Viewport {
                     count: None,
                 },
                 wgpu::BindGroupLayoutEntry {
+                    binding: 4,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Storage { read_only: true },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
                     binding: 1,
                     visibility: wgpu::ShaderStages::FRAGMENT,
                     ty: wgpu::BindingType::Buffer {
@@ -142,6 +157,10 @@ impl Viewport {
             label: None,
             layout: &layout,
             entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 4,
+                    resource: empty.as_entire_binding(),
+                },
                 wgpu::BindGroupEntry {
                     binding: 0,
                     resource: uniform.as_entire_binding(),
@@ -231,6 +250,40 @@ impl Viewport {
                 cache: None,
             })
         };
+        let liquid = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("Native-resolution moving liquid isosurface"),
+            layout: Some(&pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &shader,
+                entry_point: Some("vertex_liquid"),
+                compilation_options: Default::default(),
+                buffers: &[],
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &shader,
+                entry_point: Some("fragment_liquid"),
+                compilation_options: Default::default(),
+                targets: &[Some(wgpu::ColorTargetState {
+                    format: wgpu::TextureFormat::Rgba8UnormSrgb,
+                    blend: None,
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+            }),
+            primitive: Default::default(),
+            depth_stencil: Some(wgpu::DepthStencilState {
+                format: wgpu::TextureFormat::Depth32Float,
+                depth_write_enabled: true,
+                depth_compare: wgpu::CompareFunction::LessEqual,
+                stencil: Default::default(),
+                bias: Default::default(),
+            }),
+            multisample: wgpu::MultisampleState {
+                count: 4,
+                ..Default::default()
+            },
+            multiview: None,
+            cache: None,
+        });
         let triangle = make(false, false);
         let line = make(true, false);
         let trail = make(true, true);
@@ -243,6 +296,7 @@ impl Viewport {
             triangle,
             line,
             trail,
+            liquid,
             uniform,
             bind,
             target: None,
@@ -328,6 +382,7 @@ impl Viewport {
             false,
         )
     }
+    #[cfg(test)]
     pub fn draw_section(
         &mut self,
         model: &Model,
@@ -338,6 +393,20 @@ impl Viewport {
         span: f32,
         n: u32,
         field: Option<FieldView>,
+    ) -> egui::TextureId {
+        self.draw_section_with_surface(model, caps, plane, volume, options, span, n, field, None)
+    }
+    pub fn draw_section_with_surface(
+        &mut self,
+        model: &Model,
+        caps: &[Cap],
+        plane: SectionPlane,
+        volume: Option<&crate::domain::Volume>,
+        options: crate::section::Options,
+        span: f32,
+        n: u32,
+        field: Option<FieldView>,
+        surface: Option<(&wgpu::Buffer, u32)>,
     ) -> egui::TextureId {
         let basis = glam::Mat3::from_cols(plane.u(), -plane.normal(), plane.v());
         let camera = Camera {
@@ -350,11 +419,16 @@ impl Viewport {
                 (hi - lo).max_element().max(1.)
             },
         };
-        let domain = matches!(
+        let domain = (matches!(
             options.style,
             crate::section::Style::Voxels | crate::section::Style::Field
-        )
+        ) || surface.is_some())
         .then_some(DomainView {
+            cad: !matches!(
+                options.style,
+                crate::section::Style::Voxels | crate::section::Style::Field
+            ),
+            surface,
             field,
             source_lines: &[],
             span,
@@ -457,6 +531,13 @@ impl Viewport {
             self.size = size;
         }
         let params = Uniforms {
+            inverse_camera: camera.matrix().inverse().to_cols_array_2d(),
+            liquid: [
+                f32::from(domain.as_ref().is_some_and(|d| d.surface.is_some())),
+                f32::from(panel),
+                f32::from(hatched),
+                f32::from(domain.as_ref().is_some_and(|d| d.cad)),
+            ],
             camera: camera.matrix().to_cols_array_2d(),
             origin: plane.position.extend(0.).to_array(),
             normal: plane.normal().extend(0.).to_array(),
@@ -517,6 +598,15 @@ impl Viewport {
             layout: &self.volume_layout,
             entries: &[
                 wgpu::BindGroupEntry {
+                    binding: 4,
+                    resource: domain
+                        .as_ref()
+                        .and_then(|d| d.surface)
+                        .map(|s| s.0)
+                        .unwrap_or(&self.empty)
+                        .as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
                     binding: 3,
                     resource: domain
                         .as_ref()
@@ -565,11 +655,17 @@ impl Viewport {
                 }
             }
         }
-        for (i, _) in model.bodies.iter().enumerate().filter(|(_, b)| b.visible) {
+        for (i, _) in model.bodies.iter().enumerate().filter(|(_, b)| {
+            b.visible
+                && domain
+                    .as_ref()
+                    .and_then(|d| d.surface)
+                    .is_none_or(|s| b.simulation.material_id != s.1)
+        }) {
             let c = COLORS[i % COLORS.len()].map(|v| v as f32 / 255.);
             if cut {
                 if let Some(cap) = caps.get(i) {
-                    if hatched && domain.as_ref().is_none_or(|d| d.volume.is_none()) {
+                    if hatched && domain.as_ref().is_none_or(|d| d.volume.is_none() || d.cad) {
                         let color = [
                             linear(c[0] * 0.45 + 0.55),
                             linear(c[1] * 0.45 + 0.55),
@@ -614,7 +710,7 @@ impl Viewport {
                     }
                 }
             }
-            if cut && domain.volume.is_some() {
+            if cut && domain.volume.is_some() && !domain.cad {
                 let o = plane.position;
                 let u = plane.u() * domain.span;
                 let v = plane.v() * domain.span;
@@ -719,7 +815,12 @@ impl Viewport {
             if !panel {
                 pass.set_pipeline(&self.triangle);
                 for (body, mesh) in model.bodies.iter().zip(&self.meshes) {
-                    if body.visible {
+                    if body.visible
+                        && domain
+                            .as_ref()
+                            .and_then(|d| d.surface)
+                            .is_none_or(|s| body.simulation.material_id != s.1)
+                    {
                         pass.set_vertex_buffer(0, mesh.buffer.slice(..));
                         pass.draw(0..mesh.count, 0..1);
                     }
@@ -729,6 +830,13 @@ impl Viewport {
                 pass.set_pipeline(&self.triangle);
                 pass.set_vertex_buffer(0, vb.slice(..));
                 pass.draw(0..vertices.len() as u32, 0..1);
+            }
+            if domain
+                .as_ref()
+                .is_some_and(|d| d.surface.is_some() && (!panel || d.cad))
+            {
+                pass.set_pipeline(&self.liquid);
+                pass.draw(0..3, 0..1);
             }
             pass.set_pipeline(&self.line);
             pass.set_vertex_buffer(0, lb.slice(..));
@@ -799,6 +907,112 @@ mod tests {
         device.poll(wgpu::Maintain::Wait);
         rx.recv().unwrap().unwrap();
         buffer.slice(..).get_mapped_range().to_vec()
+    }
+    #[test]
+    fn moving_liquid_caps_match_native_section_and_three_dimensional_views() {
+        let _lock = crate::gpu_test_lock();
+        let mut view = viewport();
+        let context = crate::gpu::GpuContext {
+            name: "Headless surface render".into(),
+            device: view.state.device.clone(),
+            queue: view.state.queue.clone(),
+        };
+        let gpu = crate::domain::GpuDomain::from_context(context.clone()).unwrap();
+        let mut model = Model::load(std::path::Path::new("assets/annulus.gltf")).unwrap();
+        model.bodies[0].simulation.material_id = 3;
+        let volume = gpu
+            .build(
+                &model,
+                &crate::simulation::DomainSettings {
+                    min_mm: [-8.; 3],
+                    max_mm: [8.; 3],
+                    cell_mm: 0.5,
+                },
+                &crate::simulation::default_materials(),
+            )
+            .unwrap();
+        let mut cells = vec![crate::fluid::FluidCell::default(); 32usize.pow(3)];
+        for z in 0..32 {
+            for y in 0..32 {
+                for x in 0..32 {
+                    let p = Vec3::new(x as f32, y as f32, z as f32) * 0.5 - Vec3::splat(7.75);
+                    cells[x + 32 * (y + 32 * z)].reserved =
+                        [1., 1., f32::from(p.length() < 3.), 0.];
+                }
+            }
+        }
+        let fields = context
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Known live material occupancy"),
+                contents: bytemuck::cast_slice(&cells),
+                usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
+            });
+        let plane = SectionPlane::new(Vec3::ZERO);
+        let basis = glam::Mat3::from_cols(plane.u(), -plane.normal(), plane.v());
+        for n in [256, 512] {
+            for hatched in [true, false] {
+                let options = crate::section::Options {
+                    style: if hatched {
+                        crate::section::Style::HatchedCad
+                    } else {
+                        crate::section::Style::Outlines
+                    },
+                    edges: false,
+                    material_colors: false,
+                };
+                view.draw_section_with_surface(
+                    &model,
+                    &[],
+                    plane,
+                    Some(&volume),
+                    options,
+                    6.,
+                    n,
+                    None,
+                    Some((&fields, 3)),
+                );
+                let section = read(&view);
+                let camera = Camera {
+                    rect: egui::Rect::from_min_size(egui::Pos2::ZERO, egui::Vec2::splat(n as f32)),
+                    center: Vec3::ZERO,
+                    rotation: glam::Quat::from_mat3(&basis).inverse(),
+                    scale: n as f32 / 12.,
+                    size: 16.,
+                };
+                view.draw(
+                    camera,
+                    plane,
+                    true,
+                    hatched,
+                    &model,
+                    &[],
+                    1.,
+                    Some(DomainView {
+                        cad: true,
+                        surface: Some((&fields, 3)),
+                        field: None,
+                        source_lines: &[],
+                        span: 6.,
+                        bounds: None,
+                        grid: None,
+                        volume: Some(&volume),
+                        material_colors: false,
+                    }),
+                );
+                let scene = read(&view);
+                let row = (n / 2) as usize;
+                let center = (row * n as usize + row) * 4;
+                if hatched {
+                    assert_eq!(&section[center..center + 3], &scene[center..center + 3]);
+                    assert!(section[center] > 80);
+                } else {
+                    let inside = (row * n as usize + row + 20) * 4;
+                    assert!(section[inside] < 50);
+                }
+                // The old annular CAD mesh has a central hole. Its absence here proves the live cap was drawn.
+            }
+        }
     }
     #[test]
     fn animated_trails_render_directly_and_preserve_solver_time() {
@@ -1042,6 +1256,8 @@ mod tests {
                     &[],
                     1.,
                     Some(DomainView {
+                        cad: false,
+                        surface: None,
                         field: Some(field),
                         source_lines: &[],
                         span,
@@ -1184,6 +1400,8 @@ mod tests {
                 &[],
                 1.,
                 Some(DomainView {
+                    cad: false,
+                    surface: None,
                     span: 5.,
                     bounds: None,
                     grid: None,
@@ -1302,6 +1520,8 @@ mod tests {
                 &[],
                 1.,
                 Some(DomainView {
+                    cad: false,
+                    surface: None,
                     field: None,
                     source_lines: &[],
                     span: 5.,
@@ -1425,6 +1645,8 @@ mod tests {
                     &caps,
                     1.,
                     Some(DomainView {
+                        cad: false,
+                        surface: None,
                         field: None,
                         source_lines: &[],
                         span: 5.,

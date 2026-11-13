@@ -136,6 +136,7 @@ pub struct ThermalState {
     zero: wgpu::Buffer,
     alpha_max: f32,
     capacity_min: f32,
+    transport_delta_j: f64,
 }
 fn groups(n: u32) -> [u32; 3] {
     let n = n.div_ceil(256);
@@ -168,7 +169,7 @@ impl ThermalState {
         }
         let max_id = snapshot.materials.iter().map(|m| m.id).max().unwrap_or(0) as usize;
         let offset = (max_id + 1) * 2;
-        let mut rows = vec![[0f32; 4]; offset + snapshot.components.len() * 2];
+        let mut rows = vec![[0f32; 4]; offset + 2 + snapshot.components.len() * 2];
         let mut alpha_max = 0f32;
         let mut capacity_min = f32::INFINITY;
         for m in &snapshot.materials {
@@ -216,15 +217,16 @@ impl ThermalState {
         if !capacity_min.is_finite() {
             return Err("No thermal material occupies this model".into());
         }
+        rows[offset] = [config.initial_temperature_c + 273.15, 0., 0., 0.];
         for (i, c) in snapshot.components.iter().enumerate() {
-            rows[offset + i * 2] = [
+            rows[offset + 2 + i * 2] = [
                 c.initial_temperature_k
                     .unwrap_or(config.initial_temperature_c + 273.15),
                 c.fixed_temperature_k.unwrap_or(0.),
                 c.heat_source_w_m3,
                 0.,
             ];
-            rows[offset + i * 2 + 1] = [f32::from(c.fixed_temperature_k.is_some()), 0., 0., 0.];
+            rows[offset + 2 + i * 2 + 1] = [f32::from(c.fixed_temperature_k.is_some()), 0., 0., 0.];
         }
         let params = Params {
             dims: [grid.dims[0], grid.dims[1], grid.dims[2], n as u32],
@@ -308,6 +310,7 @@ impl ThermalState {
             });
         let pipelines = [
             "initialize",
+            "surface_recover",
             "reset_budget",
             "integrate",
             "enthalpy_difference",
@@ -352,6 +355,7 @@ impl ThermalState {
             zero,
             alpha_max,
             capacity_min,
+            transport_delta_j: 0.,
         };
         let bind = state.bind(volume, 1, None, None)?;
         let mut enc = state
@@ -471,6 +475,33 @@ impl ThermalState {
     pub fn result_buffer(&self) -> &wgpu::Buffer {
         &self.states[self.current]
     }
+    /// Accept conservative mixture enthalpy carried with the liquid occupancy.
+    pub fn accept_surface_transport(
+        &mut self,
+        volume: &Volume,
+        transported: &wgpu::Buffer,
+    ) -> Result<(), String> {
+        if transported.size() != self.result_buffer().size() {
+            return Err("Transported thermal grid size differs".into());
+        }
+        let old = self.diagnostics.enthalpy_j;
+        let bind = self.bind(volume, self.current, None, None)?;
+        let mut enc = self
+            .context
+            .device
+            .create_command_encoder(&Default::default());
+        enc.copy_buffer_to_buffer(transported, 0, self.result_buffer(), 0, transported.size());
+        self.dispatch(
+            &mut enc,
+            &bind,
+            "surface_recover",
+            groups(self.params.dims[3]),
+        );
+        self.context.queue.submit(Some(enc.finish()));
+        self.refresh(volume, None, None, 0)?;
+        self.transport_delta_j += self.diagnostics.enthalpy_j - old;
+        Ok(())
+    }
     pub fn step(
         &mut self,
         volume: &Volume,
@@ -571,6 +602,8 @@ impl ThermalState {
             self.diagnostics = old_diag;
             return Err(e);
         }
+        self.diagnostics.delta_enthalpy_j += self.transport_delta_j;
+        self.transport_delta_j = 0.;
         self.diagnostics.energy_error_j = self.diagnostics.delta_enthalpy_j
             - self.diagnostics.joule_j
             - self.diagnostics.external_j;

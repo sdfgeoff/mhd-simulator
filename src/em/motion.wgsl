@@ -16,7 +16,9 @@ fn motion(@builtin(global_invocation_id) gid:vec3<u32>){
         var p=vec3<i32>(e.xyz);p[a]-=u;p[b]-=v;
         if valid(p,scene.dims.xyz){
             let c=u32(p.x)+scene.dims.x*(u32(p.y)+scene.dims.y*u32(p.z));
-            let s=properties[materials[c]].values.x;sigma+=s;
+            let id=materials[c];let base=select(id,id&255u,(id&0x80000000u)!=0u);var s=properties[base].values.x;
+            if (id&0x80000000u)!=0u{s=properties[id&255u].values.x*f32((id>>8u)&0x7fffffu)/8388607.0;}
+            sigma+=s;
             if velocity[c].mask.x>0.5{weighted+=s*cross(velocity[c].v.xyz,magnetic[c].b.xyz)[e.w];}
         }
     }}

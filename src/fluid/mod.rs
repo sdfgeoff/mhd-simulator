@@ -1,5 +1,5 @@
-//! Incompressible MAC velocity/pressure in a fixed voxel fluid region.
-//! Walls are impermeable/no-slip. A moving liquid–air interface is a later stage.
+//! GPU MAC velocity/pressure with fixed-region and variable-density liquid/air modes.
+//! Static CAD walls are impermeable/no-slip; phase can suppress material motion.
 use crate::{
     domain::Volume,
     gpu::{GpuContext, read_bytes},
@@ -14,6 +14,7 @@ use wgpu::util::DeviceExt;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct FluidConfig {
+    pub surface: crate::surface::SurfaceConfig,
     pub material_id: u32,
     pub dt_s: f64,
     pub acceleration_m_s2: [f32; 3],
@@ -29,6 +30,7 @@ pub struct FluidConfig {
 impl Default for FluidConfig {
     fn default() -> Self {
         Self {
+            surface: Default::default(),
             material_id: 3,
             dt_s: 1e-5,
             acceleration_m_s2: [0., 0., -9.81],
@@ -45,6 +47,10 @@ impl Default for FluidConfig {
 }
 impl FluidConfig {
     pub fn validate(&self) -> Result<(), String> {
+        self.surface.validate()?;
+        if self.surface.enabled && self.periodic.iter().any(|p| *p) {
+            return Err("Moving-interface runs currently require nonperiodic domain faces".into());
+        }
         if !self.mushy_drag_rate_s_inv.is_finite()
             || self.mushy_drag_rate_s_inv <= 0.
             || !self.dt_s.is_finite()
@@ -94,6 +100,7 @@ pub struct EnergyStep {
     pub delta_kinetic_j: f64,
     pub em_work_j: f64,
     pub acceleration_work_j: f64,
+    pub surface_work_j: f64,
 }
 pub struct ForceField<'a> {
     pub buffer: &'a wgpu::Buffer,
@@ -109,9 +116,12 @@ struct Params {
     acceleration: [f32; 4],
     initial: [f32; 4],
     solve: [f32; 4],
+    surface: [f32; 4],
 }
 struct PhaseGpu {
     pipeline: wgpu::ComputePipeline,
+    surface_pipeline: wgpu::ComputePipeline,
+    zero: wgpu::Buffer,
     uniform: wgpu::Buffer,
     changed: wgpu::Buffer,
 }
@@ -212,7 +222,7 @@ impl FluidState {
         let ids = read_bytes(&context, volume.material_ids(), 0, n * 4)?;
         let mut mask: Vec<u32> = bytemuck::cast_slice::<u8, u32>(&ids)
             .iter()
-            .map(|&id| u32::from(id == config.material_id))
+            .map(|&id| u32::from(id == config.material_id || (config.surface.enabled && id == 0)))
             .collect();
         let fluid_cells = mask.iter().filter(|&&v| v != 0).count() as u64;
         if fluid_cells == 0 {
@@ -279,6 +289,12 @@ impl FluidState {
                 })
         };
         let params = Params {
+            surface: [
+                f32::from(config.surface.enabled),
+                config.surface.air_density_kg_m3,
+                config.surface.tension_n_m,
+                0.,
+            ],
             dims: [grid.dims[0], grid.dims[1], grid.dims[2], n as u32],
             faces: [f[0], f[1], f[2], nf as u32],
             flags: [
@@ -347,6 +363,19 @@ impl FluidState {
         let result = buffer("Fluid display fields", n * 64);
         let previous = buffer("Velocity checkpoint", nf * 16);
         let checkpoint = buffer("Fluid field checkpoint", n * 64);
+        if config.surface.enabled {
+            let packets: Vec<_> = bytemuck::cast_slice::<u8, u32>(&ids)
+                .iter()
+                .map(|id| FluidCell {
+                    reserved: [1., 1., f32::from(*id == config.material_id), 0.],
+                    ..Default::default()
+                })
+                .collect();
+            context
+                .queue
+                .write_buffer(&result, 0, bytemuck::cast_slice(&packets));
+        }
+
         let shader = context
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -528,7 +557,23 @@ impl FluidState {
     }
     /// GPU phase classification; CPU work only prepares component gauges when topology changes.
     pub fn update_phase(&mut self, volume: &Volume, thermal: &wgpu::Buffer) -> Result<(), String> {
-        if thermal.size() < self.result.size() {
+        self.update_cells(volume, Some(thermal), None)
+    }
+    pub fn update_surface(
+        &mut self,
+        volume: &Volume,
+        surface: &wgpu::Buffer,
+        thermal: Option<&wgpu::Buffer>,
+    ) -> Result<(), String> {
+        self.update_cells(volume, thermal, Some(surface))
+    }
+    fn update_cells(
+        &mut self,
+        volume: &Volume,
+        thermal: Option<&wgpu::Buffer>,
+        surface: Option<&wgpu::Buffer>,
+    ) -> Result<(), String> {
+        if thermal.is_some_and(|t| t.size() < self.result.size()) {
             return Err("Phase field does not match fluid grid".into());
         }
         if self.phase_gpu.is_none() {
@@ -550,6 +595,23 @@ impl FluidState {
                         compilation_options: Default::default(),
                         cache: None,
                     });
+            let surface_pipeline =
+                self.context
+                    .device
+                    .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+                        label: Some("Moving liquid/air and thermal phase classification"),
+                        layout: None,
+                        module: &shader,
+                        entry_point: Some("surface"),
+                        compilation_options: Default::default(),
+                        cache: None,
+                    });
+            let zero = self.context.device.create_buffer(&wgpu::BufferDescriptor {
+                label: Some("Absent thermal phase"),
+                size: 64,
+                usage: wgpu::BufferUsages::STORAGE,
+                mapped_at_creation: false,
+            });
             let uniform =
                 self.context
                     .device
@@ -557,9 +619,9 @@ impl FluidState {
                         label: Some("Fluid phase material"),
                         contents: bytemuck::cast_slice(&[
                             self.params.dims,
-                            [self.config.material_id, 0, 0, 0],
+                            [self.config.material_id, u32::from(thermal.is_some()), 0, 0],
                         ]),
-                        usage: wgpu::BufferUsages::UNIFORM,
+                        usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
                     });
             let changed = self.context.device.create_buffer(&wgpu::BufferDescriptor {
                 label: Some("Phase topology flag"),
@@ -570,27 +632,45 @@ impl FluidState {
                 mapped_at_creation: false,
             });
             self.phase_gpu = Some(PhaseGpu {
+                surface_pipeline,
+                zero,
                 pipeline,
                 uniform,
                 changed,
             });
         }
         let phase = self.phase_gpu.as_ref().unwrap();
-        self.context.queue.write_buffer(&phase.changed, 0, &[0; 4]);
-        let buffers = [
+        self.context.queue.write_buffer(
             &phase.uniform,
-            thermal,
+            0,
+            bytemuck::cast_slice(&[
+                self.params.dims,
+                [self.config.material_id, u32::from(thermal.is_some()), 0, 0],
+            ]),
+        );
+        self.context.queue.write_buffer(&phase.changed, 0, &[0; 4]);
+        let mut buffers = vec![
+            &phase.uniform,
+            thermal.unwrap_or(&phase.zero),
             volume.material_ids(),
             &self._mask,
             &self.result,
             &phase.changed,
         ];
+        if let Some(field) = surface {
+            buffers.push(field);
+        }
+        let pipeline = if surface.is_some() {
+            &phase.surface_pipeline
+        } else {
+            &phase.pipeline
+        };
         let bind = self
             .context
             .device
             .create_bind_group(&wgpu::BindGroupDescriptor {
                 label: Some("Phase and occupancy"),
-                layout: &phase.pipeline.get_bind_group_layout(0),
+                layout: &pipeline.get_bind_group_layout(0),
                 entries: &buffers
                     .iter()
                     .enumerate()
@@ -606,7 +686,7 @@ impl FluidState {
             .create_command_encoder(&Default::default());
         {
             let mut pass = enc.begin_compute_pass(&Default::default());
-            pass.set_pipeline(&phase.pipeline);
+            pass.set_pipeline(pipeline);
             pass.set_bind_group(0, &bind, &[]);
             let g = groups(self.params.dims[3]);
             pass.dispatch_workgroups(g[0], g[1], g[2]);
@@ -631,7 +711,7 @@ impl FluidState {
                 .queue
                 .write_buffer(&self._mask, 0, bytemuck::cast_slice(&mask));
         }
-        self.params.flags[3] = 1;
+        self.params.flags[3] = u32::from(thermal.is_some());
         self.params.solve[3] = self.config.mushy_drag_rate_s_inv;
         self.params.solve[1] = self.config.absolute_divergence_tolerance.powi(2)
             * self.grid.cell_m.powi(4)
@@ -777,6 +857,21 @@ impl FluidState {
         if (self.max_face_speed * 3f32.sqrt() + acceleration * dt) * dt / self.grid.cell_m > 0.9 {
             return Err("Fluid timestep exceeds the velocity CFL limit; reduce Δt".into());
         }
+        if self.config.surface.enabled {
+            let capillary = if self.config.surface.tension_n_m > 0. {
+                ((self.params.physical[3] + self.config.surface.air_density_kg_m3)
+                    * self.grid.cell_m.powi(3)
+                    / (2. * std::f32::consts::PI * self.config.surface.tension_n_m))
+                    .sqrt()
+            } else {
+                f32::INFINITY
+            };
+            if dt > capillary
+                || 3. * (self.max_face_speed + acceleration * dt) * dt / self.grid.cell_m > 0.45
+            {
+                return Err("Moving-interface capillary or conservative CFL limit exceeded; reduce common timestep".into());
+            }
+        }
         let start = std::time::Instant::now();
         let old_diagnostics = self.diagnostics.clone();
         let mut encoder = self
@@ -849,7 +944,7 @@ impl FluidState {
             pass.dispatch_workgroups(1, 1, 1);
         }
         self.context.queue.submit(Some(encoder.finish()));
-        let data = read_bytes(&self.context, &self.scalars, 0, 16)?;
+        let data = read_bytes(&self.context, &self.scalars, 0, 32)?;
         let v = bytemuck::cast_slice::<u8, f32>(&data);
         if v.iter().any(|v| !v.is_finite()) {
             return Err("Nonfinite fluid work integral".into());
@@ -859,6 +954,7 @@ impl FluidState {
             delta_kinetic_j: v[1] as f64,
             em_work_j: v[2] as f64,
             acceleration_work_j: v[3] as f64,
+            surface_work_j: v[4] as f64,
         })
     }
     pub fn snapshot(&self) -> FluidFrame {

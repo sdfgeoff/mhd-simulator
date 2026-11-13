@@ -363,7 +363,7 @@ impl App {
         let fields_ready = self.fields_ready();
         let span = self.section_span();
         if let Some(renderer) = &mut self.section_renderer {
-            self.texture = Some(renderer.draw_section(
+            self.texture = Some(renderer.draw_section_with_surface(
                 &self.model,
                 &self.caps,
                 self.plane,
@@ -389,6 +389,15 @@ impl App {
                     }
                 } else {
                     None
+                },
+                if self.setup {
+                    None
+                } else {
+                    self.run_ui
+                        .timeline
+                        .current()
+                        .and_then(|f| f.surface.as_ref().zip(f.fluid.as_ref()))
+                        .map(|(s, f)| (f.result_buffer(), s.material_id))
                 },
             ));
         }
@@ -498,6 +507,15 @@ impl App {
         let section_span = self.section_span();
         let preview_bounds = self.preview_bounds();
         let fields_ready = self.fields_ready();
+        let moving_surface = if self.setup {
+            None
+        } else {
+            self.run_ui
+                .timeline
+                .current()
+                .and_then(|f| f.surface.as_ref().zip(f.fluid.as_ref()))
+                .map(|(s, f)| (f.result_buffer(), s.material_id))
+        };
         if let Some(viewport) = &mut self.viewport {
             let texture = viewport.draw(
                 camera,
@@ -510,8 +528,11 @@ impl App {
                 (self.show_domain
                     || self.voxel_overlay
                     || fields_ready
+                    || moving_surface.is_some()
                     || !self.em_ui.source_lines.is_empty())
                 .then_some(crate::render::DomainView {
+                    cad: !self.voxel_overlay && !fields_ready,
+                    surface: moving_surface,
                     field: if fields_ready {
                         match self.analysis {
                             Analysis::Electromagnetics => self
@@ -528,7 +549,7 @@ impl App {
                         None
                     },
                     source_lines: &self.em_ui.source_lines,
-                    volume: if self.voxel_overlay || fields_ready {
+                    volume: if self.voxel_overlay || fields_ready || moving_surface.is_some() {
                         self.volume.as_ref()
                     } else {
                         None
@@ -703,7 +724,7 @@ impl App {
                 .show(ui, |ui| self.domain_controls(ui));
         } else {
             ui.heading("Simulation");
-            ui.small("One clock · EM ↔ fluid coupling · fixed liquid geometry");
+            ui.small("One clock · EM ↔ fluid ↔ thermal coupling");
             let mut us = self.run_ui.config.dt_s * 1e6;
             if ui
                 .add(
@@ -774,6 +795,7 @@ impl App {
             0 => "Hatched CAD",
             1 => "CAD outlines",
             2 => "Voxel domain",
+            15 => crate::fluid_ui::label(13),
             id if id < 9 => crate::em_ui::label(id - 2),
             id if id < 12 => crate::fluid_ui::label(id - 2),
             id => crate::thermal_ui::label(id - 2),
@@ -781,12 +803,18 @@ impl App {
         egui::ComboBox::from_label("Section view")
             .selected_text(view_label(selected))
             .show_ui(ui, |ui| {
-                for id in 0..=if self.setup { 2 } else { 14 } {
+                for id in 0..=if self.setup { 2 } else { 15 } {
                     ui.add_enabled_ui(
                         id < 3
                             || (id < 9 && self.run_ui.em_frame().is_some())
                             || (id >= 9 && id < 12 && self.run_ui.fluid_frame().is_some())
-                            || (id >= 12 && self.run_ui.thermal_frame().is_some()),
+                            || (id >= 12 && id < 15 && self.run_ui.thermal_frame().is_some())
+                            || (id == 15
+                                && self
+                                    .run_ui
+                                    .timeline
+                                    .current()
+                                    .is_some_and(|f| f.surface.is_some())),
                         |ui| {
                             ui.selectable_value(&mut selected, id, view_label(id));
                         },
@@ -795,9 +823,12 @@ impl App {
             });
         if selected != previous {
             self.em_ui.show = selected >= 3 && selected < 9;
-            self.fluid_ui.show = selected >= 9 && selected < 12;
-            self.thermal_ui.show = selected >= 12;
-            if selected >= 12 {
+            self.fluid_ui.show = (selected >= 9 && selected < 12) || selected == 15;
+            self.thermal_ui.show = selected >= 12 && selected < 15;
+            if selected == 15 {
+                self.analysis = Analysis::Fluid;
+                self.fluid_ui.kind = 13;
+            } else if selected >= 12 {
                 self.analysis = Analysis::Thermal;
                 self.thermal_ui.kind = selected - 2;
             } else if selected >= 9 {
@@ -908,10 +939,14 @@ impl App {
                 }
 
                 ui.add_space(20.);
-                ui.colored_label(Color32::from_rgb(75, 196, 208), "COUPLED EM / FLUIDS");
+                ui.colored_label(Color32::from_rgb(75, 196, 208), "COUPLED SIMULATION");
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     if ctx.screen_rect().width() > 850. {
-                        ui.label("Moving surface pending");
+                        ui.label(if self.fluid_ui.config.surface.enabled {
+                            "Moving liquid / air"
+                        } else {
+                            "Fixed material boundary"
+                        });
                     }
                 });
             });
@@ -1692,8 +1727,8 @@ mod ui_render_tests {
         app.material_selection = 3;
         let ctx = egui::Context::default();
         let mut tick = 0;
-        for mode in 0..4 {
-            app.setup = mode != 1 && mode != 3;
+        for mode in 0..7 {
+            app.setup = mode != 1 && mode < 3;
             if mode == 1 {
                 app.run_ui.steps = 3;
                 app.simulate();
@@ -1730,6 +1765,36 @@ mod ui_render_tests {
                 assert!((frame.time_s - 0.003).abs() < 1e-8);
                 app.analysis = Analysis::Thermal;
                 app.thermal_ui.kind = 10;
+                app.dirty = true;
+            }
+            if mode == 4 {
+                app = App::new(
+                    "assets/hotend-free-surface.mhd.json".into(),
+                    Some(state.clone()),
+                );
+                app.setup = false;
+                app.run_ui.steps = 2;
+                app.simulate();
+                let start = std::time::Instant::now();
+                while app.run_ui.busy() {
+                    app.run_ui.poll(&ctx, app.volume.as_ref());
+                    assert!(start.elapsed().as_secs() < 90);
+                    std::thread::sleep(std::time::Duration::from_millis(1));
+                }
+                assert!(app.run_ui.error.is_empty(), "{}", app.run_ui.error);
+                assert!(app.run_ui.timeline.current().unwrap().surface.is_some());
+                app.analysis = Analysis::Fluid;
+                app.fluid_ui.kind = 13;
+                app.fluid_ui.show = true;
+                app.dirty = true;
+            }
+            if mode >= 5 {
+                app.setup = false;
+                app.fluid_ui.show = false;
+                app.thermal_ui.show = false;
+                app.em_ui.show = false;
+                app.voxel_overlay = false;
+                app.hatched = mode == 5;
                 app.dirty = true;
             }
             for _ in 0..6 {

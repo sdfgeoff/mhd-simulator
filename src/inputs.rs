@@ -3,7 +3,7 @@
 //! Every table row is 32 bytes: `vec4<f32>` values then `vec4<u32>` flags.
 //! Material rows are indexed by material ID: values = conductivity S/m,
 //! relative permeability, density kg/m³, padding; flags.xyz indicate presence.
-//! Component rows are indexed by body: values = initial K, prescribed A, padding;
+//! Component rows are indexed by body: values = initial K, fixed K, volumetric heating W/m³, padding;
 //! flags = initial temperature present, fixed temperature present, included, material ID.
 //! Zero placeholders require checking presence flags; solver_tables validates the
 //! properties explicitly requested by a kernel before exposing its input tables.

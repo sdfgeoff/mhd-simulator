@@ -53,3 +53,7 @@ All checks are headless. They supplement the independent EM/fluid tests and the 
 ## Thermal deposition
 
 With thermal evolution enabled the ledger also measures stored enthalpy, deposited Joule heat and independently measured thermal heat-balance error. Deposited heat is subtracted from the separately tracked Joule loss to avoid double counting. Boundary heat and body heaters join external work. Fluid numerical/viscous loss is not automatically deposited as heat. See [the thermal model](THERMAL.md).
+
+## Moving interfaces
+
+The ledger also records capillary work on MAC faces and estimated surface energy `σ ∫|∇α| dV`. Their sum of work plus energy change is an explicit **interface energy mismatch**, not hidden external work. Fluid work balance includes capillary transfer and kinetic changes from transported density. Area estimation, diffusive occupancy transport, phase changes and partitioned coupling introduce errors; this is not an energy-conserving geometric interface scheme. See [the interface model and benchmarks](SURFACES.md).

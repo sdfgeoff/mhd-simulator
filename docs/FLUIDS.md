@@ -1,8 +1,8 @@
-# Fixed-geometry fluid velocity and pressure
+# Fluid velocity and pressure
 
-This stage computes 3D incompressible velocity and gauge pressure inside a **fixed voxel liquid region**. It supports no-slip walls, viscosity, velocity advection, gravity/acceleration, periodic box boundaries, and evolving electromagnetic force through the [unified run](RUNS.md). It does not yet move the liquid–air interface, drain the pool, create droplets, model feedstock motion or move feedstock. Temperature and phase-driven mobility are available through the [thermal model](THERMAL.md). In particular, the pool's initial air-facing surface is treated as a wall in this validation stage; it is not the final open-pool boundary condition.
+The GPU MAC solver supports fixed-region validation, temperature-driven mobility, and an optional **moving liquid/air interface** with low-density air and surface tension. The moving model, workflow and limits are described in [SURFACES.md](SURFACES.md); the equations below describe the fixed-region baseline. [Thermal evolution](THERMAL.md) adds latent heat and melting/freezing.
 
-## Use the workbench
+## Fixed-region workflow
 
 1. In **Setup**, import geometry, select solid objects and assign a material with positive density and liquid viscosity. The solder presets start with an illustrative **0.002 Pa·s**, not calibrated operating-temperature data. The shared material editor affects all assigned objects.
 2. In **Simulation**, enable **Fluid motion**, select the material defining the fixed liquid region, choose the common timestep and click **Simulate**. Electrical sources are optional. When present, EM and fluid steps exchange updated Lorentz force and motional `u × B` on the same clock; see [coupling equations and workflow](RUNS.md).
@@ -55,4 +55,4 @@ All checks are headless. CLI output includes speed, gauge pressure, divergence, 
 4. Frozen uniform EM force gives the expected acceleration, and later changes to its source buffer leave the frozen force unchanged.
 5. Pressure failure rolls back accepted buffers/time; disconnected fluid components receive pressure gauges. The application test covers EM → fluid forcing, retained-frame scrubbing, material invalidation and native viewport sampling.
 
-The bundled hotend is a coarse example, not a validated jetting design. Its material values, geometry resolution, timestep and force history all need convergence/operating-condition checks before quantitative interpretation. The next physics stage is a conservative moving liquid–air interface and balanced surface tension, validated on static/oscillating drops and breakup, with further validation of time-dependent EM coupling as geometry begins to move.
+The bundled hotend is a coarse example, not a validated jetting design. Its material values, geometry resolution, timestep and force history all need convergence/operating-condition checks before quantitative interpretation. The optional [moving-interface stage](SURFACES.md) now supplies conservative material transport and balanced capillarity. Oscillating drops and nozzle breakup remain future validation.

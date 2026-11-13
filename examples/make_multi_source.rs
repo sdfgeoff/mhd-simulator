@@ -77,5 +77,31 @@ fn main() -> Result<(), String> {
         &Default::default(),
         &Default::default(),
         &run,
+    )?;
+    for b in &mut heated.bodies {
+        b.simulation.temperature_c = Some(250.);
+    }
+    heated.bodies[0].simulation.fixed_temperature_c = Some(250.);
+    config.max_iterations = 4000;
+    let fluid = mhd_workbench::fluid::FluidConfig {
+        surface: mhd_workbench::surface::SurfaceConfig {
+            enabled: true,
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    project::save(
+        std::path::Path::new("assets/hotend-free-surface.mhd.json"),
+        &heated,
+        &settings,
+        &default_materials(),
+        SectionPlane::new(Vec3::new(0., 0., 4.)),
+        &config,
+        &fluid,
+        &mhd_workbench::run::RunConfig {
+            thermal_enabled: true,
+            dt_s: 2.5e-6,
+            ..Default::default()
+        },
     )
 }
