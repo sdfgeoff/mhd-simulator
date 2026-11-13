@@ -1,0 +1,366 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "MHD Workbench acceptance fixtures"
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "Chamber + nozzle",
+      "mesh": 0,
+      "translation": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "Molten metal",
+      "mesh": 1,
+      "translation": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "Coil envelope",
+      "mesh": 2,
+      "translation": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "Magnet +X",
+      "mesh": 3,
+      "translation": [
+        0.006,
+        0.0,
+        0.005
+      ]
+    },
+    {
+      "name": "Magnet -X",
+      "mesh": 4,
+      "translation": [
+        -0.006,
+        0.0,
+        0.005
+      ]
+    },
+    {
+      "name": "Winding A",
+      "mesh": 5,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "translation": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "Winding B",
+      "mesh": 5,
+      "scale": [
+        0.8,
+        0.8,
+        0.5
+      ],
+      "translation": [
+        0.0,
+        0.0,
+        0.002
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Chamber + nozzle",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0
+          },
+          "indices": 1
+        }
+      ]
+    },
+    {
+      "name": "Molten metal",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 2
+          },
+          "indices": 3
+        }
+      ]
+    },
+    {
+      "name": "Coil envelope",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 4
+          },
+          "indices": 5
+        }
+      ]
+    },
+    {
+      "name": "Magnet +X",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 6
+          },
+          "indices": 7
+        }
+      ]
+    },
+    {
+      "name": "Magnet -X",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 8
+          },
+          "indices": 9
+        }
+      ]
+    },
+    {
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 10
+          },
+          "mode": 3
+        }
+      ]
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "hotend.bin",
+      "byteLength": 31968
+    },
+    {
+      "byteLength": 2352,
+      "uri": "data:application/octet-stream;base64,CtejOwAAAAAAAAAANnCiO1MVKzo+wy443kGeO6GeqTo+w644UV6XO6DL+jpvEgM5veONOwrXIzs+wy45p/uBO5x6RzsOdFo5arRnO2q0ZztvEoM5nHpHO6f7gTvW6pg5CtcjO73jjTs+w645oMv6OlFelzumm8Q5oZ6pOt5BnjsOdNo5UxUrOjZwojt1TPA52bm0IArXoztvEgM6UxUrujZwojui/g06oZ6put5BnjvW6hg6oMv6ulFelzsK1yM6Ctcju73jjTs+wy46nHpHu6f7gTtyrzk6arRnu2q0Zzumm0Q6p/uBu5x6Rzvah086veONuwrXIzsOdFo6UV6Xu6DL+jpCYGU63kGeu6GeqTp1THA6NnCiu1MVKzqpOHs6Cteju9m5NCFvEoM6NnCiu1MVK7qJiIg63kGeu6Geqbqi/o06UV6Xu6DL+rq8dJM6veONuwrXI7vW6pg6p/uBu5x6R7vwYJ46arRnu2q0Z7sK16M6nHpHu6f7gbskTak6Ctcju73jjbs+w646oMv6ulFel7tYObQ6oZ6put5Bnrtyr7k6UxUrujZworuMJb86Y4uHoQrXo7umm8Q6UxUrOjZworvAEco6oZ6pOt5Bnrvah886oMv6OlFel7v0/dQ6CtcjO73jjbsOdNo6nHpHO6f7gbso6t86arRnO2q0Z7tCYOU6p/uBO5x6R7tb1uo6veONOwrXI7t1TPA6UV6XO6DL+rqPwvU63kGeO6GeqbqpOPs6NnCiO1MVK7piVwA7CtejO9m5tKFvEgM7NnCiO1MVKzp8zQU73kGeO6GeqTqJiAg7UV6XO6DL+jqWQws7veONOwrXIzui/g07p/uBO5x6RzuvuRA7arRnO2q0Zzu8dBM7nHpHO6f7gTvJLxY7CtcjO73jjTvW6hg7oMv6OlFelzvjpRs7oZ6pOt5BnjvwYB47UxUrOjZwojv9GyE7T+jhIQrXozsK1yM7UxUrujZwojsXkiY7oZ6put5BnjskTSk7oMv6ulFelzsxCCw7Ctcju73jjTs+wy47nHpHu6f7gTtLfjE7arRnu2q0ZztYOTQ7p/uBu5x6Rztl9DY7veONuwrXIztyrzk7UV6Xu6DL+jp/ajw73kGeu6GeqTqMJT87NnCiu1MVKzqZ4EE7Cteju2OLByKmm0Q7NnCiu1MVK7qzVkc73kGeu6GeqbrAEUo7UV6Xu6DL+rrNzEw7veONuwrXI7vah087p/uBu5x6R7vnQlI7arRnu2q0Z7v0/VQ7nHpHu6f7gbsBuVc7Ctcju73jjbsOdFo7oMv6ulFel7sbL107oZ6put5Bnrso6l87UxUrujZwors1pWI7niIeogrXo7tCYGU7UxUrOjZwortPG2g7oZ6pOt5Bnrtb1mo7oMv6OlFel7tokW07CtcjO73jjbt1THA7nHpHO6f7gbuCB3M7arRnO2q0Z7uPwnU7p/uBO5x6R7ucfXg7veONOwrXI7upOHs7UV6XO6DL+rq283073kGeO6GeqbpiV4A7NnCiO1MVK7rotIE7CtejO9m5NKJvEoM7NnCiO1MVKzr1b4Q73kGeO6GeqTp8zYU7UV6XO6DL+joCK4c7veONOwrXIzuJiIg7p/uBO5x6RzsP5ok7arRnO2q0ZzuWQ4s7nHpHO6f7gTscoYw7CtcjO73jjTui/o07oMv6OlFelzspXI87oZ6pOt5BnjuvuZA7UxUrOjZwojs2F5I7FFFLIgrXozu8dJM7UxUrujZwojtD0pQ7oZ6put5BnjvJL5Y7oMv6ulFelztQjZc7Ctcju73jjTvW6pg7nHpHu6f7gTtdSJo7arRnu2q0ZzvjpZs7p/uBu5x6RztqA507veONuwrXIzvwYJ47UV6Xu6DL+jp3vp873kGeu6GeqTr9G6E7NnCiu1MVKzqEeaI7Cteju0/oYSIK16M7NnCiu1MVK7qRNKU73kGeu6GeqboXkqY7UV6Xu6DL+rqe76c7veONuwrXI7skTak7p/uBu5x6R7urqqo7arRnu2q0Z7sxCKw7nHpHu6f7gbu4Za07Ctcju73jjbs+w647oMv6ulFel7vFILA7oZ6put5BnrtLfrE7UxUrujZworvS27I77fZhowrXo7tYObQ7UxUrOjZworvflrU7oZ6pOt5Bnrtl9LY7oMv6OlFel7vsUbg7CtcjO73jjbtyr7k7nHpHO6f7gbv4DLs7arRnO2q0Z7t/arw7p/uBO5x6R7sFyL07veONOwrXI7uMJb87UV6XO6DL+roSg8A73kGeO6GeqbqZ4ME7NnCiO1MVK7ofPsM7CtejO2OLh6Kmm8Q7NnCiO1MVKzos+cU73kGeO6GeqTqzVsc7UV6XO6DL+jo5tMg7veONOwrXIzvAEco7p/uBO5x6RztGb8s7arRnO2q0ZzvNzMw7nHpHO6f7gTtTKs47CtcjO73jjTvah887oMv6OlFelztg5dA7oZ6pOt5BnjvnQtI7UxUrOjZwojttoNM7FNe0ogrXozv0/dQ7UxUrujZwojt6W9Y7oZ6put5BnjsBudc7oMv6ulFelzuHFtk7Ctcju73jjTsOdNo7nHpHu6f7gTuU0ds7arRnu2q0ZzsbL907p/uBu5x6RzuhjN47veONuwrXIzso6t87UV6Xu6DL+jquR+E73kGeu6GeqTo1peI7NnCiu1MVKzq7AuQ7Cteju54iniJCYOU7NnCiu1MVK7rIveY73kGeu6GeqbpPG+g7UV6Xu6DL+rrVeOk7veONuwrXI7tb1uo7p/uBu5x6R7viM+w7arRnu2q0Z7toke07nHpHu6f7gbvv7u47Ctcju73jjbt1TPA7oMv6ulFel7v8qfE7oZ6put5BnruCB/M7UxUrujZworsJZfQ7KI54owrXo7uPwvU7UxUrOjZworsWIPc7oZ6pOt5Bnrucffg7oMv6OlFel7sj2/k7CtcjO73jjbupOPs7nHpHO6f7gbswlvw7arRnO2q0Z7u28/07p/uBO5x6R7s9Uf87veONOwrXI7tiVwA8UV6XO6DL+rolBgE83kGeO6GeqbrotAE8NnCiO1MVK7qrYwI8CtejO9m5tKJvEgM8QmBlPNm5tKJvEgM8QmBlPAAAAAAAAAAACtejOwAAAAAAAAAA"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 4608,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 4608,
+      "byteLength": 9216,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 13824,
+      "byteLength": 3840,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 17664,
+      "byteLength": 4608,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 22272,
+      "byteLength": 3072,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 25344,
+      "byteLength": 6144,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 31488,
+      "byteLength": 96,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 31584,
+      "byteLength": 144,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 31728,
+      "byteLength": 96,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 31824,
+      "byteLength": 144,
+      "target": 34963
+    },
+    {
+      "buffer": 1,
+      "byteLength": 2352
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 384,
+      "type": "VEC3",
+      "min": [
+        -0.003,
+        -0.003,
+        -0.002
+      ],
+      "max": [
+        0.003,
+        0.003,
+        0.01
+      ]
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5125,
+      "count": 2304,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 320,
+      "type": "VEC3",
+      "min": [
+        -0.0015,
+        -0.0015,
+        -0.002
+      ],
+      "max": [
+        0.0015,
+        0.0015,
+        0.009000000000000001
+      ]
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5125,
+      "count": 1152,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 256,
+      "type": "VEC3",
+      "min": [
+        -0.004200000000000001,
+        -0.004200000000000001,
+        0.003
+      ],
+      "max": [
+        0.004200000000000001,
+        0.004200000000000001,
+        0.007
+      ]
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5125,
+      "count": 1536,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5126,
+      "count": 8,
+      "type": "VEC3",
+      "min": [
+        -0.001,
+        -0.0015,
+        -0.003
+      ],
+      "max": [
+        0.001,
+        0.0015,
+        0.003
+      ]
+    },
+    {
+      "bufferView": 7,
+      "componentType": 5125,
+      "count": 36,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 8,
+      "componentType": 5126,
+      "count": 8,
+      "type": "VEC3",
+      "min": [
+        -0.001,
+        -0.0015,
+        -0.003
+      ],
+      "max": [
+        0.001,
+        0.0015,
+        0.003
+      ]
+    },
+    {
+      "bufferView": 9,
+      "componentType": 5125,
+      "count": 36,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 10,
+      "componentType": 5126,
+      "count": 196,
+      "type": "VEC3",
+      "min": [
+        -0.005,
+        -0.005,
+        0.0
+      ],
+      "max": [
+        0.013999999999999999,
+        0.005,
+        0.008
+      ]
+    }
+  ]
+}

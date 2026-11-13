@@ -61,6 +61,7 @@ pub struct EmState {
     pub input_versions: InputVersions,
     config: EmConfig,
     source_elements: Vec<sources::Element>,
+    cad_curves: Vec<crate::model::CurvePath>,
     pub mode: Mode,
     pub time_s: f64,
     pub diagnostics: Diagnostics,
@@ -128,8 +129,8 @@ impl EmState {
                 return Err("EM background is vacuum: material 0 must have zero/unset conductivity and unit/unset relative permeability".into());
             }
             for wire in &config.wires {
-                if glam::Vec3::from(wire.points_mm[0])
-                    .distance(glam::Vec3::from(*wire.points_mm.last().unwrap()))
+                let points = wire.points(model)?;
+                if glam::Vec3::from(points[0]).distance(glam::Vec3::from(*points.last().unwrap()))
                     > 1e-4
                 {
                     return Err(format!(
@@ -489,6 +490,7 @@ impl EmState {
             input_versions: volume.inputs.versions(),
             config,
             source_elements,
+            cad_curves: model.curves.clone(),
             mode,
             time_s: 0.,
             diagnostics: Diagnostics::default(),
@@ -561,9 +563,12 @@ impl EmState {
         self.context.queue.submit(Some(encoder.finish()));
     }
     fn update_sources(&mut self, model: &Model, t: f64) -> Result<(), String> {
+        if self.cad_curves != model.curves {
+            return Err("CAD centrelines changed; initialize electromagnetics again".into());
+        }
         let mut offset = 0;
         for wire in &self.config.wires {
-            let count = wire.points_mm.len() - 1;
+            let count = wire.points(model)?.len() - 1;
             let value = wire.current.value(t)
                 * wire
                     .body_current

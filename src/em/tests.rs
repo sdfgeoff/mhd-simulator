@@ -59,6 +59,8 @@ fn loop_field_matches_analytic_and_pulse_induces_conserved_currents() {
         })
         .collect();
     let wire = Wire {
+        cad_curve: None,
+        reverse: false,
         body_current: None,
         name: "Loop".into(),
         points_mm: points,
@@ -415,4 +417,101 @@ fn drive_waveforms_interpolate_and_validate() {
         .validate()
         .is_err()
     );
+}
+
+#[test]
+fn multiple_cad_currents_and_magnets_superpose_with_independent_drives() {
+    let _lock = crate::gpu_test_lock();
+    let loaded = crate::project::load(std::path::Path::new("assets/hotend-cad.mhd.json")).unwrap();
+    let gpu = GpuDomain::new().unwrap();
+    let mut settings = loaded.settings.clone();
+    settings.cell_mm = 1.2;
+    let volume = gpu
+        .build(&loaded.model, &settings, &loaded.materials)
+        .unwrap();
+    let model = loaded.model;
+    let mut config = loaded.electromagnetics;
+    config.wires[1].reverse = true;
+    let points = config.wires[1].points(&model).unwrap();
+    assert_eq!(
+        points[1],
+        model.curves[1].points_mm[model.curves[1].points_mm.len() - 2]
+    );
+
+    assert_eq!(model.curves.len(), 2);
+    assert_eq!(config.wires.len(), 2);
+    assert_eq!(config.magnets.len(), 2);
+    assert!(
+        config
+            .wires
+            .iter()
+            .all(|w| w.points_mm.is_empty() && w.cad_curve.is_some())
+    );
+    let mut combined = EmState::new(
+        gpu.context.clone(),
+        &volume,
+        &model,
+        config.clone(),
+        Mode::Applied,
+    )
+    .unwrap();
+    for time in [25e-6, 75e-6] {
+        combined.evaluate_applied(&model, time, &volume).unwrap();
+        let actual = glam::Vec3::from_slice(&combined.probe([1., 0., 4.]).unwrap().unwrap().b);
+        let mut sum = glam::Vec3::ZERO;
+        for i in 0..4 {
+            let single = EmConfig {
+                wires: if i < 2 {
+                    vec![config.wires[i].clone()]
+                } else {
+                    vec![]
+                },
+                magnets: if i >= 2 {
+                    vec![config.magnets[i - 2].clone()]
+                } else {
+                    vec![]
+                },
+                ..Default::default()
+            };
+            let mut state =
+                EmState::new(gpu.context.clone(), &volume, &model, single, Mode::Applied).unwrap();
+            state.evaluate_applied(&model, time, &volume).unwrap();
+            sum += glam::Vec3::from_slice(&state.probe([1., 0., 4.]).unwrap().unwrap().b);
+        }
+        assert!(
+            (actual - sum).length() < sum.length() * 2e-4 + 1e-7,
+            "{actual:?} vs {sum:?}"
+        );
+        let a = config.wires[0].points(&model).unwrap().len() - 1;
+        let b = config.wires[1].points(&model).unwrap().len() - 1;
+        assert_eq!(
+            combined.source_elements[0].c[2],
+            config.wires[0].current.value(time)
+        );
+        assert_eq!(
+            combined.source_elements[a + b - 1].c[2],
+            config.wires[1].current.value(time)
+        );
+    }
+    let mut changed = model.clone();
+    changed.curves[0].points_mm[0][0] += 0.1;
+    assert!(
+        combined
+            .evaluate_applied(&changed, 100e-6, &volume)
+            .unwrap_err()
+            .contains("centrelines changed")
+    );
+    let mut invalid = config.clone();
+    invalid.wires[0].cad_curve = Some(99);
+    assert!(invalid.validate(&model).is_err());
+    let mut induction = EmState::new(
+        gpu.context.clone(),
+        &volume,
+        &model,
+        config,
+        Mode::Induction,
+    )
+    .unwrap();
+    induction.step(&model, &volume).unwrap();
+    assert!(induction.diagnostics.maxima[0] > 0.);
 }

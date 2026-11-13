@@ -32,35 +32,117 @@ pub struct Material {
     pub reference: Option<String>,
 }
 pub fn default_materials() -> Vec<Material> {
-    let mut materials: Vec<_> = [
-        "Air / void",
-        "Unassigned",
-        "Copper",
-        "Sn60Pb40",
-        "Sn99.3Cu0.7",
-        "Permanent magnet",
+    let preset = |id, name: &str, sigma, mu, density, notes: &str, reference: &str| Material {
+        id,
+        name: name.into(),
+        conductivity_s_m: Some(sigma),
+        relative_permeability: Some(mu),
+        density_kg_m3: Some(density),
+        notes: notes.into(),
+        reference: (!reference.is_empty()).then(|| reference.into()),
+    };
+    vec![
+        preset(
+            0,
+            "Air / void",
+            0.,
+            1.,
+            1.2,
+            "EM vacuum/insulator approximation; approximate air density at room temperature. No temperature dependence.",
+            "",
+        ),
+        Material {
+            id: 1,
+            name: "Unassigned".into(),
+            conductivity_s_m: None,
+            relative_permeability: None,
+            density_kg_m3: None,
+            notes: "Select a physical material before simulating this component.".into(),
+            reference: None,
+        },
+        preset(
+            2,
+            "Copper",
+            58e6,
+            1.,
+            8890.,
+            "100% IACS reference conductivity and density at 20 °C; unit permeability approximation. Temperature dependence is not applied.",
+            "https://help.copper.fyi/hc/en-us/articles/4410229175442-How-does-copper-set-the-standard-for-electrical-conductivity",
+        ),
+        preset(
+            3,
+            "Sn60Pb40",
+            1. / 14.99e-8,
+            1.,
+            8520.,
+            "Bulk solder datasheet defaults: resistivity 14.99 µΩ·cm and density 8.52 Mg/m³. Unit permeability approximation. Not calibrated molten-metal properties; temperature dependence is not applied.",
+            "https://www.ametekinterconnect.com/-/media/ametek-ecp/v2/files/cw_datasheets_sds_cfsi/datasheets/sn60pb40%20data%20sheet.pdf?la=en",
+        ),
+        preset(
+            4,
+            "Sn99.3Cu0.7",
+            1. / 11.99e-8,
+            1.,
+            7420.,
+            "ALPHA VACULOY datasheet defaults: resistivity 11.99 µΩ·cm and density 7.42 g/cm³. Unit permeability approximation. Not calibrated molten-metal properties; temperature dependence is not applied.",
+            "https://www.macdermidalpha.com/sites/default/files/2024-04/ALPHA-VACULOY-Sn99.3Cu0.7-Solid-Solder-EN-12Apr24-TB.pdf",
+        ),
+        preset(
+            5,
+            "Permanent magnet",
+            1. / 1.6e-6,
+            1.,
+            7500.,
+            "Representative NdFeB: resistivity 160 µΩ·cm, density 7.5 g/cm³. The solver uses μr=1 as an explicit approximation (typical recoil μr≈1.05). Set source magnetization separately per CAD body; no temperature dependence or demagnetization model.",
+            "https://www.kjmagnetics.com/neodymium-magnet-specifications.asp",
+        ),
+        stainless316(6),
+        alumina(7),
     ]
-    .iter()
-    .enumerate()
-    .map(|(i, n)| Material {
-        id: i as u32,
-        name: (*n).into(),
-        conductivity_s_m: None,
-        relative_permeability: None,
-        density_kg_m3: None,
-        notes: String::new(),
-        reference: None,
-    })
-    .collect();
-    materials.push(stainless316(6));
-    materials.push(alumina(7));
-    materials
 }
 fn stainless316(id: u32) -> Material {
-    Material{id,name:"316 stainless steel".into(),conductivity_s_m:Some(1.0/0.75e-6),relative_permeability:None,density_kg_m3:Some(8000.),notes:"Preset defaults use density and conductivity reference values at 20 °C. Permeability is unset; processing and temperature matter.".into(),reference:Some("https://www.thyssenkrupp-materials.co.uk/stainless-steel-316-14401.html".into())}
+    Material {id,name:"316 stainless steel".into(),conductivity_s_m:Some(1./0.75e-6),relative_permeability:Some(1.),density_kg_m3:Some(8000.),
+        notes:"Density and conductivity references at 20 °C. Unit permeability is an annealed/nonmagnetic approximation; processing can change it. No temperature dependence is applied.".into(),
+        reference:Some("https://www.thyssenkrupp-materials.co.uk/stainless-steel-316-14401.html/index.html".into())}
 }
 fn alumina(id: u32) -> Material {
-    Material{id,name:"Alumina".into(),conductivity_s_m:None,relative_permeability:None,density_kg_m3:None,notes:"Alumina (grade/purity unspecified). Enter supplier-specific properties before using physical solvers.".into(),reference:None}
+    Material {id,name:"Alumina".into(),conductivity_s_m:Some(0.),relative_permeability:Some(1.),density_kg_m3:Some(3900.),
+        notes:"Representative CoorsTek AD-995 (99.5%) density. Ideal electrical insulator and unit-permeability approximations; room-temperature resistivity exceeds 10¹⁴ Ω·cm. Grade and temperature matter; no temperature dependence is applied.".into(),
+        reference:Some("https://www2.coorstek.com/media/4235/advanced-alumina.pdf".into())}
+}
+/// Fill only missing scalar values on matching built-in materials; preserve overrides and custom materials.
+pub fn fill_missing_defaults(materials: &mut [Material]) -> bool {
+    let presets = default_materials();
+    let mut changed = false;
+    for material in materials {
+        if let Some(preset) = presets
+            .iter()
+            .find(|p| p.name.eq_ignore_ascii_case(&material.name))
+        {
+            let mut filled = false;
+            for (target, value) in [
+                (&mut material.conductivity_s_m, preset.conductivity_s_m),
+                (
+                    &mut material.relative_permeability,
+                    preset.relative_permeability,
+                ),
+                (&mut material.density_kg_m3, preset.density_kg_m3),
+            ] {
+                if target.is_none() && value.is_some() {
+                    *target = value;
+                    filled = true;
+                }
+            }
+            if filled && material.reference.is_none() {
+                material.reference = preset.reference.clone();
+            }
+            if filled && !material.notes.contains(&preset.notes) {
+                material.notes = format!("{} {}", material.notes, preset.notes).trim().into();
+            }
+            changed |= filled;
+        }
+    }
+    changed
 }
 pub(crate) fn ensure_presets(materials: &mut Vec<Material>) {
     for mut preset in [stainless316(0), alumina(0)] {
@@ -395,6 +477,33 @@ mod tests {
         assert!((snapshot.components[0].initial_temperature_k.unwrap() - 523.15).abs() < 1e-4);
     }
     #[test]
+    fn named_presets_are_complete_and_missing_fill_preserves_overrides() {
+        let mut materials = default_materials();
+        for material in materials.iter().filter(|m| m.id != 1) {
+            assert!(
+                material.conductivity_s_m.is_some()
+                    && material.relative_permeability.is_some()
+                    && material.density_kg_m3.is_some(),
+                "{}",
+                material.name
+            );
+        }
+        materials[2].conductivity_s_m = Some(123.);
+        materials[2].density_kg_m3 = None;
+        materials[3].relative_permeability = None;
+        let mut custom = materials[2].clone();
+        custom.name = "Custom".into();
+        custom.id = 55;
+        materials.push(custom.clone());
+        assert!(fill_missing_defaults(&mut materials));
+        assert_eq!(materials[2].conductivity_s_m, Some(123.));
+        assert_eq!(materials[2].density_kg_m3, Some(8890.));
+        assert_eq!(materials[3].relative_permeability, Some(1.));
+        assert_eq!(materials.last(), Some(&custom));
+        assert!(!fill_missing_defaults(&mut materials));
+        assert!(materials[1].conductivity_s_m.is_none());
+    }
+    #[test]
     fn required_materials_reject_unknown_and_allow_explicit_zero() {
         let mut model = Model::load(std::path::Path::new("assets/annulus.gltf")).unwrap();
         let settings = DomainSettings::fit(&model);
@@ -411,6 +520,7 @@ mod tests {
         snapshot
             .require_properties(&[MaterialProperty::Conductivity], false)
             .unwrap();
+        snapshot.materials[0].conductivity_s_m = None;
         assert!(
             snapshot
                 .require_properties(&[MaterialProperty::Conductivity], true)

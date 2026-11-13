@@ -82,7 +82,7 @@ impl Body {
         self.boundary_edges == 0 && self.nonmanifold_edges == 0
     }
 }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct CurvePath {
     pub name: String,
     pub points_mm: Vec<[f32; 3]>,

@@ -21,6 +21,8 @@ struct SavedPlane {
 #[derive(Serialize, Deserialize)]
 struct File {
     #[serde(default)]
+    cad_curves: Option<Vec<crate::model::CurvePath>>,
+    #[serde(default)]
     electromagnetics: crate::em::EmConfig,
     version: u32,
     geometry: String,
@@ -81,6 +83,7 @@ pub fn save_with_em(
         .to_string_lossy()
         .into_owned();
     let f = File {
+        cad_curves: Some(model.curves.clone()),
         electromagnetics: electromagnetics.clone(),
         version: 1,
         geometry,
@@ -138,6 +141,12 @@ pub fn load(path: &Path) -> Result<Loaded, String> {
         path.parent().unwrap_or(Path::new(".")).join(geometry)
     };
     let mut model = Model::load(&geometry)?;
+    if f.cad_curves
+        .as_ref()
+        .is_some_and(|curves| curves != &model.curves)
+    {
+        return Err("Geometry changed: CAD centreline identities or coordinates differ from the saved project".into());
+    }
     if model.bodies.len() != f.bodies.len() {
         return Err("Geometry changed: component count differs from the saved project".into());
     }
@@ -171,6 +180,30 @@ pub fn load(path: &Path) -> Result<Loaded, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn multiple_cad_bindings_roundtrip_and_guard_curve_identity() {
+        let path = Path::new("assets/hotend-cad.mhd.json");
+        let loaded = load(path).unwrap();
+        std::fs::create_dir_all("artifacts").unwrap();
+        let saved = Path::new("artifacts/multiple-cad.mhd.json");
+        save_with_em(
+            saved,
+            &loaded.model,
+            &loaded.settings,
+            &loaded.materials,
+            loaded.plane,
+            &loaded.electromagnetics,
+        )
+        .unwrap();
+        let restored = load(saved).unwrap();
+        assert_eq!(restored.electromagnetics, loaded.electromagnetics);
+        assert_eq!(restored.model.curves, loaded.model.curves);
+        let mut data: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(saved).unwrap()).unwrap();
+        data["cad_curves"][0]["name"] = serde_json::json!("Wrong curve");
+        std::fs::write(saved, serde_json::to_vec(&data).unwrap()).unwrap();
+        assert!(load(saved).err().unwrap().contains("centreline identities"));
+    }
     #[test]
     fn project_roundtrip_and_invalid_values() {
         let mut m = Model::load(Path::new("assets/hotend.glb")).unwrap();
@@ -211,9 +244,10 @@ mod material_preset_tests {
             .unwrap();
         assert_eq!(steel.density_kg_m3, Some(8000.));
         assert!((steel.conductivity_s_m.unwrap() - 1_333_333.4).abs() < 1.);
-        assert!(steel.relative_permeability.is_none());
+        assert_eq!(steel.relative_permeability, Some(1.));
         let ceramic = materials.iter().find(|m| m.name == "Alumina").unwrap();
-        assert!(ceramic.conductivity_s_m.is_none() && ceramic.density_kg_m3.is_none());
+        assert_eq!(ceramic.conductivity_s_m, Some(0.));
+        assert_eq!(ceramic.density_kg_m3, Some(3900.));
         let mut legacy: Vec<_> = materials.into_iter().filter(|m| m.id < 6).collect();
         let mut custom = legacy[1].clone();
         custom.id = 6;

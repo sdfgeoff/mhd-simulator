@@ -172,7 +172,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap_or(if preview {
             "assets/hotend-em.mhd.json".into()
         } else {
-            "assets/hotend.gltf".into()
+            "assets/hotend-cad.mhd.json".into()
         });
     let preview_steps = if preview {
         Some(

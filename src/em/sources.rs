@@ -123,12 +123,41 @@ impl Waveform {
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Wire {
+    /// Index of a centreline in the main CAD assembly; None preserves legacy explicit paths.
+    #[serde(default)]
+    pub cad_curve: Option<usize>,
+    #[serde(default)]
+    pub reverse: bool,
     #[serde(default)]
     pub body_current: Option<usize>,
     pub name: String,
+    #[serde(default)]
     pub points_mm: Vec<[f32; 3]>,
     pub core_radius_mm: f32,
     pub current: Waveform,
+}
+impl Wire {
+    pub fn points<'a>(
+        &'a self,
+        model: &'a Model,
+    ) -> Result<std::borrow::Cow<'a, [[f32; 3]]>, String> {
+        let points = if let Some(i) = self.cad_curve {
+            &model
+                .curves
+                .get(i)
+                .ok_or_else(|| format!("Wire {} refers to missing CAD curve {i}", self.name))?
+                .points_mm
+        } else {
+            &self.points_mm
+        };
+        if self.reverse {
+            Ok(std::borrow::Cow::Owned(
+                points.iter().rev().copied().collect(),
+            ))
+        } else {
+            Ok(std::borrow::Cow::Borrowed(points))
+        }
+    }
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Magnet {
@@ -185,6 +214,7 @@ impl EmConfig {
             return Err("Invalid EM timestep, tolerance or iteration limit".into());
         }
         for wire in &self.wires {
+            let points = wire.points(model)?;
             if let Some(i) = wire.body_current {
                 if model
                     .bodies
@@ -199,12 +229,11 @@ impl EmConfig {
                 }
             }
             wire.current.validate()?;
-            if wire.points_mm.len() < 2
-                || wire.points_mm.iter().flatten().any(|v| !v.is_finite())
+            if points.len() < 2
+                || points.iter().flatten().any(|v| !v.is_finite())
                 || !wire.core_radius_mm.is_finite()
                 || wire.core_radius_mm <= 0.
-                || wire
-                    .points_mm
+                || points
                     .windows(2)
                     .any(|p| Vec3::from(p[0]).distance(Vec3::from(p[1])) < 1e-6)
             {
@@ -228,7 +257,9 @@ impl EmConfig {
         let count = self
             .wires
             .iter()
-            .map(|w| w.points_mm.len().saturating_sub(1) as u64)
+            .map(|w| w.points(model).map(|p| p.len().saturating_sub(1) as u64))
+            .collect::<Result<Vec<_>, _>>()?
+            .into_iter()
             .sum::<u64>()
             .saturating_add(
                 self.magnets
@@ -260,7 +291,7 @@ impl EmConfig {
                     .body_current
                     .and_then(|i| model.bodies.get(i).and_then(|b| b.simulation.current_a))
                     .unwrap_or(1.);
-            for pair in wire.points_mm.windows(2) {
+            for pair in wire.points(model)?.windows(2) {
                 out.push(Element {
                     a: (Vec3::from(pair[0]) * 1e-3).extend(0.).to_array(),
                     b: (Vec3::from(pair[1]) * 1e-3).extend(0.).to_array(),
@@ -320,10 +351,13 @@ pub fn cad_wires(model: &Model) -> Vec<Wire> {
     model
         .curves
         .iter()
-        .map(|curve| Wire {
+        .enumerate()
+        .map(|(i, curve)| Wire {
+            cad_curve: Some(i),
+            reverse: false,
             body_current: None,
             name: curve.name.clone(),
-            points_mm: curve.points_mm.clone(),
+            points_mm: Vec::new(),
             core_radius_mm: 0.15,
             current: Waveform::Constant { value: 0. },
         })
@@ -359,6 +393,8 @@ pub fn helix(
     points.push((first + Vec3::X * lead).to_array());
     points.push(first.to_array());
     Wire {
+        cad_curve: None,
+        reverse: false,
         body_current: None,
         name: "Closed helical coil".into(),
         points_mm: points,

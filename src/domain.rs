@@ -1132,6 +1132,7 @@ mod input_update_tests {
             cell_mm: 0.5,
         };
         let mut materials = simulation::default_materials();
+        materials[0].conductivity_s_m = None; // Explicit unknown must remain distinct from a supplied zero.
         let mut volume = gpu.build(&model, &settings, &materials).unwrap();
         let masks = gpu.read_masks(&volume);
         let serial = volume.build_serial;

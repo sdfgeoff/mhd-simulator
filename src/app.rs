@@ -121,7 +121,7 @@ impl App {
             dirty: true,
             section_time: 0.,
         };
-        app.em_ui.config.wires = crate::em::cad_wires(&app.model);
+
         if app.path.ends_with(".json") {
             app.load();
         } else {
@@ -172,10 +172,7 @@ impl App {
             match Model::load(path) {
                 Ok(m) => {
                     self.model = m;
-                    self.em_ui.config = crate::em::EmConfig {
-                        wires: crate::em::cad_wires(&self.model),
-                        ..Default::default()
-                    };
+                    self.em_ui.config = crate::em::EmConfig::default();
                     self.settings = DomainSettings::fit(&self.model);
                     self.materials = project::default_materials();
                     self.clear_derived();
@@ -212,7 +209,7 @@ impl App {
             && self.em_ui.config.magnets.is_empty()
             && self.em_ui.config.uniform.is_empty()
         {
-            self.em_ui.error = "Add a coil/current source or permanent magnet under Assign properties before simulating.".into();
+            self.em_ui.error = "Enable prescribed current on a CAD curve or a permanent magnet on a CAD solid under Assign properties.".into();
             return;
         }
         if self.domain_pending || self.volume.is_none() {
@@ -303,7 +300,7 @@ impl App {
         let (lo, hi) = self.model.bounds();
         let span = self.section_span();
         let style = self.section_style();
-        self.em_ui.update_vectors(self.plane, span);
+        self.em_ui.update_vectors(self.plane, span, &self.model);
         self.caps = self
             .model
             .bodies
@@ -990,9 +987,9 @@ impl App {
         }
     }
     fn property_controls(&mut self, ui: &mut egui::Ui) {
-        ui.small("Assign each component a material and optional initial temperature/current. Configure current sources below.");
+        ui.small("Assign materials and temperatures to solids, current waveforms to CAD curves, and magnetization to any magnetized solids.");
         for (i, b) in self.model.bodies.iter_mut().enumerate() {
-            egui::CollapsingHeader::new(&b.name)
+            egui::CollapsingHeader::new(format!("Solid · {}",b.name))
                 .id_salt(("component", i))
                 .show(ui, |ui| {
                     self.dirty |= ui.checkbox(&mut b.visible, "Show CAD").changed();
@@ -1026,18 +1023,26 @@ impl App {
                         1.,
                         " °C",
                     );
-                    self.inputs_pending |= optional(
-                        ui,
-                        "Prescribed current",
-                        &mut b.simulation.current_a,
-                        0.,
-                        1.,
-                        " A",
-                    );
-                    ui.small("Component current alone does not define a wire path. Connect it to a wire source, or specify the wire waveform directly.");
+                    egui::CollapsingHeader::new("Legacy linked current").show(ui,|ui| {
+                        self.inputs_pending |= optional(ui,"Prescribed current",&mut b.simulation.current_a,0.,1.," A");
+                        ui.small("Independent current waveforms are assigned to CAD curves below. This scalar supports older linked sources.");
+                    });
+                    self.dirty |= self.em_ui.body_source_properties(ui,i,b.closed());
+                    let unassigned=self.materials.iter().any(|m|m.id==b.simulation.material_id && m.name.eq_ignore_ascii_case("Unassigned"));
+                    if self.em_ui.config.magnets.iter().any(|m|m.body==i) && unassigned {
+                        if let Some(material)=self.materials.iter().find(|m|m.name.eq_ignore_ascii_case("Permanent magnet")) {
+                            b.simulation.material_id=material.id;self.inputs_pending=true;
+                        }
+                    }
                 });
         }
+        self.dirty |= self.em_ui.curve_properties(ui, &self.model);
         egui::CollapsingHeader::new("Material library").show(ui, |ui| {
+            if ui.button("Fill missing preset properties").clicked() {
+                self.inputs_pending |=
+                    crate::simulation::fill_missing_defaults(&mut self.materials);
+            }
+
             for m in &mut self.materials {
                 ui.push_id(m.id, |ui| {
                     ui.horizontal(|ui| {
@@ -1092,9 +1097,10 @@ mod project_ui_tests {
         let _lock = crate::gpu_test_lock();
         let mut app = App::new("assets/annulus.gltf".into(), None);
         let serial = app.volume.as_ref().unwrap().build_serial;
-        app.em_ui
-            .import_centrelines(std::path::Path::new("assets/coil-centreline.gltf"))
-            .unwrap();
+        app.model.curves = Model::load(std::path::Path::new("assets/coil-centreline.gltf"))
+            .unwrap()
+            .curves;
+        app.em_ui.config.wires = crate::em::cad_wires(&app.model);
         app.em_ui.config.wires[0].current = crate::em::Waveform::Constant { value: 10. };
         app.em_ui.run_steps = 1;
         for material in &mut app.materials {

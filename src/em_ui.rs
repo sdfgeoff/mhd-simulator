@@ -46,7 +46,7 @@ pub struct EmUi {
     height_mm: f32,
     turns: u32,
     json: String,
-    centreline_path: String,
+
     pub run_steps: u32,
     preview_time_us: f64,
 }
@@ -76,25 +76,13 @@ impl Default for EmUi {
             height_mm: 8.,
             turns: 4,
             json: String::new(),
-            centreline_path: String::new(),
+
             run_steps: 10,
             preview_time_us: 50.,
         }
     }
 }
 impl EmUi {
-    pub fn import_centrelines(&mut self, path: &std::path::Path) -> Result<usize, String> {
-        let imported = Model::load(path)?;
-        let wires = em::cad_wires(&imported);
-        if wires.is_empty() {
-            return Err("No centreline curves found. Export glTF/GLB line primitives; triangle surfaces are not wire paths.".into());
-        }
-        let count = wires.len();
-        self.config.wires.extend(wires);
-        self.invalidate();
-        self.error.clear();
-        Ok(count)
-    }
     pub fn busy(&self) -> bool {
         self.receiver.is_some()
     }
@@ -284,16 +272,18 @@ impl EmUi {
             vectors: &self.vectors,
         })
     }
-    pub fn update_vectors(&mut self, plane: SectionPlane, span: f32) {
+    pub fn update_vectors(&mut self, plane: SectionPlane, span: f32, model: &Model) {
         self.vectors.clear();
         self.source_lines = self
             .config
             .wires
             .iter()
             .flat_map(|w| {
-                w.points_mm
+                w.points(model)
+                    .unwrap_or_default()
                     .windows(2)
                     .map(|p| [Vec3::from(p[0]), Vec3::from(p[1])])
+                    .collect::<Vec<_>>()
             })
             .collect();
         if !self.arrows || self.kind == 6 {
@@ -337,6 +327,98 @@ impl EmUi {
             Err(e) => self.error = e,
         }
     }
+    pub fn curve_properties(&mut self, ui: &mut egui::Ui, model: &Model) -> bool {
+        let mut changed = false;
+        for (curve_index, curve) in model.curves.iter().enumerate() {
+            egui::CollapsingHeader::new(format!("Curve · {}",curve.name)).id_salt(("cad_curve",curve_index)).show(ui, |ui| {
+                let existing=self.config.wires.iter().position(|w|w.cad_curve==Some(curve_index));
+                let mut enabled=existing.is_some();
+                if ui.checkbox(&mut enabled,"Carry prescribed current").changed() {
+                    if enabled {self.config.wires.push(em::cad_wires(model).remove(curve_index));}
+                    else if let Some(i)=existing {self.config.wires.remove(i);}
+                    changed=true;
+                }
+                ui.small(format!("{} CAD points · positive current follows CAD curve direction",curve.points_mm.len()));
+                if let Some(wire)=self.config.wires.iter_mut().find(|w|w.cad_curve==Some(curve_index)) {
+                    changed|=waveform(ui,&mut wire.current,if wire.body_current.is_some(){"× linked component A"}else{" A"});
+                    if wire.body_current.is_some() && ui.button("Use independent current waveform").clicked() {wire.body_current=None;changed=true;}
+                    changed|=ui.add(egui::DragValue::new(&mut wire.core_radius_mm).range(1e-4..=100.).speed(0.01).prefix("Wire/core radius ").suffix(" mm")).changed();
+                    changed|=ui.checkbox(&mut wire.reverse,"Reverse current direction").changed();
+                    if let Ok(points)=wire.points(model) {
+                        if points.len()>1 && Vec3::from(points[0]).distance(Vec3::from(*points.last().unwrap()))>1e-4 {
+                            ui.colored_label(Color32::YELLOW,"Open CAD path: include the physical return lead in the CAD for induction.");
+                        }
+                    }
+                }
+            });
+        }
+        if changed {
+            self.invalidate();
+            self.error.clear();
+        }
+        changed
+    }
+    pub fn body_source_properties(&mut self, ui: &mut egui::Ui, body: usize, closed: bool) -> bool {
+        let existing = self.config.magnets.iter().position(|m| m.body == body);
+        let mut enabled = existing.is_some();
+        let mut changed = false;
+        if ui
+            .add_enabled(
+                closed,
+                egui::Checkbox::new(&mut enabled, "Permanent magnet source"),
+            )
+            .changed()
+        {
+            if enabled {
+                self.config.magnets.push(em::Magnet {
+                    body,
+                    magnetization_a_m: [0., 0., 8e5],
+                    subdivisions: 1,
+                    smoothing_mm: 0.05,
+                });
+            } else {
+                self.config.magnets.retain(|m| m.body != body);
+            }
+            changed = true;
+        }
+        if let Some(magnet) = self.config.magnets.iter_mut().find(|m| m.body == body) {
+            ui.label("Magnetization M (A/m), world XYZ");
+            for (axis, v) in ["X", "Y", "Z"]
+                .into_iter()
+                .zip(&mut magnet.magnetization_a_m)
+            {
+                changed |= ui
+                    .add(
+                        egui::DragValue::new(v)
+                            .speed(1e4)
+                            .prefix(format!("{axis} ")),
+                    )
+                    .changed();
+            }
+            egui::CollapsingHeader::new("Magnet discretization").show(ui, |ui| {
+                changed |= ui
+                    .add(
+                        egui::DragValue::new(&mut magnet.subdivisions)
+                            .range(0..=4)
+                            .prefix("Surface refinement "),
+                    )
+                    .changed();
+                changed |= ui
+                    .add(
+                        egui::DragValue::new(&mut magnet.smoothing_mm)
+                            .range(1e-4..=100.)
+                            .speed(0.01)
+                            .suffix(" mm smoothing"),
+                    )
+                    .changed();
+            });
+        }
+        if changed {
+            self.invalidate();
+            self.error.clear();
+        }
+        changed
+    }
     /// Returns (view changed, apply illustrative demo materials).
     pub fn controls(
         &mut self,
@@ -353,21 +435,8 @@ impl EmUi {
         let mut config_changed = false;
         let mut demo = false;
         ui.add_enabled_ui(!busy,|ui|{
-            ui.small(format!("{} wire paths · {} magnet sources",self.config.wires.len(),self.config.magnets.len()));
-            egui::CollapsingHeader::new("Import a CAD centreline file").show(ui, |ui| {
-                ui.text_edit_singleline(&mut self.centreline_path);
-                ui.small("glTF/GLB line strips, loops or connected line segments; metres, including assembly transforms.");
-                if ui.button("Import centrelines").clicked() {
-                    let path=self.centreline_path.clone();
-                    match self.import_centrelines(std::path::Path::new(&path)) {
-                        Ok(_) => config_changed=true,
-                        Err(error) => self.error=error,
-                    }
-                }
-            });
-
-
-            egui::CollapsingHeader::new("Current paths / waveforms / magnets").default_open(true).show(ui,|ui|{
+            ui.small(format!("{} active current paths · {} magnetized CAD bodies",self.config.wires.len(),self.config.magnets.len()));
+            egui::CollapsingHeader::new("Legacy / generated paths").default_open(false).show(ui,|ui|{
 
                 egui::CollapsingHeader::new("Generate an example coil").show(ui, |ui| {
                 ui.horizontal(|ui|{
@@ -413,7 +482,7 @@ demo=true;
                 });
                 let mut remove=None;
 
-                for (i,wire) in self.config.wires.iter_mut().enumerate() {
+                for (i,wire) in self.config.wires.iter_mut().enumerate().filter(|(_,w)|w.cad_curve.is_none()) {
 ui.push_id(("wire",i),|ui|{
 egui::CollapsingHeader::new(&wire.name).show(ui,|ui|{
 
@@ -424,7 +493,7 @@ egui::CollapsingHeader::new(&wire.name).show(ui,|ui|{
                         ui.colored_label(Color32::YELLOW,"Open path: induction needs a return lead to close the circuit.");
                         if ui.button("Add a straight return to the start").clicked() {wire.points_mm.push(wire.points_mm[0]);config_changed=true;}
                     }
-                    if ui.button("Reverse current-path direction").clicked() {wire.points_mm.reverse();config_changed=true;}
+                    if ui.button("Reverse current-path direction").clicked() {wire.reverse=!wire.reverse;config_changed=true;}
 
 config_changed|=ui.add(egui::DragValue::new(&mut wire.core_radius_mm).speed(0.01).range(1e-4..=100.).prefix("Core/smoothing ").suffix(" mm")).changed();
 
@@ -495,59 +564,6 @@ remove=Some(i);
 
                 if let Some(i)=remove{
 self.config.wires.remove(i);
-config_changed=true;
-
-}
-
-                if !model.bodies.is_empty()&&ui.button("Add magnetized CAD body").clicked(){
-self.config.magnets.push(em::Magnet{
-body:model.bodies.iter().position(|b|b.name.to_ascii_lowercase().contains("magnet")).unwrap_or(0),magnetization_a_m:[0.,0.,8e5],subdivisions:1,smoothing_mm:0.05
-}
-);
-config_changed=true;
-
-}
-
-                let mut remove=None;
-
-                for (i,magnet) in self.config.magnets.iter_mut().enumerate() {
-ui.push_id(("magnet",i),|ui|{
-egui::CollapsingHeader::new(format!("Magnet {}",i+1)).show(ui,|ui|{
-
-                    egui::ComboBox::from_id_salt("body").selected_text(model.bodies.get(magnet.body).map(|b|b.name.as_str()).unwrap_or("Missing body")).show_ui(ui,|ui|{
-for (j,b) in model.bodies.iter().enumerate(){
-config_changed|=ui.selectable_value(&mut magnet.body,j,&b.name).changed();
-
-}
-
-}
-);
-
-                    ui.label("Magnetization M (A/m), world XYZ");
-for v in &mut magnet.magnetization_a_m {
-config_changed|=ui.add(egui::DragValue::new(v).speed(1e4)).changed();
-
-}
-
-                    config_changed|=ui.add(egui::DragValue::new(&mut magnet.subdivisions).range(0..=4).prefix("Surface refinement ")).changed();
-config_changed|=ui.add(egui::DragValue::new(&mut magnet.smoothing_mm).range(1e-4..=100.).speed(0.01).suffix(" mm smoothing")).changed();
-
-                    if ui.button("Remove magnet").clicked(){
-remove=Some(i);
-
-}
-
-
-}
-);
-
-}
-);
-
-}
-
-                if let Some(i)=remove {
-self.config.magnets.remove(i);
 config_changed=true;
 
 }
@@ -1019,8 +1035,39 @@ fn waveform(ui: &mut egui::Ui, w: &mut Waveform, unit: &str) -> bool {
                 }
             }
         }
-        Waveform::Table { .. } => {
-            ui.small("Edit time/current samples in advanced JSON.");
+        Waveform::Table { samples } => {
+            ui.small("Time/current samples; times must increase strictly.");
+            let count = samples.len();
+            let mut remove = None;
+            for (i, sample) in samples.iter_mut().enumerate() {
+                ui.push_id(i, |ui| {
+                    ui.horizontal(|ui| {
+                        let mut time_us = sample[0] * 1e6;
+                        if ui
+                            .add(egui::DragValue::new(&mut time_us).speed(1.).suffix(" µs"))
+                            .changed()
+                        {
+                            sample[0] = time_us * 1e-6;
+                            changed = true;
+                        }
+                        changed |= ui
+                            .add(egui::DragValue::new(&mut sample[1]).speed(1.).suffix(unit))
+                            .changed();
+                        if ui.add_enabled(count > 2, egui::Button::new("×")).clicked() {
+                            remove = Some(i);
+                        }
+                    })
+                });
+            }
+            if let Some(i) = remove {
+                samples.remove(i);
+                changed = true;
+            }
+            if ui.button("Add sample").clicked() {
+                let last = samples.last().copied().unwrap_or([0., 0.]);
+                samples.push([last[0] + 50e-6, last[1]]);
+                changed = true;
+            }
         }
     }
     changed
@@ -1063,11 +1110,11 @@ mod tests {
         assert!(ui.ready(Some(&volume)));
         assert!(ui.state.as_ref().unwrap().diagnostics.maxima[0] > 0.);
         ui.arrow_density = 8;
-        ui.update_vectors(SectionPlane::new(Vec3::ZERO), 1.);
+        ui.update_vectors(SectionPlane::new(Vec3::ZERO), 1., &model);
         assert_eq!(ui.vectors.len(), 8 * 8 * 3);
         let coarse_length = ui.vectors[0][0].distance(ui.vectors[0][1]);
         ui.arrow_density = 32;
-        ui.update_vectors(SectionPlane::new(Vec3::ZERO), 1.);
+        ui.update_vectors(SectionPlane::new(Vec3::ZERO), 1., &model);
         assert_eq!(ui.vectors.len(), 32 * 32 * 3);
         assert!((ui.vectors[0][0].distance(ui.vectors[0][1]) * 4. - coarse_length).abs() < 1e-6);
         // Recorded fields must survive subsequent GPU writes, scrubbing and continuation.

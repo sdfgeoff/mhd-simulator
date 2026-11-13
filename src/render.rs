@@ -489,6 +489,15 @@ impl Viewport {
                 mode,
             }
         };
+        if !panel {
+            for curve in &model.curves {
+                for pair in curve.points_mm.windows(2) {
+                    for p in pair {
+                        lines.push(vertex(Vec3::from(*p), [0.55, 0.6, 0.65, 1.], 2.));
+                    }
+                }
+            }
+        }
         for (i, _) in model.bodies.iter().enumerate().filter(|(_, b)| b.visible) {
             let c = COLORS[i % COLORS.len()].map(|v| v as f32 / 255.);
             if cut {
@@ -713,6 +722,35 @@ mod tests {
         device.poll(wgpu::Maintain::Wait);
         rx.recv().unwrap().unwrap();
         buffer.slice(..).get_mapped_range().to_vec()
+    }
+    #[test]
+    fn cad_curves_render_as_geometry_without_a_current_source() {
+        let _lock = crate::gpu_test_lock();
+        let mut view = viewport();
+        let model = Model::load(std::path::Path::new("assets/coil-centreline.gltf")).unwrap();
+        let camera = Camera {
+            rect: egui::Rect::from_min_size(egui::Pos2::ZERO, egui::Vec2::splat(256.)),
+            center: Vec3::new(4., 0., 4.),
+            rotation: glam::Quat::from_rotation_x(0.7),
+            scale: 12.,
+            size: 20.,
+        };
+        let plane = SectionPlane::new(Vec3::ZERO);
+        view.draw(camera, plane, false, false, &model, &[], 1., None);
+        let with_curve = read(&view);
+        let mut empty = model.clone();
+        empty.curves.clear();
+        view.draw(camera, plane, false, false, &empty, &[], 1., None);
+        let without_curve = read(&view);
+        let changed = with_curve
+            .chunks_exact(4)
+            .zip(without_curve.chunks_exact(4))
+            .filter(|(a, b)| a != b)
+            .count();
+        assert!(
+            changed > 200,
+            "CAD curves must be visible before enabling sources: {changed}"
+        );
     }
     #[test]
     fn electromagnetic_section_samples_gpu_fields_at_native_resolution() {
