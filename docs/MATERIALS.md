@@ -15,3 +15,7 @@ Named presets provide usable starting scalars. **Unassigned** is deliberately em
 Conductivity is converted as σ=1/ρₑ. One µΩ·cm is 10⁻⁸ Ω·m. The solder values are bulk datasheet references, not calibrated molten-metal properties. The magnet preset does not imply a particular strength or orientation: assign magnetization independently on each CAD solid. The model does not include demagnetization evolution or temperature effects.
 
 Existing saved values and custom materials are preserved on load. **Material library → Fill missing preset properties** fills only unset conductivity/permeability/density fields on matching named presets; it keeps explicit values, including zero. Reference notes are visible beside the material controls.
+
+## Liquid viscosity
+
+The solder presets include **0.002 Pa·s (2 mPa·s)** as an illustrative starting assumption for the fixed-geometry fluid solver. It is not a measured fit for either alloy at the selected temperature. Other presets leave liquid viscosity unset. Choose operating-temperature density and viscosity before interpreting a fluid experiment; temperature inputs do not apply property curves automatically. [Fluid configuration, numerical assumptions and tests](FLUIDS.md) describes the solver. **Fill missing preset properties** also fills an unset solder viscosity while preserving explicit values.

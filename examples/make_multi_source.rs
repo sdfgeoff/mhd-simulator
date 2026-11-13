@@ -48,12 +48,13 @@ fn main() -> Result<(), String> {
         max_mm: [20., 12., 16.],
         cell_mm: 0.6,
     };
-    project::save_with_em(
+    project::save(
         std::path::Path::new("assets/hotend-cad.mhd.json"),
         &model,
         &settings,
         &default_materials(),
         SectionPlane::new(Vec3::new(0., 0., 4.)),
         &config,
+        &Default::default(),
     )
 }

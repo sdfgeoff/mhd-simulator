@@ -1,4 +1,4 @@
-struct Params { origin:vec4<f32>, u:vec4<f32>, v:vec4<f32>, grid:vec4<f32>, dims:vec4<u32>, source:vec4<u32>, motion:vec4<f32> }
+struct Params { origin:vec4<f32>, u:vec4<f32>, v:vec4<f32>, grid:vec4<f32>, dims:vec4<u32>, source:vec4<u32>, validity:vec4<u32>, motion:vec4<f32> }
 struct Vertex {position:vec4<f32>,color:vec4<f32>}
 @group(0) @binding(0) var<uniform> p:Params;
 @group(0) @binding(1) var<storage,read> field:array<vec4<f32>>;
@@ -14,6 +14,10 @@ fn inside(world:vec3<f32>)->bool {let q=(world-p.grid.xyz)/p.grid.w;return all(q
 fn vector(world:vec3<f32>)->vec3<f32> {
     if !inside(world) {return vec3<f32>(0.0);}
     let q=(world-p.grid.xyz)/p.grid.w;
+    if p.validity.x!=0xffffffffu {
+        let cell=vec3<u32>(floor(q));let i=(cell.x+p.dims.x*(cell.y+p.dims.y*cell.z))*p.dims.w;
+        if !(field[i+p.validity.x][p.validity.y]>=0.5) {return vec3<f32>(0.0);}
+    }
     if p.source.w==0u {return cell(vec3<u32>(floor(q)));}
     let f=q-vec3<f32>(0.5);let base=vec3<i32>(floor(f));let fraction=fract(f);var value=vec3<f32>(0.0);
     for(var z=0;z<2;z++){for(var y=0;y<2;y++){for(var x=0;x<2;x++){
@@ -24,7 +28,7 @@ fn vector(world:vec3<f32>)->vec3<f32> {
 fn direction(world:vec3<f32>)->vec3<f32> {
     let v=vector(world);let projected=dot(v,p.u.xyz)*p.u.xyz+dot(v,p.v.xyz)*p.v.xyz;
     let magnitude=length(projected);
-    if !(magnitude>1e-20 && magnitude<1e30) {return vec3<f32>(0.0);}
+    if !(magnitude>max(p.motion.w,1e-20) && magnitude<1e30) {return vec3<f32>(0.0);}
     return projected/magnitude;
 }
 fn alpha(u:f32,head:f32)->f32 {
@@ -42,7 +46,8 @@ fn main(@builtin(global_invocation_id) id:vec3<u32>) {
     for(var i=0u;i<64u;i++) {
         let a=position;let d=direction(a);let mid=a+d*p.motion.y*0.5;let d2=direction(mid);
         let b=a+d2*p.motion.y;
-        alive=alive && dot(d,d)>0.5 && dot(d2,d2)>0.5 && inside(b);
+        let end_direction=direction(b);
+        alive=alive && dot(d,d)>0.5 && dot(d2,d2)>0.5 && dot(end_direction,end_direction)>0.5 && inside(b);
         let u0=f32(i)/64.0;let u1=f32(i+1u)/64.0;
         let alpha0=select(0.0,alpha(u0,head),alive);let alpha1=select(0.0,alpha(u1,head),alive);
         let index=(seed*64u+i)*2u;
@@ -50,4 +55,12 @@ fn main(@builtin(global_invocation_id) id:vec3<u32>) {
         vertices[index+1u]=Vertex(vec4<f32>(b,1.0),vec4<f32>(alpha1));
         position=b;
     }
+}
+
+@compute @workgroup_size(64)
+fn gather(@builtin(global_invocation_id) id:vec3<u32>) {
+    let n=p.source.z;let i=id.x;if i>=n*n{return;}
+    let uv=(vec2<f32>(f32(i%n),f32(i/n))+vec2<f32>(0.5))/f32(n)*2.0-vec2<f32>(1.0);
+    let world=p.origin.xyz+p.origin.w*(uv.x*p.u.xyz+uv.y*p.v.xyz);
+    vertices[i]=Vertex(vec4<f32>(vector(world),0.0),vec4<f32>(0.0));
 }

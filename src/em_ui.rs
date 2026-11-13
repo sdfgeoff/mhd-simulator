@@ -1,11 +1,12 @@
 use crate::{
     domain::Volume,
     em::{self, CellField, EmConfig, EmFrame, EmState, Mode, Waveform},
-    flow::{FlowTrails, TrailSettings, VectorField, VectorLayout, VectorStyle},
+    flow::{VectorField, VectorLayout},
     gpu::GpuContext,
     model::Model,
     plane::SectionPlane,
     render::FieldView,
+    vector_ui::VectorUi,
 };
 use eframe::egui::{self, Color32, Pos2, Stroke, Vec2};
 use glam::Vec3;
@@ -34,15 +35,7 @@ pub struct EmUi {
     component: u32,
     auto_range: bool,
     range: f32,
-    pub vector_style: VectorStyle,
-    flow: Option<FlowTrails>,
-    animation_time: f64,
-    last_animation_time: Option<f64>,
-    animation_paused: bool,
-    animation_speed: f32,
-    trail_length: f32,
-    arrow_density: u32,
-    vectors: Vec<[Vec3; 2]>,
+    pub overlay: VectorUi,
     pub source_lines: Vec<[Vec3; 2]>,
     probe_mm: [f32; 3],
     history: Vec<Trace>,
@@ -68,15 +61,7 @@ impl Default for EmUi {
             component: 0,
             auto_range: true,
             range: 1e-3,
-            vector_style: VectorStyle::Trails,
-            flow: None,
-            animation_time: 0.,
-            last_animation_time: None,
-            animation_paused: false,
-            animation_speed: 0.35,
-            trail_length: 0.22,
-            arrow_density: 25,
-            vectors: Vec::new(),
+            overlay: VectorUi::default(),
             source_lines: Vec::new(),
             probe_mm: [1., 0., 4.],
             history: Vec::new(),
@@ -97,14 +82,12 @@ impl EmUi {
     }
     pub fn invalidate(&mut self) {
         self.state = None;
-        self.flow = None;
-        self.last_animation_time = None;
+        self.overlay.clear();
         self.timeline.clear();
         self.accept_frames = false;
         self.history.clear();
         self.history_key = None;
         self.hover_cache = None;
-        self.vectors.clear();
         if let Some(c) = &self.cancel {
             c.store(true, Ordering::Relaxed);
         }
@@ -284,14 +267,15 @@ impl EmUi {
             kind: self.kind,
             component: self.component,
             range: self.scale(),
-            vectors: &self.vectors,
-            trails: (self.vector_style.animated() && self.kind < 6)
-                .then(|| self.flow.as_ref().map(|flow| flow.draw()))
-                .flatten(),
+            vectors: &self.overlay.arrows,
+            trails: if self.kind < 6 {
+                self.overlay.draw()
+            } else {
+                None
+            },
         })
     }
-    pub fn update_vectors(&mut self, plane: SectionPlane, span: f32, model: &Model) {
-        self.vectors.clear();
+    pub fn update_source_lines(&mut self, model: &Model) {
         self.source_lines = self
             .config
             .wires
@@ -304,69 +288,19 @@ impl EmUi {
                     .collect::<Vec<_>>()
             })
             .collect();
-        if self.vector_style != VectorStyle::Arrows || self.kind == 6 {
-            return;
-        }
-        let Some(state) = self.timeline.current() else {
-            return;
-        };
-        let n = self.arrow_density;
-        match state.sample_plane(plane, span, n, self.kind) {
-            Ok(samples) => {
-                for y in 0..n {
-                    for x in 0..n {
-                        let v = samples[(y * n + x) as usize];
-                        let v = Vec3::new(v[0], v[1], v[2]);
-                        let magnitude = v.length();
-                        if magnitude <= self.scale() * 1e-6 {
-                            continue;
-                        }
-                        let start = plane.position
-                            + plane.u() * (((x as f32 + 0.5) / n as f32 * 2. - 1.) * span)
-                            + plane.v() * (((y as f32 + 0.5) / n as f32 * 2. - 1.) * span);
-                        let direction = v / magnitude;
-                        let end = start
-                            + direction
-                                * (span * 1.3 / n as f32
-                                    * (magnitude / self.scale()).sqrt().min(1.));
-                        self.vectors.push([start, end]);
-                        let side = direction
-                            .cross(plane.normal())
-                            .try_normalize()
-                            .unwrap_or(plane.u());
-                        let head = (end - start).length() * 0.25;
-                        self.vectors
-                            .push([end, end - direction * head + side * head * 0.45]);
-                        self.vectors
-                            .push([end, end - direction * head - side * head * 0.45]);
-                    }
-                }
-            }
-            Err(e) => self.error = e,
-        }
     }
     pub fn animation_running(&self, volume: Option<&Volume>) -> bool {
-        self.ready(volume)
-            && self.kind < 6
-            && self.vector_style.animated()
-            && !self.animation_paused
+        self.ready(volume) && self.kind < 6 && self.overlay.running()
     }
     pub fn update_trails(
         &mut self,
-        ui_time: f64,
+        time: f64,
         plane: SectionPlane,
         span: f32,
         context: &GpuContext,
+        dirty: bool,
     ) {
-        let delta = self
-            .last_animation_time
-            .replace(ui_time)
-            .map(|last| (ui_time - last).clamp(0., 0.1))
-            .unwrap_or(0.);
-        if !self.animation_paused {
-            self.animation_time += delta;
-        }
-        if !self.show || !self.vector_style.animated() || self.kind >= 6 {
+        if !self.show || self.kind >= 6 {
             return;
         }
         let Some(frame) = self.timeline.current() else {
@@ -382,11 +316,12 @@ impl EmUi {
             },
             subtract: (self.kind == 3).then_some(3),
             interpolate: self.kind <= 3,
+            validity: None,
         };
-        let flow = self
-            .flow
-            .get_or_insert_with(|| FlowTrails::new(context.clone()));
-        if let Err(error) = flow.update(
+        let scale = self.scale();
+        if let Err(error) = self.overlay.update(
+            time,
+            context,
             VectorField {
                 buffer: frame.result_buffer(),
                 grid: frame.grid(),
@@ -394,13 +329,8 @@ impl EmUi {
             },
             plane,
             span,
-            self.animation_time,
-            TrailSettings {
-                density: self.arrow_density,
-                speed: self.animation_speed,
-                tail: self.trail_length,
-                dots: self.vector_style == VectorStyle::Dots,
-            },
+            scale,
+            dirty,
         ) {
             self.error = error;
         }
@@ -623,45 +553,7 @@ impl EmUi {
                 .changed();
         }
         if self.kind < 6 {
-            egui::ComboBox::from_label("Vector display")
-                .selected_text(self.vector_style.label())
-                .show_ui(ui, |ui| {
-                    for style in [
-                        VectorStyle::Off,
-                        VectorStyle::Arrows,
-                        VectorStyle::Trails,
-                        VectorStyle::Dots,
-                    ] {
-                        changed |= ui
-                            .selectable_value(&mut self.vector_style, style, style.label())
-                            .changed();
-                    }
-                });
-            if self.vector_style != VectorStyle::Off {
-                changed |= ui
-                    .add(egui::Slider::new(&mut self.arrow_density, 8..=64).text("Vector density"))
-                    .changed();
-            }
-            if self.vector_style.animated() {
-                changed |= ui
-                    .checkbox(&mut self.animation_paused, "Pause animation")
-                    .changed();
-                changed |= ui
-                    .add(
-                        egui::Slider::new(&mut self.animation_speed, 0.05..=2.)
-                            .text("Visual speed"),
-                    )
-                    .changed();
-                if self.vector_style == VectorStyle::Trails {
-                    changed |= ui
-                        .add(
-                            egui::Slider::new(&mut self.trail_length, 0.05..=0.5)
-                                .text("Trail length"),
-                        )
-                        .changed();
-                }
-                ui.small("Projected onto the section plane. Motion shows direction; animation speed is independent of solver time and field magnitude.");
-            }
+            changed |= self.overlay.controls(ui, unit(self.kind));
         }
         changed
     }
@@ -694,46 +586,12 @@ impl EmUi {
             state.diagnostics.elapsed_ms,
             state.bytes as f64 / 1048576.
         ));
-        let scale = self.scale();
-        let (rect, _) =
-            ui.allocate_exact_size(Vec2::new(ui.available_width(), 12.), egui::Sense::hover());
-        for i in 0..64 {
-            let t = i as f32 / 63.;
-            let rgb = [
-                (1.5 - (4. * t - 3.).abs()).clamp(0., 1.),
-                (1.5 - (4. * t - 2.).abs()).clamp(0., 1.),
-                (1.5 - (4. * t - 1.).abs()).clamp(0., 1.),
-            ];
-            let c = if self.component > 0 && self.kind < 6 {
-                let x = t * 2. - 1.;
-                let end = if x < 0. {
-                    [0.12, 0.32, 0.95]
-                } else {
-                    [0.95, 0.18, 0.12]
-                };
-                std::array::from_fn(|j| 0.93 * (1. - x.abs()) + end[j] * x.abs())
-            } else {
-                rgb
-            };
-            ui.painter().rect_filled(
-                egui::Rect::from_min_max(
-                    Pos2::new(rect.min.x + rect.width() * i as f32 / 64., rect.min.y),
-                    Pos2::new(rect.min.x + rect.width() * (i + 1) as f32 / 64., rect.max.y),
-                ),
-                0.,
-                Color32::from_rgb(
-                    (c[0] * 255.) as u8,
-                    (c[1] * 255.) as u8,
-                    (c[2] * 255.) as u8,
-                ),
-            );
-        }
-        let min = if self.component > 0 && self.kind < 6 {
-            -scale
-        } else {
-            0.
-        };
-        ui.small(format!("{min:.3e} … {scale:.3e} {}", unit(self.kind)));
+        crate::vector_ui::color_legend(
+            ui,
+            self.scale(),
+            unit(self.kind),
+            self.component > 0 && self.kind < 6,
+        );
         egui::CollapsingHeader::new("Force / power / conservation").show(ui, |ui| {
             let d = &state.diagnostics;
             ui.monospace(format!(
@@ -1032,6 +890,7 @@ fn waveform(ui: &mut egui::Ui, w: &mut Waveform, unit: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::flow::VectorStyle;
     #[test]
     fn background_field_job_finishes_and_cancel_does_not_publish_results() {
         let _lock = crate::gpu_test_lock();
@@ -1065,15 +924,18 @@ mod tests {
         assert!(ui.error.is_empty(), "{}", ui.error);
         assert!(ui.ready(Some(&volume)));
         assert!(ui.state.as_ref().unwrap().diagnostics.maxima[0] > 0.);
-        ui.vector_style = VectorStyle::Arrows;
-        ui.arrow_density = 8;
-        ui.update_vectors(SectionPlane::new(Vec3::ZERO), 1., &model);
-        assert_eq!(ui.vectors.len(), 8 * 8 * 3);
-        let coarse_length = ui.vectors[0][0].distance(ui.vectors[0][1]);
-        ui.arrow_density = 32;
-        ui.update_vectors(SectionPlane::new(Vec3::ZERO), 1., &model);
-        assert_eq!(ui.vectors.len(), 32 * 32 * 3);
-        assert!((ui.vectors[0][0].distance(ui.vectors[0][1]) * 4. - coarse_length).abs() < 1e-6);
+        ui.overlay.style = VectorStyle::Arrows;
+        ui.overlay.density = 8;
+        ui.update_trails(0., SectionPlane::new(Vec3::ZERO), 1., &gpu.context, true);
+        assert_eq!(ui.overlay.arrows.len(), 8 * 8 * 3);
+        let coarse_length = ui.overlay.arrows[0][0].distance(ui.overlay.arrows[0][1]);
+        ui.overlay.density = 32;
+        ui.update_trails(0., SectionPlane::new(Vec3::ZERO), 1., &gpu.context, true);
+        assert_eq!(ui.overlay.arrows.len(), 32 * 32 * 3);
+        assert!(
+            (ui.overlay.arrows[0][0].distance(ui.overlay.arrows[0][1]) * 4. - coarse_length).abs()
+                < 1e-6
+        );
         // Recorded fields must survive subsequent GPU writes, scrubbing and continuation.
         ui.config.uniform[0].scale = Waveform::Sine {
             amplitude: 1.,
@@ -1095,13 +957,6 @@ mod tests {
             ui.timeline.current().unwrap().probe(p).unwrap().unwrap().b[2],
             first
         );
-        let sampled = ui
-            .timeline
-            .current()
-            .unwrap()
-            .sample_plane(SectionPlane::new(Vec3::ZERO), 1., 2, 1)
-            .unwrap();
-        assert!((sampled[0][2] - first).abs() < 1e-8);
         assert_eq!(
             ui.view(Some(&volume)).unwrap().buffer,
             ui.timeline.current().unwrap().result_buffer()
@@ -1116,15 +971,15 @@ mod tests {
         );
         let solver_time = ui.state.as_ref().unwrap().time_s;
         let selected_time = ui.timeline.current().unwrap().time_s;
-        ui.vector_style = VectorStyle::Trails;
-        ui.update_trails(1., SectionPlane::new(Vec3::ZERO), 1., &gpu.context);
-        ui.update_trails(1.1, SectionPlane::new(Vec3::ZERO), 1., &gpu.context);
+        ui.overlay.style = VectorStyle::Trails;
+        ui.update_trails(1., SectionPlane::new(Vec3::ZERO), 1., &gpu.context, false);
+        ui.update_trails(1.1, SectionPlane::new(Vec3::ZERO), 1., &gpu.context, false);
         assert_eq!(ui.state.as_ref().unwrap().time_s, solver_time);
         assert_eq!(ui.timeline.current().unwrap().time_s, selected_time);
-        ui.animation_paused = true;
-        let visual_time = ui.animation_time;
-        ui.update_trails(1.2, SectionPlane::new(Vec3::ZERO), 1., &gpu.context);
-        assert_eq!(ui.animation_time, visual_time);
+        ui.overlay.paused = true;
+        let visual_time = ui.overlay.visual_time;
+        ui.update_trails(1.2, SectionPlane::new(Vec3::ZERO), 1., &gpu.context, false);
+        assert_eq!(ui.overlay.visual_time, visual_time);
         ui.start(Mode::Applied, 1000, &model, &volume, &gpu.context);
         ui.cancel.as_ref().unwrap().store(true, Ordering::Relaxed);
         wait(&mut ui);

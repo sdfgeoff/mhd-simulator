@@ -24,6 +24,8 @@ struct File {
     cad_curves: Option<Vec<crate::model::CurvePath>>,
     #[serde(default)]
     electromagnetics: crate::em::EmConfig,
+    #[serde(default)]
+    fluid: crate::fluid::FluidConfig,
     version: u32,
     geometry: String,
     domain: DomainSettings,
@@ -33,6 +35,7 @@ struct File {
 }
 pub struct Loaded {
     pub electromagnetics: crate::em::EmConfig,
+    pub fluid: crate::fluid::FluidConfig,
     pub model: Model,
     pub settings: DomainSettings,
     pub materials: Vec<Material>,
@@ -44,25 +47,11 @@ pub fn save(
     settings: &DomainSettings,
     materials: &[Material],
     plane: SectionPlane,
-) -> Result<(), String> {
-    save_with_em(
-        path,
-        model,
-        settings,
-        materials,
-        plane,
-        &crate::em::EmConfig::default(),
-    )
-}
-pub fn save_with_em(
-    path: &Path,
-    model: &Model,
-    settings: &DomainSettings,
-    materials: &[Material],
-    plane: SectionPlane,
     electromagnetics: &crate::em::EmConfig,
+    fluid: &crate::fluid::FluidConfig,
 ) -> Result<(), String> {
     electromagnetics.validate(model)?;
+    fluid.validate()?;
     if !path
         .file_name()
         .is_some_and(|n| n.to_string_lossy().ends_with(".mhd.json"))
@@ -85,6 +74,7 @@ pub fn save_with_em(
     let f = File {
         cad_curves: Some(model.curves.clone()),
         electromagnetics: electromagnetics.clone(),
+        fluid: fluid.clone(),
         version: 1,
         geometry,
         domain: settings.clone(),
@@ -165,8 +155,10 @@ pub fn load(path: &Path) -> Result<Loaded, String> {
         return Err("Invalid plane transform".into());
     }
     f.electromagnetics.validate(&model)?;
+    f.fluid.validate()?;
     Ok(Loaded {
         electromagnetics: f.electromagnetics,
+        fluid: f.fluid,
         model,
         settings: f.domain,
         materials: f.materials,
@@ -185,13 +177,14 @@ mod tests {
         let loaded = load(path).unwrap();
         std::fs::create_dir_all("artifacts").unwrap();
         let saved = Path::new("artifacts/multiple-cad.mhd.json");
-        save_with_em(
+        save(
             saved,
             &loaded.model,
             &loaded.settings,
             &loaded.materials,
             loaded.plane,
             &loaded.electromagnetics,
+            &loaded.fluid,
         )
         .unwrap();
         let restored = load(saved).unwrap();
@@ -216,7 +209,16 @@ mod tests {
         p.rotate_world(Vec3::Z, 0.4);
         std::fs::create_dir_all("artifacts").unwrap();
         let path = Path::new("artifacts/roundtrip.mhd.json");
-        save(path, &m, &s, &materials, p).unwrap();
+        save(
+            path,
+            &m,
+            &s,
+            &materials,
+            p,
+            &Default::default(),
+            &Default::default(),
+        )
+        .unwrap();
         let r = load(path).unwrap();
         assert_eq!(r.settings, s);
         assert_eq!(r.materials, materials);

@@ -2,7 +2,7 @@
 
 A native Rust/wgpu workbench for preparing a 3D molten-metal jetting simulation. It imports CAD-exported meshes, builds a persistent **rasterized 3D material grid**, and lets you compare its voxel sections against the original geometry with a six-axis plane gizmo.
 
-**Applied magnetic fields and transient stationary-metal induction are implemented.** Inspect B, induced J, Lorentz force and Joule heating on the movable section plane. Fluid/free-surface and thermal evolution remain future stages. [Electromagnetics guide, equations and validation](docs/ELECTROMAGNETICS.md).
+**Applied magnetic fields and transient stationary-metal induction are implemented.** Inspect B, induced J, Lorentz force and Joule heating on the movable section plane. Fixed-geometry fluid velocity and pressure are also implemented, with shared animated vector overlays and optional frozen EM forcing. Moving liquid surfaces and thermal evolution remain future stages. [Fluid guide and validation](docs/FLUIDS.md). [Electromagnetics guide, equations and validation](docs/ELECTROMAGNETICS.md).
 
 ## Run and inspect
 
@@ -47,9 +47,11 @@ The included original `assets/hotend.gltf`/`.glb` fixture has a 6 mm OD / 3 mm I
 3. Occupancy is sampled at cell centres. Geometry below the cell spacing can disappear. Physical boundary fractions, face apertures, signed distances and adaptive refinement are not present; those will be needed for more accurate solver boundary treatment.
 4. Mesh closure/nonmanifold checks and nonfinite/degenerate-triangle rejection catch common import errors, but do not prove geometric validity or absence of self-intersections. Included open meshes are rejected. Ambiguous CAD section loops fall back to outlines with a warning.
 5. The current grid supports up to 31 components. Raster target layers, buffer sizes and memory are checked against the GPU limits. The UI's memory estimate covers grid working storage; uploaded mesh vertices add memory.
-6. A component current must be linked to a wire source, or the wire can supply its own current waveform. A current value alone does not define the path. Material properties are scalar inputs, not temperature-dependent property curves. Temperature remains configuration; the EM solve uses explicitly supplied conductivity/permeability. No CUDA or C/C++ CAD kernel is used; wgpu/eframe supply platform graphics/window integration.
+6. Each current waveform is assigned directly to a CAD centreline. Material properties are scalar inputs, not temperature-dependent property curves. Temperature remains configuration; the EM solve uses explicitly supplied conductivity/permeability. No CUDA or C/C++ CAD kernel is used; wgpu/eframe supply platform graphics/window integration.
 
 ## Material presets
+
+The solder presets also include an illustrative liquid viscosity of 0.002 Pa·s for starting fluid experiments; replace it for the operating temperature.
 
 All named presets now have conductivity, relative permeability and density values. **Unassigned** stays unset so forgotten material assignments are reported. [Material defaults, assumptions and sources](docs/MATERIALS.md) records the values: most are room-temperature/bulk references, with explicit unit-permeability and insulating approximations. Temperature inputs do not automatically modify these scalars. Existing project overrides are preserved; the material editor can fill only missing preset scalars.
 
@@ -74,8 +76,8 @@ Tests cover analytic hollow-cylinder volume convergence, rotated solids, a 256³
 
 `vendor/step-io` is the upstream pure-Rust STEP reader at commit `2d7bd2a9d55fe9a4c8b12e3a8f39bcafe2575300` (0.3.0). `vendor/step-loupe` is an upstream reference checkout, not linked into the app. Their licences/notices are retained; see `THIRD_PARTY.md`.
 
-1. Accurate fluid boundary treatment, pressure/velocity and free-surface capillary dynamics.
-2. Coupling electromagnetics to the moving liquid, then thermal evolution as required.
+1. Moving liquid–air interfaces, balanced surface tension and improved fractional wall treatment.
+2. Time-dependent coupling to the moving liquid, then thermal evolution as required.
 3. Tighter spatial/time convergence and faster EM preconditioning for larger grids.
 4. Robust pure-Rust STEP face tessellation.
 

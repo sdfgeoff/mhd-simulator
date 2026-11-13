@@ -603,9 +603,14 @@ impl Viewport {
                 }
             }
             if let Some(field) = domain.field {
+                let arrow_color = if field.kind >= 8 || field.component > 0 {
+                    [0.03, 0.05, 0.08, 1.]
+                } else {
+                    [0.95, 0.97, 1., 1.]
+                };
                 for segment in field.vectors {
                     for &p in segment {
-                        lines.push(vertex(p, [0.95, 0.97, 1., 1.], 2.));
+                        lines.push(vertex(p, arrow_color, 2.));
                     }
                 }
             }
@@ -850,6 +855,7 @@ mod tests {
                         offset: 0,
                         subtract: None,
                         interpolate: true,
+                        validity: None,
                     },
                 },
                 plane,
@@ -896,6 +902,171 @@ mod tests {
             state.time_s, 50e-6,
             "display animation must not advance the solver"
         );
+    }
+    #[test]
+    fn fluid_pressure_and_velocity_trails_share_native_viewports() {
+        let _lock = crate::gpu_test_lock();
+        let mut panel = viewport();
+        let mut scene = Viewport::new(panel.state.clone());
+        let context = crate::gpu::GpuContext::new(
+            panel.state.device.clone(),
+            panel.state.queue.clone(),
+            panel.state.adapter.get_info().name,
+        );
+        let gpu = crate::domain::GpuDomain::from_context(context.clone()).unwrap();
+        let project =
+            crate::project::load(std::path::Path::new("assets/hotend-cad.mhd.json")).unwrap();
+        let volume = gpu
+            .build(&project.model, &project.settings, &project.materials)
+            .unwrap();
+        let mut em = crate::em::EmState::new(
+            context.clone(),
+            &volume,
+            &project.model,
+            project.electromagnetics,
+            crate::em::Mode::Induction,
+        )
+        .unwrap();
+        for _ in 0..5 {
+            em.step(&project.model, &volume).unwrap();
+        }
+        let mut config = project.fluid;
+        config.use_em_force = true;
+        let mut state = crate::fluid::FluidState::new(
+            context.clone(),
+            &volume,
+            config,
+            Some(crate::fluid::ForceField {
+                buffer: em.result_buffer(),
+                grid: &em.grid,
+            }),
+        )
+        .unwrap();
+        for _ in 0..10 {
+            state.step(&volume).unwrap();
+        }
+        let frame = state.snapshot();
+        let time = frame.time_s;
+        assert!(frame.diagnostics.max_speed_m_s > 1e-6);
+        assert!(
+            frame.diagnostics.rms_divergence_s_inv < 3e-5,
+            "{:?}",
+            frame.diagnostics
+        );
+        let plane = project.plane;
+        let caps: Vec<_> = project
+            .model
+            .bodies
+            .iter()
+            .map(|b| crate::caps::build(b, plane, 1e-5))
+            .collect();
+        let mut flow = crate::flow::FlowTrails::new(context);
+        let n = 384;
+        let span = 6.;
+        let settings = crate::flow::TrailSettings {
+            density: 36,
+            speed: 0.5,
+            ..Default::default()
+        };
+        let basis = glam::Mat3::from_cols(plane.u(), -plane.normal(), plane.v());
+        let camera = Camera {
+            rect: egui::Rect::from_min_size(egui::Pos2::ZERO, egui::Vec2::splat(n as f32)),
+            center: plane.position,
+            rotation: glam::Quat::from_mat3(&basis).inverse(),
+            scale: n as f32 / (2. * span),
+            size: 16.,
+        };
+        let folder = std::path::Path::new("artifacts/fluid-preview");
+        std::fs::create_dir_all(folder).unwrap();
+        let mut first = Vec::new();
+        let mut changed = false;
+        for i in 0..20 {
+            flow.update(
+                crate::flow::VectorField {
+                    buffer: frame.result_buffer(),
+                    grid: &frame.grid,
+                    layout: crate::flow::VectorLayout {
+                        stride: 4,
+                        offset: 0,
+                        subtract: None,
+                        interpolate: true,
+                        validity: Some((3, 0)),
+                    },
+                },
+                plane,
+                span,
+                i as f64 * 0.1,
+                settings,
+            )
+            .unwrap();
+            let field = FieldView {
+                buffer: frame.result_buffer(),
+                kind: 8,
+                component: 0,
+                range: frame.diagnostics.max_pressure_pa,
+                vectors: &[],
+                trails: Some(flow.draw()),
+            };
+            panel.draw_section(
+                &project.model,
+                &caps,
+                plane,
+                Some(&volume),
+                crate::section::Options {
+                    style: crate::section::Style::Field,
+                    edges: false,
+                    material_colors: false,
+                },
+                span,
+                n,
+                Some(field),
+            );
+            let image = read(&panel);
+            if i == 0 {
+                first = image.clone();
+            } else {
+                changed |= image != first;
+            }
+            if i == 0 {
+                let mut hidden = project.model.clone();
+                hidden.curves.clear();
+                for b in &mut hidden.bodies {
+                    b.visible = false;
+                }
+                scene.draw(
+                    camera,
+                    plane,
+                    true,
+                    false,
+                    &hidden,
+                    &[],
+                    1.,
+                    Some(DomainView {
+                        field: Some(field),
+                        source_lines: &[],
+                        span,
+                        bounds: None,
+                        grid: None,
+                        volume: Some(&volume),
+                        material_colors: false,
+                    }),
+                );
+                let second = read(&scene);
+                let x = n as usize / 2;
+                let y = n as usize / 2;
+                assert_eq!(
+                    &image[(y * n as usize + x) * 4..][..3],
+                    &second[(y * n as usize + x) * 4..][..3]
+                );
+            }
+            let mut ppm = format!("P6\n{n} {n}\n255\n").into_bytes();
+            for pixel in image.chunks_exact(4) {
+                ppm.extend_from_slice(&pixel[..3]);
+            }
+            std::fs::write(folder.join(format!("frame-{i:02}.ppm")), ppm).unwrap();
+        }
+        assert!(changed, "fluid trails must animate over pressure");
+        assert_eq!(state.time_s, time);
     }
     #[test]
     fn cad_curves_render_as_geometry_without_a_current_source() {

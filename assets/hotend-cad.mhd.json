@@ -2029,6 +2029,30 @@
     "relative_tolerance": 0.00001,
     "max_iterations": 1000
   },
+  "fluid": {
+    "material_id": 3,
+    "dt_s": 0.00001,
+    "acceleration_m_s2": [
+      0.0,
+      0.0,
+      -9.81
+    ],
+    "initial_velocity_m_s": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "periodic": [
+      false,
+      false,
+      false
+    ],
+    "advection": true,
+    "use_em_force": false,
+    "relative_tolerance": 0.00001,
+    "absolute_divergence_tolerance": 0.00001,
+    "max_iterations": 1000
+  },
   "version": 1,
   "geometry": "hotend-cad.gltf",
   "domain": {
@@ -2051,6 +2075,7 @@
       "conductivity_s_m": 0.0,
       "relative_permeability": 1.0,
       "density_kg_m3": 1.2,
+      "dynamic_viscosity_pa_s": null,
       "notes": "EM vacuum/insulator approximation; approximate air density at room temperature. No temperature dependence.",
       "reference": null
     },
@@ -2060,6 +2085,7 @@
       "conductivity_s_m": null,
       "relative_permeability": null,
       "density_kg_m3": null,
+      "dynamic_viscosity_pa_s": null,
       "notes": "Select a physical material before simulating this component.",
       "reference": null
     },
@@ -2069,6 +2095,7 @@
       "conductivity_s_m": 58000000.0,
       "relative_permeability": 1.0,
       "density_kg_m3": 8890.0,
+      "dynamic_viscosity_pa_s": null,
       "notes": "100% IACS reference conductivity and density at 20 °C; unit permeability approximation. Temperature dependence is not applied.",
       "reference": "https://help.copper.fyi/hc/en-us/articles/4410229175442-How-does-copper-set-the-standard-for-electrical-conductivity"
     },
@@ -2078,7 +2105,8 @@
       "conductivity_s_m": 6671114.0,
       "relative_permeability": 1.0,
       "density_kg_m3": 8520.0,
-      "notes": "Bulk solder datasheet defaults: resistivity 14.99 µΩ·cm and density 8.52 Mg/m³. Unit permeability approximation. Not calibrated molten-metal properties; temperature dependence is not applied.",
+      "dynamic_viscosity_pa_s": 0.002,
+      "notes": "Bulk solder datasheet defaults: resistivity 14.99 µΩ·cm and density 8.52 Mg/m³. Unit permeability approximation. Not calibrated molten-metal properties; temperature dependence is not applied. Liquid viscosity 0.002 Pa·s is an illustrative starting assumption; replace it at operating temperature.",
       "reference": "https://www.ametekinterconnect.com/-/media/ametek-ecp/v2/files/cw_datasheets_sds_cfsi/datasheets/sn60pb40%20data%20sheet.pdf?la=en"
     },
     {
@@ -2087,7 +2115,8 @@
       "conductivity_s_m": 8340284.0,
       "relative_permeability": 1.0,
       "density_kg_m3": 7420.0,
-      "notes": "ALPHA VACULOY datasheet defaults: resistivity 11.99 µΩ·cm and density 7.42 g/cm³. Unit permeability approximation. Not calibrated molten-metal properties; temperature dependence is not applied.",
+      "dynamic_viscosity_pa_s": 0.002,
+      "notes": "ALPHA VACULOY datasheet defaults: resistivity 11.99 µΩ·cm and density 7.42 g/cm³. Unit permeability approximation. Not calibrated molten-metal properties; temperature dependence is not applied. Liquid viscosity 0.002 Pa·s is an illustrative starting assumption; replace it at operating temperature.",
       "reference": "https://www.macdermidalpha.com/sites/default/files/2024-04/ALPHA-VACULOY-Sn99.3Cu0.7-Solid-Solder-EN-12Apr24-TB.pdf"
     },
     {
@@ -2096,6 +2125,7 @@
       "conductivity_s_m": 625000.0,
       "relative_permeability": 1.0,
       "density_kg_m3": 7500.0,
+      "dynamic_viscosity_pa_s": null,
       "notes": "Representative NdFeB: resistivity 160 µΩ·cm, density 7.5 g/cm³. The solver uses μr=1 as an explicit approximation (typical recoil μr≈1.05). Set source magnetization separately per CAD body; no temperature dependence or demagnetization model.",
       "reference": "https://www.kjmagnetics.com/neodymium-magnet-specifications.asp"
     },
@@ -2105,6 +2135,7 @@
       "conductivity_s_m": 1333333.2,
       "relative_permeability": 1.0,
       "density_kg_m3": 8000.0,
+      "dynamic_viscosity_pa_s": null,
       "notes": "Density and conductivity references at 20 °C. Unit permeability is an annealed/nonmagnetic approximation; processing can change it. No temperature dependence is applied.",
       "reference": "https://www.thyssenkrupp-materials.co.uk/stainless-steel-316-14401.html/index.html"
     },
@@ -2114,6 +2145,7 @@
       "conductivity_s_m": 0.0,
       "relative_permeability": 1.0,
       "density_kg_m3": 3900.0,
+      "dynamic_viscosity_pa_s": null,
       "notes": "Representative CoorsTek AD-995 (99.5%) density. Ideal electrical insulator and unit-permeability approximations; room-temperature resistivity exceeds 10¹⁴ Ω·cm. Grade and temperature matter; no temperature dependence is applied.",
       "reference": "https://www2.coorstek.com/media/4235/advanced-alumina.pdf"
     }

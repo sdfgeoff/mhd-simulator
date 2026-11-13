@@ -58,13 +58,13 @@ fn material_table(context: &GpuContext, s: &SimulationSnapshot) -> wgpu::Buffer 
                 m.conductivity_s_m.unwrap_or(0.),
                 m.relative_permeability.unwrap_or(0.),
                 m.density_kg_m3.unwrap_or(0.),
-                0.,
+                m.dynamic_viscosity_pa_s.unwrap_or(0.),
             ],
             flags: [
                 m.conductivity_s_m.is_some() as u32,
                 m.relative_permeability.is_some() as u32,
                 m.density_kg_m3.is_some() as u32,
-                0,
+                m.dynamic_viscosity_pa_s.is_some() as u32,
             ],
         };
     }

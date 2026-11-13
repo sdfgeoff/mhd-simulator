@@ -1,6 +1,6 @@
 # Stationary electromagnetics
 
-The workbench now computes applied magnetic fields and transient eddy currents in stationary, conducting CAD volumes. It reports magnetic flux density B, induced current density J, Lorentz force density J×B, and Joule heating. The liquid surface and solids remain fixed during these stages.
+The workbench now computes applied magnetic fields and transient eddy currents in stationary, conducting CAD volumes. It reports magnetic flux density B, induced current density J, Lorentz force density J×B, and Joule heating. The liquid surface and solids remain fixed during these stages. The [fixed-geometry fluid solver](FLUIDS.md) can consume a recorded Lorentz-force snapshot; moving-interface coupling remains a later stage.
 
 ## Run an example
 

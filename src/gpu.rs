@@ -42,3 +42,33 @@ impl GpuContext {
         })
     }
 }
+
+pub(crate) fn read_bytes(
+    context: &GpuContext,
+    source: &wgpu::Buffer,
+    offset: u64,
+    bytes: u64,
+) -> Result<Vec<u8>, String> {
+    let output = context.device.create_buffer(&wgpu::BufferDescriptor {
+        label: Some("GPU scalar/probe readback"),
+        size: bytes,
+        usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
+        mapped_at_creation: false,
+    });
+    let mut encoder = context.device.create_command_encoder(&Default::default());
+    encoder.copy_buffer_to_buffer(source, offset, &output, 0, bytes);
+    let submission = context.queue.submit(Some(encoder.finish()));
+    let (tx, rx) = std::sync::mpsc::channel();
+    output.slice(..).map_async(wgpu::MapMode::Read, move |r| {
+        let _ = tx.send(r);
+    });
+    context
+        .device
+        .poll(wgpu::Maintain::WaitForSubmissionIndex(submission));
+    rx.recv()
+        .map_err(|e| e.to_string())?
+        .map_err(|e| e.to_string())?;
+    let data = output.slice(..).get_mapped_range().to_vec();
+    output.unmap();
+    Ok(data)
+}

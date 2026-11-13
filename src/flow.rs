@@ -31,6 +31,7 @@ pub struct VectorLayout {
     pub offset: u32,
     pub subtract: Option<u32>,
     pub interpolate: bool,
+    pub validity: Option<(u32, u32)>,
 }
 pub struct VectorField<'a> {
     pub buffer: &'a wgpu::Buffer,
@@ -43,6 +44,7 @@ pub struct TrailSettings {
     pub speed: f32,
     pub tail: f32,
     pub dots: bool,
+    pub minimum_magnitude: f32,
 }
 impl Default for TrailSettings {
     fn default() -> Self {
@@ -51,6 +53,7 @@ impl Default for TrailSettings {
             speed: 0.35,
             tail: 0.22,
             dots: false,
+            minimum_magnitude: 0.,
         }
     }
 }
@@ -68,11 +71,13 @@ struct Params {
     grid: [f32; 4],
     dims: [u32; 4],
     source: [u32; 4],
+    validity: [u32; 4],
     motion: [f32; 4],
 }
 pub struct FlowTrails {
     context: GpuContext,
     pipeline: wgpu::ComputePipeline,
+    gather_pipeline: wgpu::ComputePipeline,
     uniform: wgpu::Buffer,
     vertices: wgpu::Buffer,
     count: u32,
@@ -95,6 +100,17 @@ impl FlowTrails {
                 compilation_options: Default::default(),
                 cache: None,
             });
+        let gather_pipeline =
+            context
+                .device
+                .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+                    label: Some("Vector sample gather"),
+                    layout: None,
+                    module: &shader,
+                    entry_point: Some("gather"),
+                    compilation_options: Default::default(),
+                    cache: None,
+                });
         let uniform = context.device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("Flow display parameters"),
             size: std::mem::size_of::<Params>() as u64,
@@ -105,6 +121,7 @@ impl FlowTrails {
         Self {
             context,
             pipeline,
+            gather_pipeline,
             uniform,
             vertices,
             count: 0,
@@ -134,6 +151,42 @@ impl FlowTrails {
         time_s: f64,
         settings: TrailSettings,
     ) -> Result<(), String> {
+        self.generate(field, plane, span_mm, time_s, settings, false)
+    }
+    pub fn gather(
+        &mut self,
+        field: VectorField<'_>,
+        plane: SectionPlane,
+        span_mm: f32,
+        density: u32,
+    ) -> Result<Vec<[f32; 4]>, String> {
+        self.generate(
+            field,
+            plane,
+            span_mm,
+            0.,
+            TrailSettings {
+                density,
+                ..Default::default()
+            },
+            true,
+        )?;
+        let bytes =
+            crate::gpu::read_bytes(&self.context, &self.vertices, 0, self.count as u64 * 32)?;
+        Ok(bytemuck::cast_slice::<u8, [f32; 8]>(&bytes)
+            .iter()
+            .map(|v| [v[0], v[1], v[2], v[3]])
+            .collect())
+    }
+    fn generate(
+        &mut self,
+        field: VectorField<'_>,
+        plane: SectionPlane,
+        span_mm: f32,
+        time_s: f64,
+        settings: TrailSettings,
+        gather: bool,
+    ) -> Result<(), String> {
         let layout = field.layout;
         if field.grid.dims.iter().any(|&n| n == 0 || n > 2048) {
             self.count = 0;
@@ -146,6 +199,9 @@ impl FlowTrails {
             || layout.stride == 0
             || layout.offset >= layout.stride
             || layout.subtract.is_some_and(|i| i >= layout.stride)
+            || layout
+                .validity
+                .is_some_and(|(slot, component)| slot >= layout.stride || component >= 4)
             || cells
                 .checked_mul(layout.stride as u64)
                 .and_then(|n| n.checked_mul(16))
@@ -163,13 +219,15 @@ impl FlowTrails {
             || !(1..=64).contains(&settings.density)
             || !settings.speed.is_finite()
             || settings.speed < 0.
+            || !settings.minimum_magnitude.is_finite()
+            || settings.minimum_magnitude < 0.
             || !settings.tail.is_finite()
             || !(0.01..=1.).contains(&settings.tail)
         {
             self.count = 0;
             return Err("Invalid flow field layout, plane or animation settings".into());
         }
-        self.count = settings.density * settings.density * STEPS * 2;
+        self.count = settings.density * settings.density * if gather { 1 } else { STEPS * 2 };
         let bytes = self.count as u64 * 32;
         if self.vertices.size() < bytes {
             self.vertices = Self::buffer(&self.context, bytes);
@@ -198,22 +256,33 @@ impl FlowTrails {
                 settings.density,
                 u32::from(layout.interpolate),
             ],
+            validity: [
+                layout.validity.map(|v| v.0).unwrap_or(u32::MAX),
+                layout.validity.map(|v| v.1).unwrap_or(0),
+                0,
+                0,
+            ],
             motion: [
                 (time_s * settings.speed as f64).rem_euclid(1.) as f32,
                 step,
                 if settings.dots { 0.035 } else { settings.tail },
-                0.,
+                settings.minimum_magnitude,
             ],
         };
         self.context
             .queue
             .write_buffer(&self.uniform, 0, bytemuck::bytes_of(&params));
+        let pipeline = if gather {
+            &self.gather_pipeline
+        } else {
+            &self.pipeline
+        };
         let bind = self
             .context
             .device
             .create_bind_group(&wgpu::BindGroupDescriptor {
                 label: None,
-                layout: &self.pipeline.get_bind_group_layout(0),
+                layout: &pipeline.get_bind_group_layout(0),
                 entries: &[
                     wgpu::BindGroupEntry {
                         binding: 0,
@@ -235,7 +304,7 @@ impl FlowTrails {
             .create_command_encoder(&Default::default());
         {
             let mut pass = encoder.begin_compute_pass(&Default::default());
-            pass.set_pipeline(&self.pipeline);
+            pass.set_pipeline(pipeline);
             pass.set_bind_group(0, &bind, &[]);
             pass.dispatch_workgroups((settings.density * settings.density).div_ceil(64), 1, 1);
         }
@@ -278,6 +347,7 @@ mod tests {
             offset: 0,
             subtract: None,
             interpolate: true,
+            validity: None,
         };
         let plane = SectionPlane::new(glam::Vec3::ZERO);
         let settings = TrailSettings {
@@ -286,7 +356,7 @@ mod tests {
         };
         let mut trails = FlowTrails::new(context.clone());
         let read = |trails: &FlowTrails| {
-            crate::em::read_bytes(&context, trails.draw().buffer, 0, trails.count as u64 * 32)
+            crate::gpu::read_bytes(&context, trails.draw().buffer, 0, trails.count as u64 * 32)
                 .unwrap()
         };
         trails
@@ -339,7 +409,7 @@ mod tests {
             .unwrap();
         let b = read(&trails);
         assert_ne!(a, b, "animation must move the bright part of each trace");
-        let unchanged = crate::em::read_bytes(&context, &field, 0, field.size()).unwrap();
+        let unchanged = crate::gpu::read_bytes(&context, &field, 0, field.size()).unwrap();
         assert_eq!(unchanged, bytemuck::cast_slice::<_, u8>(&vectors));
         context.queue.write_buffer(
             &field,

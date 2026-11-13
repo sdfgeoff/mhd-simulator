@@ -2,6 +2,7 @@
 //! See docs/ELECTROMAGNETICS.md for the discrete formulation and limitations.
 mod grid;
 mod sources;
+use crate::gpu::read_bytes;
 use crate::{
     domain::Volume,
     gpu::GpuContext,
@@ -802,15 +803,6 @@ impl EmState {
     pub fn probe(&self, position_mm: [f32; 3]) -> Result<Option<CellField>, String> {
         self.field_view().probe(position_mm)
     }
-    pub fn sample_plane(
-        &self,
-        plane: crate::plane::SectionPlane,
-        span_mm: f32,
-        n: u32,
-        kind: u32,
-    ) -> Result<Vec<[f32; 4]>, String> {
-        self.field_view().sample_plane(plane, span_mm, n, kind)
-    }
     #[cfg(test)]
     fn all_fields(&self) -> Vec<CellField> {
         let bytes = read_bytes(
@@ -859,138 +851,11 @@ impl EmFrame {
         let bytes = read_bytes(&self.context, &self.result, i * 64, 64)?;
         Ok(Some(bytemuck::pod_read_unaligned(&bytes)))
     }
-    pub fn sample_plane(
-        &self,
-        plane: crate::plane::SectionPlane,
-        span_mm: f32,
-        n: u32,
-        kind: u32,
-    ) -> Result<Vec<[f32; 4]>, String> {
-        if !(2..=64).contains(&n) {
-            return Err("Vector sample width must be 2..64".into());
-        }
-        let data = [
-            plane.position.extend(0.).to_array().map(|v| v * 1e-3),
-            (plane.u() * span_mm * 1e-3).extend(0.).to_array(),
-            (plane.v() * span_mm * 1e-3).extend(0.).to_array(),
-            [
-                self.grid.origin_m[0],
-                self.grid.origin_m[1],
-                self.grid.origin_m[2],
-                self.grid.cell_m,
-            ],
-        ];
-        let mut bytes = bytemuck::cast_slice(&data).to_vec();
-        bytes.extend_from_slice(bytemuck::cast_slice(&[
-            self.grid.dims[0],
-            self.grid.dims[1],
-            self.grid.dims[2],
-            0,
-            n,
-            kind,
-            0,
-            0,
-        ]));
-        let uniform = self
-            .context
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Vector section probes"),
-                contents: &bytes,
-                usage: wgpu::BufferUsages::UNIFORM,
-            });
-        let output = self.context.device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("Small vector probe array"),
-            size: n as u64 * n as u64 * 16,
-            usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
-            mapped_at_creation: false,
-        });
-        let shader = self
-            .context
-            .device
-            .create_shader_module(wgpu::ShaderModuleDescriptor {
-                label: Some("Field vector probes"),
-                source: wgpu::ShaderSource::Wgsl(include_str!("sample.wgsl").into()),
-            });
-        let pipeline =
-            self.context
-                .device
-                .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-                    label: None,
-                    layout: None,
-                    module: &shader,
-                    entry_point: Some("main"),
-                    compilation_options: Default::default(),
-                    cache: None,
-                });
-        let bind = self
-            .context
-            .device
-            .create_bind_group(&wgpu::BindGroupDescriptor {
-                label: None,
-                layout: &pipeline.get_bind_group_layout(0),
-                entries: &[
-                    wgpu::BindGroupEntry {
-                        binding: 0,
-                        resource: uniform.as_entire_binding(),
-                    },
-                    wgpu::BindGroupEntry {
-                        binding: 1,
-                        resource: self.result.as_entire_binding(),
-                    },
-                    wgpu::BindGroupEntry {
-                        binding: 2,
-                        resource: output.as_entire_binding(),
-                    },
-                ],
-            });
-        let mut encoder = self
-            .context
-            .device
-            .create_command_encoder(&Default::default());
-        {
-            let mut pass = encoder.begin_compute_pass(&Default::default());
-            pass.set_pipeline(&pipeline);
-            pass.set_bind_group(0, &bind, &[]);
-            pass.dispatch_workgroups(n.div_ceil(8), n.div_ceil(8), 1);
-        }
-        self.context.queue.submit(Some(encoder.finish()));
-        Ok(bytemuck::cast_slice(&read_bytes(&self.context, &output, 0, output.size())?).to_vec())
-    }
 }
 
 fn groups(n: u32) -> [u32; 3] {
     let n = n.div_ceil(256);
     [n.min(65535), n.div_ceil(65535), 1]
-}
-pub(crate) fn read_bytes(
-    context: &GpuContext,
-    source: &wgpu::Buffer,
-    offset: u64,
-    bytes: u64,
-) -> Result<Vec<u8>, String> {
-    let output = context.device.create_buffer(&wgpu::BufferDescriptor {
-        label: Some("EM scalar/probe readback"),
-        size: bytes,
-        usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
-        mapped_at_creation: false,
-    });
-    let mut encoder = context.device.create_command_encoder(&Default::default());
-    encoder.copy_buffer_to_buffer(source, offset, &output, 0, bytes);
-    let submission = context.queue.submit(Some(encoder.finish()));
-    let (tx, rx) = std::sync::mpsc::channel();
-    output.slice(..).map_async(wgpu::MapMode::Read, move |r| {
-        let _ = tx.send(r);
-    });
-    context
-        .device
-        .poll(wgpu::Maintain::WaitForSubmissionIndex(submission));
-    rx.recv()
-        .map_err(|e| e.to_string())?
-        .map_err(|e| e.to_string())?;
-    let data = output.slice(..).get_mapped_range().to_vec();
-    output.unmap();
-    Ok(data)
 }
 #[cfg(test)]
 mod tests;

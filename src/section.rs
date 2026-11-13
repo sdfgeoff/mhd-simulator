@@ -12,7 +12,7 @@ impl Style {
             Self::HatchedCad => "Hatched CAD",
             Self::Outlines => "CAD outlines",
             Self::Voxels => "Voxel cells",
-            Self::Field => "Electromagnetic field",
+            Self::Field => "Analysis field",
         }
     }
 }

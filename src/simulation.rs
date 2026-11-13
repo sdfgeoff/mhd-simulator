@@ -25,6 +25,8 @@ pub struct Material {
     pub relative_permeability: Option<f32>,
     pub density_kg_m3: Option<f32>,
     #[serde(default)]
+    pub dynamic_viscosity_pa_s: Option<f32>,
+    #[serde(default)]
     pub notes: String,
     #[serde(default)]
     pub reference: Option<String>,
@@ -36,7 +38,14 @@ pub fn default_materials() -> Vec<Material> {
         conductivity_s_m: Some(sigma),
         relative_permeability: Some(mu),
         density_kg_m3: Some(density),
-        notes: notes.into(),
+        dynamic_viscosity_pa_s: ((id == 3) || (id == 4)).then_some(0.002),
+        notes: if id == 3 || id == 4 {
+            format!(
+                "{notes} Liquid viscosity 0.002 Pa·s is an illustrative starting assumption; replace it at operating temperature."
+            )
+        } else {
+            notes.into()
+        },
         reference: (!reference.is_empty()).then(|| reference.into()),
     };
     vec![
@@ -55,6 +64,7 @@ pub fn default_materials() -> Vec<Material> {
             conductivity_s_m: None,
             relative_permeability: None,
             density_kg_m3: None,
+            dynamic_viscosity_pa_s: None,
             notes: "Select a physical material before simulating this component.".into(),
             reference: None,
         },
@@ -99,12 +109,12 @@ pub fn default_materials() -> Vec<Material> {
     ]
 }
 fn stainless316(id: u32) -> Material {
-    Material {id,name:"316 stainless steel".into(),conductivity_s_m:Some(1./0.75e-6),relative_permeability:Some(1.),density_kg_m3:Some(8000.),
+    Material {id,name:"316 stainless steel".into(),conductivity_s_m:Some(1./0.75e-6),relative_permeability:Some(1.),density_kg_m3:Some(8000.),dynamic_viscosity_pa_s:None,
         notes:"Density and conductivity references at 20 °C. Unit permeability is an annealed/nonmagnetic approximation; processing can change it. No temperature dependence is applied.".into(),
         reference:Some("https://www.thyssenkrupp-materials.co.uk/stainless-steel-316-14401.html/index.html".into())}
 }
 fn alumina(id: u32) -> Material {
-    Material {id,name:"Alumina".into(),conductivity_s_m:Some(0.),relative_permeability:Some(1.),density_kg_m3:Some(3900.),
+    Material {id,name:"Alumina".into(),conductivity_s_m:Some(0.),relative_permeability:Some(1.),density_kg_m3:Some(3900.),dynamic_viscosity_pa_s:None,
         notes:"Representative CoorsTek AD-995 (99.5%) density. Ideal electrical insulator and unit-permeability approximations; room-temperature resistivity exceeds 10¹⁴ Ω·cm. Grade and temperature matter; no temperature dependence is applied.".into(),
         reference:Some("https://www2.coorstek.com/media/4235/advanced-alumina.pdf".into())}
 }
@@ -125,6 +135,10 @@ pub fn fill_missing_defaults(materials: &mut [Material]) -> bool {
                     preset.relative_permeability,
                 ),
                 (&mut material.density_kg_m3, preset.density_kg_m3),
+                (
+                    &mut material.dynamic_viscosity_pa_s,
+                    preset.dynamic_viscosity_pa_s,
+                ),
             ] {
                 if target.is_none() && value.is_some() {
                     *target = value;
@@ -207,6 +221,7 @@ pub fn validate_materials(materials: &[Material]) -> Result<(), String> {
             ("conductivity", m.conductivity_s_m, true),
             ("permeability", m.relative_permeability, false),
             ("density", m.density_kg_m3, false),
+            ("dynamic viscosity", m.dynamic_viscosity_pa_s, false),
         ] {
             if v.is_some_and(|v| !v.is_finite() || v < 0. || (!allow_zero && v == 0.)) {
                 return Err(format!("Invalid {name} for material {}", m.name));
@@ -324,6 +339,7 @@ pub enum MaterialProperty {
     Conductivity,
     RelativePermeability,
     Density,
+    DynamicViscosity,
 }
 impl SimulationSnapshot {
     pub fn from_model(
@@ -396,6 +412,7 @@ impl SimulationSnapshot {
                     MaterialProperty::Conductivity => material.conductivity_s_m,
                     MaterialProperty::RelativePermeability => material.relative_permeability,
                     MaterialProperty::Density => material.density_kg_m3,
+                    MaterialProperty::DynamicViscosity => material.dynamic_viscosity_pa_s,
                 };
                 if value.is_none() {
                     return Err(format!(

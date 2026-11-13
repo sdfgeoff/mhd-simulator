@@ -1,10 +1,14 @@
-pub use mhd_workbench::{caps, domain, em, flow, gpu, inputs, model, plane, project, simulation};
+pub use mhd_workbench::{
+    caps, domain, em, flow, fluid, gpu, inputs, model, plane, project, simulation,
+};
 mod app;
 mod em_ui;
+mod fluid_ui;
 mod gizmo;
 mod render;
 mod section;
 mod timeline;
+mod vector_ui;
 use glam::Vec3;
 // GPU tests share one physical adapter; serialize context lifetime and teardown.
 #[cfg(test)]
@@ -38,6 +42,88 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         for n in &m.notices {
             println!("{n}");
         }
+        return Ok(());
+    }
+    if args.get(1).is_some_and(|a| a == "--fluid-check") {
+        let path = args
+            .get(2)
+            .map(|s| s.as_str())
+            .unwrap_or("assets/hotend-cad.mhd.json");
+        let steps = args
+            .get(3)
+            .and_then(|s| s.parse::<u32>().ok())
+            .unwrap_or(10);
+        let mut project = project::load(std::path::Path::new(path))?;
+        let gpu = domain::GpuDomain::new()?;
+        let volume = gpu.build(&project.model, &project.settings, &project.materials)?;
+        let em_steps = args.get(4).and_then(|s| s.parse::<u32>().ok());
+        if em_steps.is_some() {
+            project.fluid.use_em_force = true;
+        }
+        let force = if project.fluid.use_em_force {
+            let mut state = em::EmState::new(
+                gpu.context.clone(),
+                &volume,
+                &project.model,
+                project.electromagnetics,
+                em::Mode::Induction,
+            )?;
+            for _ in 0..em_steps.unwrap_or(5) {
+                state.step(&project.model, &volume)?;
+            }
+            println!("Frozen EM forcing at {:.3} µs", state.time_s * 1e6);
+            Some(state.snapshot())
+        } else {
+            None
+        };
+        let mut state = fluid::FluidState::new(
+            gpu.context.clone(),
+            &volume,
+            project.fluid,
+            force.as_ref().map(|f| fluid::ForceField {
+                buffer: f.result_buffer(),
+                grid: f.grid(),
+            }),
+        )?;
+        println!("Fluid reference probe: {:?} mm", state.reference_probe_mm);
+        let mut csv = String::from(
+            "time_s,ux_m_s,uy_m_s,uz_m_s,pressure_pa,divergence_s_inv,max_speed_m_s,max_divergence_s_inv,rms_divergence_s_inv,net_flux_m3_s,kinetic_energy_j,relative_pressure_residual,iterations\n",
+        );
+        for i in 0..=steps {
+            if i > 0 {
+                state.step(&volume)?;
+            }
+            let sample = state.probe(state.reference_probe_mm)?.unwrap_or_default();
+            let d = &state.diagnostics;
+            println!(
+                "t={:.3} us Umax={:.3e} m/s Pmax={:.3e} Pa div_rms={:.3e} s^-1 flux={:.3e} m3/s ({} iterations, {:.1} ms)",
+                state.time_s * 1e6,
+                d.max_speed_m_s,
+                d.max_pressure_pa,
+                d.rms_divergence_s_inv,
+                d.net_flux_m3_s,
+                d.iterations,
+                d.elapsed_ms
+            );
+            csv.push_str(&format!(
+                "{},{},{},{},{},{},{},{},{},{},{},{},{}\n",
+                state.time_s,
+                sample.velocity[0],
+                sample.velocity[1],
+                sample.velocity[2],
+                sample.pressure[0],
+                sample.pressure[1],
+                d.max_speed_m_s,
+                d.max_divergence_s_inv,
+                d.rms_divergence_s_inv,
+                d.net_flux_m3_s,
+                d.kinetic_energy_j,
+                d.relative_residual,
+                d.iterations
+            ));
+        }
+        std::fs::create_dir_all("artifacts")?;
+        std::fs::write("artifacts/fluid-probe.csv", csv)?;
         return Ok(());
     }
     if args.get(1).is_some_and(|a| a == "--em-check") {
@@ -164,6 +250,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         std::fs::write("artifacts/section.ppm", ppm)?;
         return Ok(());
+    }
+    if args
+        .get(1)
+        .is_some_and(|a| a.starts_with("--") && a != "--em-preview")
+    {
+        return Err("Unknown command. Supported: --inspect, --gpu-check, --em-check, --fluid-check, --em-preview".into());
     }
     let preview = args.get(1).is_some_and(|a| a == "--em-preview");
     let path = args
