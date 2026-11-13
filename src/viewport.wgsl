@@ -57,3 +57,9 @@ struct Output { @builtin(position) position:vec4<f32>, @location(0) world:vec3<f
     }
     return v.color;
 }
+
+struct TrailInput { @location(0) position:vec4<f32>, @location(1) color:vec4<f32> }
+@vertex fn vertex_trail(v:TrailInput)->Output {
+    var out:Output;out.position=scene.camera*v.position;out.world=v.position.xyz;
+    out.color=v.color;out.uv=vec2<f32>(0.0);out.mode=2.0;return out;
+}

@@ -30,6 +30,7 @@ pub struct FieldView<'a> {
     pub component: u32,
     pub range: f32,
     pub vectors: &'a [[Vec3; 2]],
+    pub trails: Option<crate::flow::TrailDraw<'a>>,
 }
 pub struct DomainView<'a> {
     pub field: Option<FieldView<'a>>,
@@ -53,6 +54,7 @@ pub struct Viewport {
     state: egui_wgpu::RenderState,
     triangle: wgpu::RenderPipeline,
     line: wgpu::RenderPipeline,
+    trail: wgpu::RenderPipeline,
     uniform: wgpu::Buffer,
     bind: wgpu::BindGroup,
     target: Option<(
@@ -163,11 +165,75 @@ impl Viewport {
             bind_group_layouts: &[&layout],
             push_constant_ranges: &[],
         });
-        let make = |lines: bool| {
-            device.create_render_pipeline(&wgpu::RenderPipelineDescriptor{label:Some(if lines{"Section outlines"}else{"Depth-tested CAD"}),layout:Some(&pipeline_layout),vertex:wgpu::VertexState{module:&shader,entry_point:Some("vertex"),compilation_options:Default::default(),buffers:&[wgpu::VertexBufferLayout{array_stride:std::mem::size_of::<Vertex>()as u64,step_mode:wgpu::VertexStepMode::Vertex,attributes:&wgpu::vertex_attr_array![0=>Float32x3,1=>Float32x4,2=>Float32x2,3=>Float32]}]},fragment:Some(wgpu::FragmentState{module:&shader,entry_point:Some("fragment"),compilation_options:Default::default(),targets:&[Some(wgpu::ColorTargetState{format:wgpu::TextureFormat::Rgba8UnormSrgb,blend:Some(wgpu::BlendState::PREMULTIPLIED_ALPHA_BLENDING),write_mask:wgpu::ColorWrites::ALL})]}),primitive:wgpu::PrimitiveState{topology:if lines{wgpu::PrimitiveTopology::LineList}else{wgpu::PrimitiveTopology::TriangleList},cull_mode:if lines{None}else{Some(wgpu::Face::Back)},..Default::default()},depth_stencil:Some(wgpu::DepthStencilState{format:wgpu::TextureFormat::Depth32Float,depth_write_enabled:!lines,depth_compare:wgpu::CompareFunction::LessEqual,stencil:Default::default(),bias:wgpu::DepthBiasState{constant:if lines{-2}else{0},..Default::default()}}),multisample:wgpu::MultisampleState{count:4,..Default::default()},multiview:None,cache:None})
+        let attributes =
+            wgpu::vertex_attr_array![0=>Float32x3,1=>Float32x4,2=>Float32x2,3=>Float32];
+        let trail_attributes = wgpu::vertex_attr_array![0=>Float32x4,1=>Float32x4];
+        let make = |lines: bool, trails: bool| {
+            device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+                label: Some(if lines {
+                    "Section outlines"
+                } else {
+                    "Depth-tested CAD"
+                }),
+                layout: Some(&pipeline_layout),
+                vertex: wgpu::VertexState {
+                    module: &shader,
+                    entry_point: Some(if trails { "vertex_trail" } else { "vertex" }),
+                    compilation_options: Default::default(),
+                    buffers: &[wgpu::VertexBufferLayout {
+                        array_stride: if trails {
+                            32
+                        } else {
+                            std::mem::size_of::<Vertex>() as u64
+                        },
+                        step_mode: wgpu::VertexStepMode::Vertex,
+                        attributes: if trails {
+                            &trail_attributes
+                        } else {
+                            &attributes
+                        },
+                    }],
+                },
+                fragment: Some(wgpu::FragmentState {
+                    module: &shader,
+                    entry_point: Some("fragment"),
+                    compilation_options: Default::default(),
+                    targets: &[Some(wgpu::ColorTargetState {
+                        format: wgpu::TextureFormat::Rgba8UnormSrgb,
+                        blend: Some(wgpu::BlendState::PREMULTIPLIED_ALPHA_BLENDING),
+                        write_mask: wgpu::ColorWrites::ALL,
+                    })],
+                }),
+                primitive: wgpu::PrimitiveState {
+                    topology: if lines {
+                        wgpu::PrimitiveTopology::LineList
+                    } else {
+                        wgpu::PrimitiveTopology::TriangleList
+                    },
+                    cull_mode: if lines { None } else { Some(wgpu::Face::Back) },
+                    ..Default::default()
+                },
+                depth_stencil: Some(wgpu::DepthStencilState {
+                    format: wgpu::TextureFormat::Depth32Float,
+                    depth_write_enabled: !lines,
+                    depth_compare: wgpu::CompareFunction::LessEqual,
+                    stencil: Default::default(),
+                    bias: wgpu::DepthBiasState {
+                        constant: if lines { -2 } else { 0 },
+                        ..Default::default()
+                    },
+                }),
+                multisample: wgpu::MultisampleState {
+                    count: 4,
+                    ..Default::default()
+                },
+                multiview: None,
+                cache: None,
+            })
         };
-        let triangle = make(false);
-        let line = make(true);
+        let triangle = make(false, false);
+        let line = make(true, false);
+        let trail = make(true, true);
         Self {
             meshes: Vec::new(),
             mesh_uploads: 0,
@@ -176,6 +242,7 @@ impl Viewport {
             state,
             triangle,
             line,
+            trail,
             uniform,
             bind,
             target: None,
@@ -661,6 +728,11 @@ impl Viewport {
             pass.set_pipeline(&self.line);
             pass.set_vertex_buffer(0, lb.slice(..));
             pass.draw(0..contour_count, 0..1);
+            if let Some(trails) = domain.as_ref().and_then(|d| d.field).and_then(|f| f.trails) {
+                pass.set_pipeline(&self.trail);
+                pass.set_vertex_buffer(0, trails.buffer.slice(..));
+                pass.draw(0..trails.vertices, 0..1);
+            }
         }
         queue.submit(Some(encoder.finish()));
         self.texture.unwrap()
@@ -722,6 +794,108 @@ mod tests {
         device.poll(wgpu::Maintain::Wait);
         rx.recv().unwrap().unwrap();
         buffer.slice(..).get_mapped_range().to_vec()
+    }
+    #[test]
+    fn animated_trails_render_directly_and_preserve_solver_time() {
+        let _lock = crate::gpu_test_lock();
+        let mut panel = viewport();
+        let context = crate::gpu::GpuContext::new(
+            panel.state.device.clone(),
+            panel.state.queue.clone(),
+            panel.state.adapter.get_info().name,
+        );
+        let gpu = crate::domain::GpuDomain::from_context(context.clone()).unwrap();
+        let project =
+            crate::project::load(std::path::Path::new("assets/hotend-cad.mhd.json")).unwrap();
+        let volume = gpu
+            .build(&project.model, &project.settings, &project.materials)
+            .unwrap();
+        let mut state = crate::em::EmState::new(
+            context.clone(),
+            &volume,
+            &project.model,
+            project.electromagnetics,
+            crate::em::Mode::Applied,
+        )
+        .unwrap();
+        state
+            .evaluate_applied(&project.model, 50e-6, &volume)
+            .unwrap();
+        let plane = project.plane;
+        let caps: Vec<_> = project
+            .model
+            .bodies
+            .iter()
+            .map(|b| crate::caps::build(b, plane, 1e-5))
+            .collect();
+        let mut flow = crate::flow::FlowTrails::new(context);
+        let n = 384;
+        let span = 12.;
+        let settings = crate::flow::TrailSettings {
+            density: 28,
+            speed: 0.5,
+            ..Default::default()
+        };
+        let folder = std::path::Path::new("artifacts/flow-preview");
+        std::fs::create_dir_all(folder).unwrap();
+        let mut first = Vec::new();
+        let mut changed = false;
+        for i in 0..20 {
+            flow.update(
+                crate::flow::VectorField {
+                    buffer: state.result_buffer(),
+                    grid: &state.grid,
+                    layout: crate::flow::VectorLayout {
+                        stride: 4,
+                        offset: 0,
+                        subtract: None,
+                        interpolate: true,
+                    },
+                },
+                plane,
+                span,
+                i as f64 * 0.1,
+                settings,
+            )
+            .unwrap();
+            panel.draw_section(
+                &project.model,
+                &caps,
+                plane,
+                Some(&volume),
+                crate::section::Options {
+                    style: crate::section::Style::Field,
+                    edges: false,
+                    material_colors: false,
+                },
+                span,
+                n,
+                Some(FieldView {
+                    buffer: state.result_buffer(),
+                    kind: 1,
+                    component: 0,
+                    range: 0.12,
+                    vectors: &[],
+                    trails: Some(flow.draw()),
+                }),
+            );
+            let image = read(&panel);
+            if i == 0 {
+                first = image.clone();
+            } else {
+                changed |= image != first;
+            }
+            let mut ppm = format!("P6\n{n} {n}\n255\n").into_bytes();
+            for pixel in image.chunks_exact(4) {
+                ppm.extend_from_slice(&pixel[..3]);
+            }
+            std::fs::write(folder.join(format!("frame-{i:02}.ppm")), ppm).unwrap();
+        }
+        assert!(changed, "trail animation must change rendered pixels");
+        assert_eq!(
+            state.time_s, 50e-6,
+            "display animation must not advance the solver"
+        );
     }
     #[test]
     fn cad_curves_render_as_geometry_without_a_current_source() {
@@ -798,6 +972,7 @@ mod tests {
                 component: 0,
                 range: 0.02,
                 vectors: &[],
+                trails: None,
             };
             panel.draw_section(
                 &model,

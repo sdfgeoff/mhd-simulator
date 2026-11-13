@@ -1,4 +1,4 @@
-pub use mhd_workbench::{caps, domain, em, gpu, inputs, model, plane, project, simulation};
+pub use mhd_workbench::{caps, domain, em, flow, gpu, inputs, model, plane, project, simulation};
 mod app;
 mod em_ui;
 mod gizmo;

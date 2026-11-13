@@ -1,6 +1,7 @@
 use crate::{
     domain::Volume,
     em::{self, CellField, EmConfig, EmFrame, EmState, Mode, Waveform},
+    flow::{FlowTrails, TrailSettings, VectorField, VectorLayout, VectorStyle},
     gpu::GpuContext,
     model::Model,
     plane::SectionPlane,
@@ -33,12 +34,20 @@ pub struct EmUi {
     component: u32,
     auto_range: bool,
     range: f32,
-    pub arrows: bool,
+    pub vector_style: VectorStyle,
+    flow: Option<FlowTrails>,
+    animation_time: f64,
+    last_animation_time: Option<f64>,
+    animation_paused: bool,
+    animation_speed: f32,
+    trail_length: f32,
     arrow_density: u32,
     vectors: Vec<[Vec3; 2]>,
     pub source_lines: Vec<[Vec3; 2]>,
     probe_mm: [f32; 3],
     history: Vec<Trace>,
+    history_key: Option<([u32; 3], usize, u64, u64)>,
+    hover_cache: Option<([u32; 3], u64, Option<CellField>)>,
     pub timeline: crate::timeline::Timeline<EmFrame>,
     accept_frames: bool,
     pub error: String,
@@ -59,12 +68,20 @@ impl Default for EmUi {
             component: 0,
             auto_range: true,
             range: 1e-3,
-            arrows: true,
+            vector_style: VectorStyle::Trails,
+            flow: None,
+            animation_time: 0.,
+            last_animation_time: None,
+            animation_paused: false,
+            animation_speed: 0.35,
+            trail_length: 0.22,
             arrow_density: 25,
             vectors: Vec::new(),
             source_lines: Vec::new(),
             probe_mm: [1., 0., 4.],
             history: Vec::new(),
+            history_key: None,
+            hover_cache: None,
             timeline: Default::default(),
             accept_frames: false,
             error: String::new(),
@@ -80,9 +97,13 @@ impl EmUi {
     }
     pub fn invalidate(&mut self) {
         self.state = None;
+        self.flow = None;
+        self.last_animation_time = None;
         self.timeline.clear();
         self.accept_frames = false;
         self.history.clear();
+        self.history_key = None;
+        self.hover_cache = None;
         self.vectors.clear();
         if let Some(c) = &self.cancel {
             c.store(true, Ordering::Relaxed);
@@ -163,6 +184,8 @@ impl EmUi {
         if steps == 0 {
             self.timeline.clear();
             self.history.clear();
+            self.history_key = None;
+            self.hover_cache = None;
         }
         if mode == Mode::Applied {
             self.kind = 2;
@@ -262,6 +285,9 @@ impl EmUi {
             component: self.component,
             range: self.scale(),
             vectors: &self.vectors,
+            trails: (self.vector_style.animated() && self.kind < 6)
+                .then(|| self.flow.as_ref().map(|flow| flow.draw()))
+                .flatten(),
         })
     }
     pub fn update_vectors(&mut self, plane: SectionPlane, span: f32, model: &Model) {
@@ -278,7 +304,7 @@ impl EmUi {
                     .collect::<Vec<_>>()
             })
             .collect();
-        if !self.arrows || self.kind == 6 {
+        if self.vector_style != VectorStyle::Arrows || self.kind == 6 {
             return;
         }
         let Some(state) = self.timeline.current() else {
@@ -317,6 +343,66 @@ impl EmUi {
                 }
             }
             Err(e) => self.error = e,
+        }
+    }
+    pub fn animation_running(&self, volume: Option<&Volume>) -> bool {
+        self.ready(volume)
+            && self.kind < 6
+            && self.vector_style.animated()
+            && !self.animation_paused
+    }
+    pub fn update_trails(
+        &mut self,
+        ui_time: f64,
+        plane: SectionPlane,
+        span: f32,
+        context: &GpuContext,
+    ) {
+        let delta = self
+            .last_animation_time
+            .replace(ui_time)
+            .map(|last| (ui_time - last).clamp(0., 0.1))
+            .unwrap_or(0.);
+        if !self.animation_paused {
+            self.animation_time += delta;
+        }
+        if !self.show || !self.vector_style.animated() || self.kind >= 6 {
+            return;
+        }
+        let Some(frame) = self.timeline.current() else {
+            return;
+        };
+        let layout = VectorLayout {
+            stride: 4,
+            offset: match self.kind {
+                2 => 3,
+                4 => 1,
+                5 => 2,
+                _ => 0,
+            },
+            subtract: (self.kind == 3).then_some(3),
+            interpolate: self.kind <= 3,
+        };
+        let flow = self
+            .flow
+            .get_or_insert_with(|| FlowTrails::new(context.clone()));
+        if let Err(error) = flow.update(
+            VectorField {
+                buffer: frame.result_buffer(),
+                grid: frame.grid(),
+                layout,
+            },
+            plane,
+            span,
+            self.animation_time,
+            TrailSettings {
+                density: self.arrow_density,
+                speed: self.animation_speed,
+                tail: self.trail_length,
+                dots: self.vector_style == VectorStyle::Dots,
+            },
+        ) {
+            self.error = error;
         }
     }
     pub fn curve_properties(&mut self, ui: &mut egui::Ui, model: &Model) -> bool {
@@ -536,17 +622,46 @@ impl EmUi {
                 )
                 .changed();
         }
-        changed |= ui
-            .checkbox(&mut self.arrows, "Vector arrows on plane")
-            .changed();
-        if self.arrows && self.kind < 6 {
-            changed |= ui
-                .add(egui::Slider::new(&mut self.arrow_density, 8..=64).text("Arrow density"))
-                .changed();
-            ui.small(format!(
-                "{} × {} samples",
-                self.arrow_density, self.arrow_density
-            ));
+        if self.kind < 6 {
+            egui::ComboBox::from_label("Vector display")
+                .selected_text(self.vector_style.label())
+                .show_ui(ui, |ui| {
+                    for style in [
+                        VectorStyle::Off,
+                        VectorStyle::Arrows,
+                        VectorStyle::Trails,
+                        VectorStyle::Dots,
+                    ] {
+                        changed |= ui
+                            .selectable_value(&mut self.vector_style, style, style.label())
+                            .changed();
+                    }
+                });
+            if self.vector_style != VectorStyle::Off {
+                changed |= ui
+                    .add(egui::Slider::new(&mut self.arrow_density, 8..=64).text("Vector density"))
+                    .changed();
+            }
+            if self.vector_style.animated() {
+                changed |= ui
+                    .checkbox(&mut self.animation_paused, "Pause animation")
+                    .changed();
+                changed |= ui
+                    .add(
+                        egui::Slider::new(&mut self.animation_speed, 0.05..=2.)
+                            .text("Visual speed"),
+                    )
+                    .changed();
+                if self.vector_style == VectorStyle::Trails {
+                    changed |= ui
+                        .add(
+                            egui::Slider::new(&mut self.trail_length, 0.05..=0.5)
+                                .text("Trail length"),
+                        )
+                        .changed();
+                }
+                ui.small("Projected onto the section plane. Motion shows direction; animation speed is independent of solver time and field magnitude.");
+            }
         }
         changed
     }
@@ -649,10 +764,22 @@ impl EmUi {
                 moved |= ui.add(egui::DragValue::new(p).speed(0.1)).changed();
             }
         });
-        if moved
-            || self.history.len() != self.timeline.samples.len()
-            || self.history.last().map(|t| t.time) != self.timeline.samples.last().map(|t| t.time_s)
-        {
+        let key = (
+            self.probe_mm.map(f32::to_bits),
+            self.timeline.samples.len(),
+            self.timeline
+                .samples
+                .first()
+                .map(|s| s.time_s.to_bits())
+                .unwrap_or(0),
+            self.timeline
+                .samples
+                .last()
+                .map(|s| s.time_s.to_bits())
+                .unwrap_or(0),
+        );
+        if moved || self.history_key != Some(key) {
+            self.history_key = Some(key);
             self.history = self
                 .timeline
                 .samples
@@ -669,8 +796,8 @@ impl EmUi {
                 })
                 .collect();
         }
-        if let Ok(Some(p)) = state.probe(self.probe_mm) {
-            show_probe(ui, p);
+        if let Some(trace) = self.history.iter().find(|t| t.time == state.time_s) {
+            show_probe(ui, trace.field);
         }
         if self.history.len() > 1 {
             ui.label(format!("{} probe history", label(self.kind)));
@@ -713,10 +840,18 @@ impl EmUi {
             ));
         }
     }
-    pub fn hover_probe(&self, ui: &mut egui::Ui, point: [f32; 3]) {
-        if let Some(state) = self.timeline.current() {
-            if let Ok(Some(p)) = state.probe(point) {
-                show_probe(ui, p);
+    pub fn hover_probe(&mut self, ui: &mut egui::Ui, point: [f32; 3]) {
+        if let Some(frame) = self.timeline.current() {
+            let key = (point.map(f32::to_bits), frame.time_s.to_bits());
+            if self
+                .hover_cache
+                .as_ref()
+                .is_none_or(|(p, t, _)| (*p, *t) != key)
+            {
+                self.hover_cache = Some((key.0, key.1, frame.probe(point).ok().flatten()));
+            }
+            if let Some((_, _, Some(field))) = self.hover_cache {
+                show_probe(ui, field);
             }
         }
     }
@@ -930,6 +1065,7 @@ mod tests {
         assert!(ui.error.is_empty(), "{}", ui.error);
         assert!(ui.ready(Some(&volume)));
         assert!(ui.state.as_ref().unwrap().diagnostics.maxima[0] > 0.);
+        ui.vector_style = VectorStyle::Arrows;
         ui.arrow_density = 8;
         ui.update_vectors(SectionPlane::new(Vec3::ZERO), 1., &model);
         assert_eq!(ui.vectors.len(), 8 * 8 * 3);
@@ -978,6 +1114,17 @@ mod tests {
             ui.timeline.current().unwrap().probe(p).unwrap().unwrap().b[2],
             first
         );
+        let solver_time = ui.state.as_ref().unwrap().time_s;
+        let selected_time = ui.timeline.current().unwrap().time_s;
+        ui.vector_style = VectorStyle::Trails;
+        ui.update_trails(1., SectionPlane::new(Vec3::ZERO), 1., &gpu.context);
+        ui.update_trails(1.1, SectionPlane::new(Vec3::ZERO), 1., &gpu.context);
+        assert_eq!(ui.state.as_ref().unwrap().time_s, solver_time);
+        assert_eq!(ui.timeline.current().unwrap().time_s, selected_time);
+        ui.animation_paused = true;
+        let visual_time = ui.animation_time;
+        ui.update_trails(1.2, SectionPlane::new(Vec3::ZERO), 1., &gpu.context);
+        assert_eq!(ui.animation_time, visual_time);
         ui.start(Mode::Applied, 1000, &model, &volume, &gpu.context);
         ui.cancel.as_ref().unwrap().store(true, Ordering::Relaxed);
         wait(&mut ui);

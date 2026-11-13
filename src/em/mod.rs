@@ -836,6 +836,9 @@ pub struct EmFrame {
     pub bytes: u64,
 }
 impl EmFrame {
+    pub fn grid(&self) -> &GridSi {
+        &self.grid
+    }
     pub fn is_current(&self, volume: &Volume) -> bool {
         self.input_versions == volume.inputs.versions()
     }

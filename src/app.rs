@@ -131,7 +131,6 @@ impl App {
     }
     pub fn start_em_preview(&mut self, steps: u32) {
         if let (Some(gpu), Some(volume)) = (&self.gpu, &self.volume) {
-            self.em_ui.arrows = true;
             self.em_ui.start(
                 crate::em::Mode::Induction,
                 steps,
@@ -286,7 +285,6 @@ impl App {
         let started = std::time::Instant::now();
         let (lo, hi) = self.model.bounds();
         let span = self.section_span();
-        let style = self.section_style();
         self.em_ui.update_vectors(self.plane, span, &self.model);
         self.caps = self
             .model
@@ -300,6 +298,12 @@ impl App {
                 }
             })
             .collect();
+        self.draw_section_texture();
+        self.section_time = started.elapsed().as_secs_f64() * 1000.;
+    }
+    fn draw_section_texture(&mut self) {
+        let style = self.section_style();
+        let span = self.section_span();
         if let Some(renderer) = &mut self.section_renderer {
             self.texture = Some(renderer.draw_section(
                 &self.model,
@@ -316,7 +320,6 @@ impl App {
                 self.em_ui.view(self.volume.as_ref()),
             ));
         }
-        self.section_time = started.elapsed().as_secs_f64() * 1000.;
     }
     fn camera(&self, rect: egui::Rect) -> Camera {
         let (lo, hi) = self.model.bounds();
@@ -353,10 +356,25 @@ impl App {
                 (self.zoom * ui.input(|i| (i.smooth_scroll_delta.y * 0.001).exp())).clamp(0.2, 8.);
         }
         camera = self.camera(rect);
+        let animate = self.em_ui.animation_running(self.volume.as_ref());
+        if let Some(gpu) = &self.gpu {
+            self.em_ui.update_trails(
+                ui.input(|i| i.time),
+                self.plane,
+                self.section_span(),
+                &gpu.context,
+            );
+        }
+        if animate {
+            ui.ctx()
+                .request_repaint_after(std::time::Duration::from_millis(33));
+        }
         if self.dirty {
             self.update_section(ui.ctx());
             self.dirty = false;
             ui.ctx().request_repaint();
+        } else if animate {
+            self.draw_section_texture();
         }
         let painter = ui.painter_at(rect);
         let section_span = self.section_span();
