@@ -6,6 +6,7 @@ use crate::{
     plane::SectionPlane,
     project::{self, DomainSettings, Material},
     render::Viewport,
+    section::{Options as SectionOptions, SectionRenderer, Style},
 };
 use eframe::egui::{self, Color32, Pos2, Stroke, Vec2};
 use glam::{EulerRot, Quat, Vec3};
@@ -38,7 +39,7 @@ pub struct App {
     project_path: String,
     notice: String,
     section_pixels: Vec<Pixel>,
-    overlay_pixels: Vec<u8>,
+    section_renderer: Option<SectionRenderer>,
     path: String,
     error: String,
     gpu: Option<Gpu>,
@@ -52,7 +53,7 @@ pub struct App {
     show_gizmo: bool,
     hatched: bool,
     resolution: u32,
-    texture: Option<egui::TextureHandle>,
+    texture: Option<egui::TextureId>,
     caps: Vec<Cap>,
     dirty: bool,
     section_time: f64,
@@ -81,7 +82,7 @@ impl App {
             project_path: "project.mhd.json".into(),
             notice: String::new(),
             section_pixels: Vec::new(),
-            overlay_pixels: Vec::new(),
+            section_renderer: state.clone().map(SectionRenderer::new),
             model,
             path,
             error: format!("{error}{gpu_error}"),
@@ -95,7 +96,7 @@ impl App {
             gizmo: Gizmo::default(),
             show_gizmo: true,
             hatched: true,
-            resolution: 256,
+            resolution: 512,
             texture: None,
             caps: Vec::new(),
             dirty: true,
@@ -114,7 +115,7 @@ impl App {
         self.caps.clear();
         self.texture = None;
         self.section_pixels.clear();
-        self.overlay_pixels.clear();
+
         if let Some(view) = &mut self.viewport {
             view.set_section(&[0, 0, 0, 0], 1);
         }
@@ -180,9 +181,20 @@ impl App {
         self.gizmo = Gizmo::default();
         self.dirty = true;
     }
-    fn update_section(&mut self, ctx: &egui::Context) {
+    fn section_style(&self) -> Style {
+        if self.voxel_overlay {
+            Style::Voxels
+        } else if self.hatched {
+            Style::HatchedCad
+        } else {
+            Style::Outlines
+        }
+    }
+    fn update_section(&mut self, _ctx: &egui::Context) {
+        let started = std::time::Instant::now();
         let (lo, hi) = self.model.bounds();
         let span = self.section_span();
+        let style = self.section_style();
         self.caps = self
             .model
             .bodies
@@ -195,62 +207,54 @@ impl App {
                 }
             })
             .collect();
-        if self.model.bodies.is_empty() {
-            self.texture = None;
-            return;
-        }
-        let start = std::time::Instant::now();
-        let (Some(gpu), Some(volume)) = (&self.gpu, &self.volume) else {
-            self.texture = None;
-            return;
-        };
-        match gpu.section(volume, self.plane, span, self.resolution) {
-            Ok(pixels) => {
-                self.overlaps = pixels.iter().filter(|p| p.body == 255).count();
-                let n = self.resolution as usize;
-                let mut image = Vec::with_capacity(n * n);
-                let mut overlay = Vec::with_capacity(n * n * 4);
-                for y in (0..n).rev() {
-                    for p in &pixels[y * n..(y + 1) * n] {
-                        let id = if self.material_view {
-                            p.material
-                        } else {
-                            p.body
-                        };
-                        let mut c = color(id);
-                        if p.inside == 0 {
-                            c = [8, 12, 20];
-                        }
-                        if self.grid_lines {
-                            let ink = p.edge * 0.75;
-                            for channel in &mut c {
-                                *channel = (*channel as f32 * (1. - ink)) as u8;
-                            }
-                        }
-                        image.push(Color32::from_rgb(c[0], c[1], c[2]));
-                        overlay.extend([c[0], c[1], c[2], if p.body == 0 { 0 } else { 255 }]);
-                    }
-                }
-                self.texture = Some(ctx.load_texture(
-                    "Voxel material section",
-                    egui::ColorImage {
-                        size: [n, n],
-                        pixels: image,
-                    },
-                    egui::TextureOptions::NEAREST,
-                ));
-                self.overlay_pixels = overlay;
-                self.section_pixels = pixels;
-                if let Some(view) = &mut self.viewport {
-                    view.set_section(&self.overlay_pixels, self.resolution);
-                }
-                self.section_time = start.elapsed().as_secs_f64() * 1000.;
-            }
-            Err(e) => {
+        self.section_pixels.clear();
+        self.overlaps = 0;
+        let mut cells = Vec::new();
+        if style == Style::Voxels {
+            let (Some(gpu), Some(volume)) = (&self.gpu, &self.volume) else {
                 self.texture = None;
-                self.error = e;
+                return;
+            };
+            match gpu.section(volume, self.plane, span, self.resolution) {
+                Ok(pixels) => {
+                    self.overlaps = pixels.iter().filter(|p| p.body == 255).count();
+                    self.section_pixels = pixels;
+                }
+                Err(e) => {
+                    self.texture = None;
+                    self.error = e;
+                    return;
+                }
+            }
+            match gpu.intersected_cells(volume, self.plane) {
+                Ok(c) => cells = c,
+                Err(e) => {
+                    self.texture = None;
+                    self.error = e;
+                    return;
+                }
             }
         }
+        if let Some(renderer) = &mut self.section_renderer {
+            self.texture = Some(renderer.draw(
+                &self.model,
+                &self.caps,
+                self.plane,
+                self.volume.as_ref(),
+                &cells,
+                SectionOptions {
+                    style,
+                    edges: self.grid_lines,
+                    material_colors: self.material_view,
+                },
+                span,
+                self.resolution,
+            ));
+            if let (Some(viewport), Some(view)) = (&mut self.viewport, renderer.view()) {
+                viewport.set_shared_section(view);
+            }
+        }
+        self.section_time = started.elapsed().as_secs_f64() * 1000.;
     }
     fn camera(&self, rect: egui::Rect) -> Camera {
         let (lo, hi) = self.model.bounds();
@@ -303,12 +307,15 @@ impl App {
                 &self.model,
                 &self.caps,
                 ui.ctx().pixels_per_point(),
-                self.voxel_overlay.then_some(crate::render::DomainView {
+                Some(crate::render::DomainView {
                     span: section_span,
-                    bounds: self
-                        .volume
-                        .as_ref()
-                        .map(|v| (Vec3::from(v.settings.min_mm), v.max())),
+                    bounds: if self.voxel_overlay {
+                        self.volume
+                            .as_ref()
+                            .map(|v| (Vec3::from(v.settings.min_mm), v.max()))
+                    } else {
+                        None
+                    },
                 }),
             );
             painter.image(
@@ -399,20 +406,28 @@ impl App {
             "Arrows translate along world X/Y/Z. Rings rotate around those axes at the pivot.",
         );
         ui.horizontal(|ui| {
-            ui.selectable_value(&mut self.voxel_overlay, false, "CAD");
-            ui.selectable_value(&mut self.voxel_overlay, true, "Voxel domain");
+            self.dirty |= ui
+                .selectable_value(&mut self.voxel_overlay, false, "CAD")
+                .changed();
+            self.dirty |= ui
+                .selectable_value(&mut self.voxel_overlay, true, "Voxel domain")
+                .changed();
         });
         if self.voxel_overlay {
             self.dirty |= ui
-                .checkbox(&mut self.grid_lines, "Voxel boundaries")
+                .checkbox(&mut self.grid_lines, "Subtle cell edges")
                 .changed();
             self.dirty |= ui
                 .checkbox(&mut self.material_view, "Colour by material ID")
                 .changed();
         } else {
             ui.horizontal(|ui| {
-                ui.selectable_value(&mut self.hatched, true, "Hatched CAD");
-                ui.selectable_value(&mut self.hatched, false, "Outlines");
+                self.dirty |= ui
+                    .selectable_value(&mut self.hatched, true, "Hatched CAD")
+                    .changed();
+                self.dirty |= ui
+                    .selectable_value(&mut self.hatched, false, "Outlines")
+                    .changed();
             });
         }
         ui.horizontal(|ui| {
@@ -461,7 +476,7 @@ impl App {
         egui::ComboBox::from_label("Section pixels")
             .selected_text(self.resolution.to_string())
             .show_ui(ui, |ui| {
-                for n in [64, 128, 256] {
+                for n in [128, 256, 512, 1024] {
                     self.dirty |= ui
                         .selectable_value(&mut self.resolution, n, n.to_string())
                         .changed();
@@ -507,7 +522,7 @@ impl eframe::App for App {
                 );
                 ui.separator();
                 ui.small(format!(
-                    "Grid lookup: {:.1} ms · {} overlap pixels",
+                    "Section update: {:.1} ms · {} overlap samples",
                     self.section_time, self.overlaps
                 ));
             });
@@ -527,18 +542,20 @@ impl eframe::App for App {
             .show(ctx, |ui| {
                 egui::ScrollArea::vertical().show(ui, |ui| {
                     ui.add_space(12.);
-                    ui.heading("04 / Voxel cross-section");
-                    ui.label("Samples the persistent 3D grid");
+                    ui.heading("04 / Section");
+                    ui.label(self.section_style().label());
+                    ui.small("Same section image as the 3D cut face");
                     ui.add_space(8.);
-                    if self.domain_pending {
+                    if self.voxel_overlay && self.domain_pending {
                         ui.colored_label(
                             Color32::YELLOW,
                             "Settings changed — rebuild to update this grid.",
                         );
                     }
-                    if let Some(t) = &self.texture {
+                    if let Some(t) = self.texture {
                         let response = ui.add(
-                            egui::Image::new(t)
+                            egui::Image::new((t, Vec2::splat(self.resolution as f32)))
+                                .bg_fill(Color32::from_rgb(14, 21, 32))
                                 .fit_to_exact_size(Vec2::splat(ui.available_width().min(320.))),
                         );
                         if let Some(pointer) = response.hover_pos() {
@@ -569,9 +586,15 @@ impl eframe::App for App {
                     } else {
                         ui.label("No built volume available.");
                     }
-                    ui.small(
-                        "Air = 0 · Overlap = 255 · CAD visibility does not change the domain.",
-                    );
+                    if self.voxel_overlay {
+                        ui.small(
+                            "Air = 0 · Overlap = 255 · CAD visibility does not change the domain.",
+                        );
+                    } else {
+                        ui.small(
+                            "CAD geometry; voxel diagnostics below refer to the built domain.",
+                        );
+                    }
                     self.domain_diagnostics(ui);
                     ui.separator();
                     if !self.error.is_empty() {
@@ -755,6 +778,12 @@ impl App {
                     );
                     self.domain_pending |=
                         optional(ui, "Density", &mut m.density_kg_m3, 1., 10., " kg/m³");
+                    if !m.notes.is_empty() {
+                        ui.small(&m.notes);
+                    }
+                    if let Some(reference) = &m.reference {
+                        ui.hyperlink_to("Reference datasheet", reference);
+                    }
                     ui.separator();
                 });
             }
@@ -767,6 +796,8 @@ impl App {
                         conductivity_s_m: None,
                         relative_permeability: None,
                         density_kg_m3: None,
+                        notes: String::new(),
+                        reference: None,
                     });
                     self.domain_pending = true;
                 }
@@ -780,6 +811,7 @@ mod project_ui_tests {
     use super::*;
     #[test]
     fn project_startup_and_geometry_replacement_clear_cached_sections() {
+        let _gpu_lock = crate::gpu_test_lock();
         let model = Model::load(std::path::Path::new("assets/hotend.glb")).unwrap();
         let settings = DomainSettings::fit(&model);
         let materials = project::default_materials();

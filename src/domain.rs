@@ -30,7 +30,7 @@ struct Slice {
 pub struct Pixel {
     pub body: u32,
     pub material: u32,
-    pub edge: f32,
+    pub _padding: f32,
     pub inside: u32,
 }
 #[repr(C)]
@@ -38,6 +38,12 @@ pub struct Pixel {
 struct Physical {
     values: [f32; 4],
     flags: [u32; 4],
+}
+#[derive(Clone, Copy, Debug)]
+pub struct Cell {
+    pub index: [u32; 3],
+    pub body: u32,
+    pub material: u32,
 }
 pub struct Volume {
     pub settings: DomainSettings,
@@ -75,6 +81,7 @@ pub struct GpuDomain {
     finalize: wgpu::ComputePipeline,
     coverage: wgpu::ComputePipeline,
     slice: wgpu::ComputePipeline,
+    cells: wgpu::ComputePipeline,
     pub name: String,
     serial: std::cell::Cell<u64>,
 }
@@ -294,6 +301,18 @@ impl GpuDomain {
                 compilation_options: Default::default(),
                 cache: None,
             });
+            let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+                label: Some("Intersected voxel slab"),
+                source: wgpu::ShaderSource::Wgsl(include_str!("voxel-cells.wgsl").into()),
+            });
+            let cells = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+                label: Some("Enumerate plane-intersected cells"),
+                layout: None,
+                module: &shader,
+                entry_point: Some("main"),
+                compilation_options: Default::default(),
+                cache: None,
+            });
             Ok(Self {
                 device,
                 queue,
@@ -305,6 +324,7 @@ impl GpuDomain {
                 finalize,
                 coverage,
                 slice,
+                cells,
                 name,
                 serial: std::cell::Cell::new(0),
             })
@@ -791,6 +811,93 @@ impl GpuDomain {
         self.queue.submit(Some(encoder.finish()));
         Ok(bytemuck::cast_slice(&self.read(&output, bytes)?).to_vec())
     }
+    pub fn intersected_cells(
+        &self,
+        volume: &Volume,
+        plane: SectionPlane,
+    ) -> Result<Vec<Cell>, String> {
+        let n = plane.normal().abs();
+        let k = if n.x >= n.y && n.x >= n.z {
+            0usize
+        } else if n.y >= n.z {
+            1
+        } else {
+            2
+        };
+        let a = (k + 1) % 3;
+        let b = (k + 2) % 3;
+        let count = volume.dims[a] as u64 * volume.dims[b] as u64 * 4;
+        let bytes = count * 16;
+        if bytes > self.device.limits().max_storage_buffer_binding_size as u64 {
+            return Err("Section cell slab exceeds the GPU buffer limit".into());
+        }
+        let p = Slice {
+            origin: plane.position.extend(0.).to_array(),
+            u: plane.u().extend(0.).to_array(),
+            v: plane.v().extend(0.).to_array(),
+            minimum: [
+                volume.settings.min_mm[0],
+                volume.settings.min_mm[1],
+                volume.settings.min_mm[2],
+                volume.settings.cell_mm,
+            ],
+            dimensions: [volume.dims[0], volume.dims[1], volume.dims[2], 0],
+            options: [k as u32, 0, 0, 0],
+        };
+        let uniform = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Cell slab plane"),
+                contents: bytemuck::bytes_of(&p),
+                usage: wgpu::BufferUsages::UNIFORM,
+            });
+        let output = self.device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Plane-intersected cell records"),
+            size: bytes,
+            usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
+            mapped_at_creation: false,
+        });
+        let bind = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: None,
+            layout: &self.cells.get_bind_group_layout(0),
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: uniform.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: volume.masks.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 2,
+                    resource: volume.materials.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 3,
+                    resource: output.as_entire_binding(),
+                },
+            ],
+        });
+        let mut encoder = self.device.create_command_encoder(&Default::default());
+        {
+            let mut pass = encoder.begin_compute_pass(&Default::default());
+            pass.set_pipeline(&self.cells);
+            pass.set_bind_group(0, &bind, &[]);
+            pass.dispatch_workgroups(volume.dims[a].div_ceil(8), volume.dims[b].div_ceil(8), 1);
+        }
+        self.queue.submit(Some(encoder.finish()));
+        let raw = self.read(&output, bytes)?;
+        Ok(bytemuck::cast_slice::<u8, [u32; 4]>(&raw)
+            .iter()
+            .filter(|r| r[3] != 0)
+            .map(|r| Cell {
+                index: [r[0], r[1], r[2]],
+                body: r[3] & 255,
+                material: r[3] >> 8,
+            })
+            .collect())
+    }
     #[cfg(test)]
     pub fn read_masks(&self, v: &Volume) -> Vec<u32> {
         bytemuck::cast_slice(
@@ -812,6 +919,7 @@ mod tests {
     }
     #[test]
     fn rasterized_hollow_volume_converges_and_slices_do_not_rebuild() {
+        let _gpu_lock = crate::gpu_test_lock();
         let gpu = GpuDomain::new().unwrap();
         let mut model = annulus();
         model.bodies[0].simulation.material_id = 3;
@@ -874,6 +982,7 @@ mod tests {
     }
     #[test]
     fn rotated_solid_matches_analytic_interior() {
+        let _gpu_lock = crate::gpu_test_lock();
         let gpu = GpuDomain::new().unwrap();
         let mut model = annulus();
         let transform = Mat4::from_rotation_translation(
@@ -919,6 +1028,7 @@ mod tests {
     }
     #[test]
     fn overlaps_visibility_inclusion_and_disappearing_features() {
+        let _gpu_lock = crate::gpu_test_lock();
         let gpu = GpuDomain::new().unwrap();
         let settings = DomainSettings {
             min_mm: [-4., -4., -5.],
@@ -969,6 +1079,7 @@ mod tests {
     }
     #[test]
     fn open_mesh_is_rejected_before_build() {
+        let _gpu_lock = crate::gpu_test_lock();
         let gpu = GpuDomain::new().unwrap();
         let model = Model::load(std::path::Path::new("assets/open-triangle.gltf")).unwrap();
         assert!(
@@ -989,6 +1100,7 @@ mod larger_grid_test {
     use super::*;
     #[test]
     fn persistent_256_cubed_grid() {
+        let _gpu_lock = crate::gpu_test_lock();
         let gpu = GpuDomain::new().unwrap();
         let model = Model::load(std::path::Path::new("assets/annulus.gltf")).unwrap();
         let settings = DomainSettings {

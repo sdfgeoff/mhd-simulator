@@ -26,9 +26,13 @@ pub struct Material {
     pub conductivity_s_m: Option<f32>,
     pub relative_permeability: Option<f32>,
     pub density_kg_m3: Option<f32>,
+    #[serde(default)]
+    pub notes: String,
+    #[serde(default)]
+    pub reference: Option<String>,
 }
 pub fn default_materials() -> Vec<Material> {
-    [
+    let mut materials: Vec<_> = [
         "Air / void",
         "Unassigned",
         "Copper",
@@ -44,9 +48,35 @@ pub fn default_materials() -> Vec<Material> {
         conductivity_s_m: None,
         relative_permeability: None,
         density_kg_m3: None,
+        notes: String::new(),
+        reference: None,
     })
-    .collect()
+    .collect();
+    materials.push(stainless316(6));
+    materials.push(alumina(7));
+    materials
 }
+fn stainless316(id: u32) -> Material {
+    Material{id,name:"316 stainless steel".into(),conductivity_s_m:Some(1.0/0.75e-6),relative_permeability:None,density_kg_m3:Some(8000.),notes:"Preset defaults use density and conductivity reference values at 20 °C. Permeability is unset; processing and temperature matter.".into(),reference:Some("https://www.thyssenkrupp-materials.co.uk/stainless-steel-316-14401.html".into())}
+}
+fn alumina(id: u32) -> Material {
+    Material{id,name:"Alumina".into(),conductivity_s_m:None,relative_permeability:None,density_kg_m3:None,notes:"Alumina (grade/purity unspecified). Enter supplier-specific properties before using physical solvers.".into(),reference:None}
+}
+fn ensure_presets(materials: &mut Vec<Material>) {
+    for mut preset in [stainless316(0), alumina(0)] {
+        if materials
+            .iter()
+            .any(|m| m.name.eq_ignore_ascii_case(&preset.name))
+        {
+            continue;
+        }
+        if let Some(id) = (1..255).find(|id| materials.iter().all(|m| m.id != *id)) {
+            preset.id = id;
+            materials.push(preset);
+        }
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct DomainSettings {
     pub min_mm: [f32; 3],
@@ -233,13 +263,14 @@ pub fn save(
     result
 }
 pub fn load(path: &Path) -> Result<Loaded, String> {
-    let f: File = serde_json::from_slice(&std::fs::read(path).map_err(|e| e.to_string())?)
+    let mut f: File = serde_json::from_slice(&std::fs::read(path).map_err(|e| e.to_string())?)
         .map_err(|e| e.to_string())?;
     if f.version != 1 {
         return Err("Unsupported project version".into());
     }
     f.domain.dims()?;
     validate_materials(&f.materials)?;
+    ensure_presets(&mut f.materials);
     let geometry = PathBuf::from(&f.geometry);
     let geometry = if geometry.is_absolute() {
         geometry
@@ -303,5 +334,42 @@ mod tests {
         let mut invalid = s;
         invalid.cell_mm = 0.;
         assert!(invalid.dims().is_err());
+    }
+}
+
+#[cfg(test)]
+mod material_preset_tests {
+    use super::*;
+    #[test]
+    fn stainless_preset_and_legacy_library_preserve_custom_ids() {
+        let materials = default_materials();
+        let steel = materials
+            .iter()
+            .find(|m| m.name == "316 stainless steel")
+            .unwrap();
+        assert_eq!(steel.density_kg_m3, Some(8000.));
+        assert!((steel.conductivity_s_m.unwrap() - 1_333_333.4).abs() < 1.);
+        assert!(steel.relative_permeability.is_none());
+        let ceramic = materials.iter().find(|m| m.name == "Alumina").unwrap();
+        assert!(ceramic.conductivity_s_m.is_none() && ceramic.density_kg_m3.is_none());
+        let mut legacy: Vec<_> = materials.into_iter().filter(|m| m.id < 6).collect();
+        let mut custom = legacy[1].clone();
+        custom.id = 6;
+        custom.name = "My custom material".into();
+        legacy.push(custom.clone());
+        ensure_presets(&mut legacy);
+        assert_eq!(legacy.iter().find(|m| m.id == 6), Some(&custom));
+        assert_eq!(
+            legacy
+                .iter()
+                .find(|m| m.name == "316 stainless steel")
+                .unwrap()
+                .id,
+            7
+        );
+        assert!(legacy.iter().any(|m| m.name == "Alumina" && m.id == 8));
+        let text = r#"{"id":2,"name":"Copper","conductivity_s_m":null,"relative_permeability":null,"density_kg_m3":null}"#;
+        let old: Material = serde_json::from_str(text).unwrap();
+        assert!(old.notes.is_empty() && old.reference.is_none());
     }
 }

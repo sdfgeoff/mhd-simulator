@@ -6,7 +6,14 @@ mod model;
 mod plane;
 mod project;
 mod render;
+mod section;
 use glam::Vec3;
+// GPU tests share one physical adapter; serialize context lifetime and teardown.
+#[cfg(test)]
+pub(crate) fn gpu_test_lock() -> std::sync::MutexGuard<'static, ()> {
+    static LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    LOCK.lock().unwrap_or_else(|poison| poison.into_inner())
+}
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<_> = std::env::args().collect();
     if args.get(1).is_some_and(|a| a == "--inspect") {

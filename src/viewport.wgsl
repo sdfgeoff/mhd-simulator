@@ -8,7 +8,8 @@ struct Output { @builtin(position) position:vec4<f32>, @location(0) world:vec3<f
 @fragment fn fragment(v:Output)->@location(0) vec4<f32>{
     let coordinate=(v.uv.x+v.uv.y)*0.70710678/scene.settings.y;
     let width=max(fwidth(coordinate),0.002);
-    if v.mode>2.5{let c=textureSampleLevel(section,section_sampler,v.uv,0.0);if c.a<0.5{discard;}return vec4<f32>(c.rgb,1.0);}
+    let uv_dx=dpdx(v.uv);let uv_dy=dpdy(v.uv);
+    if v.mode>2.5{let c=textureSampleGrad(section,section_sampler,v.uv,uv_dx,uv_dy);if c.a<0.001{discard;}return c;}
     if scene.settings.x>0.5 && v.mode<0.5 && dot(v.world-scene.origin.xyz,scene.normal.xyz)>0.0 {discard;}
     if v.mode>0.5 && v.mode<1.5 {
         let distance=abs(fract(coordinate)-0.5);

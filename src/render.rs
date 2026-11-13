@@ -89,8 +89,9 @@ impl Viewport {
         let slice_texture = make_slice(device, 1);
         let slice_view = slice_texture.create_view(&Default::default());
         let slice_sampler = device.create_sampler(&wgpu::SamplerDescriptor {
-            mag_filter: wgpu::FilterMode::Nearest,
-            min_filter: wgpu::FilterMode::Nearest,
+            mag_filter: wgpu::FilterMode::Linear,
+            min_filter: wgpu::FilterMode::Linear,
+            mipmap_filter: wgpu::FilterMode::Linear,
             ..Default::default()
         });
         let bind = device.create_bind_group(&wgpu::BindGroupDescriptor {
@@ -117,7 +118,7 @@ impl Viewport {
             push_constant_ranges: &[],
         });
         let make = |lines: bool| {
-            device.create_render_pipeline(&wgpu::RenderPipelineDescriptor{label:Some(if lines{"Section outlines"}else{"Depth-tested CAD"}),layout:Some(&pipeline_layout),vertex:wgpu::VertexState{module:&shader,entry_point:Some("vertex"),compilation_options:Default::default(),buffers:&[wgpu::VertexBufferLayout{array_stride:std::mem::size_of::<Vertex>()as u64,step_mode:wgpu::VertexStepMode::Vertex,attributes:&wgpu::vertex_attr_array![0=>Float32x3,1=>Float32x4,2=>Float32x2,3=>Float32]}]},fragment:Some(wgpu::FragmentState{module:&shader,entry_point:Some("fragment"),compilation_options:Default::default(),targets:&[Some(wgpu::ColorTargetState{format:wgpu::TextureFormat::Rgba8UnormSrgb,blend:None,write_mask:wgpu::ColorWrites::ALL})]}),primitive:wgpu::PrimitiveState{topology:if lines{wgpu::PrimitiveTopology::LineList}else{wgpu::PrimitiveTopology::TriangleList},cull_mode:if lines{None}else{Some(wgpu::Face::Back)},..Default::default()},depth_stencil:Some(wgpu::DepthStencilState{format:wgpu::TextureFormat::Depth32Float,depth_write_enabled:!lines,depth_compare:wgpu::CompareFunction::LessEqual,stencil:Default::default(),bias:wgpu::DepthBiasState{constant:if lines{-2}else{0},..Default::default()}}),multisample:Default::default(),multiview:None,cache:None})
+            device.create_render_pipeline(&wgpu::RenderPipelineDescriptor{label:Some(if lines{"Section outlines"}else{"Depth-tested CAD"}),layout:Some(&pipeline_layout),vertex:wgpu::VertexState{module:&shader,entry_point:Some("vertex"),compilation_options:Default::default(),buffers:&[wgpu::VertexBufferLayout{array_stride:std::mem::size_of::<Vertex>()as u64,step_mode:wgpu::VertexStepMode::Vertex,attributes:&wgpu::vertex_attr_array![0=>Float32x3,1=>Float32x4,2=>Float32x2,3=>Float32]}]},fragment:Some(wgpu::FragmentState{module:&shader,entry_point:Some("fragment"),compilation_options:Default::default(),targets:&[Some(wgpu::ColorTargetState{format:wgpu::TextureFormat::Rgba8UnormSrgb,blend:Some(wgpu::BlendState::PREMULTIPLIED_ALPHA_BLENDING),write_mask:wgpu::ColorWrites::ALL})]}),primitive:wgpu::PrimitiveState{topology:if lines{wgpu::PrimitiveTopology::LineList}else{wgpu::PrimitiveTopology::TriangleList},cull_mode:if lines{None}else{Some(wgpu::Face::Back)},..Default::default()},depth_stencil:Some(wgpu::DepthStencilState{format:wgpu::TextureFormat::Depth32Float,depth_write_enabled:!lines,depth_compare:wgpu::CompareFunction::LessEqual,stencil:Default::default(),bias:wgpu::DepthBiasState{constant:if lines{-2}else{0},..Default::default()}}),multisample:Default::default(),multiview:None,cache:None})
         };
         let triangle = make(false);
         let line = make(true);
@@ -180,6 +181,33 @@ impl Viewport {
                 depth_or_array_layers: 1,
             },
         );
+    }
+    pub fn set_shared_section(&mut self, view: &wgpu::TextureView) {
+        self.bind = self
+            .state
+            .device
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                label: Some("Shared section image in 3D"),
+                layout: &self.slice_layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: self.uniform.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: wgpu::BindingResource::TextureView(view),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 2,
+                        resource: wgpu::BindingResource::Sampler(&self.slice_sampler),
+                    },
+                ],
+            });
+    }
+    #[cfg(test)]
+    pub(crate) fn output_texture(&self) -> &wgpu::Texture {
+        &self.target.as_ref().unwrap().0
     }
     pub fn draw(
         &mut self,
@@ -305,9 +333,11 @@ impl Viewport {
                             }
                         }
                     }
-                    for segment in &cap.contours {
-                        for &p in segment {
-                            lines.push(vertex(p, [0.7, 0.85, 0.9, 1.], 2.));
+                    if domain.is_none() {
+                        for segment in &cap.contours {
+                            for &p in segment {
+                                lines.push(vertex(p, [0.7, 0.85, 0.9, 1.], 2.));
+                            }
                         }
                     }
                 }
@@ -484,6 +514,7 @@ mod tests {
     }
     #[test]
     fn gpu_hatched_caps_preserve_cavity_and_outline_mode_removes_fill() {
+        let _gpu_lock = crate::gpu_test_lock();
         let mut view = viewport();
         let model = Model::load(std::path::Path::new("assets/annulus.gltf")).unwrap();
         let plane = SectionPlane {
