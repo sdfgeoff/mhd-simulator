@@ -75,7 +75,7 @@ The matrix-free Jacobi-preconditioned conjugate-gradient solver, dot products an
 
 Source geometry remains resident; time steps update amplitudes. Direct summation is split into 32-element dispatches to bound individual kernel duration. Very large source/grid combinations are rejected above 50 billion edge–source evaluations; lower source refinement/segment count or coarsen the grid. Source acceleration remains a future performance improvement.
 
-The kernels use at most eight storage bindings and 16 KiB workgroup storage. Field allocation, reduction scratch, source tables and a rollback checkpoint are checked against adapter binding limits and a 3 GiB combined grid/EM budget. There is no CUDA dependency or duplicate CPU numerical solver.
+The kernels use at most eight storage bindings and 16 KiB workgroup storage. Field allocation, reduction scratch, source tables and rollback checkpoints are checked against adapter binding limits and live available driver memory; see [memory availability](RUNS.md#memory-availability). There is no CUDA dependency or duplicate CPU numerical solver.
 
 ## Outer boundary and interpretation
 
@@ -113,3 +113,20 @@ Measured on an NVIDIA RTX 3060 Laptop GPU:
 These results demonstrate the coarse-wall error and improvement in local current with refinement; they do not establish high-accuracy force prediction. Central-field and local heating errors do not decrease monotonically at fixed first-order timestep. Further spatial/time refinement and interface treatment are needed when tighter accuracy is required. The benchmark does not validate dynamic TEAM 28 motion.
 
 The current 60×40×40 multi-source example took approximately 0.12–0.17 s per step in a three-step headless run on the same GPU. The 128³ reference took approximately 0.9 s per step. Background rendering or other GPU work can increase these times. Field-memory estimates are shown in the UI.
+
+## Conductivity contrast and iteration limits
+
+The edge system combines a curl–curl stiffness term with a conductive mass term proportional to `μ₀ σ_edge h²/Δt`. First-order material transport creates small nonzero liquid fractions, and therefore very small but nonzero edge conductivities. The strictly nonconducting air gauge treatment cannot remove physical conducting gradient modes. A diagonal/Jacobi preconditioner can then need many iterations even though the initial stationary geometry converges. Conductivity contrast is a diagnostic of this difficulty; it is not itself an eigenvalue-derived matrix condition number.
+
+A local V6 investigation at 0.2 mm spacing (172×112×124 cells) used the same 100 A pulse and 10⁻⁴ EM relative tolerance. Comparisons ended at the same physical time, 30 µs:
+
+| Case | Common timestep | EM iteration cap | Result through 30 µs |
+| --- | ---: | ---: | --- |
+| Stationary EM geometry | 10 µs | 1000 | 805 / 805 / 808 iterations |
+| Moving material, coupled | 10 µs | 1000 | third tick exceeds cap |
+| Moving material, coupled | 10 µs | 4000 | third tick converges in 1060 iterations |
+| Moving material, coupled | 2.5 µs | 1000 | all 12 ticks converge, roughly 600–640 iterations per later tick |
+
+The moving third-tick operator had positive edge conductivities from about **0.20 to 58 million S/m**. Smaller timesteps strengthen the conductive mass term relative to curl–curl and improve this case's conditioning. More iterations also worked here; neither is a guarantee for arbitrary later states, and timestep refinement changes the numerical trajectory. Changing fluid pressure tolerance does not change the EM criterion. The CLI reports both processes separately, and an EM failure now includes the requested tolerance and positive edge-conductivity range. A full residual is recomputed at the cap before accepting or reporting failure.
+
+A stronger preconditioner that separately corrects curl and gradient modes is the next solver improvement to investigate. The primary [hypre AMS documentation](https://hypre.readthedocs.io/en/latest/solvers-ams.html) describes auxiliary-space methods for variable-coefficient curl–curl/mass systems, including zero-mass regions. This workbench does not currently include AMS or an equivalent multilevel preconditioner. The implementation remains Rust/WGSL; no conductivity cutoff or artificial change to material properties was introduced to make these tests pass.

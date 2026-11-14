@@ -75,6 +75,7 @@ pub struct EmState {
     pub mode: Mode,
     pub time_s: f64,
     pub diagnostics: Diagnostics,
+    conductivity_range: [f32; 2],
     params: Params,
     uniform: wgpu::Buffer,
     _source: wgpu::Buffer,
@@ -155,7 +156,7 @@ impl EmState {
                     MaterialProperty::Conductivity,
                     MaterialProperty::RelativePermeability,
                 ],
-                false,
+                true,
             )?;
             for magnet in &config.magnets {
                 let c = &volume.inputs.snapshot().components[magnet.body];
@@ -203,13 +204,13 @@ impl EmState {
         let limits = context.device.limits();
         if sizes.iter().any(|&s| {
             s > limits.max_storage_buffer_binding_size as u64 || s > limits.max_buffer_size
-        }) || bytes + volume.persistent_bytes > 3 * 1024 * 1024 * 1024u64
-        {
+        }) {
             return Err(format!(
-                "EM buffers need {:.0} MiB and exceed the device binding/memory budget; increase cell spacing",
+                "EM buffers need {:.0} MiB and exceed device buffer limits; increase cell spacing",
                 bytes as f64 / 1048576.
             ));
         }
+        context.ensure_memory(bytes, "EM working buffers")?;
         let create = |label, size| {
             context.device.create_buffer(&wgpu::BufferDescriptor {
                 label: Some(label),
@@ -508,6 +509,7 @@ impl EmState {
             mode,
             time_s: 0.,
             diagnostics: Diagnostics::default(),
+            conductivity_range: [0.; 2],
             params,
             uniform,
             _source: source,
@@ -534,6 +536,7 @@ impl EmState {
             ("coefficient_check", [1, 1, 1]),
         ]);
         let check = state.read_f32(&state.scalars, 0, 4)?;
+        state.conductivity_range = [if check[3] > 0. { check[1] } else { 0. }, check[2]];
         if check[0] > 0. {
             return Err(
                 "A conductor touches the EM outer boundary; add air padding to the domain".into(),
@@ -634,7 +637,9 @@ impl EmState {
             ("coefficients", self.edge_groups()),
             ("coefficient_check", [1, 1, 1]),
         ]);
-        if self.read_f32(&self.scalars, 0, 4)?[0] > 0. {
+        let check = self.read_f32(&self.scalars, 0, 4)?;
+        self.conductivity_range = [if check[3] > 0. { check[1] } else { 0. }, check[2]];
+        if check[0] > 0. {
             return Err(
                 "Moving conductor reached the EM outer boundary; enlarge the domain".into(),
             );
@@ -788,12 +793,21 @@ impl EmState {
                 break;
             }
         }
+        // A cap or finite CG breakdown must still inspect the actual equation,
+        // rather than reporting only the recursively accumulated residual.
+        if status[7] != 1. && status.iter().all(|v| v.is_finite()) {
+            self.dispatch(&[("true_residual", eg), ("restart_reduce", [1, 1, 1])]);
+            status = self.read_f32(&self.scalars, 0, 8)?;
+        }
         if status[7] != 1. || status.iter().any(|v| !v.is_finite()) {
             self.dispatch(&[("rollback", eg)]);
             return Err(format!(
-                "EM solve did not converge: {} iterations, relative residual {:.3e}; state restored",
+                "EM solve did not converge: {} iterations, true relative residual {:.3e} (requested {:.3e}); conducting-edge σ range {:.3e}…{:.3e} S/m; state restored",
                 status[6],
-                (status[1] / status[2].max(1e-38)).sqrt()
+                (status[1] / status[2].max(1e-38)).sqrt(),
+                self.config.relative_tolerance,
+                self.conductivity_range[0],
+                self.conductivity_range[1]
             ));
         }
         let mut encoder = self

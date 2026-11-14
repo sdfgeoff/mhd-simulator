@@ -374,9 +374,10 @@ impl GpuDomain {
             .filter(|b| b.simulation.included)
             .map(|b| b.triangles().len() as u64 * 52)
             .sum::<u64>();
-        if settings.estimated_bytes(model.bodies.len())? + mesh_bytes > 2 * 1024 * 1024 * 1024 {
-            return Err("Estimated build memory exceeds 2 GiB; increase cell spacing".into());
-        }
+        self.context.ensure_memory(
+            settings.estimated_bytes(model.bodies.len())? + mesh_bytes,
+            "Domain build",
+        )?;
         for b in model.bodies.iter().filter(|b| b.simulation.included) {
             if !b.closed() {
                 return Err(format!(

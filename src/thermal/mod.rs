@@ -158,15 +158,10 @@ impl ThermalState {
         let bytes = n * 64;
         let total = bytes * 3 + (n.div_ceil(256) + 1) * 48;
         let limits = context.device.limits();
-        if bytes > limits.max_storage_buffer_binding_size as u64
-            || bytes > limits.max_buffer_size
-            || total + volume.persistent_bytes > 3 * 1024 * 1024 * 1024
-        {
-            return Err(
-                "Thermal state exceeds GPU binding or working-memory limits; increase cell spacing"
-                    .into(),
-            );
+        if bytes > limits.max_storage_buffer_binding_size as u64 || bytes > limits.max_buffer_size {
+            return Err("Thermal state exceeds GPU buffer limits; increase cell spacing".into());
         }
+        context.ensure_memory(total, "Thermal working buffers")?;
         let max_id = snapshot.materials.iter().map(|m| m.id).max().unwrap_or(0) as usize;
         let offset = (max_id + 1) * 2;
         let mut rows = vec![[0f32; 4]; offset + 2 + snapshot.components.len() * 2];

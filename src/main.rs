@@ -61,6 +61,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .unwrap_or(10);
         let p = project::load(std::path::Path::new(path))?;
         let gpu = domain::GpuDomain::new()?;
+        println!("GPU: {}", gpu.context.name);
+        if let Some(m) = gpu.context.memory_status() {
+            println!(
+                "GPU memory: {:.0} MiB available, {:.0} MiB process budget, {:.0} MiB process usage ({})",
+                m.available_bytes as f64 / 1048576.,
+                m.budget_bytes as f64 / 1048576.,
+                m.used_bytes as f64 / 1048576.,
+                m.source
+            );
+        }
+
         let volume = gpu.build(&p.model, &p.settings, &p.materials)?;
         let mut state = run::RunState::new(
             gpu.context.clone(),
@@ -94,11 +105,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .as_ref()
                 .map_or(0., |f| f.diagnostics.rms_divergence_s_inv);
             println!(
-                "t={:.3} µs Bmax={:.3e} T Umax={:.3e} m/s rms_div={:.3e} s^-1",
+                "t={:.3} µs Bmax={:.3e} T Umax={:.3e} m/s rms_div={:.3e} s^-1 · EM {} it / {:.3e} · pressure {} it / {:.3e}",
                 state.time_s * 1e6,
                 b,
                 u,
-                d
+                d,
+                state.em.as_ref().map_or(0, |e| e.diagnostics.iterations),
+                state
+                    .em
+                    .as_ref()
+                    .map_or(0., |e| e.diagnostics.relative_residual),
+                state.fluid.as_ref().map_or(0, |f| f.diagnostics.iterations),
+                state
+                    .fluid
+                    .as_ref()
+                    .map_or(0., |f| f.diagnostics.relative_residual)
             );
             let e = &state.energy;
             csv.push_str(&format!(

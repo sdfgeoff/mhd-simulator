@@ -8,34 +8,10 @@ use bytemuck::{Pod, Zeroable};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use wgpu::util::DeviceExt;
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct SurfaceConfig {
     pub enabled: bool,
-    pub air_density_kg_m3: f32,
-    pub tension_n_m: f32,
-}
-impl Default for SurfaceConfig {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            air_density_kg_m3: 1.2,
-            tension_n_m: 0.5,
-        }
-    }
-}
-impl SurfaceConfig {
-    pub fn validate(&self) -> Result<(), String> {
-        if !self.air_density_kg_m3.is_finite()
-            || self.air_density_kg_m3 <= 0.
-            || !self.tension_n_m.is_finite()
-            || self.tension_n_m < 0.
-        {
-            Err("Invalid air density or surface tension".into())
-        } else {
-            Ok(())
-        }
-    }
 }
 #[repr(C)]
 #[derive(Clone, Copy, Pod, Zeroable)]
@@ -100,10 +76,10 @@ impl SurfaceState {
         let limits = context.device.limits();
         if sizes.iter().any(|s| {
             *s > limits.max_storage_buffer_binding_size as u64 || *s > limits.max_buffer_size
-        }) || sizes.iter().sum::<u64>() + volume.persistent_bytes > 3 * 1024 * 1024 * 1024
-        {
-            return Err("Moving-interface buffers exceed device limits or working budget".into());
+        }) {
+            return Err("Moving-interface buffers exceed device buffer limits".into());
         }
+        context.ensure_memory(sizes.iter().sum(), "Moving-interface working buffers")?;
         let buffer = |label, size| {
             context.device.create_buffer(&wgpu::BufferDescriptor {
                 label: Some(label),

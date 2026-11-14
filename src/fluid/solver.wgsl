@@ -274,3 +274,16 @@ fn energy_reduce(@builtin(local_invocation_index) l:u32){
  reduce_b[l]=cap;reduce[l]=sum;let total=sum_group(l);for(var s=128u;s>0u;s/=2u){if l<s{reduce_b[l]+=reduce_b[l+s];}workgroupBarrier();}
  if l==0u{scalars[0]=total;scalars[1]=reduce_b[0];}
 }
+
+// Independent residual check, including gauge cells, with no changes to PCG vectors.
+@compute @workgroup_size(256)
+fn pressure_check(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>){
+ if group_id(group)>=count_groups(){return;}let i=flat_id(gid);var sum=vec4<f32>(0.0);
+ if i<p.dims.w && mask[i]!=0u {let pos=decode(i,p.dims.xyz);let b=-p.physical.x*p.physical.x*divergence(pos,true);let r=b-laplacian(pos,0u);sum.y=r*r;}
+ reduce[l]=sum;let total=sum_group(l);if l==0u{partials[group_id(group)]=total;}
+}
+@compute @workgroup_size(256)
+fn check_reduce(@builtin(local_invocation_index) l:u32){
+ var sum=vec4<f32>(0.0);for(var i=l;i<count_groups();i+=256u){sum+=partials[i];}reduce[l]=sum;let total=sum_group(l);
+ if l==0u {scalars[0].y=total.y;scalars[1].z=select(0.0,1.0,total.y<=p.solve.x*scalars[0].z+p.solve.y);}
+}

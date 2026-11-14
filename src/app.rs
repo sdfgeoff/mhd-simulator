@@ -1415,7 +1415,11 @@ impl App {
                 .iter()
                 .filter(|b| b.simulation.material_id == m.id)
                 .count();
-            ui.small(format!("Assigned to {users} objects"));
+            if m.id == 0 {
+                ui.small("Ambient material · used by empty simulation cells");
+            } else {
+                ui.small(format!("Assigned to {users} objects"));
+            }
             self.inputs_pending |= ui.text_edit_singleline(&mut m.name).changed();
             self.inputs_pending |=
                 optional(ui, "Conductivity", &mut m.conductivity_s_m, 0., 1e5, " S/m");
@@ -1437,6 +1441,17 @@ impl App {
                 0.0001,
                 " Pa·s",
             );
+            self.inputs_pending |= optional(
+                ui,
+                "Surface tension vs ambient",
+                &mut m.surface_tension_n_m,
+                0.5,
+                0.01,
+                " N/m",
+            );
+            if m.surface_tension_n_m.is_some() {
+                ui.small("Interface value against the ambient material (Air / void). Solder defaults are illustrative.");
+            }
             egui::CollapsingHeader::new("Thermal / phase properties").show(ui, |ui| {
                 ui.small("Thermal transport uses these values. Latent heat is required before crossing a defined melting interval.");
                 self.inputs_pending |= optional(
@@ -1490,6 +1505,7 @@ impl App {
         if ui.button("Create material").clicked() {
             if let Some(id) = (1..255).find(|id| self.materials.iter().all(|m| m.id != *id)) {
                 self.materials.push(Material {
+                    surface_tension_n_m: None,
                     id,
                     name: format!("Material {id}"),
                     conductivity_s_m: None,

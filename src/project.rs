@@ -81,7 +81,7 @@ pub fn save(
         cad_curves: Some(model.curves.clone()),
         electromagnetics: electromagnetics.clone(),
         fluid: fluid.clone(),
-        version: 2,
+        version: 3,
         geometry,
         domain: settings.clone(),
         materials: materials.to_vec(),
@@ -122,9 +122,11 @@ pub fn save(
     result
 }
 pub fn load(path: &Path) -> Result<Loaded, String> {
-    let mut f: File = serde_json::from_slice(&std::fs::read(path).map_err(|e| e.to_string())?)
-        .map_err(|e| e.to_string())?;
-    if !matches!(f.version, 1 | 2) {
+    let raw: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(path).map_err(|e| e.to_string())?)
+            .map_err(|e| e.to_string())?;
+    let mut f: File = serde_json::from_value(raw.clone()).map_err(|e| e.to_string())?;
+    if !matches!(f.version, 1 | 2 | 3) {
         return Err("Unsupported project version".into());
     }
     f.domain.dims()?;
@@ -158,6 +160,71 @@ pub fn load(path: &Path) -> Result<Loaded, String> {
                 }
                 if changed {
                     m.notes.push_str(" Thermal defaults added during project upgrade. Solder latent heats, Sn60Pb40 heat capacity and magnet thermal conductivity are illustrative; calibrate at operating temperature.");
+                }
+            }
+        }
+    }
+
+    if f.version < 3 {
+        // Material values are authoritative. Migrate old global interface settings only
+        // when the new material field was absent; never replace a material override.
+        let presets = crate::simulation::default_materials();
+        let missing: std::collections::BTreeSet<u32> = raw["materials"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter(|m| m.get("surface_tension_n_m").is_none())
+            .filter_map(|m| m["id"].as_u64().map(|id| id as u32))
+            .collect();
+        for m in &mut f.materials {
+            if missing.contains(&m.id) {
+                m.surface_tension_n_m = presets
+                    .iter()
+                    .find(|p| p.name.eq_ignore_ascii_case(&m.name))
+                    .and_then(|p| p.surface_tension_n_m);
+            }
+        }
+        let candidates: Vec<_> = f
+            .materials
+            .iter()
+            .filter(|m| {
+                m.dynamic_viscosity_pa_s.is_some()
+                    && m.thermal.solidus_c.is_some()
+                    && f.bodies
+                        .iter()
+                        .any(|b| b.simulation.included && b.simulation.material_id == m.id)
+            })
+            .map(|m| m.id)
+            .collect();
+        let liquid = if f.run.thermal_enabled && candidates.len() == 1 {
+            candidates[0]
+        } else {
+            f.fluid.material_id
+        };
+        if let Some(t) = raw["fluid"]["surface"]["tension_n_m"]
+            .as_f64()
+            .or_else(|| f.fluid.surface.enabled.then_some(0.5))
+        {
+            if let Some(m) = f
+                .materials
+                .iter_mut()
+                .find(|m| m.id == liquid && missing.contains(&m.id))
+            {
+                m.surface_tension_n_m = Some(t as f32);
+                m.notes.push_str(
+                    " Surface tension migrated from the former global interface setting.",
+                );
+            }
+        }
+        if let Some(d) = raw["fluid"]["surface"]["air_density_kg_m3"]
+            .as_f64()
+            .or_else(|| f.fluid.surface.enabled.then_some(1.2))
+        {
+            if let Some(m) = f.materials.iter_mut().find(|m| m.id == 0) {
+                if m.density_kg_m3.is_none() || m.density_kg_m3 == Some(1.2) {
+                    m.density_kg_m3 = Some(d as f32);
+                } else if m.density_kg_m3 != Some(d as f32) {
+                    m.notes.push_str(" Ambient material density takes precedence over the former global air-density setting.");
                 }
             }
         }
@@ -242,6 +309,74 @@ mod tests {
             load(path).unwrap().materials[2].thermal.conductivity_w_m_k,
             None
         );
+    }
+    #[test]
+    fn interface_properties_migrate_to_materials_and_roundtrip_without_globals() {
+        let source = Path::new("assets/hotend-free-surface.mhd.json");
+        let mut raw: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(source).unwrap()).unwrap();
+        let geometry = source
+            .parent()
+            .unwrap()
+            .join(raw["geometry"].as_str().unwrap());
+        raw["geometry"] = serde_json::json!(std::fs::canonicalize(geometry).unwrap());
+        raw["version"] = serde_json::json!(2);
+        for m in raw["materials"].as_array_mut().unwrap() {
+            m.as_object_mut().unwrap().remove("surface_tension_n_m");
+        }
+        raw["fluid"]["surface"]["tension_n_m"] = serde_json::json!(0.72);
+        raw["fluid"]["surface"]["air_density_kg_m3"] = serde_json::json!(2.5);
+        std::fs::create_dir_all("artifacts").unwrap();
+        let path = Path::new("artifacts/interface-upgrade.mhd.json");
+        std::fs::write(path, serde_json::to_vec(&raw).unwrap()).unwrap();
+        let p = load(path).unwrap();
+        assert_eq!(p.materials[3].surface_tension_n_m, Some(0.72));
+        assert_eq!(p.materials[0].density_kg_m3, Some(2.5));
+        save(
+            path,
+            &p.model,
+            &p.settings,
+            &p.materials,
+            p.plane,
+            &p.electromagnetics,
+            &p.fluid,
+            &p.run,
+        )
+        .unwrap();
+        let saved: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
+        assert_eq!(saved["version"], 3);
+        assert!(saved["fluid"]["surface"].get("tension_n_m").is_none());
+        assert_eq!(load(path).unwrap().materials, p.materials);
+        raw["materials"][0]["density_kg_m3"] = serde_json::json!(3.);
+        raw["materials"][3]["surface_tension_n_m"] = serde_json::json!(0.9);
+        std::fs::write(path, serde_json::to_vec(&raw).unwrap()).unwrap();
+        let p = load(path).unwrap();
+        assert_eq!(p.materials[0].density_kg_m3, Some(3.));
+        assert_eq!(p.materials[3].surface_tension_n_m, Some(0.9));
+        let mut implicit = raw.clone();
+        implicit["materials"][3]["name"] = serde_json::json!("Custom liquid");
+        implicit["materials"][3]
+            .as_object_mut()
+            .unwrap()
+            .remove("surface_tension_n_m");
+        implicit["materials"][0]["density_kg_m3"] = serde_json::Value::Null;
+        implicit["fluid"]["surface"]
+            .as_object_mut()
+            .unwrap()
+            .remove("tension_n_m");
+        implicit["fluid"]["surface"]
+            .as_object_mut()
+            .unwrap()
+            .remove("air_density_kg_m3");
+        std::fs::write(path, serde_json::to_vec(&implicit).unwrap()).unwrap();
+        let p = load(path).unwrap();
+        assert_eq!(p.materials[3].surface_tension_n_m, Some(0.5));
+        assert_eq!(p.materials[0].density_kg_m3, Some(1.2));
+        raw["version"] = serde_json::json!(3);
+        raw["materials"][3]["surface_tension_n_m"] = serde_json::Value::Null;
+        std::fs::write(path, serde_json::to_vec(&raw).unwrap()).unwrap();
+        assert_eq!(load(path).unwrap().materials[3].surface_tension_n_m, None);
     }
     #[test]
     fn multiple_cad_bindings_roundtrip_and_guard_curve_identity() {

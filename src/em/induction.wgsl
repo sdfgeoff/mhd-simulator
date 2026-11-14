@@ -16,10 +16,10 @@ var<workgroup> reduction_d:array<vec4<f32>,256>;
 fn cell_properties(p:vec3<i32>)->vec2<f32> {
     if !valid(p,scene.dims.xyz)||scene.control.z==1u {return vec2<f32>(0.0,1.0);}
     let i=u32(p.x)+scene.dims.x*(u32(p.y)+scene.dims.y*u32(p.z));let id=materials[i];
-    if id==0u{return vec2<f32>(0.0,1.0);}
+    if id==0u{return properties[0].values.xy;}
     if (id&0x80000000u)!=0u {
         let alpha=f32((id>>8u)&0x7fffffu)/8388607.0;let value=properties[id&255u].values.xy;
-        return vec2<f32>(alpha*value.x,mix(1.0,value.y,alpha));
+        return vec2<f32>(alpha*value.x,mix(properties[0].values.y,value.y,alpha));
     }
     return properties[id].values.xy;
 }
@@ -76,7 +76,7 @@ fn sum_group(local:u32)->vec4<f32>{
 }
 @compute @workgroup_size(256)
 fn coefficients(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>) {
-    let i=flat_id(gid);var v=vec4<f32>(0.0);
+    let i=flat_id(gid);var v=vec4<f32>(0.0,1e30,0.0,0.0);
     if i<scene.edges.w {
         let e=edge_decode(i);let p=vec3<i32>(e.xyz);let a=(e.w+1u)%3u;let b=(e.w+2u)%3u;
         var sigma=0.0;for(var u=0;u<2;u++){for(var v=0;v<2;v++){var q=p;q[a]-=u;q[b]-=v;sigma+=0.25*cell_properties(q).x;}}
@@ -87,12 +87,14 @@ fn coefficients(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invo
         let lower_air=select(0.0,1.0,air_node(p));let upper_air=select(0.0,1.0,air_node(upper));
         source[i+scene.edges.w]=vec4<f32>(0.0,lower_air,upper_air,0.0);
         source[i].z=sigma;source[i].w=diag+lower_air+upper_air;
+        v.y=select(1e30,sigma,sigma>0.0);v.z=sigma;v.w=select(0.0,1.0,sigma>0.0);
     }
-    reduction[l]=v;let sum=sum_group(l);if l==0u && group_id(group)<(scene.edges.w+255u)/256u{partials[group_id(group)]=sum;}
+    reduction[l]=v;workgroupBarrier();for(var stride=128u;stride>0u;stride/=2u){if l<stride{let a=reduction[l];let b=reduction[l+stride];reduction[l]=vec4<f32>(a.x+b.x,min(a.y,b.y),max(a.z,b.z),a.w+b.w);}workgroupBarrier();}let sum=reduction[0];if l==0u && group_id(group)<(scene.edges.w+255u)/256u{partials[group_id(group)]=sum;}
 }
 @compute @workgroup_size(256)
 fn coefficient_check(@builtin(local_invocation_index) l:u32){
-    var sum=vec4<f32>(0.0);let n=(scene.edges.w+255u)/256u;for(var i=l;i<n;i+=256u){sum+=partials[i];}reduction[l]=sum;let total=sum_group(l);if l==0u{scalars[0]=total;}
+    var sum=vec4<f32>(0.0,1e30,0.0,0.0);let n=(scene.edges.w+255u)/256u;for(var i=l;i<n;i+=256u){let b=partials[i];sum=vec4<f32>(sum.x+b.x,min(sum.y,b.y),max(sum.z,b.z),sum.w+b.w);}
+    reduction[l]=sum;workgroupBarrier();for(var stride=128u;stride>0u;stride/=2u){if l<stride{let a=reduction[l];let b=reduction[l+stride];reduction[l]=vec4<f32>(a.x+b.x,min(a.y,b.y),max(a.z,b.z),a.w+b.w);}workgroupBarrier();}if l==0u{scalars[0]=reduction[0];}
 }
 @compute @workgroup_size(256)
 fn prepare(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>) {

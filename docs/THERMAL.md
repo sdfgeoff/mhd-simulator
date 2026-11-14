@@ -38,4 +38,4 @@ These constants are starting values, not calibrated molten-metal properties. **S
 | Alumina AD-995 | 880 | 30 | unknown | [CoorsTek](https://www2.coorstek.com/media/4235/advanced-alumina.pdf), cp at 100 °C, k at 20 °C |
 | Aluminium 6061 | 896 | 167 | 582–652 | [Kaiser](https://online.kaiseraluminum.com/depot/PublicProductInformation/Document/1006/Kaiser_Aluminum_Shapes_Soft_Alloy.pdf), cp at 100 °C |
 
-Project version 2 preserves explicit unknowns and overrides. Loading a version 1 project fills only unset thermal fields of matching named presets and records a migration note; existing scalar values remain intact. Thermal evolution defaults off for older projects.
+Project versions 2 and 3 preserve explicit thermal unknowns and overrides. Loading a version 1 project fills only unset thermal fields of matching named presets and records a migration note; existing scalar values remain intact. Thermal evolution defaults off for older projects.

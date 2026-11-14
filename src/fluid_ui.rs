@@ -60,25 +60,7 @@ impl FluidUi {
             .changed();
         if self.config.surface.enabled {
             ui.small("Imported liquid is the initial distribution; other CAD solids remain walls. Low-density air participates in pressure and motion.");
-            changed |= ui
-                .add(
-                    egui::DragValue::new(&mut self.config.surface.tension_n_m)
-                        .range(0. ..=10.)
-                        .speed(0.01)
-                        .prefix("Surface tension ")
-                        .suffix(" N/m"),
-                )
-                .changed();
-            changed |= ui
-                .add(
-                    egui::DragValue::new(&mut self.config.surface.air_density_kg_m3)
-                        .range(0.01..=1000.)
-                        .speed(0.1)
-                        .prefix("Air density ")
-                        .suffix(" kg/m³"),
-                )
-                .changed();
-            ui.small("0.5 N/m is an illustrative initial surface tension. Refine the grid/timestep for interface motion.");
+            ui.small("Surface tension comes from the liquid material; ambient density comes from Air / void in the material library.");
         } else {
             ui.label(if phase_driven {
                 "Phase-driven flow · fixed material boundary"

@@ -108,6 +108,7 @@ pub struct RunFrame {
     pub fluid: Option<FluidFrame>,
 }
 pub struct RunState {
+    context: GpuContext,
     pub surface: Option<crate::surface::SurfaceState>,
     dynamic_volume: Option<Volume>,
     pub thermal: Option<ThermalState>,
@@ -175,12 +176,10 @@ impl RunState {
         if fluid_config.surface.enabled {
             working += n * 132 + (n.div_ceil(256) + 1) * 32;
         }
-        if working > 3 * 1024 * 1024 * 1024 {
-            return Err(format!(
-                "Combined solver working buffers need {:.0} MiB, above the 3 GiB budget; increase cell spacing",
-                working as f64 / 1048576.
-            ));
-        }
+        context.ensure_memory(
+            working.saturating_sub(volume.persistent_bytes),
+            "Combined solver working buffers",
+        )?;
         if fluid_config.surface.enabled && em_enabled {
             let m = volume
                 .inputs
@@ -251,7 +250,7 @@ impl RunState {
         };
         let mut fluid = if fluid_present {
             Some(FluidState::new(
-                context,
+                context.clone(),
                 volume,
                 fluid_config.clone(),
                 em.as_ref().map(|s| ForceField {
@@ -282,9 +281,11 @@ impl RunState {
             .as_ref()
             .map_or(0., |f| f.diagnostics.kinetic_energy_j as f64);
         Ok(Self {
+            context,
             energy: EnergyLedger {
                 surface_j: surface.as_ref().map_or(0., |s| {
-                    s.diagnostics.area_m2 * fluid_config.surface.tension_n_m as f64
+                    s.diagnostics.area_m2
+                        * fluid.as_ref().map_or(0., |f| f.surface_tension_n_m()) as f64
                 }),
                 thermal_j: thermal.as_ref().map_or(0., |t| t.diagnostics.enthalpy_j),
                 magnetic_j,
@@ -444,8 +445,8 @@ impl RunState {
             };
             let ledger = &mut self.energy;
             if let Some(surface) = &self.surface {
-                let now =
-                    surface.diagnostics.area_m2 * self.fluid_config.surface.tension_n_m as f64;
+                let now = surface.diagnostics.area_m2
+                    * self.fluid.as_ref().map_or(0., |f| f.surface_tension_n_m()) as f64;
                 let delta = now - ledger.surface_j;
                 ledger.surface_j = now;
                 ledger.surface_work_j += f.surface_work_j;
@@ -479,10 +480,24 @@ impl RunState {
         self.time_s += self.config.dt_s;
         Ok(())
     }
+    fn context_grid_cells(&self) -> u64 {
+        self.em
+            .as_ref()
+            .map(|s| &s.grid)
+            .or_else(|| self.fluid.as_ref().map(|s| &s.grid))
+            .or_else(|| self.thermal.as_ref().map(|s| &s.grid))
+            .map_or(0, |g| g.dims.iter().map(|v| *v as u64).product())
+    }
     pub fn snapshot(&self) -> Result<RunFrame, String> {
         if self.failed {
             return Err("A failed coupled tick cannot be recorded".into());
         }
+        let fields = u64::from(self.em.is_some())
+            + u64::from(self.fluid.is_some())
+            + u64::from(self.thermal.is_some());
+        let cells = self.context_grid_cells();
+        self.context
+            .ensure_memory(cells * 64 * fields, "Next complete timeline frame")?;
         Ok(RunFrame {
             surface: self.surface.as_ref().map(|s| s.diagnostics.clone()),
             thermal: self.thermal.as_ref().map(ThermalState::snapshot),
@@ -725,6 +740,8 @@ mod thermal_run_tests {
         let mut model = Model::load(std::path::Path::new("assets/annulus.gltf")).unwrap();
         model.bodies[0].simulation.material_id = 3;
         model.bodies[0].simulation.temperature_c = Some(250.);
+        let mut materials = default_materials();
+        materials[3].surface_tension_n_m = Some(0.);
         let volume = gpu
             .build(
                 &model,
@@ -733,7 +750,7 @@ mod thermal_run_tests {
                     max_mm: [8.; 3],
                     cell_mm: 1.,
                 },
-                &default_materials(),
+                &materials,
             )
             .unwrap();
         let original =
@@ -742,7 +759,6 @@ mod thermal_run_tests {
         let fc = FluidConfig {
             surface: crate::surface::SurfaceConfig {
                 enabled: true,
-                tension_n_m: 0.,
                 ..Default::default()
             },
             acceleration_m_s2: [0., 0., -0.1],

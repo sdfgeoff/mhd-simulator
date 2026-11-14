@@ -23,3 +23,6 @@ opt-level = 2
 
 [dev-dependencies]
 num-complex = "0.4"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+ash = "0.38"

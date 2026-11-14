@@ -2063,9 +2063,7 @@
   },
   "fluid": {
     "surface": {
-      "enabled": true,
-      "air_density_kg_m3": 1.2,
-      "tension_n_m": 0.5
+      "enabled": true
     },
     "material_id": 3,
     "dt_s": 0.00001,
@@ -2091,7 +2089,7 @@
     "absolute_divergence_tolerance": 0.00001,
     "max_iterations": 1000
   },
-  "version": 2,
+  "version": 3,
   "geometry": "hotend-cad.gltf",
   "domain": {
     "min_mm": [
@@ -2108,6 +2106,7 @@
   },
   "materials": [
     {
+      "surface_tension_n_m": null,
       "thermal": {
         "solidus_c": null,
         "liquidus_c": null,
@@ -2125,6 +2124,7 @@
       "reference": null
     },
     {
+      "surface_tension_n_m": null,
       "thermal": {
         "solidus_c": null,
         "liquidus_c": null,
@@ -2142,6 +2142,7 @@
       "reference": null
     },
     {
+      "surface_tension_n_m": null,
       "thermal": {
         "solidus_c": 1084.62,
         "liquidus_c": 1084.62,
@@ -2159,6 +2160,7 @@
       "reference": "https://help.copper.fyi/hc/en-us/articles/4410229175442-How-does-copper-set-the-standard-for-electrical-conductivity"
     },
     {
+      "surface_tension_n_m": 0.5,
       "thermal": {
         "solidus_c": 183.0,
         "liquidus_c": 190.0,
@@ -2172,10 +2174,11 @@
       "relative_permeability": 1.0,
       "density_kg_m3": 8520.0,
       "dynamic_viscosity_pa_s": 0.002,
-      "notes": "Bulk solder datasheet defaults: resistivity 14.99 µΩ·cm and density 8.52 Mg/m³. Unit permeability approximation. Not calibrated molten-metal properties; temperature dependence is not applied. Liquid viscosity 0.002 Pa·s and latent heat are illustrative starting assumptions; Sn60Pb40 heat capacity is also an estimate. Replace them with operating-temperature data.",
+      "notes": "Bulk solder datasheet defaults: resistivity 14.99 µΩ·cm and density 8.52 Mg/m³. Unit permeability approximation. Not calibrated molten-metal properties; temperature dependence is not applied. Liquid viscosity 0.002 Pa·s, surface tension 0.5 N/m and latent heat are illustrative starting assumptions; Sn60Pb40 heat capacity is also an estimate. Replace them with operating-temperature data.",
       "reference": "https://www.ametekinterconnect.com/-/media/ametek-ecp/v2/files/cw_datasheets_sds_cfsi/datasheets/sn60pb40%20data%20sheet.pdf?la=en"
     },
     {
+      "surface_tension_n_m": 0.5,
       "thermal": {
         "solidus_c": 227.0,
         "liquidus_c": 227.0,
@@ -2189,10 +2192,11 @@
       "relative_permeability": 1.0,
       "density_kg_m3": 7420.0,
       "dynamic_viscosity_pa_s": 0.002,
-      "notes": "ALPHA VACULOY datasheet defaults: resistivity 11.99 µΩ·cm and density 7.42 g/cm³. Unit permeability approximation. Not calibrated molten-metal properties; temperature dependence is not applied. Liquid viscosity 0.002 Pa·s and latent heat are illustrative starting assumptions; Sn60Pb40 heat capacity is also an estimate. Replace them with operating-temperature data.",
+      "notes": "ALPHA VACULOY datasheet defaults: resistivity 11.99 µΩ·cm and density 7.42 g/cm³. Unit permeability approximation. Not calibrated molten-metal properties; temperature dependence is not applied. Liquid viscosity 0.002 Pa·s, surface tension 0.5 N/m and latent heat are illustrative starting assumptions; Sn60Pb40 heat capacity is also an estimate. Replace them with operating-temperature data.",
       "reference": "https://www.macdermidalpha.com/sites/default/files/2024-04/ALPHA-VACULOY-Sn99.3Cu0.7-Solid-Solder-EN-12Apr24-TB.pdf"
     },
     {
+      "surface_tension_n_m": null,
       "thermal": {
         "solidus_c": null,
         "liquidus_c": null,
@@ -2210,6 +2214,7 @@
       "reference": "https://www.kjmagnetics.com/neodymium-magnet-specifications.asp"
     },
     {
+      "surface_tension_n_m": null,
       "thermal": {
         "solidus_c": 1375.0,
         "liquidus_c": 1400.0,
@@ -2227,6 +2232,7 @@
       "reference": "https://www.thyssenkrupp-materials.co.uk/stainless-steel-316-14401.html/index.html"
     },
     {
+      "surface_tension_n_m": null,
       "thermal": {
         "solidus_c": null,
         "liquidus_c": null,
@@ -2244,6 +2250,7 @@
       "reference": "https://www2.coorstek.com/media/4235/advanced-alumina.pdf"
     },
     {
+      "surface_tension_n_m": null,
       "thermal": {
         "solidus_c": 582.0,
         "liquidus_c": 652.0,

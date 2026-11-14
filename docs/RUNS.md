@@ -34,3 +34,11 @@ cargo test
 `--run-check` uses the same `RunState` as the workbench, prints the enabled processes and synchronized diagnostics, and writes `artifacts/run-diagnostics.csv`. It never opens a window.
 
 Tests cover moving-conductor feedback, zero-velocity equivalence with stationary EM, relative discrete current divergence, common-time frames, continuation/scrubbing, source-free fluid runs, failed coupled ticks, timestep refinement, clipped/cavity-aware picking, project persistence and fully offscreen Setup/Simulation/file-picker rendering. No desktop window is opened or focused.
+
+## Memory availability
+
+Fixed 2/3 GiB caps have been removed. On Linux/Vulkan, allocation preflights query the selected device's current **VK_EXT_memory_budget** and usage, comparing **additional** allocations with currently available device-local memory. Existing geometry, solver state and retained history already count in the driver's usage. The checks run before a domain build, solver allocation and each complete timeline snapshot. This follows the driver's live [memory-budget estimate](https://docs.vulkan.org/refpages/latest/refpages/source/VkPhysicalDeviceMemoryBudgetPropertiesEXT.html), not the GPU model's advertised VRAM alone. Budgets can change as other applications allocate memory.
+
+Hardware buffer/binding/texture limits remain mandatory. Backends without a live budget query enforce those device limits without substituting an arbitrary global cap. The current live query is implemented for Linux/Vulkan, with hardware and software Vulkan both supported. The CLI reports the adapter name so a software fallback is visible.
+
+Working solver memory and timeline memory are separate. Each complete EM/fluid/thermal frame needs **192 bytes per cell**; ten frames multiply that storage by ten, and the worker queue can temporarily retain additional frames. A working simulation fitting in memory therefore does not guarantee that the requested history also fits. Allocation errors report required additional memory, live available memory and driver usage/budget. Reduce history or resolution when those actual requirements do not fit.

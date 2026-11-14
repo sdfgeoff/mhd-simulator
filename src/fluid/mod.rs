@@ -47,7 +47,6 @@ impl Default for FluidConfig {
 }
 impl FluidConfig {
     pub fn validate(&self) -> Result<(), String> {
-        self.surface.validate()?;
         if self.surface.enabled && self.periodic.iter().any(|p| *p) {
             return Err("Moving-interface runs currently require nonperiodic domain faces".into());
         }
@@ -152,6 +151,8 @@ pub struct FluidState {
     energy_bind: wgpu::BindGroup,
     phase_gpu: Option<PhaseGpu>,
     pipelines: HashMap<&'static str, wgpu::ComputePipeline>,
+    surface_tension_n_m: f32,
+    air_density_kg_m3: f32,
     force_max: f32,
     max_face_speed: f32,
 }
@@ -181,6 +182,24 @@ impl FluidState {
             .dynamic_viscosity_pa_s
             .filter(|v| v.is_finite() && *v > 0.)
             .ok_or("Fluid material needs a positive liquid viscosity")?;
+        let (surface_tension_n_m, air_density_kg_m3) = if config.surface.enabled {
+            let tension = material
+                .surface_tension_n_m
+                .ok_or("Liquid material needs surface tension against the ambient material")?;
+            let ambient = volume
+                .inputs
+                .snapshot()
+                .materials
+                .iter()
+                .find(|m| m.id == 0)
+                .ok_or("Ambient material (ID 0) is missing")?;
+            let air = ambient
+                .density_kg_m3
+                .ok_or("Ambient material needs a density")?;
+            (tension, air)
+        } else {
+            (0., rho)
+        };
         let nu = mu / rho;
         if !nu.is_finite() || nu <= 0. {
             return Err("Fluid viscosity/density ratio is outside the numerical range".into());
@@ -212,13 +231,13 @@ impl FluidState {
             s > limits.max_buffer_size || s > limits.max_storage_buffer_binding_size as u64
         }) || n > u32::MAX as u64
             || nf > u32::MAX as u64
-            || bytes + volume.persistent_bytes > 3 * 1024 * 1024 * 1024
         {
             return Err(format!(
-                "Fluid allocation exceeds device limits or the 3 GiB working budget ({:.1} MiB)",
+                "Fluid allocation exceeds device buffer limits ({:.1} MiB)",
                 bytes as f64 / 1048576.
             ));
         }
+        context.ensure_memory(bytes, "Fluid working buffers")?;
         let ids = read_bytes(&context, volume.material_ids(), 0, n * 4)?;
         let mut mask: Vec<u32> = bytemuck::cast_slice::<u8, u32>(&ids)
             .iter()
@@ -291,8 +310,8 @@ impl FluidState {
         let params = Params {
             surface: [
                 f32::from(config.surface.enabled),
-                config.surface.air_density_kg_m3,
-                config.surface.tension_n_m,
+                air_density_kg_m3,
+                surface_tension_n_m,
                 0.,
             ],
             dims: [grid.dims[0], grid.dims[1], grid.dims[2], n as u32],
@@ -391,6 +410,8 @@ impl FluidState {
             "pressure_commit",
             "phase_faces",
             "pressure_refresh",
+            "pressure_check",
+            "check_reduce",
             "initial_reduce",
             "pressure_apply",
             "alpha_reduce",
@@ -513,6 +534,8 @@ impl FluidState {
             energy_bind,
             phase_gpu: None,
             pipelines,
+            surface_tension_n_m,
+            air_density_kg_m3,
             force_max: 0.,
             max_face_speed: 0.,
         };
@@ -720,9 +743,11 @@ impl FluidState {
         self.context
             .queue
             .write_buffer(&self._uniform, 0, bytemuck::bytes_of(&self.params));
-        let mut iterations = 0;
-        let mut residual = 0.;
+        let mut iterations = self.diagnostics.iterations;
+        let mut residual = self.diagnostics.relative_residual;
+        let mut elapsed = self.diagnostics.elapsed_ms;
         if changed {
+            let started = std::time::Instant::now();
             self.dispatch(&[("phase_faces", groups(self.params.faces[3]))]);
             let mut enc = self
                 .context
@@ -730,14 +755,20 @@ impl FluidState {
                 .create_command_encoder(&Default::default());
             enc.copy_buffer_to_buffer(&self.velocity, 0, &self.scratch, 0, self.velocity.size());
             self.context.queue.submit(Some(enc.finish()));
-            (iterations, residual) = self.project()?;
+            let (extra, r) = self.project()?;
+            iterations += extra;
+            residual = r;
+            elapsed += started.elapsed().as_secs_f64() * 1000.;
         }
         self.dispatch(&[
             ("fields", groups(self.params.dims[3])),
             ("diagnostics", [1, 1, 1]),
         ]);
-        self.read_diagnostics(iterations, residual, 0.)?;
+        self.read_diagnostics(iterations, residual, elapsed)?;
         Ok(())
+    }
+    pub fn surface_tension_n_m(&self) -> f32 {
+        self.surface_tension_n_m
     }
     pub fn config(&self) -> &FluidConfig {
         &self.config
@@ -806,12 +837,19 @@ impl FluidState {
             if residual.1 {
                 self.dispatch(&[("pressure_refresh", cells), ("initial_reduce", [1, 1, 1])]);
                 residual = self.convergence()?;
+            } else if iterations % 64 == 0 || iterations == self.config.max_iterations {
+                // Inspect the full physical equation without resetting CG conjugacy.
+                // The conservative inner gauge bound may be below f32 precision.
+                self.dispatch(&[("pressure_check", cells), ("check_reduce", [1, 1, 1])]);
+                residual = self.convergence()?;
             }
         }
         if !residual.1 {
             return Err(format!(
-                "Fluid pressure solve did not converge after {iterations} iterations (relative residual {:.3e})",
-                residual.0
+                "Fluid pressure solve did not converge after {iterations} iterations (true relative residual {:.3e}, requested {:.3e}, RMS divergence floor {:.3e} s⁻¹)",
+                residual.0,
+                self.config.relative_tolerance,
+                self.config.absolute_divergence_tolerance
             ));
         }
         self.dispatch(&[
@@ -858,10 +896,9 @@ impl FluidState {
             return Err("Fluid timestep exceeds the velocity CFL limit; reduce Δt".into());
         }
         if self.config.surface.enabled {
-            let capillary = if self.config.surface.tension_n_m > 0. {
-                ((self.params.physical[3] + self.config.surface.air_density_kg_m3)
-                    * self.grid.cell_m.powi(3)
-                    / (2. * std::f32::consts::PI * self.config.surface.tension_n_m))
+            let capillary = if self.surface_tension_n_m > 0. {
+                ((self.params.physical[3] + self.air_density_kg_m3) * self.grid.cell_m.powi(3)
+                    / (2. * std::f32::consts::PI * self.surface_tension_n_m))
                     .sqrt()
             } else {
                 f32::INFINITY

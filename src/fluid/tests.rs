@@ -355,3 +355,110 @@ fn thermal_phase_topology_and_weighted_projection_preserve_hydrostatic_rest() {
     assert_eq!(s.diagnostics.fluid_mass_kg, 0.);
     assert_eq!(s.diagnostics.max_speed_m_s, 0.);
 }
+
+#[test]
+fn interface_coefficients_reference_liquid_and_ambient_materials() {
+    let _lock = crate::gpu_test_lock();
+    let (gpu, mut volume, _) = channel(
+        8,
+        FluidConfig {
+            acceleration_m_s2: [0.; 3],
+            ..Default::default()
+        },
+    );
+    let mut snapshot = volume.inputs.snapshot().clone();
+    snapshot.materials[0].density_kg_m3 = Some(2.7);
+    snapshot.materials[3].surface_tension_n_m = Some(0.23);
+    volume.inputs =
+        crate::inputs::GpuInputs::new(&gpu.context, snapshot, volume.build_serial).unwrap();
+    let config = FluidConfig {
+        surface: crate::surface::SurfaceConfig { enabled: true },
+        acceleration_m_s2: [0.; 3],
+        ..Default::default()
+    };
+    let state = FluidState::new(gpu.context.clone(), &volume, config, None).unwrap();
+    assert_eq!(state.params.surface[1], 2.7);
+    assert_eq!(state.params.surface[2], 0.23);
+}
+
+#[test]
+fn physical_pressure_check_accepts_solution_without_discarding_cg_direction() {
+    let _lock = crate::gpu_test_lock();
+    let (_, _, state) = channel(
+        8,
+        FluidConfig {
+            acceleration_m_s2: [0.; 3],
+            ..Default::default()
+        },
+    );
+    let dims = state.grid.dims;
+    let faces = dims.map(|n| n + 1);
+    let h = state.grid.cell_m;
+    let index = |q: [u32; 3], d: [u32; 3]| (q[0] + d[0] * (q[1] + d[1] * q[2])) as usize;
+    let phi: Vec<f32> = (0..state.params.dims[3])
+        .map(|i| ((i * 17) % 31) as f32 * 1e-7)
+        .collect();
+    let work: Vec<_> = phi
+        .iter()
+        .enumerate()
+        .map(|(i, p)| [*p, 0., i as f32 * 0.001, 0.])
+        .collect();
+    let mut predicted = vec![[0f32; 4]; state.params.faces[3] as usize];
+    for z in 0..faces[2] {
+        for y in 0..faces[1] {
+            for x in 0..faces[0] {
+                let q = [x, y, z];
+                for axis in 0..3 {
+                    if q[axis] > 0 && (0..3).all(|a| q[a] < dims[a]) {
+                        let mut left = q;
+                        left[axis] -= 1;
+                        predicted[index(q, faces)][axis] =
+                            (phi[index(q, dims)] - phi[index(left, dims)]) / h;
+                    }
+                }
+            }
+        }
+    }
+    state
+        .context
+        .queue
+        .write_buffer(&state._work, 0, bytemuck::cast_slice(&work));
+    state
+        .context
+        .queue
+        .write_buffer(&state.scratch, 0, bytemuck::cast_slice(&predicted));
+    state.dispatch(&[
+        ("pressure_refresh", groups(state.params.dims[3])),
+        ("initial_reduce", [1, 1, 1]),
+    ]);
+    // Model the over-strict recursive stop flag while preserving an exact manufactured solution.
+    state
+        .context
+        .queue
+        .write_buffer(&state.scalars, 24, bytemuck::bytes_of(&0f32));
+    state
+        .context
+        .queue
+        .write_buffer(&state._work, 0, bytemuck::cast_slice(&work));
+    let before = read_bytes(&state.context, &state._work, 0, state._work.size()).unwrap();
+    state.dispatch(&[
+        ("pressure_check", groups(state.params.dims[3])),
+        ("check_reduce", [1, 1, 1]),
+    ]);
+    assert!(state.convergence().unwrap().1);
+    assert_eq!(
+        before,
+        read_bytes(&state.context, &state._work, 0, state._work.size()).unwrap()
+    );
+    state.dispatch(&[
+        ("correct", groups(state.params.faces[3])),
+        ("fields", groups(state.params.dims[3])),
+        ("diagnostics", [1, 1, 1]),
+    ]);
+    let bytes = read_bytes(&state.context, &state.result, 0, state.result.size()).unwrap();
+    assert!(
+        bytemuck::cast_slice::<u8, FluidCell>(&bytes)
+            .iter()
+            .all(|c| c.velocity[3] < 1e-7)
+    );
+}

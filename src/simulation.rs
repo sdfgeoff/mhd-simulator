@@ -25,6 +25,9 @@ impl Default for SimulationProperties {
 }
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Material {
+    /// Surface tension of this liquid against the ambient material (Air / void).
+    #[serde(default)]
+    pub surface_tension_n_m: Option<f32>,
     #[serde(default)]
     pub thermal: ThermalProperties,
     pub id: u32,
@@ -64,6 +67,7 @@ impl ThermalProperties {
 pub fn default_materials() -> Vec<Material> {
     let preset = |id, name: &str, sigma, mu, density, notes: &str, reference: &str| Material {
         id,
+        surface_tension_n_m: matches!(id, 3 | 4).then_some(0.5),
         thermal: thermal_default(id),
         name: name.into(),
         conductivity_s_m: Some(sigma),
@@ -72,7 +76,7 @@ pub fn default_materials() -> Vec<Material> {
         dynamic_viscosity_pa_s: ((id == 3) || (id == 4)).then_some(0.002),
         notes: if id == 3 || id == 4 {
             format!(
-                "{notes} Liquid viscosity 0.002 Pa·s and latent heat are illustrative starting assumptions; Sn60Pb40 heat capacity is also an estimate. Replace them with operating-temperature data."
+                "{notes} Liquid viscosity 0.002 Pa·s, surface tension 0.5 N/m and latent heat are illustrative starting assumptions; Sn60Pb40 heat capacity is also an estimate. Replace them with operating-temperature data."
             )
         } else {
             notes.into()
@@ -91,6 +95,7 @@ pub fn default_materials() -> Vec<Material> {
         ),
         Material {
             id: 1,
+            surface_tension_n_m:None,
             thermal:Default::default(),
             name: "Unassigned".into(),
             conductivity_s_m: None,
@@ -138,7 +143,7 @@ pub fn default_materials() -> Vec<Material> {
         ),
         stainless316(6),
         alumina(7),
-        Material {id:8,name:"Aluminium 6061 (T6)".into(),conductivity_s_m:Some(25e6),relative_permeability:Some(1.),density_kg_m3:Some(2700.),dynamic_viscosity_pa_s:None,
+        Material {surface_tension_n_m:None,id:8,name:"Aluminium 6061 (T6)".into(),conductivity_s_m:Some(25e6),relative_permeability:Some(1.),density_kg_m3:Some(2700.),dynamic_viscosity_pa_s:None,
             thermal:ThermalProperties {solidus_c:Some(582.),liquidus_c:Some(652.),heat_capacity_j_kg_k:Some(896.),conductivity_w_m_k:Some(167.),latent_heat_j_kg:None},
             notes:"Representative 6061-T6 room-temperature properties: density 2700 kg/m³, conductivity 25 MS/m, heat capacity 896 J/(kg K) at 100 °C, thermal conductivity 167 W/(m K). Melting interval 582–652 °C. Unit permeability approximation. Temper/temperature dependence is not modeled; latent heat and liquid viscosity remain unknown.".into(),
             reference:Some("https://online.kaiseraluminum.com/depot/PublicProductInformation/Document/1006/Kaiser_Aluminum_Shapes_Soft_Alloy.pdf".into())},
@@ -164,12 +169,12 @@ fn thermal_default(id: u32) -> ThermalProperties {
     }
 }
 fn stainless316(id: u32) -> Material {
-    Material {id,thermal:thermal_default(id),name:"316 stainless steel".into(),conductivity_s_m:Some(1./0.75e-6),relative_permeability:Some(1.),density_kg_m3:Some(8000.),dynamic_viscosity_pa_s:None,
+    Material {surface_tension_n_m:None,id,thermal:thermal_default(id),name:"316 stainless steel".into(),conductivity_s_m:Some(1./0.75e-6),relative_permeability:Some(1.),density_kg_m3:Some(8000.),dynamic_viscosity_pa_s:None,
         notes:"Density and conductivity references at 20 °C. Unit permeability is an annealed/nonmagnetic approximation; processing can change it. No temperature dependence is applied.".into(),
         reference:Some("https://www.thyssenkrupp-materials.co.uk/stainless-steel-316-14401.html/index.html".into())}
 }
 fn alumina(id: u32) -> Material {
-    Material {id,thermal:thermal_default(id),name:"Alumina".into(),conductivity_s_m:Some(0.),relative_permeability:Some(1.),density_kg_m3:Some(3900.),dynamic_viscosity_pa_s:None,
+    Material {surface_tension_n_m:None,id,thermal:thermal_default(id),name:"Alumina".into(),conductivity_s_m:Some(0.),relative_permeability:Some(1.),density_kg_m3:Some(3900.),dynamic_viscosity_pa_s:None,
         notes:"Representative CoorsTek AD-995 (99.5%) density. Ideal electrical insulator and unit-permeability approximations; room-temperature resistivity exceeds 10¹⁴ Ω·cm. Grade and temperature matter; no temperature dependence is applied.".into(),
         reference:Some("https://www2.coorstek.com/media/4235/advanced-alumina.pdf".into())}
 }
@@ -256,6 +261,7 @@ pub fn validate_materials(materials: &[Material]) -> Result<(), String> {
             ("permeability", m.relative_permeability, false),
             ("density", m.density_kg_m3, false),
             ("dynamic viscosity", m.dynamic_viscosity_pa_s, false),
+            ("surface tension", m.surface_tension_n_m, true),
             ("heat capacity", m.thermal.heat_capacity_j_kg_k, false),
             ("thermal conductivity", m.thermal.conductivity_w_m_k, false),
             ("latent heat", m.thermal.latent_heat_j_kg, false),
