@@ -147,6 +147,7 @@ pub struct FluidState {
     previous: wgpu::Buffer,
     checkpoint: wgpu::Buffer,
     _force: wgpu::Buffer,
+    shared_force: bool,
     bind: wgpu::BindGroup,
     energy_bind: wgpu::BindGroup,
     phase_gpu: Option<PhaseGpu>,
@@ -162,6 +163,24 @@ impl FluidState {
         volume: &Volume,
         config: FluidConfig,
         force: Option<ForceField<'_>>,
+    ) -> Result<Self, String> {
+        Self::new_with_force(context, volume, config, force, false)
+    }
+    /// Coupled runs consume the live EM output; standalone frozen-force runs keep a private copy.
+    pub(crate) fn new_coupled(
+        context: GpuContext,
+        volume: &Volume,
+        config: FluidConfig,
+        force: Option<ForceField<'_>>,
+    ) -> Result<Self, String> {
+        Self::new_with_force(context, volume, config, force, true)
+    }
+    fn new_with_force(
+        context: GpuContext,
+        volume: &Volume,
+        config: FluidConfig,
+        force: Option<ForceField<'_>>,
+        shared_force: bool,
     ) -> Result<Self, String> {
         if volume.overlaps > 0 {
             return Err("Resolve overlapping components before fluids".into());
@@ -223,7 +242,11 @@ impl FluidState {
             n * 64,
             nf * 16,
             n * 64,
-            if config.use_em_force { n * 64 } else { 64 },
+            if config.use_em_force {
+                if shared_force { 0 } else { n * 64 }
+            } else {
+                64
+            },
         ];
         let bytes = sizes.iter().sum::<u64>();
         let limits = context.device.limits();
@@ -288,16 +311,23 @@ impl FluidState {
             if !field.buffer.usage().contains(wgpu::BufferUsages::COPY_SRC) {
                 return Err("EM force must support a GPU snapshot copy".into());
             }
-            let frozen = context.device.create_buffer(&wgpu::BufferDescriptor {
-                label: Some("Frozen EM force snapshot"),
-                size: n * 64,
-                usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
-                mapped_at_creation: false,
-            });
-            let mut encoder = context.device.create_command_encoder(&Default::default());
-            encoder.copy_buffer_to_buffer(field.buffer, 0, &frozen, 0, n * 64);
-            context.queue.submit(Some(encoder.finish()));
-            frozen
+            if shared_force {
+                if !field.buffer.usage().contains(wgpu::BufferUsages::STORAGE) {
+                    return Err("Coupled EM force must support storage binding".into());
+                }
+                field.buffer.clone()
+            } else {
+                let frozen = context.device.create_buffer(&wgpu::BufferDescriptor {
+                    label: Some("Frozen EM force snapshot"),
+                    size: n * 64,
+                    usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
+                    mapped_at_creation: false,
+                });
+                let mut encoder = context.device.create_command_encoder(&Default::default());
+                encoder.copy_buffer_to_buffer(field.buffer, 0, &frozen, 0, n * 64);
+                context.queue.submit(Some(encoder.finish()));
+                frozen
+            }
         } else {
             context
                 .device
@@ -530,6 +560,7 @@ impl FluidState {
             previous,
             checkpoint,
             _force: force,
+            shared_force,
             bind,
             energy_bind,
             phase_gpu: None,
@@ -560,12 +591,18 @@ impl FluidState {
         {
             return Err("Coupled force requires enabled EM forcing and matching GPU grids".into());
         }
-        let mut encoder = self
-            .context
-            .device
-            .create_command_encoder(&Default::default());
-        encoder.copy_buffer_to_buffer(field.buffer, 0, &self._force, 0, self.result.size());
-        self.context.queue.submit(Some(encoder.finish()));
+        if self.shared_force {
+            if field.buffer != &self._force {
+                return Err("Coupled EM output allocation changed".into());
+            }
+        } else {
+            let mut encoder = self
+                .context
+                .device
+                .create_command_encoder(&Default::default());
+            encoder.copy_buffer_to_buffer(field.buffer, 0, &self._force, 0, self.result.size());
+            self.context.queue.submit(Some(encoder.finish()));
+        }
         // Refresh the force bound before the CFL check, not after taking the step.
         self.dispatch(&[
             ("fields", groups(self.params.dims[3])),
@@ -708,7 +745,7 @@ impl FluidState {
             .device
             .create_command_encoder(&Default::default());
         {
-            let mut pass = enc.begin_compute_pass(&Default::default());
+            let mut pass = self.context.compute_pass(&mut enc, None);
             pass.set_pipeline(pipeline);
             pass.set_bind_group(0, &bind, &[]);
             let g = groups(self.params.dims[3]);
@@ -791,7 +828,7 @@ impl FluidState {
             .device
             .create_command_encoder(&Default::default());
         {
-            let mut pass = encoder.begin_compute_pass(&Default::default());
+            let mut pass = self.context.compute_pass(&mut encoder, None);
             pass.set_bind_group(0, &self.bind, &[]);
             for (entry, g) in entries {
                 pass.set_pipeline(&self.pipelines[entry]);
@@ -810,6 +847,7 @@ impl FluidState {
         Ok((residual, s[6] > 0.5))
     }
     fn project(&mut self) -> Result<(u32, f32), String> {
+        let _stage = self.context.profiler.stage(crate::profile::Stage::Pressure);
         let cells = groups(self.params.dims[3]);
         self.dispatch(&[
             ("pressure_warm", groups(self.params.faces[3])),
@@ -972,7 +1010,7 @@ impl FluidState {
             .device
             .create_command_encoder(&Default::default());
         {
-            let mut pass = encoder.begin_compute_pass(&Default::default());
+            let mut pass = self.context.compute_pass(&mut encoder, None);
             pass.set_bind_group(0, &self.energy_bind, &[]);
             pass.set_pipeline(&self.pipelines["energy_collect"]);
             let g = groups(self.params.dims[3]);
@@ -1009,35 +1047,44 @@ impl FluidState {
             .create_command_encoder(&Default::default());
         encoder.copy_buffer_to_buffer(&self.result, 0, &result, 0, result.size());
         self.context.queue.submit(Some(encoder.finish()));
+        let mut frame = self.field_view();
+        frame.result = crate::recording::FieldStorage::gpu(result);
+        frame
+    }
+    pub(crate) fn field_view(&self) -> FluidFrame {
         FluidFrame {
             grid: self.grid.clone(),
             time_s: self.time_s,
             diagnostics: self.diagnostics.clone(),
-            result,
+            result: crate::recording::FieldStorage::gpu(self.result.clone()),
             context: self.context.clone(),
             input_versions: self.input_versions,
             bytes: self.result.size(),
         }
     }
 }
+#[derive(Clone)]
 pub struct FluidFrame {
     pub grid: GridSi,
     pub time_s: f64,
     pub diagnostics: FluidDiagnostics,
     pub bytes: u64,
-    result: wgpu::Buffer,
+    pub(crate) result: crate::recording::FieldStorage,
     context: GpuContext,
     input_versions: InputVersions,
 }
 impl FluidFrame {
     pub fn result_buffer(&self) -> &wgpu::Buffer {
-        &self.result
+        self.result.buffer()
+    }
+    pub fn is_resident(&self) -> bool {
+        self.result.is_resident()
     }
     pub fn is_current(&self, volume: &Volume) -> bool {
         self.input_versions == volume.inputs.versions()
     }
     pub fn probe(&self, point_mm: [f32; 3]) -> Result<Option<FluidCell>, String> {
-        probe_cell(&self.context, &self.grid, &self.result, point_mm)
+        crate::recording::probe(&self.context, &self.grid, &self.result, point_mm)
     }
 }
 fn probe_cell(

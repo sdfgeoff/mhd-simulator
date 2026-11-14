@@ -394,8 +394,7 @@ impl App {
                     None
                 } else {
                     self.run_ui
-                        .timeline
-                        .current()
+                        .gpu_frame()
                         .and_then(|f| f.surface.as_ref().zip(f.fluid.as_ref()))
                         .map(|(s, f)| (f.result_buffer(), s.material_id))
                 },
@@ -511,8 +510,7 @@ impl App {
             None
         } else {
             self.run_ui
-                .timeline
-                .current()
+                .gpu_frame()
                 .and_then(|f| f.surface.as_ref().zip(f.fluid.as_ref()))
                 .map(|(s, f)| (f.result_buffer(), s.material_id))
         };
@@ -1551,6 +1549,17 @@ mod project_ui_tests {
         app.simulate();
         wait(&mut app);
         assert_eq!(app.run_ui.timeline.samples.len(), 4);
+        let one_frame = app.run_ui.timeline.samples[0].output.ram_bytes();
+        assert!(one_frame > 0);
+        assert_eq!(app.run_ui.timeline.bytes(), one_frame * 4);
+        assert_eq!(app.run_ui.gpu_cache_bytes(), one_frame);
+        assert!(
+            app.run_ui
+                .timeline
+                .samples
+                .iter()
+                .all(|s| s.output.gpu_bytes() == 0)
+        );
         for sample in &app.run_ui.timeline.samples {
             let f = &sample.output;
             assert_eq!(
@@ -1592,6 +1601,44 @@ mod project_ui_tests {
         wait(&mut app);
         assert!(app.run_ui.em_frame().is_none());
         assert_eq!(app.run_ui.timeline.samples.len(), 2);
+    }
+    #[test]
+    fn recording_interval_keeps_final_tick_and_bounds_gpu_history() {
+        let _lock = crate::gpu_test_lock();
+        let mut app = App::new("assets/hotend-cad.mhd.json".into(), None);
+        let ctx = egui::Context::default();
+        app.run_ui.steps = 5;
+        app.run_ui.record_every = 3;
+        app.simulate();
+        let start = std::time::Instant::now();
+        while app.run_ui.busy() {
+            app.run_ui.poll(&ctx, app.volume.as_ref());
+            assert!(start.elapsed().as_secs() < 30);
+            std::thread::sleep(std::time::Duration::from_millis(1));
+        }
+        assert!(app.run_ui.error.is_empty(), "{}", app.run_ui.error);
+        let steps: Vec<_> = app
+            .run_ui
+            .timeline
+            .samples
+            .iter()
+            .map(|s| s.output.step)
+            .collect();
+        assert_eq!(steps, vec![0, 3, 5]);
+        assert!((app.run_ui.timeline.samples.last().unwrap().time_s - 5e-5).abs() < 1e-12);
+        assert!(
+            app.run_ui
+                .timeline
+                .samples
+                .iter()
+                .all(|s| s.output.gpu_bytes() == 0)
+        );
+        let size = app.run_ui.timeline.samples[0].output.ram_bytes();
+        assert_eq!(app.run_ui.gpu_cache_bytes(), size);
+        app.run_ui.timeline.selected = 0;
+        app.run_ui.poll(&ctx, app.volume.as_ref());
+        assert_eq!(app.run_ui.gpu_frame().unwrap().step, 0);
+        assert_eq!(app.run_ui.gpu_cache_bytes(), size);
     }
     #[test]
     fn cad_import_properties_simulate_rebuilds_and_runs_headlessly() {

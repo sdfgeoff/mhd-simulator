@@ -418,7 +418,7 @@ impl ThermalState {
         name: &str,
         g: [u32; 3],
     ) {
-        let mut pass = enc.begin_compute_pass(&Default::default());
+        let mut pass = self.context.compute_pass(enc, Some(name));
         pass.set_bind_group(0, bind, &[]);
         pass.set_pipeline(&self.pipelines[name]);
         pass.dispatch_workgroups(g[0], g[1], g[2]);
@@ -467,25 +467,29 @@ impl ThermalState {
     pub fn is_current(&self, volume: &Volume) -> bool {
         self.versions == volume.inputs.versions()
     }
+    pub fn working_bytes(&self) -> u64 {
+        self.states.iter().map(wgpu::Buffer::size).sum::<u64>()
+            + self.checkpoint.size()
+            + self.catalog.size()
+            + self.stats.size()
+            + self.uniform.size()
+            + self.zero.size()
+    }
     pub fn result_buffer(&self) -> &wgpu::Buffer {
         &self.states[self.current]
     }
+    pub fn transport_destination(&self) -> &wgpu::Buffer {
+        &self.states[1 - self.current]
+    }
     /// Accept conservative mixture enthalpy carried with the liquid occupancy.
-    pub fn accept_surface_transport(
-        &mut self,
-        volume: &Volume,
-        transported: &wgpu::Buffer,
-    ) -> Result<(), String> {
-        if transported.size() != self.result_buffer().size() {
-            return Err("Transported thermal grid size differs".into());
-        }
+    pub fn accept_surface_transport(&mut self, volume: &Volume) -> Result<(), String> {
         let old = self.diagnostics.enthalpy_j;
+        self.current = 1 - self.current;
         let bind = self.bind(volume, self.current, None, None)?;
         let mut enc = self
             .context
             .device
             .create_command_encoder(&Default::default());
-        enc.copy_buffer_to_buffer(transported, 0, self.result_buffer(), 0, transported.size());
         self.dispatch(
             &mut enc,
             &bind,
@@ -620,12 +624,17 @@ impl ThermalState {
             .create_command_encoder(&Default::default());
         enc.copy_buffer_to_buffer(self.result_buffer(), 0, &result, 0, result.size());
         self.context.queue.submit(Some(enc.finish()));
+        let mut frame = self.field_view();
+        frame.result = crate::recording::FieldStorage::gpu(result);
+        frame
+    }
+    pub(crate) fn field_view(&self) -> ThermalFrame {
         ThermalFrame {
             grid: self.grid.clone(),
             time_s: self.time_s,
             diagnostics: self.diagnostics.clone(),
-            bytes: result.size(),
-            result,
+            bytes: self.result_buffer().size(),
+            result: crate::recording::FieldStorage::gpu(self.result_buffer().clone()),
             context: self.context.clone(),
             versions: self.versions,
         }
@@ -634,24 +643,28 @@ impl ThermalState {
         probe(&self.context, &self.grid, self.result_buffer(), point_mm)
     }
 }
+#[derive(Clone)]
 pub struct ThermalFrame {
     pub grid: GridSi,
     pub time_s: f64,
     pub diagnostics: Diagnostics,
     pub bytes: u64,
-    result: wgpu::Buffer,
+    pub(crate) result: crate::recording::FieldStorage,
     context: GpuContext,
     versions: InputVersions,
 }
 impl ThermalFrame {
     pub fn result_buffer(&self) -> &wgpu::Buffer {
-        &self.result
+        self.result.buffer()
+    }
+    pub fn is_resident(&self) -> bool {
+        self.result.is_resident()
     }
     pub fn is_current(&self, v: &Volume) -> bool {
         self.versions == v.inputs.versions()
     }
     pub fn probe(&self, p: [f32; 3]) -> Result<Option<ThermalCell>, String> {
-        probe(&self.context, &self.grid, &self.result, p)
+        crate::recording::probe(&self.context, &self.grid, &self.result, p)
     }
 }
 fn probe(

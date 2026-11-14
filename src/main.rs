@@ -91,9 +91,29 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut csv = String::from(
             "time_s,max_B_T,max_u_m_s,rms_div_u_s_inv,magnetic_j,kinetic_j,joule_generated_j,external_work_j,induction_numerical_loss_j,fluid_loss_j,coupling_defect_j,em_balance_error_j,thermal_j,thermal_deposited_j,thermal_balance_error_j,maximum_temperature_c,liquid_volume_m3,surface_j,capillary_work_j,surface_balance_error_j,material_volume_m3,volume_transport_error_m3\n",
         );
+        let memory = state.working_memory(&volume);
+        println!(
+            "Working buffers: domain {:.1} · EM {:.1} · fluid {:.1} · thermal {:.1} · surface {:.1} MiB; total {:.1} MiB",
+            memory.domain as f64 / 1048576.,
+            memory.em as f64 / 1048576.,
+            memory.fluid as f64 / 1048576.,
+            memory.thermal as f64 / 1048576.,
+            memory.surface as f64 / 1048576.,
+            memory.total() as f64 / 1048576.
+        );
+        let mut performance = String::from(
+            "step,time_s,accepted,stage,cpu_wall_ms,gpu_pass_ms,recorded_passes,total_passes\n",
+        );
+        let mut failure = None;
         for i in 0..=steps {
             if i > 0 {
-                state.step(&p.model, &volume)?;
+                if let Err(error) = state.step(&p.model, &volume) {
+                    failure = Some(error);
+                    break;
+                }
+            }
+            for report in gpu.context.profiler.take_completed(false) {
+                performance.push_str(&report.csv_rows());
             }
             let b = state.em.as_ref().map_or(0., |e| e.diagnostics.maxima[0]);
             let u = state
@@ -160,8 +180,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .map_or(0., |s| s.diagnostics.transport_error_m3)
             ));
         }
+        for report in gpu.context.profiler.take_completed(true) {
+            performance.push_str(&report.csv_rows());
+        }
         std::fs::create_dir_all("artifacts")?;
+        std::fs::write("artifacts/run-performance.csv", performance)?;
         std::fs::write("artifacts/run-diagnostics.csv", csv)?;
+        if let Some(error) = failure {
+            return Err(error.into());
+        }
         return Ok(());
     }
     if args.get(1).is_some_and(|a| a == "--fluid-check") {

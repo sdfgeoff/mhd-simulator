@@ -912,11 +912,11 @@ mod tests {
     fn moving_liquid_caps_match_native_section_and_three_dimensional_views() {
         let _lock = crate::gpu_test_lock();
         let mut view = viewport();
-        let context = crate::gpu::GpuContext {
-            name: "Headless surface render".into(),
-            device: view.state.device.clone(),
-            queue: view.state.queue.clone(),
-        };
+        let context = crate::gpu::GpuContext::new(
+            view.state.device.clone(),
+            view.state.queue.clone(),
+            "Headless surface render".into(),
+        );
         let gpu = crate::domain::GpuDomain::from_context(context.clone()).unwrap();
         let mut model = Model::load(std::path::Path::new("assets/annulus.gltf")).unwrap();
         model.bodies[0].simulation.material_id = 3;

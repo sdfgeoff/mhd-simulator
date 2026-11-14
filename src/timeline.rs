@@ -119,7 +119,7 @@ impl<T> Timeline<T> {
             }
         });
         if !self.samples.is_empty() {
-            ui.small(format!("Recorded outputs · {:.1} MiB · {}-frame window · {} older frames discarded · stepping continues from latest solver time", self.bytes() as f64/1048576., self.capacity_frames, self.dropped));
+            ui.small(format!("Recorded RAM · {:.1} MiB · {}-frame window · {} older frames discarded · stepping continues from latest solver time", self.bytes() as f64/1048576., self.capacity_frames, self.dropped));
         }
         old != self.selected || old_time != self.samples.get(self.selected).map(|s| s.time_s)
     }

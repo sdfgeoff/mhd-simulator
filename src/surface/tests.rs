@@ -151,6 +151,12 @@ fn conservative_surface_transport_moves_volume_and_enthalpy_without_changing_cad
                 | wgpu::BufferUsages::COPY_DST
                 | wgpu::BufferUsages::COPY_SRC,
         });
+    let transported = gpu.context.device.create_buffer(&wgpu::BufferDescriptor {
+        label: Some("Test transport destination"),
+        size: thermal.size(),
+        usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
+        mapped_at_creation: false,
+    });
     let centroid = |v: &[[f32; 4]]| {
         v.iter()
             .enumerate()
@@ -162,19 +168,19 @@ fn conservative_surface_transport_moves_volume_and_enthalpy_without_changing_cad
     let initial_x = centroid(&values);
     for _ in 0..40 {
         surface
-            .advance(&volume, &velocity, Some(&thermal), 0.01, max_speed)
+            .advance(
+                &volume,
+                &velocity,
+                Some((&thermal, &transported)),
+                0.01,
+                max_speed,
+            )
             .unwrap();
         let mut enc = gpu
             .context
             .device
             .create_command_encoder(&Default::default());
-        enc.copy_buffer_to_buffer(
-            surface.transported_thermal(),
-            0,
-            &thermal,
-            0,
-            thermal.size(),
-        );
+        enc.copy_buffer_to_buffer(&transported, 0, &thermal, 0, thermal.size());
         gpu.context.queue.submit(Some(enc.finish()));
     }
     let data = read_bytes(&gpu.context, surface.field(), 0, surface.field().size()).unwrap();

@@ -568,10 +568,9 @@ impl EmState {
             .device
             .create_command_encoder(&Default::default());
         {
-            let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
-                label: Some("EM compute batch"),
-                ..Default::default()
-            });
+            let mut pass = self
+                .context
+                .compute_pass(&mut encoder, Some("EM compute batch"));
             pass.set_bind_group(0, &self.bind, &[]);
             for (name, g) in commands {
                 pass.set_pipeline(&self.pipelines[name]);
@@ -581,6 +580,10 @@ impl EmState {
         self.context.queue.submit(Some(encoder.finish()));
     }
     fn update_sources(&mut self, model: &Model, t: f64) -> Result<(), String> {
+        let _stage = self
+            .context
+            .profiler
+            .stage(crate::profile::Stage::EmSources);
         if self.cad_curves != model.curves {
             return Err("CAD centrelines changed; initialize electromagnetics again".into());
         }
@@ -617,7 +620,7 @@ impl EmState {
                 .device
                 .create_command_encoder(&Default::default());
             {
-                let mut pass = encoder.begin_compute_pass(&Default::default());
+                let mut pass = self.context.compute_pass(&mut encoder, None);
                 pass.set_pipeline(&self.source_pipeline);
                 pass.set_bind_group(0, &self.source_bind, &[]);
                 let g = self.edge_groups();
@@ -633,6 +636,10 @@ impl EmState {
     /// The next induction step enforces the same discrete current continuity as at rest.
     /// Rebuild edge material coefficients after a conservative interface update.
     pub fn update_material_geometry(&mut self) -> Result<(), String> {
+        let _stage = self
+            .context
+            .profiler
+            .stage(crate::profile::Stage::EmCoefficients);
         self.dispatch(&[
             ("coefficients", self.edge_groups()),
             ("coefficient_check", [1, 1, 1]),
@@ -715,7 +722,7 @@ impl EmState {
             .device
             .create_command_encoder(&Default::default());
         {
-            let mut pass = encoder.begin_compute_pass(&Default::default());
+            let mut pass = self.context.compute_pass(&mut encoder, None);
             pass.set_pipeline(pipeline);
             pass.set_bind_group(0, &bind, &[]);
             let g = self.edge_groups();
@@ -758,6 +765,7 @@ impl EmState {
         self.params.physical[0] = self.config.dt_s as f32;
         self.params.physical[3] = self.config.relative_tolerance.powi(2);
         self.update_sources(model, time)?;
+        let solve_stage = self.context.profiler.stage(crate::profile::Stage::EmSolve);
         let eg = self.edge_groups();
         self.dispatch(&[
             ("begin_step", eg),
@@ -810,6 +818,8 @@ impl EmState {
                 self.conductivity_range[1]
             ));
         }
+        drop(solve_stage);
+        let _fields_stage = self.context.profiler.stage(crate::profile::Stage::EmFields);
         let mut encoder = self
             .context
             .device
@@ -826,7 +836,7 @@ impl EmState {
             .device
             .create_command_encoder(&Default::default());
         {
-            let mut pass = encoder.begin_compute_pass(&Default::default());
+            let mut pass = self.context.compute_pass(&mut encoder, None);
             pass.set_bind_group(0, &self.body_bind, &[]);
             pass.set_pipeline(&self.body_collect);
             let g = groups(self.params.dims[3]);
@@ -930,7 +940,7 @@ impl EmState {
             context: self.context.clone(),
             grid: self.grid.clone(),
             input_versions: self.input_versions,
-            result,
+            result: crate::recording::FieldStorage::gpu(result),
             time_s: self.time_s,
             mode: self.mode,
             diagnostics: self.diagnostics.clone(),
@@ -938,12 +948,12 @@ impl EmState {
             bytes: self.result.size(),
         }
     }
-    fn field_view(&self) -> EmFrame {
+    pub(crate) fn field_view(&self) -> EmFrame {
         EmFrame {
             context: self.context.clone(),
             grid: self.grid.clone(),
             input_versions: self.input_versions,
-            result: self.result.clone(),
+            result: crate::recording::FieldStorage::gpu(self.result.clone()),
             time_s: self.time_s,
             mode: self.mode,
             diagnostics: self.diagnostics.clone(),
@@ -967,11 +977,12 @@ impl EmState {
     }
 }
 /// GPU-resident output and diagnostics at one recorded time; no resumable solver state.
+#[derive(Clone)]
 pub struct EmFrame {
     input_versions: InputVersions,
     context: GpuContext,
     grid: GridSi,
-    result: wgpu::Buffer,
+    pub(crate) result: crate::recording::FieldStorage,
     pub time_s: f64,
     pub mode: Mode,
     pub diagnostics: Diagnostics,
@@ -986,21 +997,13 @@ impl EmFrame {
         self.input_versions == volume.inputs.versions()
     }
     pub fn result_buffer(&self) -> &wgpu::Buffer {
-        &self.result
+        self.result.buffer()
     }
     pub fn probe(&self, position_mm: [f32; 3]) -> Result<Option<CellField>, String> {
-        let mut p = [0u32; 3];
-        for i in 0..3 {
-            let q = ((position_mm[i] * 1e-3 - self.grid.origin_m[i]) / self.grid.cell_m).floor();
-            if q < 0. || q >= self.grid.dims[i] as f32 || !q.is_finite() {
-                return Ok(None);
-            }
-            p[i] = q as u32;
-        }
-        let i = p[0] as u64
-            + self.grid.dims[0] as u64 * (p[1] as u64 + self.grid.dims[1] as u64 * p[2] as u64);
-        let bytes = read_bytes(&self.context, &self.result, i * 64, 64)?;
-        Ok(Some(bytemuck::pod_read_unaligned(&bytes)))
+        crate::recording::probe(&self.context, &self.grid, &self.result, position_mm)
+    }
+    pub fn is_resident(&self) -> bool {
+        self.result.is_resident()
     }
 }
 

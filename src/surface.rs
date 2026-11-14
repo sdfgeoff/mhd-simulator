@@ -39,10 +39,10 @@ pub struct SurfaceState {
     fields: [wgpu::Buffer; 2],
     current: usize,
     normals: wgpu::Buffer,
-    transported: wgpu::Buffer,
     checkpoint: wgpu::Buffer,
     stats: wgpu::Buffer,
     zero: wgpu::Buffer,
+    zero_output: wgpu::Buffer,
     pipelines: HashMap<&'static str, wgpu::ComputePipeline>,
     layout: wgpu::BindGroupLayout,
     id_pipeline: wgpu::ComputePipeline,
@@ -69,7 +69,7 @@ impl SurfaceState {
             n * 16,
             n * 16,
             n * 16,
-            n * 64,
+            128,
             (n.div_ceil(256) + 1) * 32,
             n * 4,
         ];
@@ -107,10 +107,10 @@ impl SurfaceState {
             buffer("Liquid occupancy B", n * 16),
         ];
         let normals = buffer("Interface normal", n * 16);
-        let transported = buffer("Co-transported enthalpy", n * 64);
         let checkpoint = buffer("Accepted interface checkpoint", n * 16);
         let stats = buffer("Interface reductions", (n.div_ceil(256) + 1) * 32);
         let zero = buffer("Absent interface input", 64);
+        let zero_output = buffer("Absent transport output", 64);
         let shader = context
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -201,10 +201,10 @@ impl SurfaceState {
             fields,
             current: 0,
             normals,
-            transported,
             checkpoint,
             stats,
             zero,
+            zero_output,
             pipelines,
             layout,
             id_pipeline,
@@ -215,17 +215,23 @@ impl SurfaceState {
         s.update_materials(volume, &evolving);
         Ok((s, evolving))
     }
+    pub fn working_bytes(&self) -> u64 {
+        self.fields.iter().map(wgpu::Buffer::size).sum::<u64>()
+            + self.normals.size()
+            + self.checkpoint.size()
+            + self.stats.size()
+            + self.uniform.size()
+            + self.zero.size()
+            + self.zero_output.size()
+    }
     pub fn field(&self) -> &wgpu::Buffer {
         &self.fields[self.current]
-    }
-    pub fn transported_thermal(&self) -> &wgpu::Buffer {
-        &self.transported
     }
     fn dispatch(
         &self,
         volume: &Volume,
         velocity: Option<&wgpu::Buffer>,
-        thermal: Option<&wgpu::Buffer>,
+        thermal: Option<(&wgpu::Buffer, &wgpu::Buffer)>,
         entries: &[&str],
     ) {
         let buffers = [
@@ -234,8 +240,8 @@ impl SurfaceState {
             self.field(),
             &self.fields[1 - self.current],
             velocity.unwrap_or(&self.zero),
-            thermal.unwrap_or(&self.zero),
-            &self.transported,
+            thermal.map_or(&self.zero, |(input, _)| input),
+            thermal.map_or(&self.zero_output, |(_, output)| output),
             &self.normals,
             &self.stats,
         ];
@@ -259,7 +265,7 @@ impl SurfaceState {
             .device
             .create_command_encoder(&Default::default());
         {
-            let mut pass = enc.begin_compute_pass(&Default::default());
+            let mut pass = self.context.compute_pass(&mut enc, None);
             pass.set_bind_group(0, &bind, &[]);
             for name in entries {
                 pass.set_pipeline(&self.pipelines[name]);
@@ -301,7 +307,7 @@ impl SurfaceState {
         &mut self,
         volume: &Volume,
         velocity: &wgpu::Buffer,
-        thermal: Option<&wgpu::Buffer>,
+        thermal: Option<(&wgpu::Buffer, &wgpu::Buffer)>,
         dt: f64,
         max_speed: f32,
     ) -> Result<(), String> {
@@ -368,7 +374,7 @@ impl SurfaceState {
             .device
             .create_command_encoder(&Default::default());
         {
-            let mut pass = enc.begin_compute_pass(&Default::default());
+            let mut pass = self.context.compute_pass(&mut enc, None);
             pass.set_pipeline(&self.id_pipeline);
             pass.set_bind_group(0, &bind, &[]);
             let g = groups(self.params.dims[3]);

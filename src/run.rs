@@ -99,7 +99,23 @@ impl EnergyLedger {
             - self.external_work_j
     }
 }
+#[derive(Clone, Debug, Default)]
+pub struct WorkingMemory {
+    pub domain: u64,
+    pub em: u64,
+    pub fluid: u64,
+    pub thermal: u64,
+    pub surface: u64,
+}
+impl WorkingMemory {
+    pub fn total(&self) -> u64 {
+        self.domain + self.em + self.fluid + self.thermal + self.surface
+    }
+}
+#[derive(Clone)]
 pub struct RunFrame {
+    pub id: u64,
+    pub step: u64,
     pub surface: Option<crate::surface::SurfaceDiagnostics>,
     pub thermal: Option<ThermalFrame>,
     pub energy: EnergyLedger,
@@ -116,6 +132,7 @@ pub struct RunState {
     pub em: Option<EmState>,
     pub fluid: Option<FluidState>,
     pub time_s: f64,
+    pub steps: u64,
     pub config: RunConfig,
     pub em_config: EmConfig,
     pub fluid_config: FluidConfig,
@@ -164,17 +181,14 @@ impl RunState {
                 + 128;
         }
         if fluid_present {
-            working += n * 148
-                + nf * 48
-                + n.div_ceil(256) * 48
-                + 80
-                + if em_enabled { n * 64 } else { 64 };
+            working +=
+                n * 148 + nf * 48 + n.div_ceil(256) * 48 + 80 + if em_enabled { 0 } else { 64 };
         }
         if config.thermal_enabled {
             working += n * 192 + (n.div_ceil(256) + 1) * 48;
         }
         if fluid_config.surface.enabled {
-            working += n * 132 + (n.div_ceil(256) + 1) * 32;
+            working += n * 68 + (n.div_ceil(256) + 1) * 32;
         }
         context.ensure_memory(
             working.saturating_sub(volume.persistent_bytes),
@@ -249,7 +263,7 @@ impl RunState {
             None
         };
         let mut fluid = if fluid_present {
-            Some(FluidState::new(
+            Some(FluidState::new_coupled(
                 context.clone(),
                 volume,
                 fluid_config.clone(),
@@ -298,6 +312,7 @@ impl RunState {
             surface,
             dynamic_volume,
             time_s: 0.,
+            steps: 0,
             config,
             em_config,
             fluid_config,
@@ -326,9 +341,16 @@ impl RunState {
         if !self.is_current(volume) {
             return Err("Run inputs changed or a coupled step failed; restart the run".into());
         }
+        self.context
+            .profiler
+            .begin_step(self.steps + 1, self.time_s + self.config.dt_s);
         let physics_volume = self.dynamic_volume.as_ref().unwrap_or(volume);
         let result = (|| {
             if let Some(em) = &mut self.em {
+                let _stage = self
+                    .context
+                    .profiler
+                    .stage(crate::profile::Stage::EmPreparation);
                 if self.surface.is_some() {
                     em.update_material_geometry()?;
                 }
@@ -338,6 +360,7 @@ impl RunState {
                 em.step(model, physics_volume)?;
             }
             if let Some(fluid) = &mut self.fluid {
+                let _stage = self.context.profiler.stage(crate::profile::Stage::Fluid);
                 if let Some(em) = &self.em {
                     let m = volume
                         .inputs
@@ -370,17 +393,20 @@ impl RunState {
                 None
             };
             if let (Some(surface), Some(fluid)) = (&mut self.surface, &self.fluid) {
+                let _stage = self.context.profiler.stage(crate::profile::Stage::Surface);
                 surface.advance(
                     volume,
                     fluid.face_buffer(),
-                    self.thermal.as_ref().map(|t| t.result_buffer()),
+                    self.thermal
+                        .as_ref()
+                        .map(|t| (t.result_buffer(), t.transport_destination())),
                     self.config.dt_s,
                     fluid.max_face_speed(),
                 )?;
                 surface.update_materials(volume, physics_volume);
                 if let Some(thermal) = &mut self.thermal {
-                    thermal
-                        .accept_surface_transport(physics_volume, surface.transported_thermal())?;
+                    let _stage = self.context.profiler.stage(crate::profile::Stage::Thermal);
+                    thermal.accept_surface_transport(physics_volume)?;
                 }
             }
             if let Some(thermal) = &mut self.thermal {
@@ -410,6 +436,7 @@ impl RunState {
                         }),
                 )?;
             }
+            let phase_stage = self.context.profiler.stage(crate::profile::Stage::Phase);
             if let (Some(surface), Some(fluid)) = (&self.surface, &mut self.fluid) {
                 fluid.update_surface(
                     volume,
@@ -428,6 +455,8 @@ impl RunState {
                     return Err("A melted material needs liquid viscosity before fluid motion can be simulated".into());
                 }
             }
+            drop(phase_stage);
+            let _energy_stage = self.context.profiler.stage(crate::profile::Stage::Energy);
             let e = self
                 .em
                 .as_ref()
@@ -473,12 +502,27 @@ impl RunState {
             ledger.em_balance_error_j += e.balance_error_j;
             Ok(())
         })();
+        self.context.profiler.end_step(result.is_ok());
         if result.is_err() {
             self.failed = true;
             return result;
         }
         self.time_s += self.config.dt_s;
+        self.steps += 1;
         Ok(())
+    }
+    pub fn working_memory(&self, volume: &Volume) -> WorkingMemory {
+        WorkingMemory {
+            domain: volume.persistent_bytes,
+            em: self.em.as_ref().map_or(0, |s| s.bytes),
+            fluid: self.fluid.as_ref().map_or(0, |s| s.bytes),
+            thermal: self.thermal.as_ref().map_or(0, |s| s.working_bytes()),
+            surface: self.surface.as_ref().map_or(0, |s| s.working_bytes())
+                + self
+                    .dynamic_volume
+                    .as_ref()
+                    .map_or(0, |v| v.material_ids().size()),
+        }
     }
     fn context_grid_cells(&self) -> u64 {
         self.em
@@ -487,6 +531,40 @@ impl RunState {
             .or_else(|| self.fluid.as_ref().map(|s| &s.grid))
             .or_else(|| self.thermal.as_ref().map(|s| &s.grid))
             .map_or(0, |g| g.dims.iter().map(|v| *v as u64).product())
+    }
+    fn frame_view(&self) -> RunFrame {
+        static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+        RunFrame {
+            id: NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
+            step: self.steps,
+            surface: self.surface.as_ref().map(|s| s.diagnostics.clone()),
+            thermal: self.thermal.as_ref().map(ThermalState::field_view),
+            energy: self.energy.clone(),
+            time_s: self.time_s,
+            em: self.em.as_ref().map(EmState::field_view),
+            fluid: self.fluid.as_ref().map(FluidState::field_view),
+        }
+    }
+    pub fn begin_recording(
+        &self,
+        pool: &mut crate::recording::ReadbackPool,
+    ) -> Result<PendingRunFrame, String> {
+        if self.failed {
+            return Err("A failed coupled tick cannot be recorded".into());
+        }
+        let frame = self.frame_view();
+        let mut sources = Vec::new();
+        if let Some(f) = &frame.em {
+            sources.push(f.result_buffer());
+        }
+        if let Some(f) = &frame.fluid {
+            sources.push(f.result_buffer());
+        }
+        if let Some(f) = &frame.thermal {
+            sources.push(f.result_buffer());
+        }
+        let transfer = pool.begin(&sources)?;
+        Ok(PendingRunFrame { frame, transfer })
     }
     pub fn snapshot(&self) -> Result<RunFrame, String> {
         if self.failed {
@@ -498,14 +576,76 @@ impl RunState {
         let cells = self.context_grid_cells();
         self.context
             .ensure_memory(cells * 64 * fields, "Next complete timeline frame")?;
-        Ok(RunFrame {
-            surface: self.surface.as_ref().map(|s| s.diagnostics.clone()),
-            thermal: self.thermal.as_ref().map(ThermalState::snapshot),
-            energy: self.energy.clone(),
-            time_s: self.time_s,
-            em: self.em.as_ref().map(EmState::snapshot),
-            fluid: self.fluid.as_ref().map(FluidState::snapshot),
-        })
+        let mut frame = self.frame_view();
+        frame.em = self.em.as_ref().map(EmState::snapshot);
+        frame.fluid = self.fluid.as_ref().map(FluidState::snapshot);
+        frame.thermal = self.thermal.as_ref().map(ThermalState::snapshot);
+        Ok(frame)
+    }
+}
+
+pub struct PendingRunFrame {
+    frame: RunFrame,
+    transfer: crate::recording::PendingFields,
+}
+impl PendingRunFrame {
+    pub fn ready(&mut self) -> bool {
+        self.transfer.ready()
+    }
+    pub fn finish(
+        self,
+        pool: &mut crate::recording::ReadbackPool,
+    ) -> Result<(RunFrame, crate::recording::CaptureTiming), String> {
+        let (data, timing) = self.transfer.finish(pool)?;
+        let mut data = data.into_iter();
+        let mut frame = self.frame;
+        if let Some(f) = &mut frame.em {
+            f.result = crate::recording::FieldStorage::host(data.next().unwrap());
+        }
+        if let Some(f) = &mut frame.fluid {
+            f.result = crate::recording::FieldStorage::host(data.next().unwrap());
+        }
+        if let Some(f) = &mut frame.thermal {
+            f.result = crate::recording::FieldStorage::host(data.next().unwrap());
+        }
+        Ok((frame, timing))
+    }
+}
+impl RunFrame {
+    pub fn ram_bytes(&self) -> u64 {
+        self.em.as_ref().map_or(0, |f| f.result.host_bytes())
+            + self.fluid.as_ref().map_or(0, |f| f.result.host_bytes())
+            + self.thermal.as_ref().map_or(0, |f| f.result.host_bytes())
+    }
+    pub fn gpu_bytes(&self) -> u64 {
+        self.em.as_ref().map_or(0, |f| f.result.gpu_bytes())
+            + self.fluid.as_ref().map_or(0, |f| f.result.gpu_bytes())
+            + self.thermal.as_ref().map_or(0, |f| f.result.gpu_bytes())
+    }
+    pub fn make_resident(&mut self, context: &GpuContext) -> Result<(), String> {
+        let mut required = 0;
+        for f in [
+            &self.em.as_ref().map(|f| &f.result),
+            &self.fluid.as_ref().map(|f| &f.result),
+            &self.thermal.as_ref().map(|f| &f.result),
+        ] {
+            if let Some(f) = f {
+                if !f.is_resident() {
+                    required += f.host_bytes();
+                }
+            }
+        }
+        context.ensure_memory(required, "Selected history frame GPU cache")?;
+        if let Some(f) = &mut self.em {
+            f.result.make_resident(context);
+        }
+        if let Some(f) = &mut self.fluid {
+            f.result.make_resident(context);
+        }
+        if let Some(f) = &mut self.thermal {
+            f.result.make_resident(context);
+        }
+        Ok(())
     }
 }
 
@@ -614,7 +754,16 @@ mod tests {
             fc,
         )
         .unwrap();
+        let memory = std::sync::Arc::new(crate::recording::RecordingMemory::default());
+        let mut pool = crate::recording::ReadbackPool::new(gpu.context.clone(), memory.clone());
+        let pending = state.begin_recording(&mut pool).unwrap();
         assert!(state.step(&p.model, &volume).is_err());
+        assert!(state.begin_recording(&mut pool).is_err());
+        let (frame, _) = pending.finish(&mut pool).unwrap();
+        assert_eq!(frame.time_s, 0.);
+        assert_eq!(frame.gpu_bytes(), 0);
+        assert!(frame.ram_bytes() > 0);
+        assert_eq!(memory.snapshot().pending_bytes, 0);
         assert_eq!(state.time_s, 0.);
         assert!(!state.is_current(&volume));
         assert!(state.snapshot().is_err());

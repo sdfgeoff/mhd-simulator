@@ -20,3 +20,7 @@ pub mod run;
 pub mod thermal;
 
 pub mod surface;
+
+pub mod profile;
+
+pub mod recording;

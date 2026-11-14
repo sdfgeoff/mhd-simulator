@@ -223,7 +223,9 @@ fn frozen_em_force_accelerates_velocity_and_ignores_later_source_changes() {
         .create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: None,
             contents: bytemuck::cast_slice(&cells),
-            usage: wgpu::BufferUsages::COPY_SRC | wgpu::BufferUsages::COPY_DST,
+            usage: wgpu::BufferUsages::COPY_SRC
+                | wgpu::BufferUsages::COPY_DST
+                | wgpu::BufferUsages::STORAGE,
         });
     let mut state = FluidState::new(
         gpu.context.clone(),
@@ -238,11 +240,33 @@ fn frozen_em_force_accelerates_velocity_and_ignores_later_source_changes() {
         }),
     )
     .unwrap();
+    let mut shared = FluidState::new_coupled(
+        gpu.context.clone(),
+        &volume,
+        state.config().clone(),
+        Some(ForceField {
+            buffer: &force,
+            grid: &base.grid,
+        }),
+    )
+    .unwrap();
+    assert_eq!(state.bytes - shared.bytes, n as u64 * 64);
     gpu.context.queue.write_buffer(
         &force,
         0,
         bytemuck::cast_slice(&vec![FluidCell::default(); n]),
     );
+    shared
+        .update_force(ForceField {
+            buffer: &force,
+            grid: &base.grid,
+        })
+        .unwrap();
+    shared.step(&volume).unwrap();
+    let live = shared.probe([2., 4., 2.]).unwrap().unwrap();
+    assert_eq!(live.force[0], 0.);
+    assert_eq!(live.velocity[0], 0.);
+
     state.step(&volume).unwrap();
     let p = state.snapshot().probe([2., 4., 2.]).unwrap().unwrap();
     assert!((p.velocity[0] - 1e-4).abs() < 1e-8, "{:?}", p.velocity);

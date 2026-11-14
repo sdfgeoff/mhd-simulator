@@ -4,11 +4,13 @@ pub struct GpuContext {
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
     pub name: String,
+    pub profiler: std::sync::Arc<crate::profile::Profiler>,
 }
 pub fn device_descriptor(adapter: &wgpu::Adapter) -> wgpu::DeviceDescriptor<'static> {
     let limits = adapter.limits();
     wgpu::DeviceDescriptor {
         label: Some("Rendering and simulation device"),
+        required_features: adapter.features() & wgpu::Features::TIMESTAMP_QUERY,
         required_limits: wgpu::Limits {
             max_texture_dimension_2d: limits.max_texture_dimension_2d,
             max_texture_array_layers: limits.max_texture_array_layers,
@@ -21,11 +23,23 @@ pub fn device_descriptor(adapter: &wgpu::Adapter) -> wgpu::DeviceDescriptor<'sta
 }
 impl GpuContext {
     pub fn new(device: wgpu::Device, queue: wgpu::Queue, name: String) -> Self {
+        let profiler = std::sync::Arc::new(crate::profile::Profiler::new(&device, &queue));
         Self {
             device,
             queue,
             name,
+            profiler,
         }
+    }
+    pub fn compute_pass<'a>(
+        &'a self,
+        encoder: &'a mut wgpu::CommandEncoder,
+        label: Option<&'a str>,
+    ) -> wgpu::ComputePass<'a> {
+        encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+            label,
+            timestamp_writes: self.profiler.timestamps(),
+        })
     }
     pub fn headless() -> Result<Self, String> {
         pollster::block_on(async {
