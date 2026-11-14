@@ -435,6 +435,7 @@ impl FluidState {
             "initialize",
             "predict",
             "viscous",
+            "pressure_coefficients",
             "pressure_guess",
             "pressure_warm",
             "pressure_commit",
@@ -837,20 +838,21 @@ impl FluidState {
         }
         self.context.queue.submit(Some(encoder.finish()));
     }
-    fn convergence(&self) -> Result<(f32, bool), String> {
+    fn convergence(&self) -> Result<(f32, bool, u32), String> {
         let data = read_bytes(&self.context, &self.scalars, 0, 32)?;
         let s = bytemuck::cast_slice::<u8, f32>(&data);
         let residual = (s[1] / s[2].max(1e-38)).sqrt();
-        if !residual.is_finite() || s[1] < 0. || s[2] < 0. {
+        if !residual.is_finite() || s.iter().any(|v| !v.is_finite()) || s[1] < 0. || s[2] < 0. {
             return Err("Nonfinite fluid pressure residual".into());
         }
-        Ok((residual, s[6] > 0.5))
+        Ok((residual, s[6] > 0.5, s[7] as u32))
     }
     fn project(&mut self) -> Result<(u32, f32), String> {
         let _stage = self.context.profiler.stage(crate::profile::Stage::Pressure);
         let cells = groups(self.params.dims[3]);
         self.dispatch(&[
             ("pressure_warm", groups(self.params.faces[3])),
+            ("pressure_coefficients", groups(self.params.faces[3])),
             ("pressure_guess", cells),
             ("pressure_refresh", cells),
             ("initial_reduce", [1, 1, 1]),
@@ -858,7 +860,11 @@ impl FluidState {
         let mut iterations = 0;
         let mut residual = self.convergence()?;
         while !residual.1 && iterations < self.config.max_iterations {
-            let batch = 8.min(self.config.max_iterations - iterations);
+            // The GPU guards converged iterations. Poll less often while still
+            // stopping at each independent physical-residual check and the cap.
+            let batch = 32
+                .min(self.config.max_iterations - iterations)
+                .min(64 - iterations % 64);
             let mut stages = Vec::new();
             for _ in 0..batch {
                 stages.extend([
@@ -870,8 +876,11 @@ impl FluidState {
                 ]);
             }
             self.dispatch(&stages);
-            iterations += batch;
             residual = self.convergence()?;
+            if residual.2 <= iterations && !residual.1 {
+                return Err("Fluid pressure iteration made no progress".into());
+            }
+            iterations = residual.2;
             if residual.1 {
                 self.dispatch(&[("pressure_refresh", cells), ("initial_reduce", [1, 1, 1])]);
                 residual = self.convergence()?;

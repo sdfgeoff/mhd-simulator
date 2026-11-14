@@ -4,7 +4,8 @@ struct Result {velocity:vec4<f32>,pressure:vec4<f32>,force:vec4<f32>,reserved:ve
 @group(0) @binding(1) var<storage,read> mask:array<u32>;
 @group(0) @binding(2) var<storage,read_write> velocity:array<vec4<f32>>;
 @group(0) @binding(3) var<storage,read_write> predicted:array<vec4<f32>>;
-// x=pressure potential, y=residual, z=search, w=operator/search product
+// x=pressure potential, y=residual, z=search.
+// w=operator/search product until update, then the cached diagonal for search.
 @group(0) @binding(4) var<storage,read_write> work:array<vec4<f32>>;
 @group(0) @binding(5) var<storage,read_write> partials:array<vec4<f32>>;
 @group(0) @binding(6) var<storage,read_write> scalars:array<vec4<f32>>;
@@ -64,9 +65,39 @@ fn laplacian(pos:vec3<i32>,kind:u32)->f32 {
     for(var axis=0u;axis<3u;axis++) {for(var sign=-1;sign<=1;sign+=2) {var q=pos;q[axis]+=sign;if fluid(q) {var fp=pos;if sign>0 {fp[axis]+=1;}out+=mobility(fp,axis)*(center-potential(q,kind));}}}
     return out;
 }
+// During projection, predicted contains all candidate face velocities and
+// previous retains the accepted state. Reuse velocity as a coefficient cache
+// until correct writes the projected velocity. Physical residual verification
+// below still evaluates the original, uncached mobility/laplacian.
+fn cached_mobility(pos:vec3<i32>,axis:u32)->f32 {
+    return velocity[index(canonical_face(pos),p.faces.xyz)][axis];
+}
+fn cached_diagonal(i:u32)->f32 {return velocity[i].w;}
 fn apply(pos:vec3<i32>,kind:u32)->f32 {
     if (mask[index(pos,p.dims.xyz)]&3u)==2u {return potential(pos,kind);}
-    return laplacian(pos,kind);
+    let center=potential(pos,kind);var out=0.0;
+    for(var axis=0u;axis<3u;axis++) {for(var sign=-1;sign<=1;sign+=2) {
+        var fp=pos;if sign>0 {fp[axis]+=1;}
+        let beta=cached_mobility(fp,axis);
+        // Nonzero cached mobility certifies two valid fluid cells. Closed faces
+        // have zero weight, so no neighbor mask/density checks are needed here.
+        if beta>0.0 {
+            var q=pos;q[axis]+=sign;let v=work[index(wrap_cell(q),p.dims.xyz)];
+            out+=beta*(center-select(v.x,v.z,kind==1u));
+        }
+    }}
+    return out;
+}
+@compute @workgroup_size(256)
+fn pressure_coefficients(@builtin(global_invocation_id) gid:vec3<u32>) {
+    let i=flat_id(gid);if i>=p.faces.w{return;}
+    let pos=decode(i,p.faces.xyz);var coeff=vec4<f32>(0.0);
+    for(var axis=0u;axis<3u;axis++) {
+        if open_face(pos,axis) {coeff[axis]=mobility(pos,axis);}
+    }
+    // The diagonal is indexed by cell's flat index, independently of face position.
+    if i<p.dims.w && mask[i]!=0u {coeff.w=diagonal(decode(i,p.dims.xyz));}
+    velocity[i]=coeff;
 }
 fn divergence(pos:vec3<i32>,star:bool)->f32 {
     var sum=0.0;for(var axis=0u;axis<3u;axis++) {var q=pos;q[axis]+=1;sum+=face(q,axis,star)-face(pos,axis,star);}return sum/p.physical.x;
@@ -144,7 +175,7 @@ fn pressure_warm(@builtin(global_invocation_id) gid:vec3<u32>){
 }
 @compute @workgroup_size(256)
 fn pressure_guess(@builtin(global_invocation_id) gid:vec3<u32>) {
-    let i=flat_id(gid);if i<p.dims.w {work[i]=vec4<f32>(0.0);}
+    let i=flat_id(gid);if i<p.dims.w {work[i]=vec4<f32>(0.0);}if i==0u {scalars[1].w=0.0;}
 }
 @compute @workgroup_size(256)
 fn pressure_commit(@builtin(global_invocation_id) gid:vec3<u32>){
@@ -155,7 +186,7 @@ fn pressure_refresh(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_
     if group_id(group)>=count_groups() {return;}
     let i=flat_id(gid);var sum=vec4<f32>(0.0);
     if i<p.dims.w && mask[i]!=0u {
-        let pos=decode(i,p.dims.xyz);let b=rhs(pos);let r=b-apply(pos,0u);let d=diagonal(pos);
+        let pos=decode(i,p.dims.xyz);let b=rhs(pos);let r=b-apply(pos,0u);let d=cached_diagonal(i);
         work[i].y=r;work[i].z=r/d;
         let physical=-p.physical.x*p.physical.x*divergence(pos,true);
         let true_residual=physical-laplacian(pos,0u);
@@ -167,7 +198,7 @@ fn pressure_refresh(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_
 fn initial_reduce(@builtin(local_invocation_index) l:u32) {
     var sum=vec4<f32>(0.0);for(var i=l;i<count_groups();i+=256u) {sum+=partials[i];}
     reduce[l]=sum;let total=sum_group(l);
-    if l==0u {scalars[0]=total;scalars[1]=vec4<f32>(0.0,0.0,select(0.0,1.0,total.y<=p.solve.x*total.z+p.solve.y||total.z==0.0),0.0);}
+    if l==0u {scalars[0]=total;scalars[1]=vec4<f32>(0.0,0.0,select(0.0,1.0,total.y<=p.solve.x*total.z+p.solve.y||total.z==0.0),scalars[1].w);}
 }
 @compute @workgroup_size(256)
 fn pressure_apply(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>) {
@@ -186,8 +217,8 @@ fn update(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invocation
     if group_id(group)>=count_groups() {return;}
     let i=flat_id(gid);var sum=vec4<f32>(0.0);
     if i<p.dims.w && mask[i]!=0u && scalars[1].z<0.5 {
-        let a=scalars[1].x;let v=work[i];let r=v.y-a*v.w;work[i]=vec4<f32>(v.x+a*v.z,r,v.z,v.w);
-        let diagonal=diagonal(decode(i,p.dims.xyz));sum=vec4<f32>(r*r/diagonal,r*r,0.0,0.0);
+        let a=scalars[1].x;let v=work[i];let r=v.y-a*v.w;
+        let diagonal=cached_diagonal(i);work[i]=vec4<f32>(v.x+a*v.z,r,v.z,diagonal);sum=vec4<f32>(r*r/diagonal,r*r,0.0,0.0);
     }
     reduce[l]=sum;let total=sum_group(l);if l==0u {partials[group_id(group)]=total;}
 }
@@ -195,6 +226,7 @@ fn update(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invocation
 fn beta_reduce(@builtin(local_invocation_index) l:u32) {
     var sum=vec4<f32>(0.0);for(var i=l;i<count_groups();i+=256u) {sum+=partials[i];}reduce[l]=sum;let total=sum_group(l);
     if l==0u && scalars[1].z<0.5 {
+        scalars[1].w+=1.0;
         scalars[1].y=total.x/max(scalars[0].x,1e-35);scalars[0].x=total.x;scalars[0].y=total.y;
         scalars[1].z=select(0.0,1.0,total.y<=(p.solve.x*scalars[0].z+p.solve.y)/p.solve.z);
     }
@@ -202,7 +234,7 @@ fn beta_reduce(@builtin(local_invocation_index) l:u32) {
 @compute @workgroup_size(256)
 fn search(@builtin(global_invocation_id) gid:vec3<u32>) {
     let i=flat_id(gid);if i>=p.dims.w || mask[i]==0u || scalars[1].z>0.5 {return;}
-    let v=work[i];work[i].z=v.y/diagonal(decode(i,p.dims.xyz))+scalars[1].y*v.z;
+    let v=work[i];work[i].z=v.y/v.w+scalars[1].y*v.z;
 }
 @compute @workgroup_size(256)
 fn correct(@builtin(global_invocation_id) gid:vec3<u32>) {

@@ -657,3 +657,156 @@ fn driven_induction_accounts_external_work_heat_and_backward_euler_loss() {
         assert!((e.joule_j / (s.diagnostics.power_w as f64 * s.config.dt_s) - 1.).abs() < 1e-5);
     }
 }
+
+#[test]
+fn air_stencil_matches_full_curl_gauge_operator_at_materials_and_boundaries() {
+    let _lock = crate::gpu_test_lock();
+    let gpu = GpuDomain::new().unwrap();
+    let mut model = Model::load(std::path::Path::new("assets/annulus.gltf")).unwrap();
+    model.bodies[0].simulation.material_id = 6;
+    let settings = DomainSettings {
+        min_mm: [-8.; 3],
+        max_mm: [8.; 3],
+        cell_mm: 1.,
+    };
+    for (sigma, mu) in [(0., 1.), (1.33e6, 1.), (0., 2.)] {
+        let mut materials = default_materials();
+        materials[6].conductivity_s_m = Some(sigma);
+        materials[6].relative_permeability = Some(mu);
+        let volume = gpu.build(&model, &settings, &materials).unwrap();
+        let state = EmState::new(
+            gpu.context.clone(),
+            &volume,
+            &model,
+            EmConfig::default(),
+            Mode::Induction,
+        )
+        .unwrap();
+        let n = state.params.edges[3] as usize;
+        let work: Vec<[f32; 4]> = (0..n)
+            .map(|i| {
+                let v = ((i as f32 * 1.2345).sin() + (i as f32 * 0.345).cos()) * 0.01;
+                [0., 0., v, 0.]
+            })
+            .collect();
+        state
+            .context
+            .queue
+            .write_buffer(&state._work, 0, bytemuck::cast_slice(&work));
+        state
+            .context
+            .queue
+            .write_buffer(&state.scalars, 0, &[0; 32]);
+        state.dispatch(&[("apply_operator", state.edge_groups())]);
+        let fast = read_bytes(&state.context, &state._work, 0, state._work.size()).unwrap();
+        let data = read_bytes(&state.context, &state._source, 0, state._source.size()).unwrap();
+        let mut coefficients = bytemuck::cast_slice::<u8, [f32; 4]>(&data).to_vec();
+        let eligible = coefficients[n..].iter().filter(|v| v[3] > 0.5).count();
+        assert!(
+            eligible > n / 4,
+            "Expected substantial air-stencil coverage"
+        );
+        for c in &mut coefficients[n..] {
+            c[3] = 0.;
+        }
+        state
+            .context
+            .queue
+            .write_buffer(&state._source, 0, bytemuck::cast_slice(&coefficients));
+        state.dispatch(&[("apply_operator", state.edge_groups())]);
+        let exact = read_bytes(&state.context, &state._work, 0, state._work.size()).unwrap();
+        let a = bytemuck::cast_slice::<u8, [f32; 4]>(&fast);
+        let b = bytemuck::cast_slice::<u8, [f32; 4]>(&exact);
+        let error = a
+            .iter()
+            .zip(b)
+            .map(|(a, b)| (a[3] as f64 - b[3] as f64).powi(2))
+            .sum::<f64>();
+        let norm = b.iter().map(|v| (v[3] as f64).powi(2)).sum::<f64>();
+        assert!(
+            (error / norm).sqrt() < 2e-7,
+            "sigma={sigma} mu={mu} relative operator error {}",
+            (error / norm).sqrt()
+        );
+    }
+}
+
+#[test]
+#[ignore = "GPU performance microbenchmark; select a project with MHD_BENCH_PROJECT"]
+fn benchmark_em_kernels() {
+    let _lock = crate::gpu_test_lock();
+    let path =
+        std::env::var("MHD_BENCH_PROJECT").unwrap_or_else(|_| "assets/hotend-cad.mhd.json".into());
+    let p = crate::project::load(std::path::Path::new(&path)).unwrap();
+    let gpu = GpuDomain::new().unwrap();
+    let volume = gpu.build(&p.model, &p.settings, &p.materials).unwrap();
+    let state = EmState::new(
+        gpu.context.clone(),
+        &volume,
+        &p.model,
+        p.electromagnetics,
+        Mode::Induction,
+    )
+    .unwrap();
+    if !state
+        .context
+        .device
+        .features()
+        .contains(wgpu::Features::TIMESTAMP_QUERY)
+    {
+        eprintln!("GPU timestamps unavailable; kernel throughput measurement skipped");
+        return;
+    }
+    let n = state.params.edges[3] as usize;
+    let work = vec![[0f32, 1e-6, 1e-6, 1e-6]; n];
+    let partials = vec![[1f32; 4]; n.div_ceil(256)];
+    for (step, entry) in [
+        "apply_operator",
+        "alpha_reduce",
+        "update_residual",
+        "beta_reduce",
+        "update_search",
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        state
+            .context
+            .queue
+            .write_buffer(&state._work, 0, bytemuck::cast_slice(&work));
+        state
+            .context
+            .queue
+            .write_buffer(&state._partials, 0, bytemuck::cast_slice(&partials));
+        state.context.queue.write_buffer(
+            &state.scalars,
+            0,
+            bytemuck::cast_slice(&[[1f32, 1., 1., 0.], [0.01, 0.5, 0., 0.]]),
+        );
+        state.context.device.poll(wgpu::Maintain::Wait);
+        state.context.profiler.begin_step(step as u64, 0.);
+        {
+            let _stage = state.context.profiler.stage(crate::profile::Stage::EmSolve);
+            let count = if entry.ends_with("reduce") {
+                [1, 1, 1]
+            } else {
+                state.edge_groups()
+            };
+            state.dispatch(&vec![(entry, count); 50]);
+        }
+        state.context.profiler.end_step(true);
+        let status = state.read_f32(&state.scalars, 0, 8).unwrap();
+        assert_eq!(
+            status[7], 0.,
+            "Kernel fixture must keep GPU iterations active"
+        );
+        for report in state.context.profiler.take_completed(true) {
+            if let Some(gpu) = report.gpu {
+                eprintln!(
+                    "{entry}: {:.4} ms per dispatch",
+                    gpu.stages_ms.values().sum::<f64>() / 50.
+                );
+            }
+        }
+    }
+}

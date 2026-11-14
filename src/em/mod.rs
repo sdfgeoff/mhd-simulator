@@ -778,7 +778,7 @@ impl EmState {
                 && status.iter().all(|v| v.is_finite())
                 && (status[6] as u32) < self.config.max_iterations
             {
-                let batch = (self.config.max_iterations - status[6] as u32).min(16);
+                let batch = (self.config.max_iterations - status[6] as u32).min(32);
                 let mut commands = Vec::new();
                 for _ in 0..batch {
                     commands.extend_from_slice(&[

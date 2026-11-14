@@ -3,7 +3,8 @@ struct Result {b:vec4<f32>,j:vec4<f32>,fq:vec4<f32>,applied:vec4<f32>}
 @group(0) @binding(1) var<storage,read> materials:array<u32>;
 @group(0) @binding(2) var<storage,read> properties:array<Physical>;
 @group(0) @binding(3) var<storage,read_write> source:array<vec4<f32>>;
-// x=reaction A, y=residual, z=PCG search direction, w=operator/search product
+// x=reaction A, y=residual, z=PCG search direction.
+// w=operator/search product until update_residual, then the diagonal for update_search.
 @group(0) @binding(4) var<storage,read_write> work:array<vec4<f32>>;
 @group(0) @binding(5) var<storage,read_write> previous:array<f32>;
 @group(0) @binding(6) var<storage,read_write> partials:array<vec4<f32>>;
@@ -85,7 +86,14 @@ fn coefficients(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invo
         if boundary(e){diag=1.0;if sigma>0.0{v.x=1.0;}}
         var upper=p;upper[e.w]+=1;
         let lower_air=select(0.0,1.0,air_node(p));let upper_air=select(0.0,1.0,air_node(upper));
-        source[i+scene.edges.w]=vec4<f32>(0.0,lower_air,upper_air,0.0);
+        // In unit-reluctivity air, CᵀC + the complete nodal gauge is the
+        // componentwise seven-point negative Laplacian. Mark only edges whose
+        // two endpoints have the full gauge and whose four incident faces
+        // have unit reluctivity. Material/boundary edges retain the full stencil.
+        let scalar_air=lower_air>0.5 && upper_air>0.5 &&
+            nu_face(b,p)==1.0 && nu_face(b,qa)==1.0 &&
+            nu_face(a,p)==1.0 && nu_face(a,qb)==1.0;
+        source[i+scene.edges.w]=vec4<f32>(0.0,lower_air,upper_air,select(0.0,1.0,scalar_air));
         source[i].z=sigma;source[i].w=diag+lower_air+upper_air;
         v.y=select(1e30,sigma,sigma>0.0);v.z=sigma;v.w=select(0.0,1.0,sigma>0.0);
     }
@@ -112,11 +120,22 @@ fn initial_reduce(@builtin(local_invocation_index) l:u32){
     var v=vec4<f32>(0.0);let n=(scene.edges.w+255u)/256u;for(var i=l;i<n;i+=256u){v+=partials[i];}reduction[l]=v;let sum=sum_group(l);
     if l==0u {let threshold=sum.y*scene.physical.w+1e-38;scalars[0]=vec4<f32>(sum.x,sum.y,sum.y,threshold);scalars[1]=vec4<f32>(0.0,0.0,0.0,select(0.0,1.0,sum.y<=threshold));}
 }
+fn air_laplacian(e:vec4<u32>)->f32 {
+    let p=vec3<i32>(e.xyz);let center=work[edge_index(e.w,p)].z;
+    var result=0.0;
+    for(var a=0u;a<3u;a++) {
+        var lower=p;lower[a]-=1;var upper=p;upper[a]+=1;
+        result+=(center-a_edge(e.w,lower,1u))+(center-a_edge(e.w,upper,1u));
+    }
+    return result;
+}
 @compute @workgroup_size(256)
 fn apply_operator(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>){
     let i=flat_id(gid);var dot=0.0;
     if i<scene.edges.w && scalars[1].w==0.0 {
-        let e=edge_decode(i);var q=adjoint(e,1u,false)+gauge(e,1u)+mass(i)*work[i].z;if boundary(e){q=work[i].z;}work[i].w=q;dot=work[i].z*q;
+        let e=edge_decode(i);var q=0.0;
+        if source[i+scene.edges.w].w>0.5 {q=air_laplacian(e);}else{q=adjoint(e,1u,false)+gauge(e,1u)+mass(i)*work[i].z;}
+        if boundary(e){q=work[i].z;}work[i].w=q;dot=work[i].z*q;
     }
     reduction[l]=vec4<f32>(dot,0.0,0.0,0.0);let sum=sum_group(l);if l==0u && group_id(group)<(scene.edges.w+255u)/256u{partials[group_id(group)]=sum;}
 }
@@ -128,7 +147,13 @@ fn alpha_reduce(@builtin(local_invocation_index) l:u32){
 @compute @workgroup_size(256)
 fn update_residual(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>){
     let i=flat_id(gid);var v=vec4<f32>(0.0);
-    if i<scene.edges.w && scalars[1].w==0.0 {work[i].x+=scalars[1].x*work[i].z;let r=work[i].y-scalars[1].x*work[i].w;work[i].y=r;v=vec4<f32>(r*r/diagonal(i),r*r,0.0,0.0);}
+    if i<scene.edges.w && scalars[1].w==0.0 {
+        let old=work[i];let r=old.y-scalars[1].x*old.w;let d=diagonal(i);
+        // The operator product is dead after this update. Carry the diagonal
+        // to search in the same record, avoiding another full coefficient read.
+        work[i]=vec4<f32>(old.x+scalars[1].x*old.z,r,old.z,d);
+        v=vec4<f32>(r*r/d,r*r,0.0,0.0);
+    }
     reduction[l]=v;let sum=sum_group(l);if l==0u && group_id(group)<(scene.edges.w+255u)/256u{partials[group_id(group)]=sum;}
 }
 @compute @workgroup_size(256)
@@ -137,7 +162,7 @@ fn beta_reduce(@builtin(local_invocation_index) l:u32){
     if l==0u && scalars[1].w==0.0 {scalars[1].y=sum.x/scalars[0].x;scalars[0].x=sum.x;scalars[0].y=sum.y;scalars[1].z+=1.0;if sum.y<=scalars[0].w {scalars[1].w=1.0;}if abs(sum.x)>3e38||abs(sum.y)>3e38{scalars[1].w=2.0;}}
 }
 @compute @workgroup_size(256)
-fn update_search(@builtin(global_invocation_id) gid:vec3<u32>){let i=flat_id(gid);if i<scene.edges.w && scalars[1].w==0.0 {work[i].z=work[i].y/diagonal(i)+scalars[1].y*work[i].z;}}
+fn update_search(@builtin(global_invocation_id) gid:vec3<u32>){let i=flat_id(gid);if i<scene.edges.w && scalars[1].w==0.0 {let v=work[i];work[i].z=v.y/v.w+scalars[1].y*v.z;}}
 @compute @workgroup_size(256)
 fn rollback(@builtin(global_invocation_id) gid:vec3<u32>){let i=flat_id(gid);if i<scene.edges.w {work[i].x=previous[i];source[i].x=source[i].y;}}
 fn electric_edge(axis:u32,p:vec3<i32>)->f32 {

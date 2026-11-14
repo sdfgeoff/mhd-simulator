@@ -29,7 +29,7 @@ Acceptance combines relative pressure-correction residual and absolute RMS diver
 
 `||b − Aφ||² ≤ tolerance_relative² ||b||² + N_fluid (h² tolerance_divergence)²`.
 
-The absolute term prevents chasing f32 roundoff in an almost divergence-free predictor. A relative residual above the relative setting can therefore be acceptable when the absolute divergence criterion controls. Diagnostics show the resulting actual maximum/RMS divergence, not just the algebraic residual. Iteration counts are upper bounds in eight-iteration GPU batches.
+The absolute term prevents chasing f32 roundoff in an almost divergence-free predictor. A relative residual above the relative setting can therefore be acceptable when the absolute divergence criterion controls. Diagnostics show the resulting actual maximum/RMS divergence, not just the algebraic residual. Iteration counts report actual GPU iterations. Submissions contain up to 32 iterations; GPU convergence guards stop updates within a submission. CPU polling still stops at the independent physical checks every 64 iterations and at the configured cap.
 
 The explicit viscous bound is `Δt ≤ 0.95 h²/(6ν)`. A conservative face-velocity CFL check limits backtraces. Failed pressure solves, nonfinite fields and invalid input revisions do not advance time; accepted velocity/output buffers are restored after a failed step. Display velocity is reconstructed at cell centres; energy uses averages of **squared face velocities**, rather than squaring the cell-centre average. Pressure is relative to a zero gauge per connected region, not absolute thermodynamic pressure.
 
@@ -62,3 +62,11 @@ The bundled hotend is a coarse example, not a validated jetting design. Its mate
 The error now reports the **true physical pressure residual**, requested relative tolerance and absolute RMS divergence floor. The acceptance criterion combines the relative and absolute terms above; the RMS floor is not an independent hard maximum on every accepted step. On a large, density-contrasting grid, pressure needs more iterations and numerical precision matters. A relative residual printed by an older build could already be below the requested tolerance while its conservative internal gauge bound had not triggered the final physical check. That acceptance-path bug is fixed without relaxing the final physical equation.
 
 The CLI prints EM and pressure iteration counts/residuals separately. Changing pressure tolerances cannot repair an EM failure, and vice versa. Moving weakly conducting interface cells can make EM harder even when the identical stationary conductor geometry converges. Test iteration limits and common timestep independently, preserving the waveform's physical time when comparing runs.
+
+## Pressure-loop performance
+
+Face mobility and the pressure diagonal are constant during one projection. A preparation pass evaluates them once, including variable density, mushy resistance, walls and periodicity. The temporarily unused face-velocity buffer holds this cache while the predictor and accepted-velocity checkpoint retain the needed physical data. The projection pass writes physical velocity back; on failure, rollback restores it. This adds no full-grid allocation.
+
+The cached nonzero face weights also certify neighbor validity, removing repeated topology/material lookups inside CG. The independent physical-residual checks continue to evaluate the original uncached equation, and velocity correction uses uncached mobility to avoid reading a cache record that another invocation might overwrite. The residual update carries its diagonal in the now-dead operator-product slot for the search update, saving another grid-sized coefficient read.
+
+GPU comparisons against the original stencil cover constant/variable density, phase resistance, walls, disconnected regions and periodic axes. Existing conservation, projection, rollback and refinement checks remain applicable. See [performance measurements](PERFORMANCE.md).

@@ -85,6 +85,9 @@ fn periodic_uniform_flow_and_closed_hydrostatic_balance() {
         },
     );
     closed.step(&volume).unwrap();
+    let actual = closed.convergence().unwrap().2;
+    assert_eq!(closed.diagnostics.iterations, actual);
+    assert!(actual > 0 && actual <= closed.config.max_iterations);
     assert!(
         closed.diagnostics.max_speed_m_s < 1e-5,
         "{:?}",
@@ -452,6 +455,7 @@ fn physical_pressure_check_accepts_solution_without_discarding_cg_direction() {
         .queue
         .write_buffer(&state.scratch, 0, bytemuck::cast_slice(&predicted));
     state.dispatch(&[
+        ("pressure_coefficients", groups(state.params.faces[3])),
         ("pressure_refresh", groups(state.params.dims[3])),
         ("initial_reduce", [1, 1, 1]),
     ]);
@@ -485,4 +489,137 @@ fn physical_pressure_check_accepts_solution_without_discarding_cg_direction() {
             .iter()
             .all(|c| c.velocity[3] < 1e-7)
     );
+}
+
+#[test]
+fn cached_pressure_coefficients_match_original_operator_with_walls_phase_and_periodicity() {
+    let _lock = crate::gpu_test_lock();
+    for periodic in [[false; 3], [true, false, true], [true; 3]] {
+        for mode in 0..3 {
+            let (_, _, mut state) = channel(
+                8,
+                FluidConfig {
+                    periodic,
+                    acceleration_m_s2: [0.; 3],
+                    ..Default::default()
+                },
+            );
+            let n = state.params.dims[3] as usize;
+            let mut mask: Vec<u32> = (0..n).map(|i| u32::from((i / 4) % 8 != 3)).collect();
+            anchors(&mut mask, state.grid.dims, periodic);
+            state
+                .context
+                .queue
+                .write_buffer(&state._mask, 0, bytemuck::cast_slice(&mask));
+            let cells: Vec<FluidCell> = (0..n)
+                .map(|i| FluidCell {
+                    reserved: [
+                        1.,
+                        0.2 + 0.8 * (i % 7) as f32 / 6.,
+                        (i % 11) as f32 / 10.,
+                        0.,
+                    ],
+                    ..Default::default()
+                })
+                .collect();
+            state
+                .context
+                .queue
+                .write_buffer(&state.result, 0, bytemuck::cast_slice(&cells));
+            state.params.surface[0] = f32::from(mode > 0);
+            state.params.surface[1] = 1.2;
+            state.params.flags[3] = u32::from(mode == 2);
+            state
+                .context
+                .queue
+                .write_buffer(&state._uniform, 0, bytemuck::bytes_of(&state.params));
+            let work: Vec<[f32; 4]> = (0..n)
+                .map(|i| [0., 0., (i as f32 * 0.1234).sin(), 0.])
+                .collect();
+            state
+                .context
+                .queue
+                .write_buffer(&state._work, 0, bytemuck::cast_slice(&work));
+            state
+                .context
+                .queue
+                .write_buffer(&state.scalars, 0, &[0; 32]);
+            state.dispatch(&[
+                ("pressure_coefficients", groups(state.params.faces[3])),
+                ("pressure_apply", groups(n as u32)),
+            ]);
+            let fast = read_bytes(&state.context, &state._work, 0, state._work.size()).unwrap();
+            let coefficients =
+                read_bytes(&state.context, &state.velocity, 0, state.velocity.size()).unwrap();
+            // Independent GPU evaluation of the original physical stencil, without
+            // introducing a duplicate CPU numerical implementation.
+            let source = format!(
+                "{}\n@compute @workgroup_size(256) fn reference(@builtin(global_invocation_id) gid:vec3<u32>){{let i=flat_id(gid);if i<p.dims.w && mask[i]!=0u {{let pos=decode(i,p.dims.xyz);var a=laplacian(pos,1u);if (mask[i]&3u)==2u {{a=potential(pos,1u);}}work[i].w=a;work[i].y=diagonal(pos);}}}}",
+                include_str!("solver.wgsl")
+            );
+            let shader = state
+                .context
+                .device
+                .create_shader_module(wgpu::ShaderModuleDescriptor {
+                    label: Some("Uncached pressure reference"),
+                    source: wgpu::ShaderSource::Wgsl(source.into()),
+                });
+            let layout =
+                state
+                    .context
+                    .device
+                    .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                        label: None,
+                        bind_group_layouts: &[
+                            &state.pipelines["pressure_apply"].get_bind_group_layout(0)
+                        ],
+                        push_constant_ranges: &[],
+                    });
+            let pipeline =
+                state
+                    .context
+                    .device
+                    .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+                        label: None,
+                        layout: Some(&layout),
+                        module: &shader,
+                        entry_point: Some("reference"),
+                        compilation_options: Default::default(),
+                        cache: None,
+                    });
+            let mut enc = state
+                .context
+                .device
+                .create_command_encoder(&Default::default());
+            {
+                let mut pass = enc.begin_compute_pass(&Default::default());
+                pass.set_pipeline(&pipeline);
+                pass.set_bind_group(0, &state.bind, &[]);
+                let g = groups(n as u32);
+                pass.dispatch_workgroups(g[0], g[1], g[2]);
+            }
+            state.context.queue.submit(Some(enc.finish()));
+            let exact = read_bytes(&state.context, &state._work, 0, state._work.size()).unwrap();
+            let a = bytemuck::cast_slice::<u8, [f32; 4]>(&fast);
+            let b = bytemuck::cast_slice::<u8, [f32; 4]>(&exact);
+            let coeff = bytemuck::cast_slice::<u8, [f32; 4]>(&coefficients);
+            let mut error = 0f64;
+            let mut norm = 0f64;
+            for i in 0..n {
+                if mask[i] != 0 {
+                    assert_eq!(
+                        coeff[i][3], b[i][1],
+                        "diagonal at {i}, mode {mode}, periodic {periodic:?}"
+                    );
+                    error += (a[i][3] as f64 - b[i][3] as f64).powi(2);
+                    norm += (b[i][3] as f64).powi(2);
+                }
+            }
+            assert!(
+                (error / norm).sqrt() < 2e-7,
+                "mode {mode}, periodic {periodic:?}: {}",
+                (error / norm).sqrt()
+            );
+        }
+    }
 }
