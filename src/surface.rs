@@ -710,3 +710,6 @@ mod curvature_filter_tests;
 
 #[cfg(test)]
 mod energy_tests;
+
+#[cfg(test)]
+mod height_diagnostics;
