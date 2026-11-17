@@ -7,7 +7,7 @@ use crate::{
 use std::f64::consts::PI;
 
 /// Integrate vertical ellipsoid chords over each cell's x/y cross-section.
-fn ellipsoid(n: u32, h: f64, r: f64, epsilon: f64) -> Vec<[f32; 4]> {
+pub(super) fn ellipsoid(n: u32, h: f64, r: f64, epsilon: f64, offset_cells: f64) -> Vec<[f32; 4]> {
     let radii = [
         r / (1. + epsilon).sqrt(),
         r / (1. + epsilon).sqrt(),
@@ -17,7 +17,11 @@ fn ellipsoid(n: u32, h: f64, r: f64, epsilon: f64) -> Vec<[f32; 4]> {
     for z in 0..n {
         for y in 0..n {
             for x in 0..n {
-                let lo = [x as f64 * h - 0.5, y as f64 * h - 0.5, z as f64 * h - 0.5];
+                let lo = [
+                    (x as f64 - offset_cells) * h - 0.5,
+                    (y as f64 - offset_cells) * h - 0.5,
+                    (z as f64 - offset_cells) * h - 0.5,
+                ];
                 let center = std::array::from_fn::<_, 3, _>(|a| (lo[a] + 0.5 * h).abs() / radii[a]);
                 let half = std::array::from_fn::<_, 3, _>(|a| 0.5 * h / radii[a]);
                 let nearest = (0..3)
@@ -50,7 +54,7 @@ fn ellipsoid(n: u32, h: f64, r: f64, epsilon: f64) -> Vec<[f32; 4]> {
 }
 
 /// Central second moments isolate the quadrupole from centre-of-mass drift.
-fn moments(n: u32, h: f64, r: f64, field: &[[f32; 4]]) -> (f64, f64, f64) {
+fn moments(n: u32, h: f64, r: f64, field: &[[f32; 4]], offset_cells: f64) -> (f64, f64, f64) {
     let mut volume = 0.;
     let mut first = [0.; 3];
     let mut second = [0.; 3];
@@ -69,7 +73,7 @@ fn moments(n: u32, h: f64, r: f64, field: &[[f32; 4]]) -> (f64, f64, f64) {
     let quadrupole = 5. * (2. * central[2] - central[0] - central[1]) / (6. * r * r * volume);
     let drift = first
         .iter()
-        .map(|x| (x / volume).powi(2))
+        .map(|x| (x / volume - offset_cells * h).powi(2))
         .sum::<f64>()
         .sqrt();
     (quadrupole, volume, drift)
@@ -80,7 +84,7 @@ fn moments(n: u32, h: f64, r: f64, field: &[[f32; 4]]) -> (f64, f64, f64) {
 fn rayleigh_lamb_drop_oscillation() {
     let _lock = crate::gpu_test_lock();
     let grids: Vec<u32> = std::env::var("MHD_DROP_GRIDS")
-        .unwrap_or("48,64".into())
+        .unwrap_or("48,64,80,96".into())
         .split(',')
         .map(|x| x.trim().parse().unwrap())
         .collect();
@@ -114,6 +118,10 @@ fn rayleigh_lamb_drop_oscillation() {
                 dump: true,
                 cad: std::env::var_os("MHD_DROP_CAD").is_some(),
                 liquid_nu: std::env::var("MHD_DROP_LIQUID_NU")
+                    .unwrap_or("0".into())
+                    .parse()
+                    .unwrap(),
+                offset_cells: std::env::var("MHD_DROP_OFFSET_CELLS")
                     .unwrap_or("0".into())
                     .parse()
                     .unwrap(),
@@ -176,6 +184,7 @@ struct DropOptions {
     cad: bool,
     /// Liquid kinematic viscosity in m²/s; ambient remains inviscid.
     liquid_nu: f32,
+    offset_cells: f64,
 }
 
 fn simulate_drop(
@@ -190,8 +199,10 @@ fn simulate_drop(
         dump,
         cad,
         liquid_nu,
+        offset_cells,
     } = options;
     assert!(liquid_nu.is_finite() && liquid_nu >= 0.);
+    assert!(offset_cells.is_finite() && offset_cells.abs() <= 0.5);
     let wall_started = std::time::Instant::now();
     let mut materials = default_materials();
     materials[3].density_kg_m3 = Some(ratio);
@@ -204,7 +215,7 @@ fn simulate_drop(
         max_mm: [1000.; 3],
         cell_mm: 1000. / n as f32,
     };
-    let model = cad_ellipsoid(epsilon);
+    let model = cad_ellipsoid(epsilon, settings.cell_mm * offset_cells as f32);
     let (gpu, volume) = if cad {
         let gpu = crate::domain::GpuDomain::new().unwrap();
         let volume = gpu.build(&model, &settings, &materials).unwrap();
@@ -216,20 +227,21 @@ fn simulate_drop(
     assert_eq!(volume.dims, [n; 3]);
     let h = volume.inputs.snapshot().grid.cell_m as f64;
     let r = 0.2;
+    let initial_center_m = 0.5 + offset_cells * h;
     let (mut surface, _) = SurfaceState::new(gpu.context.clone(), &volume, 3).unwrap();
     let initial = if cad {
         surface.initialize_cad(&volume, &model, None).unwrap();
         let bytes = read_bytes(&gpu.context, surface.field(), 0, surface.field().size()).unwrap();
         bytemuck::cast_slice(&bytes).to_vec()
     } else {
-        let initial = ellipsoid(n, h, r, epsilon);
+        let initial = ellipsoid(n, h, r, epsilon, offset_cells);
         gpu.context
             .queue
             .write_buffer(surface.field(), 0, bytemuck::cast_slice(&initial));
         surface.refresh(&volume).unwrap();
         initial
     };
-    let (a0, v0, _) = moments(n, h, r, &initial);
+    let (a0, v0, _) = moments(n, h, r, &initial, offset_cells);
     // Potential flow inside r^l and outside r^(-l-1), with Laplace jump:
     // omega_l^2=l(l-1)(l+1)(l+2)sigma/[R^3((l+1)rho_l+l rho_g)].
     let effective_r = (3. * v0 / (4. * PI)).cbrt();
@@ -277,9 +289,10 @@ fn simulate_drop(
         format!("artifacts/drop-oscillation-regular-{n}.csv")
     };
     let mut csv = String::from(
-        "step,time_s,quadrupole,linear_quadrupole,relative_volume_drift,centroid_drift_m,max_speed_m_s,rms_divergence_s_inv,min_alpha,max_alpha,viscous_substeps,material_volume_m3\n",
+        "step,time_s,quadrupole,linear_quadrupole,relative_volume_drift,centroid_drift_m,max_speed_m_s,rms_divergence_s_inv,min_alpha,max_alpha,viscous_substeps,material_volume_m3,initial_center_m\n",
     );
     let profile = dump && std::env::var_os("MHD_DROP_PROFILE").is_some();
+    let dump_geometry = dump && std::env::var_os("MHD_DROP_DUMP_GEOMETRY").is_some();
     gpu.context.profiler.set_enabled(profile);
     let mut performance = String::from(
         "step,time_s,accepted,stage,cpu_wall_ms,gpu_pass_ms,recorded_passes,total_passes\n",
@@ -290,7 +303,10 @@ fn simulate_drop(
     let mut peak = a0.abs();
     for step in 0..=steps {
         let bytes = read_bytes(&gpu.context, surface.field(), 0, surface.field().size()).unwrap();
-        let (a, v, drift) = moments(n, h, r, bytemuck::cast_slice(&bytes));
+        if dump_geometry && (step % 100 == 0 || step == steps) {
+            std::fs::write(format!("artifacts/drop-geometry-{n}-{step}.bin"), &bytes).unwrap();
+        }
+        let (a, v, drift) = moments(n, h, r, bytemuck::cast_slice(&bytes), offset_cells);
         let t = step as f64 * dt;
         trace.push((t, a));
         if step > 0 && a * previous < 0. {
@@ -298,7 +314,7 @@ fn simulate_drop(
         }
         peak = peak.max(a.abs());
         csv.push_str(&format!(
-            "{step},{t},{a},{},{},{drift},{},{},{},{},{},{v}\n",
+            "{step},{t},{a},{},{},{drift},{},{},{},{},{},{v},{initial_center_m}\n",
             a0 * (omega * t).cos(),
             v / v0 - 1.,
             fluid.diagnostics.max_speed_m_s,
@@ -371,7 +387,7 @@ fn simulate_drop(
     }
     let drift = (surface.diagnostics.volume_m3 / v0 - 1.).abs();
     eprintln!(
-        "drop n={n}: omega exact={omega:.8}, peak/q0={:.5}, volume drift={drift:.4e}, crossings={crossings:?}",
+        "drop n={n}: inviscid omega={omega:.8}, comparison omega={frequency_reference:.8}, peak/q0={:.5}, volume drift={drift:.4e}, crossings={crossings:?}",
         peak / a0.abs()
     );
     assert!(drift < 2e-6);
@@ -384,7 +400,7 @@ fn simulate_drop(
     }
 }
 
-fn cad_ellipsoid(epsilon: f64) -> crate::model::Model {
+fn cad_ellipsoid(epsilon: f64, offset_mm: f32) -> crate::model::Model {
     use crate::model::{Body, Model};
     use glam::Vec3;
     let latitude: u32 = std::env::var("MHD_DROP_CAD_LATITUDES")
@@ -398,7 +414,7 @@ fn cad_ellipsoid(epsilon: f64) -> crate::model::Model {
         (200. / (1. + epsilon).sqrt()) as f32,
         (200. * (1. + epsilon)) as f32,
     );
-    let center = Vec3::splat(500.);
+    let center = Vec3::splat(500. + offset_mm);
     let point = |j: u32, k: u32| {
         if j == 0 {
             return center + Vec3::Z * axes.z;
@@ -441,7 +457,7 @@ fn cad_ellipsoid(epsilon: f64) -> crate::model::Model {
 #[ignore = "CAD fractional initialization diagnostic"]
 fn imported_drop_initialization_diagnostic() {
     let _lock = crate::gpu_test_lock();
-    let model = cad_ellipsoid(0.03);
+    let model = cad_ellipsoid(0.03, 0.);
     let mesh_volume = model.bodies[0].volume_mm3() * 1e-9;
     let mut csv = String::from("grid,relative_volume_error,relative_fraction_l1,quadrupole\n");
     for n in [32u32, 48, 64] {
@@ -460,10 +476,10 @@ fn imported_drop_initialization_diagnostic() {
         let (mut surface, _) = SurfaceState::new(gpu.context.clone(), &volume, 3).unwrap();
         surface.initialize_cad(&volume, &model, None).unwrap();
         let h = volume.inputs.snapshot().grid.cell_m as f64;
-        let exact = ellipsoid(n, h, 0.2, 0.03);
+        let exact = ellipsoid(n, h, 0.2, 0.03, 0.);
         let bytes = read_bytes(&gpu.context, surface.field(), 0, surface.field().size()).unwrap();
         let values = bytemuck::cast_slice::<u8, [f32; 4]>(&bytes);
-        let (q, v, _) = moments(n, h, 0.2, values);
+        let (q, v, _) = moments(n, h, 0.2, values, 0.);
         let l1 = values
             .iter()
             .zip(&exact)
@@ -539,6 +555,16 @@ fn viscous_drop_saved_diagnostics() {
             }
         }
         errors.push(check_frequency(n, &crossings, reference.im));
+        let trace = if let Ok(limit) = std::env::var("MHD_DROP_ANALYSIS_PERIODS") {
+            let limit: f64 = limit.parse().unwrap();
+            assert!(limit.is_finite() && limit > 0.);
+            trace
+                .into_iter()
+                .filter(|(t, _)| *t <= limit * period)
+                .collect::<Vec<_>>()
+        } else {
+            trace
+        };
         report_viscous_fit(&trace, reference, period, n);
     }
     check_frequency_refinement(&errors);

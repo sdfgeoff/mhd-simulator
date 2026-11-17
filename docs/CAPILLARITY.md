@@ -34,9 +34,22 @@ Those baseline cases preserve reduced volume and remain oscillatory over 1.5 per
 
 ## With consistent MAC momentum transport
 
-The current method uses the same PLIC mass fluxes to carry momentum and fraction, then projects with the updated density. At equal density, measured frequency is **10.9825924 / 11.0194531 rad/s**, retaining the **1.20% / 0.87%** refinement trend. At 7000:1, measured frequency is **0.1866898 / 0.1874863 rad/s** on the two grids, giving errors **0.633% / 0.209%**. Volume drift remains below **1.2×10⁻⁷** relative over 1.5 periods. This slight frequency-error increase accompanies the large improvement in nonuniform momentum conservation; both errors must be tracked when refining the method.
+At the symmetric-stress baseline (3c957f0), the method uses the same PLIC mass fluxes to carry momentum and fraction, then projects with the updated density. At equal density, measured frequency is **10.9825924 / 11.0194531 rad/s**, retaining the **1.20% / 0.87%** refinement trend. At 7000:1, measured frequency is **0.1866898 / 0.1874863 rad/s** on the two grids, giving errors **0.633% / 0.209%**. Volume drift remains below **1.2×10⁻⁷** relative over 1.5 periods. This slight frequency-error increase accompanies the large improvement in nonuniform momentum conservation; both errors must be tracked when refining the method.
 
-The extra density projection increases solve cost. At the momentum milestone, starting it from a zero pressure increment instead of the larger force-balance pressure cut the two-grid high-density benchmark from **153.8 s to 124.4 s** without changing equations or tolerances. With full [symmetric viscous stress transfer](VISCOUS_STRESS.md), the current benchmark takes **136.1 s**. The earlier interface-only coupling took 75.6 s, so the complete conservative method is still slower. These are single-run diagnostic timings and vary with GPU load. Combining transport/force stages into one projection remains a separate optimization requiring revalidation.
+The extra density projection increases solve cost. At the momentum milestone, starting it from a zero pressure increment instead of the larger force-balance pressure cut the two-grid high-density benchmark from **153.8 s to 124.4 s** without changing equations or tolerances. At the symmetric-stress milestone, that benchmark took **136.1 s**. The earlier interface-only coupling took 75.6 s, so the complete conservative method is still slower. These are single-run diagnostic timings and vary with GPU load. Combining transport/force stages into one projection remains a separate optimization requiring revalidation.
+
+## With extended heights and limited bulk reconstruction
+
+Current checks retain the same dispersion relation and timestep fraction. The 3D curvature filter preserves an extruded interface, while the momentum reconstruction is limited to homogeneous phase stencils when densities differ.
+
+| Density ratio | Grid | Measured ω, rad/s | Frequency error |
+|---|---|---:|---:|
+| 1:1 | 32×32×4 | 10.9820112 | 1.204% |
+| 1:1 | 64×64×4 | 11.0191627 | 0.870% |
+| 7000:1 | 32×32×4 | 0.1866870 | 0.635% |
+| 7000:1 | 64×64×4 | 0.1874856 | 0.210% |
+
+Both 1.5-period refinements pass; reduced volume drift remains below 1.2×10⁻⁷. These frequencies remain close to the earlier conservative method. The [3D drop](DROP_OSCILLATION.md) exposes larger geometry and damping errors despite passing this planar check.
 
 ## Failure found and correction
 
@@ -62,4 +75,4 @@ The long benchmark writes `artifacts/capillary-wave-N.csv`. `MHD_CAPILLARY_DUMP=
 
 ## Three-dimensional drop dynamics
 
-[The Rayleigh–Lamb drop benchmark](DROP_OSCILLATION.md) complements this planar-wave check. Its mode-frequency error decreases from 1.84% to 1.31% with refinement, and its coarse-grid/timestep probes expose a spatial-resolution limitation that the planar interface does not capture.
+[The Rayleigh–Lamb drop benchmark](DROP_OSCILLATION.md) complements this planar-wave check. It includes four-grid refinement, a half-cell placement check and longer trajectories. Its coarse results are nonmonotonic; the spatial-resolution and numerical-damping limits are not captured by the planar interface alone.

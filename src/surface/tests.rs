@@ -292,7 +292,8 @@ fn balanced_surface_force_and_reconstructed_static_drop_refine() {
                 acceleration_m_s2: [0.; 3],
                 dt_s: 0.001,
                 advection: !exact,
-                relative_tolerance: 1e-6,
+                relative_tolerance: 1e-7,
+                absolute_divergence_tolerance: 1e-7,
                 max_iterations: 4000,
                 surface: SurfaceConfig {
                     enabled: true,

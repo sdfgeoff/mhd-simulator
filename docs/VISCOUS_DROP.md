@@ -28,9 +28,9 @@ Shape is the central second-moment quadrupole. The saved diagnostic fits
 
 with free amplitude, phase and offset. Gauss–Newton fitting is checked on a known decaying signal with nonzero phase/offset. This dominant-mode fit does not model all initial viscous transients, nonlinear shape corrections or higher harmonics.
 
-## Observed limitations
+## Earlier spatial error
 
-The following 1.5-period runs use analytic initial fractions and the stabilized stress integrator. Windows start at zero, one-quarter or one-half of the inviscid reference period.
+Before the wider-height update, the following 1.5-period runs used analytic initial fractions and the stabilized stress integrator. Windows start at zero, one-quarter or one-half of the inviscid reference period.
 
 | Grid | Fit start | Fitted β, s⁻¹ | Decay error against full reference | Normalized fit RMS |
 |---|---:|---:|---:|---:|
@@ -41,19 +41,34 @@ The following 1.5-period runs use analytic initial fractions and the stabilized 
 | 64³ | T/4 | 0.024788 | +10.9% | 0.00132 |
 | 64³ | T/2 | 0.024635 | +10.2% | 0.000702 |
 
-The finer-grid fits have smaller residuals but retain about 10% excess decay. The coarser-grid agreement depends on the fit window and does not prove accuracy. Zero-crossing frequency errors against the viscous reference decrease from about 1.25% to 0.67%; damping error does not decrease monotonically. Timestep, amplitude and further spatial refinement are still needed. No inviscid numerical loss is subtracted to manufacture a physical decay rate.
+The finer-grid fits had smaller residuals but retained about 10% excess decay. The coarser-grid agreement depends on the fit window and does not prove accuracy. Zero-crossing frequency errors against the viscous reference decrease from about 1.25% to 0.67%; damping error does not decrease monotonically. Timestep, amplitude and further spatial refinement are still needed. No inviscid numerical loss is subtracted to manufacture a physical decay rate.
 
 The 48³ stabilized and Euler-subcycled traces differ by at most 0.0341% of the initial quadrupole over the full run. Their measured zero-crossing frequencies differ by 0.0011%, and late-window fitted decay rates by about 0.1%. This supports the integration change, while leaving the shared spatial/shape errors unresolved.
 
+## With wider heights and limited bulk reconstruction
+
+The current height stencil extends incomplete seven-cell columns to nine cells, and momentum uses MC–Hancock in homogeneous phase stencils with upwind velocity near density jumps. At capillary timestep fraction 0.2, the matched 1.5-period fits are:
+
+| Grid | Fit start | Fitted β, s⁻¹ | Decay error against full reference | Normalized fit RMS |
+|---|---|---:|---:|---:|
+| 64³ | 0 | 0.0228845 | +2.37% | 0.001846 |
+| 64³ | T/4 | 0.0225024 | +0.66% | 0.001605 |
+| 64³ | T/2 | 0.0222623 | −0.41% | 0.000546 |
+| 80³ | 0 | 0.0231736 | +3.66% | 0.001841 |
+| 80³ | T/4 | 0.0227043 | +1.57% | 0.000796 |
+| 80³ | T/2 | 0.0226167 | +1.17% | 0.000400 |
+
+Zero-crossing frequency error decreases from 0.362% to 0.231%. The finer late-window decay errors are about 1.2–1.6%, despite smaller fit residuals: damping agreement does not improve monotonically. Halving the earlier baseline timestep changed late fits by less than 0.1% over the same window, without resolving its roughly 10% excess decay. The geometry/reconstruction change has a much larger effect in this case. For the selected 64³ scheme, halving the timestep again (capillary fraction 0.2 → 0.1) changes the T/4 and T/2 decay fits by 0.046% and 0.027%; zero-crossing frequency error stays about 0.362%. Agreement at one grid and selected windows still does not establish converged damping; the inviscid diagnostic retains numerical phase and amplitude errors.
+
 ## Reproduce
 
-    MHD_DROP_LIQUID_NU=0.0002 MHD_DROP_GRIDS=48,64 cargo test --offline rayleigh_lamb_drop_oscillation -- --ignored --nocapture
-    cargo test --offline viscous_drop_saved_diagnostics -- --ignored --nocapture
+    MHD_DROP_LIQUID_NU=0.0002 MHD_DROP_GRIDS=64,80 MHD_DROP_DT_FACTOR=0.2 cargo test --offline rayleigh_lamb_drop_oscillation -- --ignored --nocapture
+    MHD_DROP_GRIDS=64,80 cargo test --offline viscous_drop_saved_diagnostics -- --ignored --nocapture
     cargo test --offline viscous_reference -- --nocapture
     cargo test --offline fitted_decay -- --nocapture
 
 The first command writes artifacts/drop-oscillation-viscous-N.csv. The second reads those files and reports all three fitting windows without rerunning the GPU. CSVs include an inviscid linear trace as a baseline; it is not the viscous solution. New files also include absolute material volume so the analyzer can recover the initialized reference radius. Older diagnostic files use nominal R=0.2 m.
 
-MHD_DROP_DT_FACTOR changes the capillary timestep fraction; MHD_DROP_DEFORMATION changes amplitude. The test-only MHD_DROP_EULER_VISCOSITY=1 selects the original GPU subcycling for comparisons. It does not change the production project schema. Analyze complete long traces before replacing them with short performance probes.
+MHD_DROP_ANALYSIS_PERIODS limits the saved-data analyzer's endpoint in inviscid reference periods for matched-window comparisons. MHD_DROP_DT_FACTOR changes the capillary timestep fraction; MHD_DROP_DEFORMATION changes amplitude. The test-only MHD_DROP_EULER_VISCOSITY=1 selects the original GPU subcycling for comparisons. It does not change the production project schema. Analyze complete long traces before replacing them with short performance probes.
 
 See [viscous stresses](VISCOUS_STRESS.md) for the operator, stage storage and timestep restrictions, and [performance measurements](PERFORMANCE.md) for timing comparisons.

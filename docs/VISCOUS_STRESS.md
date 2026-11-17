@@ -61,6 +61,6 @@ The coupled hotend completes 24 ticks to 60 µs. The saved V6 project completes 
 
 ## Limits
 
-Arithmetic mixture/edge coefficients smear viscosity across the resolved interface. Sharp-interface viscous damping and breakup need resolution studies; these checks do not establish nozzle pinch-off or satellite sizes. Momentum reconstruction remains first-order upwind, and the coupled stages are temporally split. Viscous loss is included in the inferred fluid energy balance but is not deposited as thermal heat. Temperature-dependent rheology, oxide skins and non-Newtonian effects remain absent.
+Arithmetic mixture/edge coefficients smear viscosity across the resolved interface. Sharp-interface viscous damping and breakup need resolution studies; these checks do not establish nozzle pinch-off or satellite sizes. Momentum reconstruction uses MC–Hancock in homogeneous phase stencils and upwind velocity near density jumps; the coupled stages remain temporally split. Viscous loss is included in the inferred fluid energy balance but is not deposited as thermal heat. Temperature-dependent rheology, oxide skins and non-Newtonian effects remain absent.
 
 The [viscous capillary-drop diagnostic](VISCOUS_DROP.md) measures coupled decay against a full linear mode. Its present grid/window results leave damping accuracy unresolved; operator conservation alone is insufficient to establish that accuracy.

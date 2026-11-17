@@ -14,7 +14,9 @@ The unit cube contains a volume-preserving ellipsoid with axes R/√(1+ε), R/�
 
 A central second-moment quadrupole measures the shape, removing centre-of-mass drift. Its normalized value initially equals one. The reference radius is the volume-equivalent radius of the initialized fractions, avoiding initial quadrature-volume bias without changing or renormalizing those fractions. Frequency comes from the first and third alternating zero crossings.
 
-## Measured refinement
+## Earlier seven-cell-stencil measurements
+
+These measurements precede extended height columns and bulk MC reconstruction.
 
 | Grid | Cells across initial diameter | Measured ω, rad/s | Frequency error |
 | --- | ---: | ---: | ---: |
@@ -34,6 +36,21 @@ Coarse grids show why resolution matters. At 0.35 reference periods, the normali
 
 The coarse 24³ drop has not crossed its spherical state. Reducing the 32³ timestep fourfold barely changes its substantial shape error, indicating spatial resolution is the main limitation in this probe. The resolved-grid frequency trend does not establish a universal cell-count threshold for breakup.
 
+## Extended heights and limited bulk reconstruction
+
+The current scheme extends incomplete height columns from seven to nine cells, with a common origin between lengths, and filters transverse 3D height second differences. Momentum uses MC–Hancock reconstruction in homogeneous phase stencils and upwind velocity near density jumps. Both geometry and momentum matter; the isolated shear accuracy gain alone did not fix capillary behavior.
+
+| Grid | Cells across initial diameter | Measured ω, rad/s | Frequency error |
+|---|---:|---:|---:|
+| 48³ | 19.2 | 0.383455 | 1.46% |
+| 64³ | 25.6 | 0.387979 | 2.65% |
+| 80³ | 32.0 | 0.387836 | 2.62% |
+| 96³ | 38.4 | 0.380570 | 0.69% |
+
+The coarse results are nonmonotonic. The substantial reduction at 96³ does not establish a clean convergence order. The default diagnostic includes all four grids, retains the 3% frequency bound at each grid, and requires the final error to be smaller than the first. A separate 48³/64³-only run still fails that refinement assertion.
+
+At 64³, shifting the initial drop by half a cell along all three axes gives 2.32% frequency error, compared with 2.65% when centered. The shifted case completes three reference periods without mode-amplitude growth or volume drift above 6×10⁻⁸. Its final quadrupole is only 0.663 of the initial value, compared with a linear inviscid reference of one: appreciable numerical damping and phase error remain. Completion of the run does not establish energy conservation. Halving the centered 64³ timestep changes frequency error from 2.65% to 2.61%, leaving the spatial bias largely intact.
+
 ## Run it
 
     cargo test --offline three_dimensional_drop_restores -- --nocapture
@@ -44,13 +61,21 @@ Optional investigation controls:
     MHD_DROP_GRIDS=24,32,48 MHD_DROP_PERIODS=0.35 cargo test --offline rayleigh_lamb_drop_oscillation -- --ignored --nocapture
     MHD_DROP_GRIDS=32 MHD_DROP_PERIODS=0.35 MHD_DROP_DT_FACTOR=0.1 cargo test --offline rayleigh_lamb_drop_oscillation -- --ignored --nocapture
 
-Default refinement uses 48³/64³ grids and 0.4 of the capillary timestep bound. Other controls are MHD_DROP_DEFORMATION and MHD_DROP_DENSITY_RATIO. Short probes report shape/conservation; runs of at least 1.3 reference periods must complete three half-period crossings and pass the frequency check. Insufficiently resolved cases can fail that check.
+Default refinement uses 48³/64³/80³/96³ grids and 0.4 of the capillary timestep bound. This is an explicit long GPU diagnostic. Other controls are MHD_DROP_DEFORMATION and MHD_DROP_DENSITY_RATIO. MHD_DROP_OFFSET_CELLS shifts the centre by up to ±0.5 cell along every axis. Short probes report shape/conservation; runs of at least 1.3 reference periods must complete three half-period crossings and pass the frequency check. Insufficiently resolved cases can fail that check.
 
-CSV files artifacts/drop-oscillation-N.csv contain the quadrupole, analytic trace, volume/centroid drift, speed, divergence and fraction bounds. Accepted trajectory rows are also saved if a subsequent solver step fails.
+CSV files artifacts/drop-oscillation-N.csv contain the quadrupole, analytic trace, volume/centroid drift, speed, divergence, fraction bounds and the initial centre. Accepted trajectory rows are also saved if a subsequent solver step fails.
+
+## Inspecting height coverage
+
+An optional GPU diagnostic reports which mixed cells have complete height stencils and saves artifacts/height-coverage-N.csv:
+
+    MHD_HEIGHT_GRID=64 MHD_HEIGHT_OFFSET=0.5 cargo test --offline drop_height_function_coverage -- --ignored --nocapture
+
+MHD_DROP_DUMP_GEOMETRY=1 saves raw accepted geometry every 100 steps and at completion. Set MHD_HEIGHT_INPUT to one of those artifacts/drop-geometry-N-STEP.bin files to inspect an evolved interface while retaining its recorded curvature. The coverage CSV also reports a hypothetical eleven-cell stencil for research; production still uses seven/nine cells.
 
 ## Limits
 
-The default diagnostic uses analytically integrated fractions. The CAD option below measures imported-model initialization separately. The benchmark does not yet establish accurate local velocities, physical viscous damping, nozzle pinch-off or satellite sizes. Curvature fallback, arithmetic face density, first-order momentum reconstruction and splitting still introduce errors; further refinement and additional observables are needed for those claims.
+The default diagnostic uses analytically integrated fractions. The CAD option below measures imported-model initialization separately. The benchmark does not yet establish accurate local velocities, physical viscous damping, nozzle pinch-off or satellite sizes. Curvature fallback, arithmetic face density, upwind transport near density jumps and splitting still introduce errors; further refinement and additional observables are needed for those claims.
 
 ## CAD initialization option
 
@@ -58,7 +83,7 @@ Set MHD_DROP_CAD=1 to initialize the diagnostic from a tessellated CAD ellipsoid
 
     MHD_DROP_CAD=1 MHD_DROP_GRIDS=48 MHD_DROP_PERIODS=1.5 cargo test rayleigh_lamb_drop_oscillation -- --ignored --nocapture
 
-MHD_DROP_CAD_LATITUDES controls the diagnostic mesh: longitude divisions are twice the latitude count. Its default of 64 produces 16,128 triangles. With that fixed mesh, frequency errors are 1.52% at 48³ and 2.45% at 64³: the paired-grid refinement assertion fails. Good volume conservation does not establish curvature accuracy.
+The following CAD refinement measurements precede the height-stencil update. MHD_DROP_CAD_LATITUDES controls the diagnostic mesh: longitude divisions are twice the latitude count. Its default of 64 produces 16,128 triangles. With that fixed mesh, frequency errors are 1.52% at 48³ and 2.45% at 64³: the paired-grid refinement assertion fails. Good volume conservation does not establish curvature accuracy.
 
 At 64³, doubling to 128 latitude divisions (65,024 triangles) reduces frequency error to 1.31%, with relative volume drift below 4×10⁻⁸ and no measured quadrupole amplification. A further refinement to 256 latitude divisions (261,120 triangles) gives 1.24% error, also without quadrupole amplification. These are close to the 1.31% analytic-initialization frequency error at that grid. Refining the fluid grid alone while holding a coarse curved CAD tessellation fixed can therefore give a misleading convergence trend.
 

@@ -328,40 +328,17 @@ fn reconstruction_normal_is_consistent_when_a_shallow_plane_crosses_cell_rows() 
 fn height_columns_reject_multiple_crossings_and_preserve_orientation() {
     let _lock = crate::gpu_test_lock();
     let (gpu, volume, mut surface, _) = super::tests::fixture(8);
-    let source = format!(
-        "{}\n{}\n{}\n{}\n@compute @workgroup_size(256) fn probe(@builtin(global_invocation_id) g:vec3<u32>){{if flat(g)!=0u{{return;}}stats[0]=vec4<f32>(height(vec3<i32>(3,3,3),1u),0.0);}}",
-        include_str!("../periodic.wgsl"),
-        include_str!("../vof.wgsl"),
-        include_str!("../surface_geometry.wgsl"),
-        include_str!("../surface.wgsl")
+    super::install_test_entry(
+        &mut surface,
+        "probe",
+        r#"
+        @compute @workgroup_size(256)
+        fn probe(@builtin(global_invocation_id) g:vec3<u32>){
+            if flat(g)!=0u{return;}
+            stats[0]=vec4<f32>(height(vec3<i32>(3,3,3),1u),0.0);
+        }"#,
     );
-    let shader = gpu
-        .context
-        .device
-        .create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("Single-crossing height contract"),
-            source: wgpu::ShaderSource::Wgsl(source.into()),
-        });
-    let layout = gpu
-        .context
-        .device
-        .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            label: None,
-            bind_group_layouts: &[&surface.layout],
-            push_constant_ranges: &[],
-        });
-    let pipeline = gpu
-        .context
-        .device
-        .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-            label: None,
-            layout: Some(&layout),
-            module: &shader,
-            entry_point: Some("probe"),
-            compilation_options: Default::default(),
-            cache: None,
-        });
-    surface.pipelines.insert("probe", pipeline);
+
     for (profile, valid, orientation) in [
         ([1., 1., 0.8, 0.4, 0.6, 0.2, 0., 0.], false, 1.),
         ([1., 1., 0.8, 0.6, 0.4, 0.2, 0., 0.], true, 1.),

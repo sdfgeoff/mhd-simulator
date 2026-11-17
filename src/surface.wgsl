@@ -22,19 +22,26 @@ fn normal(@builtin(global_invocation_id) g:vec3<u32>){let i=flat(g);if i>=p.dims
 }
 // Reflect transverse height columns at outer walls. This is a neutral (90°)
 // contact-angle extension for domain walls; fixed CAD walls remain voxel walls.
-fn height(q:vec3<i32>,axis:u32)->vec3<f32>{
+fn height_range(q:vec3<i32>,axis:u32,radius:i32)->vec3<f32>{
  var center=bounded(q);center[axis]=q[axis];var h=0.0;
- var low=center;low[axis]-=3;var high=center;high[axis]+=3;
+ var low=center;low[axis]-=radius;var high=center;high[axis]+=radius;
  if !inside(low)||!inside(high){return vec3<f32>(0.0);}
  let a=alpha(low);let b=alpha(high);var valid=(a>0.99&&b<0.01)||(b>0.99&&a<0.01);
  // Incomplete endpoints cannot define a height; the column sum is unused.
  if !valid{return vec3<f32>(0.0,0.0,sign(a-b));}
  let orientation=sign(a-b);var previous=a;
- for(var k=-3;k<=3;k++){
+ for(var k=-radius;k<=radius;k++){
   var at=center;at[axis]+=k;let value=alpha(at);h+=value;
   if orientation*(value-previous)>1e-5 {valid=false;}previous=value;
  }
- return vec3<f32>(h,select(0.0,1.0,valid),orientation);
+ // A longer monotone column adds one liquid cell per extra radius. Subtract
+ // that radius so neighboring columns share an origin even with mixed extents.
+ return vec3<f32>(h-f32(radius),select(0.0,1.0,valid),orientation);
+}
+fn height(q:vec3<i32>,axis:u32)->vec3<f32>{
+ let local=height_range(q,axis,3);if local.y>0.5{return local;}
+ let extended=height_range(q,axis,4);if extended.y>0.5{return extended;}
+ return local;
 }
 // Height gradients avoid Youngs' grid-crossing slope bias for nearly aligned
 // interfaces. Fall back to the local volume gradient when no single crossing
@@ -64,8 +71,9 @@ fn curvature(@builtin(global_invocation_id) g:vec3<u32>){let i=flat(g);if i>=p.d
  for(var v=-1;v<=1;v++){for(var u=-1;u<=1;u++){var at=q;at[a]+=u;at[b]+=v;let h=height(at,axis);heights[u32((u+1)+3*(v+1))]=h.x;valid=valid&&h.y>0.5&&h.z==sign(normals[i][axis]);}}
  if valid {
  let hx=0.5*(heights[5]-heights[3]);let hy=0.5*(heights[7]-heights[1]);
- let hxx=(heights[5]+heights[3]-2.0*heights[4])/p.step.y;let hyy=(heights[7]+heights[1]-2.0*heights[4])/p.step.y;
- let hxy=(heights[8]-heights[6]-heights[2]+heights[0])/(4.0*p.step.y);
+ // Transverse filtering suppresses a 3D grid mode without changing extruded waves.
+ let hessian=height_hessian(heights,p.step.y);
+ let hxx=hessian.x;let hyy=hessian.y;let hxy=hessian.z;
  k=-(hxx*(1.0+hy*hy)+hyy*(1.0+hx*hx)-2.0*hxy*hx*hy)/pow(1.0+hx*hx+hy*hy,1.5);
  }
  output_field[i]=vec4<f32>(input_field[i].x,clamp(k,-2.0/p.step.y,2.0/p.step.y),input_field[i].zw);

@@ -25,7 +25,7 @@ The conservative speed bound is `3 max|u_face| Δt/h ≤ 0.45`. The GPU independ
 Reconstruction reuses the normal buffer during advection; curvature normals are refreshed afterward. The two occupancy buffers carry the intermediate fraction and fixed compression metadata. Thermal transport alternates its existing two field buffers and reuses its existing rollback checkpoint. No additional grid-sized thermal scratch buffer is allocated. A rejected sweep restores the original occupancy and thermal input bytes, leaves accepted diagnostics intact, and does not advance sweep ordering.
 
 1. Translating a planar slab for 40 steps preserves one mixed layer at each interface, with integrated fraction error approximately 10⁻⁷ and unchanged reduced volume.
-2. A diagonally translated sphere gives relative L1 fraction errors 2.63% and 0.88% at 24³ and 48³. Relative volume drift stays below 2×10⁻⁷; the fine-grid occupancy extrema are within f32 roundoff of [0,1].
+2. A diagonally translated sphere gives relative L1 fraction errors 2.63% and 0.94% at 24³ and 48³. Relative volume drift stays below 2×10⁻⁷; the fine-grid occupancy extrema are within f32 roundoff of [0,1].
 3. A closed-box circulation transports volume and uniform specific enthalpy conservatively. A deliberately invalid face speed verifies rejection and byte-for-byte rollback of both occupancy and compensated thermal state.
 4. The existing pressure-balance, curvature refinement, thermal/phase, common-clock and offscreen rendering checks remain part of the regular headless suite.
 
@@ -35,6 +35,6 @@ cargo test moving_liquid -- --nocapture
 ./run.sh --run-check assets/hotend-free-surface.mhd.json 24
 ```
 
-These tests establish geometric transport behavior, not nozzle pinch-off or jetting thresholds. Initial CAD occupancy and walls are still voxel based. Moving-interface [momentum transport](MOMENTUM.md) now shares the geometric mass flux with arithmetic MAC dual-volume averaging. Its first-order upwind velocity reconstruction remains dissipative; contact angle, wetting and oxide films remain absent.
+These tests establish geometric transport behavior, not nozzle pinch-off or jetting thresholds. Initial CAD occupancy and walls are still voxel based. Moving-interface [momentum transport](MOMENTUM.md) now shares the geometric mass flux with arithmetic MAC dual-volume averaging. Velocity uses MC–Hancock reconstruction in homogeneous phase stencils and retains upwind transport near density jumps. Contact angle, wetting and oxide films remain absent.
 
 [Dynamic capillary validation](CAPILLARITY.md) explains why height-derived reconstruction normals are important for a nearly grid-aligned moving interface. The static curvature fallback remains separate from those transport normals.

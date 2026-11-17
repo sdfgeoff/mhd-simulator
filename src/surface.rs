@@ -72,6 +72,50 @@ pub struct SurfaceState {
     id_pipeline: wgpu::ComputePipeline,
     momentum_pipeline: wgpu::ComputePipeline,
 }
+// Keep diagnostic entry points on the same shader dependencies as production.
+fn shader_source() -> String {
+    format!(
+        "{}\n{}\n{}\n{}\n{}",
+        include_str!("periodic.wgsl"),
+        include_str!("vof.wgsl"),
+        include_str!("surface_geometry.wgsl"),
+        include_str!("height_hessian.wgsl"),
+        include_str!("surface.wgsl")
+    )
+}
+
+#[cfg(test)]
+fn install_test_entry(surface: &mut SurfaceState, name: &'static str, body: &str) {
+    let shader = surface
+        .context
+        .device
+        .create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some(name),
+            source: wgpu::ShaderSource::Wgsl(format!("{}\n{}", shader_source(), body).into()),
+        });
+    let layout = surface
+        .context
+        .device
+        .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: None,
+            bind_group_layouts: &[&surface.layout],
+            push_constant_ranges: &[],
+        });
+    let pipeline =
+        surface
+            .context
+            .device
+            .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+                label: Some(name),
+                layout: Some(&layout),
+                module: &shader,
+                entry_point: Some(name),
+                compilation_options: Default::default(),
+                cache: None,
+            });
+    surface.pipelines.insert(name, pipeline);
+}
+
 impl SurfaceState {
     pub fn new(
         context: GpuContext,
@@ -154,16 +198,7 @@ impl SurfaceState {
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
                 label: Some("Conservative liquid interface"),
-                source: wgpu::ShaderSource::Wgsl(
-                    format!(
-                        "{}\n{}\n{}\n{}",
-                        include_str!("periodic.wgsl"),
-                        include_str!("vof.wgsl"),
-                        include_str!("surface_geometry.wgsl"),
-                        include_str!("surface.wgsl")
-                    )
-                    .into(),
-                ),
+                source: wgpu::ShaderSource::Wgsl(shader_source().into()),
             });
         let layout = context
             .device
@@ -666,3 +701,9 @@ mod viscous_reference;
 
 #[cfg(test)]
 mod drop_fit;
+
+#[cfg(test)]
+mod momentum_accuracy_tests;
+
+#[cfg(test)]
+mod curvature_filter_tests;
