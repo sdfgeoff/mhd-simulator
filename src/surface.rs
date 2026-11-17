@@ -454,3 +454,6 @@ fn groups(n: u32) -> [u32; 3] {
 }
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod capillary_tests;

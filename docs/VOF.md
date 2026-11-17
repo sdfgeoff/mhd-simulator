@@ -4,13 +4,13 @@ The interface is an occupied-volume fraction α, independent of the material's m
 
 ## Plane integration
 
-Inside a unit cube centred at zero, liquid occupies `n·x ≤ d`. The outward normal is the negative Youngs gradient, normalized by its L1 norm. The plane intercept is found by 24 bisection iterations to match the supplied cell fraction.
+Inside a unit cube centred at zero, liquid occupies `n·x ≤ d`. The outward reconstruction normal uses centred height gradients on a valid monotone single-crossing stencil, with the negative Youngs gradient as fallback; it is normalized by its L1 norm. The plane intercept is found by 24 bisection iterations to match the supplied cell fraction.
 
 The volume is the distribution function of a sum of three independent weighted uniform coordinates. Reflecting to positive weights and then the lower half of the cube gives an inclusion–exclusion sum of truncated cubes. With sorted nonnegative weights `a ≤ b ≤ c` and lower-half coordinate t, the first difference is evaluated as `a(3t² − 3ta + a²)` rather than subtracting nearly equal cubes. Pure one-/two-dimensional cuts and the central constant-density interval have explicit branches. This avoids cancellation for nearly axis-aligned planes. Components below 10⁻⁸ of the largest normal component are dropped before integration, below the useful precision of the geometry calculation.
 
 A face displacement is `C = |u_face| Δt/h`. The outgoing slab has width C and centre `sign(u_face)(1−C)/2`. Its occupied fraction follows by scaling that component of n by C and shifting d by the slab centre. Multiplying by signed displacement gives the liquid-volume flux. Each neighboring cell evaluates the identical face expression, so internal fluxes cancel without atomics or separate cell-based limiters.
 
-The geometric routines are an independent WGSL implementation. GPU checks cover analytic planar cuts, complementary volumes, inverse reconstruction and exact slab partitions, including small/negative normal components. The underlying reconstruction and swept-volume formulation are described by the primary [Basilisk geometry](https://basilisk.fr/src/geometry.h) and [VOF](https://basilisk.fr/src/vof.h) references; the code here is not copied from Basilisk.
+The geometric routines are an independent WGSL implementation. GPU checks cover analytic planar cuts, complementary volumes, inverse reconstruction and exact slab partitions, including small/negative normal components. The underlying reconstruction and swept-volume formulation are described by the primary [Basilisk geometry](https://basilisk.fr/src/geometry.h) and [VOF](https://basilisk.fr/src/vof.h) references; with details of the independent implementation given above.
 
 ## Split conservation and heat
 
@@ -25,7 +25,7 @@ The conservative speed bound is `3 max|u_face| Δt/h ≤ 0.45`. The GPU independ
 Reconstruction reuses the normal buffer during advection; curvature normals are refreshed afterward. The two occupancy buffers carry the intermediate fraction and fixed compression metadata. Thermal transport alternates its existing two field buffers and reuses its existing rollback checkpoint. No additional grid-sized thermal scratch buffer is allocated. A rejected sweep restores the original occupancy and thermal input bytes, leaves accepted diagnostics intact, and does not advance sweep ordering.
 
 1. Translating a planar slab for 40 steps preserves one mixed layer at each interface, with integrated fraction error approximately 10⁻⁷ and unchanged reduced volume.
-2. A diagonally translated sphere gives relative L1 fraction errors 1.99% and 0.98% at 24³ and 48³. Relative volume drift stays below 2×10⁻⁷; the fine-grid occupancy extrema are within f32 roundoff of [0,1].
+2. A diagonally translated sphere gives relative L1 fraction errors 2.63% and 0.88% at 24³ and 48³. Relative volume drift stays below 2×10⁻⁷; the fine-grid occupancy extrema are within f32 roundoff of [0,1].
 3. A closed-box circulation transports volume and uniform specific enthalpy conservatively. A deliberately invalid face speed verifies rejection and byte-for-byte rollback of both occupancy and compensated thermal state.
 4. The existing pressure-balance, curvature refinement, thermal/phase, common-clock and offscreen rendering checks remain part of the regular headless suite.
 
@@ -36,3 +36,5 @@ cargo test moving_liquid -- --nocapture
 ```
 
 These tests establish geometric transport behavior, not nozzle pinch-off or jetting thresholds. Initial CAD occupancy and walls are still voxel based. Momentum transport is not yet a geometrically consistent mass/momentum scheme, and contact angle, wetting and oxide films remain absent.
+
+[Dynamic capillary validation](CAPILLARITY.md) explains why height-derived reconstruction normals are important for a nearly grid-aligned moving interface. The static curvature fallback remains separate from those transport normals.

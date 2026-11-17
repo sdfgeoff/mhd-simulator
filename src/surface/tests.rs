@@ -7,16 +7,30 @@ use crate::{
 };
 use glam::Vec3;
 pub(crate) fn fixture(n: u32) -> (GpuDomain, Volume, SurfaceState, Volume) {
-    let hi = 1000.;
+    box_fixture(
+        DomainSettings {
+            min_mm: [0.; 3],
+            max_mm: [1000.; 3],
+            cell_mm: 1000. / n as f32,
+        },
+        &default_materials(),
+    )
+}
+pub(crate) fn box_fixture(
+    settings: DomainSettings,
+    materials: &[crate::simulation::Material],
+) -> (GpuDomain, Volume, SurfaceState, Volume) {
+    let lo = Vec3::from(settings.min_mm);
+    let hi = Vec3::from(settings.max_mm);
     let v = [
-        Vec3::ZERO,
-        Vec3::new(hi, 0., 0.),
-        Vec3::new(hi, hi, 0.),
-        Vec3::new(0., hi, 0.),
-        Vec3::new(0., 0., hi),
-        Vec3::new(hi, 0., hi),
-        Vec3::splat(hi),
-        Vec3::new(0., hi, hi),
+        lo,
+        Vec3::new(hi.x, lo.y, lo.z),
+        Vec3::new(hi.x, hi.y, lo.z),
+        Vec3::new(lo.x, hi.y, lo.z),
+        Vec3::new(lo.x, lo.y, hi.z),
+        Vec3::new(hi.x, lo.y, hi.z),
+        hi,
+        Vec3::new(lo.x, hi.y, hi.z),
     ];
     let f = [
         [0, 2, 1],
@@ -40,17 +54,7 @@ pub(crate) fn fixture(n: u32) -> (GpuDomain, Volume, SurfaceState, Volume) {
         ..Default::default()
     };
     let gpu = GpuDomain::new().unwrap();
-    let volume = gpu
-        .build(
-            &model,
-            &DomainSettings {
-                min_mm: [0.; 3],
-                max_mm: [hi; 3],
-                cell_mm: hi / n as f32,
-            },
-            &default_materials(),
-        )
-        .unwrap();
+    let volume = gpu.build(&model, &settings, materials).unwrap();
     let (surface, evolving) = SurfaceState::new(gpu.context.clone(), &volume, 3).unwrap();
     (gpu, volume, surface, evolving)
 }
