@@ -397,9 +397,7 @@ impl RunState {
                 surface.advance(
                     volume,
                     fluid.face_buffer(),
-                    self.thermal
-                        .as_ref()
-                        .map(|t| (t.result_buffer(), t.transport_destination())),
+                    self.thermal.as_ref().map(|t| t.surface_transport()),
                     self.config.dt_s,
                     fluid.max_face_speed(),
                 )?;

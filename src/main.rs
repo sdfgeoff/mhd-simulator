@@ -89,7 +89,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             state.config.dt_s
         );
         let mut csv = String::from(
-            "time_s,max_B_T,max_u_m_s,rms_div_u_s_inv,magnetic_j,kinetic_j,joule_generated_j,external_work_j,induction_numerical_loss_j,fluid_loss_j,coupling_defect_j,em_balance_error_j,thermal_j,thermal_deposited_j,thermal_balance_error_j,maximum_temperature_c,liquid_volume_m3,surface_j,capillary_work_j,surface_balance_error_j,material_volume_m3,volume_transport_error_m3\n",
+            "time_s,max_B_T,max_u_m_s,rms_div_u_s_inv,magnetic_j,kinetic_j,joule_generated_j,external_work_j,induction_numerical_loss_j,fluid_loss_j,coupling_defect_j,em_balance_error_j,thermal_j,thermal_deposited_j,thermal_balance_error_j,maximum_temperature_c,liquid_volume_m3,surface_j,capillary_work_j,surface_balance_error_j,material_volume_m3,volume_transport_error_m3,interface_divergence_volume_m3\n",
         );
         let memory = state.working_memory(&volume);
         println!(
@@ -143,7 +143,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             );
             let e = &state.energy;
             csv.push_str(&format!(
-                "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n",
+                "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n",
                 state.time_s,
                 b,
                 u,
@@ -177,7 +177,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 state
                     .surface
                     .as_ref()
-                    .map_or(0., |s| s.diagnostics.transport_error_m3)
+                    .map_or(0., |s| s.diagnostics.transport_error_m3),
+                state
+                    .surface
+                    .as_ref()
+                    .map_or(0., |s| s.diagnostics.transport_divergence_m3)
             ));
         }
         for report in gpu.context.profiler.take_completed(true) {

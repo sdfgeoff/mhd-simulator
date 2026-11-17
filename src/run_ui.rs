@@ -418,6 +418,7 @@ impl RunUi {
             ui.monospace(format!("Induction numerical loss {:.4e} · Fluid loss (viscous + numerical) {:.4e} · Coupling work mismatch {:.4e} · EM closure error {:.4e} · Thermal closure error {:.4e}",e.induction_numerical_loss_j,e.fluid_loss_j,e.coupling_defect_j,e.em_balance_error_j,e.thermal_balance_error_j));
             if let Some(surface)=&frame.surface {
                 ui.monospace(format!("Material volume {:.4e} m³ · Transport drift {:.3e} m³ · Occupancy {:.4}…{:.4}",surface.volume_m3,surface.transport_error_m3,surface.min_fraction,surface.max_fraction));
+                ui.monospace(format!("Volume contribution from velocity divergence {:.3e} m³", surface.transport_divergence_m3));
                 ui.monospace(format!("Surface energy {:.4e} J · Capillary work {:.4e} J · Interface energy mismatch {:.4e} J",e.surface_j,e.surface_work_j,e.surface_balance_error_j));
             }
             ui.small("Work/loss terms accumulate from run start. Fluid loss is inferred from its work balance; it is not deposited as heat. EM closure uses staggered operator energy, including boundary/source work.");

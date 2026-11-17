@@ -478,8 +478,12 @@ impl ThermalState {
     pub fn result_buffer(&self) -> &wgpu::Buffer {
         &self.states[self.current]
     }
-    pub fn transport_destination(&self) -> &wgpu::Buffer {
-        &self.states[1 - self.current]
+    pub fn surface_transport(&self) -> crate::surface::EnthalpyTransport<'_> {
+        crate::surface::EnthalpyTransport {
+            input: self.result_buffer(),
+            output: &self.states[1 - self.current],
+            checkpoint: &self.checkpoint,
+        }
     }
     /// Accept conservative mixture enthalpy carried with the liquid occupancy.
     pub fn accept_surface_transport(&mut self, volume: &Volume) -> Result<(), String> {

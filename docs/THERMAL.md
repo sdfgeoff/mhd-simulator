@@ -39,3 +39,5 @@ These constants are starting values, not calibrated molten-metal properties. **S
 | Aluminium 6061 | 896 | 167 | 582–652 | [Kaiser](https://online.kaiseraluminum.com/depot/PublicProductInformation/Document/1006/Kaiser_Aluminum_Shapes_Soft_Alloy.pdf), cp at 100 °C |
 
 Project versions 2 and 3 preserve explicit thermal unknowns and overrides. Loading a version 1 project fills only unset thermal fields of matching named presets and records a migration note; existing scalar values remain intact. Thermal evolution defaults off for older projects.
+
+For moving interfaces, mixture enthalpy is transported by the same geometric face-volume flux as material occupancy. A frozen per-cell tracer compression coefficient cancels the split directional divergence correction for incompressible velocity, preserving uniform specific enthalpy across the moving interface. The transport stage reuses the thermal ping-pong buffers and checkpoint; failed interface sweeps restore the original thermal bytes before returning an error. Spatial variation of specific enthalpy still uses first-order donor values. See [VOF transport](VOF.md).

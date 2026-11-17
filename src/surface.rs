@@ -20,6 +20,14 @@ struct Params {
     choice: [u32; 4],
     step: [f32; 4],
 }
+/// Existing thermal ping-pong storage and its rollback checkpoint. Input may be
+/// scratch during split sweeps; output holds the complete result on success.
+#[derive(Clone, Copy)]
+pub struct EnthalpyTransport<'a> {
+    pub input: &'a wgpu::Buffer,
+    pub output: &'a wgpu::Buffer,
+    pub checkpoint: &'a wgpu::Buffer,
+}
 #[derive(Clone, Debug, Default)]
 pub struct SurfaceDiagnostics {
     pub material_id: u32,
@@ -28,6 +36,7 @@ pub struct SurfaceDiagnostics {
     pub min_fraction: f32,
     pub max_fraction: f32,
     pub transport_error_m3: f64,
+    pub transport_divergence_m3: f64,
     pub max_curvature_m_inv: f32,
 }
 pub struct SurfaceState {
@@ -35,6 +44,8 @@ pub struct SurfaceState {
     pub grid: GridSi,
     pub diagnostics: SurfaceDiagnostics,
     params: Params,
+    step_divergence_m3: f64,
+    sweep_index: u32,
     uniform: wgpu::Buffer,
     fields: [wgpu::Buffer; 2],
     current: usize,
@@ -115,7 +126,14 @@ impl SurfaceState {
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
                 label: Some("Conservative liquid interface"),
-                source: wgpu::ShaderSource::Wgsl(include_str!("surface.wgsl").into()),
+                source: wgpu::ShaderSource::Wgsl(
+                    format!(
+                        "{}\n{}",
+                        include_str!("vof.wgsl"),
+                        include_str!("surface.wgsl")
+                    )
+                    .into(),
+                ),
             });
         let layout = context
             .device
@@ -151,7 +169,8 @@ impl SurfaceState {
             "initialize",
             "normal",
             "curvature",
-            "advect",
+            "reconstruct",
+            "sweep",
             "collect",
             "reduce",
         ]
@@ -197,6 +216,8 @@ impl SurfaceState {
             grid,
             diagnostics: Default::default(),
             params,
+            step_divergence_m3: 0.,
+            sweep_index: 0,
             uniform,
             fields,
             current: 0,
@@ -292,9 +313,10 @@ impl SurfaceState {
         let s = bytemuck::cast_slice::<u8, f32>(&data);
         if s.iter().any(|v| !v.is_finite()) || s[3] > 0. || s[4] < -1e-5 || s[5] > 1.00001 {
             return Err(
-                "Liquid interface transport left [0,1] or became nonfinite; reduce timestep".into(),
+                "Liquid interface transport violated its face CFL, left [0,1], or became nonfinite; reduce timestep".into(),
             );
         }
+        self.step_divergence_m3 = s[2] as f64;
         self.diagnostics.material_id = self.params.choice[0];
         self.diagnostics.volume_m3 = s[0] as f64;
         self.diagnostics.area_m2 = s[1] as f64;
@@ -307,7 +329,7 @@ impl SurfaceState {
         &mut self,
         volume: &Volume,
         velocity: &wgpu::Buffer,
-        thermal: Option<(&wgpu::Buffer, &wgpu::Buffer)>,
+        thermal: Option<EnthalpyTransport<'_>>,
         dt: f64,
         max_speed: f32,
     ) -> Result<(), String> {
@@ -319,32 +341,75 @@ impl SurfaceState {
         {
             return Err("Conservative interface CFL exceeds 0.45; reduce common timestep".into());
         }
+        if let Some(t) = thermal {
+            let size = self.params.dims[3] as u64 * 64;
+            if t.input.size() != size
+                || t.output.size() != size
+                || t.checkpoint.size() != size
+                || t.input == t.output
+                || t.input == t.checkpoint
+                || t.output == t.checkpoint
+                || !t.input.usage().contains(
+                    wgpu::BufferUsages::COPY_SRC
+                        | wgpu::BufferUsages::COPY_DST
+                        | wgpu::BufferUsages::STORAGE,
+                )
+                || !t.output.usage().contains(wgpu::BufferUsages::STORAGE)
+                || !t
+                    .checkpoint
+                    .usage()
+                    .contains(wgpu::BufferUsages::COPY_SRC | wgpu::BufferUsages::COPY_DST)
+            {
+                return Err("Interface enthalpy transport requires matching distinct ping-pong buffers and a rollback checkpoint".into());
+            }
+        }
         let old = self.diagnostics.volume_m3;
         let old_diagnostics = self.diagnostics.clone();
+        let old_divergence = self.step_divergence_m3;
         let mut enc = self
             .context
             .device
             .create_command_encoder(&Default::default());
         enc.copy_buffer_to_buffer(self.field(), 0, &self.checkpoint, 0, self.field().size());
+        if let Some(t) = thermal {
+            enc.copy_buffer_to_buffer(t.input, 0, t.checkpoint, 0, t.input.size());
+        }
         self.context.queue.submit(Some(enc.finish()));
         self.params.step[0] = dt as f32;
         self.params.choice[1] = u32::from(thermal.is_some());
-        self.context
-            .queue
-            .write_buffer(&self.uniform, 0, bytemuck::bytes_of(&self.params));
-        self.dispatch(volume, Some(velocity), thermal, &["advect"]);
-        self.current = 1 - self.current;
+        for sweep in 0..3 {
+            self.params.choice[2] = (self.sweep_index + sweep) % 3;
+            self.params.choice[3] = u32::from(sweep == 0) | (u32::from(sweep == 2) << 1);
+            self.context
+                .queue
+                .write_buffer(&self.uniform, 0, bytemuck::bytes_of(&self.params));
+            let heat = thermal.map(|t| {
+                if sweep % 2 == 0 {
+                    (t.input, t.output)
+                } else {
+                    (t.output, t.input)
+                }
+            });
+            self.dispatch(volume, Some(velocity), heat, &["reconstruct", "sweep"]);
+            self.current = 1 - self.current;
+        }
         if let Err(e) = self.refresh(volume) {
             let mut enc = self
                 .context
                 .device
                 .create_command_encoder(&Default::default());
             enc.copy_buffer_to_buffer(&self.checkpoint, 0, self.field(), 0, self.field().size());
+            if let Some(t) = thermal {
+                enc.copy_buffer_to_buffer(t.checkpoint, 0, t.input, 0, t.input.size());
+            }
             self.context.queue.submit(Some(enc.finish()));
             self.diagnostics = old_diagnostics;
+            self.step_divergence_m3 = old_divergence;
             return Err(e);
         }
+        self.sweep_index = (self.sweep_index + 1) % 3;
         self.diagnostics.transport_error_m3 += self.diagnostics.volume_m3 - old;
+        self.diagnostics.transport_divergence_m3 += self.step_divergence_m3;
         Ok(())
     }
     pub fn update_materials(&self, original: &Volume, evolving: &Volume) {

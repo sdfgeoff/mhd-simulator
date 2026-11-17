@@ -157,6 +157,12 @@ fn conservative_surface_transport_moves_volume_and_enthalpy_without_changing_cad
         usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
         mapped_at_creation: false,
     });
+    let checkpoint = gpu.context.device.create_buffer(&wgpu::BufferDescriptor {
+        label: Some("Test thermal rollback"),
+        size: thermal.size(),
+        usage: wgpu::BufferUsages::COPY_SRC | wgpu::BufferUsages::COPY_DST,
+        mapped_at_creation: false,
+    });
     let centroid = |v: &[[f32; 4]]| {
         v.iter()
             .enumerate()
@@ -171,7 +177,11 @@ fn conservative_surface_transport_moves_volume_and_enthalpy_without_changing_cad
             .advance(
                 &volume,
                 &velocity,
-                Some((&thermal, &transported)),
+                Some(EnthalpyTransport {
+                    input: &thermal,
+                    output: &transported,
+                    checkpoint: &checkpoint,
+                }),
                 0.01,
                 max_speed,
             )
@@ -398,11 +408,326 @@ fn invalid_transport_restores_the_accepted_occupancy() {
             contents: bytemuck::cast_slice(&faces),
             usage: wgpu::BufferUsages::STORAGE,
         });
-    // Deliberately under-report speed to exercise the independent GPU occupancy check.
-    assert!(s.advance(&volume, &velocity, None, 1., 0.).is_err());
+    let cells: Vec<ThermalCell> = (0..8usize.pow(3))
+        .map(|i| ThermalCell {
+            state: [300., 0.5, 50. + i as f32 * 0.1, 1.],
+            valid: [1., 0.125, -7., 3.],
+            budget: [9., 8., 7., 6.],
+            flux: [1., 2., 3., 4.],
+        })
+        .collect();
+    let thermal = gpu
+        .context
+        .device
+        .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Accepted thermal state before rejected sweep"),
+            contents: bytemuck::cast_slice(&cells),
+            usage: wgpu::BufferUsages::STORAGE
+                | wgpu::BufferUsages::COPY_SRC
+                | wgpu::BufferUsages::COPY_DST,
+        });
+    let output = gpu.context.device.create_buffer(&wgpu::BufferDescriptor {
+        label: None,
+        size: thermal.size(),
+        usage: wgpu::BufferUsages::STORAGE,
+        mapped_at_creation: false,
+    });
+    let checkpoint = gpu.context.device.create_buffer(&wgpu::BufferDescriptor {
+        label: None,
+        size: thermal.size(),
+        usage: wgpu::BufferUsages::COPY_SRC | wgpu::BufferUsages::COPY_DST,
+        mapped_at_creation: false,
+    });
+    // Under-report speed: the independent GPU face-CFL check must reject the tick
+    // even when Weymouth-Yue compression keeps a completely full cell bounded.
+    assert!(
+        s.advance(
+            &volume,
+            &velocity,
+            Some(EnthalpyTransport {
+                input: &thermal,
+                output: &output,
+                checkpoint: &checkpoint
+            }),
+            1.,
+            0.
+        )
+        .is_err()
+    );
+    assert_eq!(
+        read_bytes(&gpu.context, &thermal, 0, thermal.size()).unwrap(),
+        bytemuck::cast_slice::<ThermalCell, u8>(&cells)
+    );
     assert_eq!(
         before,
         read_bytes(&gpu.context, s.field(), 0, s.field().size()).unwrap()
     );
     assert_eq!(s.diagnostics.volume_m3, volume_before);
+}
+
+#[test]
+fn geometric_plane_cuts_inverse_and_flux_partitions_match_analytic_volumes() {
+    let _lock = crate::gpu_test_lock();
+    let gpu = GpuDomain::new().unwrap();
+    let analytic = [
+        ([1., 0., 0., -0.25], 0.25),
+        ([-1., 0., 0., 0.25], 0.75),
+        ([1., 1., 1., -0.5], 1. / 6.),
+        ([1., 1., 1., 0.], 0.5),
+        ([1., 1., 1., 0.5], 5. / 6.),
+        ([1., 1., 0., -0.5], 0.125),
+        ([1., 1., 0., 0.], 0.5),
+        ([1e-12, 1., 0., 0.125], 0.625),
+        ([1e-12, 2e-12, 1., -0.1], 0.4),
+        ([1e-8, 1e-8, 1e-8, -0.5e-8], 1. / 6.),
+    ];
+    let mut cases: Vec<[[f32; 4]; 2]> = analytic
+        .iter()
+        .enumerate()
+        .map(|(i, (plane, _))| [*plane, [0.173, 0.17, (i % 3) as f32, 0.]])
+        .collect();
+    for i in 0..300 {
+        let n = [
+            (i as f32 * 0.2345).sin(),
+            (i as f32 * 1.345 + 0.7).cos(),
+            (i as f32 * 0.712 + 0.3).sin(),
+        ];
+        cases.push([
+            [n[0], n[1], n[2], (i as f32 * 0.15).sin() * 0.4],
+            [
+                i as f32 / 299.,
+                0.13 + 0.003 * (i % 50) as f32,
+                (i % 3) as f32,
+                0.,
+            ],
+        ]);
+    }
+    let input = gpu
+        .context
+        .device
+        .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Analytic plane cuts"),
+            contents: bytemuck::cast_slice(&cases),
+            usage: wgpu::BufferUsages::STORAGE,
+        });
+    let output = gpu.context.device.create_buffer(&wgpu::BufferDescriptor {
+        label: None,
+        size: cases.len() as u64 * 16,
+        usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
+        mapped_at_creation: false,
+    });
+    let source = format!(
+        "{}\nstruct Case{{plane:vec4<f32>,info:vec4<f32>}} @group(0) @binding(0) var<storage,read> cases:array<Case>; @group(0) @binding(1) var<storage,read_write> result:array<vec4<f32>>; @compute @workgroup_size(64) fn main(@builtin(global_invocation_id) g:vec3<u32>){{let i=g.x;if i>=arrayLength(&cases){{return;}}let c=cases[i];let n=c.plane.xyz;let d=c.plane.w;let width=c.info.y;let axis=u32(c.info.z);let fraction=cube_halfspace(n,d);let partitioned=width*slab_fraction(n,d,axis,width,1.0)+(1.0-width)*slab_fraction(n,d,axis,1.0-width,-1.0);result[i]=vec4<f32>(fraction,cube_halfspace(n,cube_intercept(n,c.info.x)),cube_halfspace(n,-d),partitioned);}}",
+        include_str!("../vof.wgsl")
+    );
+    let shader = gpu
+        .context
+        .device
+        .create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("Geometric integration checks"),
+            source: wgpu::ShaderSource::Wgsl(source.into()),
+        });
+    let pipeline = gpu
+        .context
+        .device
+        .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+            label: None,
+            layout: None,
+            module: &shader,
+            entry_point: Some("main"),
+            compilation_options: Default::default(),
+            cache: None,
+        });
+    let bind = gpu
+        .context
+        .device
+        .create_bind_group(&wgpu::BindGroupDescriptor {
+            label: None,
+            layout: &pipeline.get_bind_group_layout(0),
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: input.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: output.as_entire_binding(),
+                },
+            ],
+        });
+    let mut enc = gpu
+        .context
+        .device
+        .create_command_encoder(&Default::default());
+    {
+        let mut pass = enc.begin_compute_pass(&Default::default());
+        pass.set_pipeline(&pipeline);
+        pass.set_bind_group(0, &bind, &[]);
+        pass.dispatch_workgroups((cases.len() as u32).div_ceil(64), 1, 1);
+    }
+    gpu.context.queue.submit(Some(enc.finish()));
+    let data = read_bytes(&gpu.context, &output, 0, output.size()).unwrap();
+    let results = bytemuck::cast_slice::<u8, [f32; 4]>(&data);
+    for (i, (case, result)) in cases.iter().zip(results).enumerate() {
+        assert!(result.iter().all(|x| x.is_finite()), "case {i}: {result:?}");
+        if i < analytic.len() {
+            assert!(
+                (result[0] - analytic[i].1).abs() < 2e-6,
+                "analytic case {i}: {result:?}"
+            );
+        }
+        assert!(
+            (result[1] - case[1][0]).abs() < 2e-6,
+            "inverse case {i}: {result:?}"
+        );
+        assert!(
+            (result[0] + result[2] - 1.).abs() < 2e-6,
+            "complement case {i}"
+        );
+        assert!(
+            (result[0] - result[3]).abs() < 3e-6,
+            "flux partition case {i}: {result:?}"
+        );
+    }
+}
+
+#[test]
+fn geometric_transport_keeps_a_translated_slab_sharp_in_both_directions() {
+    let _lock = crate::gpu_test_lock();
+    let n = 24;
+    let (gpu, volume, mut surface, _) = fixture(n);
+    let h = 1. / n as f32;
+    for direction in [-1., 1.] {
+        let left = 0.35;
+        let right = 0.65;
+        let values: Vec<[f32; 4]> = (0..n.pow(3))
+            .map(|i| {
+                let x = (i % n) as f32 * h;
+                [((x + h).min(right) - x.max(left)).max(0.) / h, 0., 0., 0.]
+            })
+            .collect();
+        gpu.context
+            .queue
+            .write_buffer(surface.field(), 0, bytemuck::cast_slice(&values));
+        surface.refresh(&volume).unwrap();
+        let initial = surface.diagnostics.volume_m3;
+        let fd = n + 1;
+        let speed = 0.1;
+        let steps = 40;
+        let dt = 0.025;
+        let faces: Vec<[f32; 4]> = (0..fd.pow(3))
+            .map(|i| {
+                let x = i % fd;
+                [
+                    if x > 0 && x < n {
+                        direction * speed
+                    } else {
+                        0.
+                    },
+                    0.,
+                    0.,
+                    0.,
+                ]
+            })
+            .collect();
+        let velocity = gpu
+            .context
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Constant slab translation"),
+                contents: bytemuck::cast_slice(&faces),
+                usage: wgpu::BufferUsages::STORAGE,
+            });
+        for _ in 0..steps {
+            surface
+                .advance(&volume, &velocity, None, dt, speed)
+                .unwrap();
+        }
+        let data = read_bytes(&gpu.context, surface.field(), 0, surface.field().size()).unwrap();
+        let values = bytemuck::cast_slice::<u8, [f32; 4]>(&data);
+        let shift = direction * speed * steps as f32 * dt as f32;
+        let mut l1 = 0f64;
+        let mut mixed = 0;
+        for (i, v) in values.iter().enumerate() {
+            let x = (i as u32 % n) as f32 * h;
+            let exact = ((x + h).min(right + shift) - x.max(left + shift)).max(0.) / h;
+            l1 += (v[0] - exact).abs() as f64 * h.powi(3) as f64;
+            if v[0] > 1e-4 && v[0] < 1. - 1e-4 {
+                mixed += 1;
+            }
+            assert!(v[0] >= -2e-6 && v[0] <= 1. + 2e-6);
+        }
+        eprintln!(
+            "PLIC slab direction {direction}: L1={l1:.3e}, mixed={mixed}, relative volume drift {:.3e}",
+            (surface.diagnostics.volume_m3 / initial - 1.).abs()
+        );
+        assert!(l1 < 1e-5);
+        assert!(mixed <= 2 * n.pow(2));
+        assert!((surface.diagnostics.volume_m3 / initial - 1.).abs() < 2e-6);
+    }
+}
+
+#[test]
+fn geometric_sphere_translation_converges_without_mass_renormalization() {
+    let _lock = crate::gpu_test_lock();
+    let mut errors = Vec::new();
+    for n in [24u32, 48] {
+        let (gpu, volume, mut surface, _) = fixture(n);
+        let h = 1. / n as f32;
+        let center = Vec3::new(0.35, 0.4, 0.55);
+        let radius = 0.14;
+        let initial = sphere(n, center, radius);
+        gpu.context
+            .queue
+            .write_buffer(surface.field(), 0, bytemuck::cast_slice(&initial));
+        surface.refresh(&volume).unwrap();
+        let volume_before = surface.diagnostics.volume_m3;
+        let speed = Vec3::new(0.12, 0.07, -0.05);
+        let fd = n + 1;
+        let faces: Vec<[f32; 4]> = (0..fd.pow(3))
+            .map(|i| {
+                let q = [i % fd, (i / fd) % fd, i / (fd * fd)];
+                let mut v = [0.; 4];
+                for axis in 0..3 {
+                    if q[axis] > 0 && q[axis] < n {
+                        v[axis] = speed[axis];
+                    }
+                }
+                v
+            })
+            .collect();
+        let velocity = gpu
+            .context
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Three-dimensional sphere translation"),
+                contents: bytemuck::cast_slice(&faces),
+                usage: wgpu::BufferUsages::STORAGE,
+            });
+        let steps = 2 * n;
+        let dt = 1. / steps as f64;
+        for _ in 0..steps {
+            surface.advance(&volume, &velocity, None, dt, 0.12).unwrap();
+        }
+        let reference = sphere(n, center + speed, radius);
+        let data = read_bytes(&gpu.context, surface.field(), 0, surface.field().size()).unwrap();
+        let values = bytemuck::cast_slice::<u8, [f32; 4]>(&data);
+        let l1 = values
+            .iter()
+            .zip(&reference)
+            .map(|(a, b)| (a[0] - b[0]).abs() as f64 * h.powi(3) as f64)
+            .sum::<f64>();
+        let drift = (surface.diagnostics.volume_m3 / volume_before - 1.).abs();
+        eprintln!(
+            "PLIC sphere n={n}: relative L1 {:.3e}, mass drift {drift:.3e}, bounds {}..{}",
+            l1 / volume_before,
+            surface.diagnostics.min_fraction,
+            surface.diagnostics.max_fraction
+        );
+        assert!(values.iter().all(|a| a[0] >= -2e-6 && a[0] <= 1. + 2e-6));
+        assert!(drift < 2e-6);
+        errors.push(l1 / volume_before);
+    }
+    assert!(errors[1] < 0.6 * errors[0], "{errors:?}");
+    assert!(errors[1] < 0.05, "{errors:?}");
 }
