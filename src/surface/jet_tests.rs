@@ -269,6 +269,11 @@ fn pulsed_nozzle_experiment() {
         .parse()
         .unwrap();
     assert!((-4.0..=-1.2).contains(&z_min_mm));
+    let z_max_mm: f32 = std::env::var("MHD_JET_Z_MAX_MM")
+        .unwrap_or_else(|_| "1.5".into())
+        .parse()
+        .unwrap();
+    assert!((1.5..=6.0).contains(&z_max_mm));
     let mut materials = crate::simulation::default_materials();
     materials[3].density_kg_m3 = Some(7000.);
     materials[3].dynamic_viscosity_pa_s = Some(0.002);
@@ -282,7 +287,7 @@ fn pulsed_nozzle_experiment() {
             &model,
             &crate::simulation::DomainSettings {
                 min_mm: [-0.9, -0.9, z_min_mm],
-                max_mm: [0.9, 0.9, 1.5],
+                max_mm: [0.9, 0.9, z_max_mm],
                 cell_mm: h_mm,
             },
             &materials,
@@ -321,6 +326,11 @@ fn pulsed_nozzle_experiment() {
         .parse()
         .unwrap();
     assert!(factor > 0. && factor <= 0.5);
+    let record_every: u32 = std::env::var("MHD_JET_RECORD_EVERY")
+        .unwrap_or_else(|_| "20".into())
+        .parse()
+        .unwrap();
+    assert!((1..=10000).contains(&record_every));
     let steps = (end / (factor * (7001.2 * h.powi(3) / (2. * std::f64::consts::PI * 0.5)).sqrt()))
         .ceil() as u32;
     let dt = end / steps as f64;
@@ -344,6 +354,13 @@ fn pulsed_nozzle_experiment() {
         }),
     )
     .unwrap();
+    fluid.force_multigrid = std::env::var("MHD_JET_PRESSURE_MG")
+        .ok()
+        .map(|v| match v.as_str() {
+            "0" => false,
+            "1" => true,
+            _ => panic!("MHD_JET_PRESSURE_MG must be 0 or 1"),
+        });
     fluid
         .update_surface(&volume, surface.field(), None)
         .unwrap();
@@ -354,7 +371,7 @@ fn pulsed_nozzle_experiment() {
     std::fs::create_dir_all(out).unwrap();
     std::fs::write(
         out.join("grid.json"),
-        serde_json::to_string_pretty(&serde_json::json!({"origin_m":grid.origin_m,"cell_m":grid.cell_m,"dims":grid.dims,"dt_s":dt,"pulse_s":pulse_s,"force_peak_n_m3":peak,"initialization":initialization})).unwrap(),
+        serde_json::to_string_pretty(&serde_json::json!({"origin_m":grid.origin_m,"cell_m":grid.cell_m,"dims":grid.dims,"dt_s":dt,"pulse_s":pulse_s,"force_peak_n_m3":peak,"initialization":initialization,"pressure_multigrid_override":fluid.force_multigrid,"record_every":record_every})).unwrap(),
     )
     .unwrap();
     let mut csv = String::from(
@@ -392,7 +409,7 @@ fn pulsed_nozzle_experiment() {
         }
         let drift = surface.diagnostics.volume_m3 / initial - 1.;
         assert!(drift.abs() < 2e-4, "volume drift={drift}");
-        if step % 20 == 0 || step == steps {
+        if step % record_every == 0 || step == steps {
             let bytes =
                 read_bytes(&gpu.context, surface.field(), 0, surface.field().size()).unwrap();
             let fields = bytemuck::cast_slice::<u8, [f32; 4]>(&bytes);

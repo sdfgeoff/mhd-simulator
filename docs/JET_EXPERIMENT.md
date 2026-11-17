@@ -111,13 +111,18 @@ Defaults use 50 µm cells, 1 ms duration and timestep factor 0.05. Default peak 
 `MHD_JET_FORCE_N_M3=0` for the unforced control, `MHD_JET_PULSE_S` for pulse
 duration, and `MHD_JET_CELL_MM`/`MHD_JET_DT_FACTOR` for spatial/time controls.
 `MHD_JET_Z_MIN_MM` changes the lower bound (−2.0 mm by default).
+`MHD_JET_Z_MAX_MM` changes the upper bound (1.5 mm by default).
+`MHD_JET_PRESSURE_MG=0/1` overrides the pressure preconditioner for a diagnostic;
+leaving it unset keeps production automatic selection.
 Use a distinct output directory for every control: snapshots are not cleaned on
 rerun, and differing step counts can otherwise leave stale files.
 
 `grid.json` stores dimensions, origin, spacing, timestep and pulse parameters.
 `alpha-NNNNN.bin` is little-endian f32, X-fastest. `flow-NNNNN.bin` stores four
 f32 per cell: `(u_x,u_y,u_z,p)`. Snapshots occur every 20 steps and at completion;
-`diagnostics.csv` uses the same samples. No desktop window opens.
+`diagnostics.csv` uses the same samples. `MHD_JET_RECORD_EVERY` changes the
+snapshot interval (default 20) without changing the physical timestep. Coarser
+recording also coarsens the sampled boundary/contact checks. No desktop window opens.
 
 Plot saved snapshots with `python scripts/plot_jet.py OUTPUT_DIRECTORY` (optional
 NumPy/Matplotlib postprocessing; no additional simulation implementation).
@@ -138,3 +143,39 @@ motion and discrete wall/meniscus errors remain. These controls support the
 initialization change; they do not validate a physical wetting model or breakup.
 
 [Neutral-wall investigation](NEUTRAL_WALLS.md) and [projection definition](CAD_INITIALIZATION.md).
+
+## First coarse release experiment
+
+With projected initialization, peak force **7×10⁷ N/m³**, the same 0.5 ms pulse,
+50 µm cells and timestep factor 0.1, the 2 ms run produces a separated main bolus
+and a small fragment. The aperture is six cells across. This is a **coarse-grid
+release event**, not validation of a real solder jetting threshold.
+
+1. First saved separation of the large bolus occurs at **1.334 ms** for the
+   `α>0.5` core and **1.401 ms** for `α>0.01`. The threshold dependence exposes
+   an unresolved neck; saved frames are 33.36 µs apart.
+2. At 2 ms, primary core volume is **40.63–43.83 nL** across those thresholds,
+   corresponding to equivalent sphere diameter **0.427–0.437 mm**. A late
+   centroid fit gives **0.359–0.366 m/s**. These ranges capture threshold
+   sensitivity, not total uncertainty or a convergence interval.
+3. The small fragment has only four cells in its `α>0.5` core, about two cells
+   across in equivalent diameter. Its physical existence/size is unresolved.
+   No significant liquid reaches the outer boundary in the saved frames.
+4. The 10⁸ N/m³ run reaches the closed upper boundary at about **1.051 ms** and
+   stops. It needs a larger air box before interpreting its later behavior.
+
+```sh
+MHD_JET_FORCE_N_M3=70000000 MHD_JET_END_S=0.002 MHD_JET_DT_FACTOR=0.1 \
+  MHD_JET_PRESSURE_MG=1 MHD_JET_OUTPUT=artifacts/jet-force70 \
+  cargo test --offline --lib pulsed_nozzle_experiment -- --ignored --nocapture
+```
+
+The pressure multigrid control at the lower 5×10⁷ N/m³ pulse reproduces the
+2 ms retraction trajectory: maximum saved fraction L1 difference is
+**1.36×10⁻⁷** relative to liquid volume, with unchanged convergence criteria.
+A short sequential 120-step screening pair takes **19.33 → 12.78 s**, including
+initialization/output; one pair is not a general performance ratio. The full
+Jacobi run overlapped other GPU validation, so its wall time is not used as a
+paired speedup measurement. Production's automatic size threshold is unchanged.
+
+Spatial and temporal controls around the release case remain required.
