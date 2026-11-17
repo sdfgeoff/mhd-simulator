@@ -1,6 +1,6 @@
 # Electromagnetics
 
-The workbench now computes applied magnetic fields and transient eddy currents in conducting CAD volumes with fixed geometry. It reports magnetic flux density B, induced current density J, Lorentz force density J×B, and Joule heating. The liquid surface and solids remain fixed during these stages. The [unified run](RUNS.md) exchanges evolving Lorentz force and velocity-induced EMF with the [fixed-geometry fluid solver](FLUIDS.md). Moving interfaces remain a later stage.
+The workbench computes applied magnetic fields and transient eddy currents, reporting magnetic flux density B, induced current density J, Lorentz force density J×B, and Joule heating. The [unified run](RUNS.md) exchanges evolving Lorentz force and velocity-induced EMF with the fluid solver. With the [moving liquid/air interface](SURFACES.md) enabled, conductivity follows fractional liquid occupancy and edge coefficients refresh before each induction step. CAD solids, prescribed current centrelines and permanent magnets remain fixed. The moving liquid currently requires unit relative permeability; material coefficients are supplied constants.
 
 ## Run an example
 
