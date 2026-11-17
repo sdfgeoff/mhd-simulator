@@ -16,7 +16,7 @@ applying the kinematic and Laplace-pressure conditions, gives
 
 The zero-ambient-density limit gives the classical liquid-jet relation. For
 equal densities, the Bessel Wronskian reduces it to the isotropic ideal-fluid
-result in [the published equal-density result, equation 3.2](https://www.cambridge.org/core/journals/journal-of-fluid-mechanics/article/rayleighplateau-instability-of-anisotropic-interfaces-part-1-an-analytical-and-numerical-study-of-fluid-interfaces/3655725B371DD3A0CA26CB4DC7BCB3D6).
+result in [the published equal-density analysis, equation 3.2](https://www.cambridge.org/core/journals/journal-of-fluid-mechanics/article/rayleighplateau-instability-of-anisotropic-interfaces-part-1-an-analytical-and-numerical-study-of-fluid-interfaces/3655725B371DD3A0CA26CB4DC7BCB3D6).
 [Basilisk's cylinder benchmark](https://basilisk.fr/src/test/plateau.c) separately
 illustrates the distinction between initial linear growth and nonlinear
 pinch-off scaling; that benchmark is axisymmetric, while this calculation uses
@@ -96,6 +96,38 @@ reference by about 1–3.2%; maximum local speeds do not refine
 monotonically. Neither local-flow accuracy, nozzle pinch-off, satellite sizes
 nor jetting thresholds has been established.
 
+## Follow-up controls
+
+At the 12-cell radius, a Jacobi-CG control repeats the first 380 steps of the
+multigrid run with the same f32 timestep and unchanged pressure criteria.
+Maximum difference in normalized mode is **2.50×10⁻⁶**; final kinetic energy
+changes **−0.00808%**. This is much smaller than the observed grid reversal over
+that prefix (`s t≈0.501`). It does not isolate all late-time effects.
+
+An initial-only curvature reduction compares mixed-cell curvature against the
+analytic surface of revolution:
+
+`κ(z)=1/[r√(1+r_z²)]−r_zz/(1+r_z²)^(3/2)`.
+
+Weights are `α(1−α)`. A weighted regression against `cos(kz)` fits the mean and
+harmonic together; a plain Fourier sum would leak the large mean curvature into
+the small harmonic because mixed-cell weights vary with axial position.
+
+| Cells per radius | Initial curvature harmonic error | Weighted RMS curvature error (m⁻¹) |
+| --- | ---: | ---: |
+| 8 | +2.127% | 0.08341 |
+| 10 | +0.874% | 0.05149 |
+| 12 | +0.432% | 0.03581 |
+| 16 | +0.131% | 0.01958 |
+
+Initial curvature improves monotonically in this placement. Together with the
+pressure control, that points to examining evolving geometry/transport rather
+than attributing the dynamic reversal to initial curvature or multigrid alone.
+It does not prove which mechanism causes it. A scalar weighted-fit control and
+an independent GPU/readback moment comparison verify this reduction; accepted
+field, normal, statistics and checkpoint buffers are unchanged. The readback
+comparison is test-only aggregation, not a CPU fluid solver.
+
 ## Reproduce
 
 ```sh
@@ -106,6 +138,14 @@ MHD_CYLINDER_RADIUS_CELLS=8,10 MHD_CYLINDER_KR=1.4 MHD_CYLINDER_DURATION=3 \
   cargo test --offline --lib rayleigh_plateau_cylinder_diagnostic -- --ignored --nocapture
 ```
 
+The initial-only diagnostic runs with:
+
+```sh
+cargo test --offline --lib cylinder_initial_curvature_diagnostic -- --ignored --nocapture
+```
+
+It writes `artifacts/cylinder-initial-curvature.csv` without time stepping.
+
 Set `MHD_CYLINDER_DT_FACTOR=0.2` for the half-timestep control or
 `MHD_CYLINDER_DEFORMATION=0` for an unperturbed cylinder. Optional
 `MHD_CYLINDER_PRESSURE_MG=0/1` selects a test-only pressure control; leaving it
@@ -115,6 +155,6 @@ checks; it is not an assertion that the measured rate matches theory.
 
 Output is `artifacts/cylinder-N-krX-eY.csv`, with `N` the cells per radius.
 Archive files before changing timestep or pressure settings, since those runs
-share filenames. No desktop window is opened. Four regular scalar/geometry/GPU
+share filenames. No desktop window is opened. Six regular scalar/geometry/GPU
 measurement checks accompany the ignored dynamic diagnostic; the last full
 production suite passed 135 tests before this test-only addition.

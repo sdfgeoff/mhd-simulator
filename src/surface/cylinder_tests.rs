@@ -225,8 +225,11 @@ struct Moments {
 }
 impl ModeProbe {
     fn new(surface: &mut SurfaceState, volume: &Volume) -> Self {
+        Self::with_source(surface, volume, include_str!("cylinder_probes.wgsl"))
+    }
+    fn with_source(surface: &mut SurfaceState, volume: &Volume, source: &str) -> Self {
         for entry in ["cylinder_collect", "cylinder_reduce"] {
-            install_test_entry(surface, entry, include_str!("cylinder_probes.wgsl"));
+            install_test_entry(surface, entry, source);
         }
         let count = surface.params.dims[3].div_ceil(256);
         let stats = surface
@@ -273,7 +276,7 @@ impl ModeProbe {
             count,
         }
     }
-    fn sample(&self, surface: &SurfaceState) -> Moments {
+    fn raw_sample(&self, surface: &SurfaceState) -> [f32; 8] {
         let context = &surface.context;
         let mut encoder = context.device.create_command_encoder(&Default::default());
         {
@@ -289,6 +292,10 @@ impl ModeProbe {
         let bytes = read_bytes(context, &self.stats, self.count as u64 * 32, 32).unwrap();
         let v = bytemuck::cast_slice::<u8, f32>(&bytes);
         assert!(v.iter().all(|v| v.is_finite()) && v[0] > 0., "{v:?}");
+        v.try_into().unwrap()
+    }
+    fn sample(&self, surface: &SurfaceState) -> Moments {
+        let v = self.raw_sample(surface);
         let sum = v[0] as f64;
         Moments {
             volume: sum * (surface.params.step[1] as f64).powi(3),
@@ -601,4 +608,148 @@ fn cylinder_rate_fit_recovers_known_scalar_modes() {
         let (actual, rms) = fit_rate(&trace, unstable);
         assert!((actual - rate).abs() < 1e-8 && rms < 1e-8);
     }
+}
+
+// Weighted regression removes the correlation between mixed-cell weights and
+// axial position. A raw Fourier sum of curvature would alias its mean into
+// the small physical harmonic when the number of mixed cells varies with z.
+fn curvature_fit(v: [f32; 8]) -> [f64; 4] {
+    let v = v.map(f64::from);
+    let denominator = v[2] - v[1] * v[1] / v[0];
+    assert!(denominator > 0.);
+    let slope = |sum: f64, cosine_sum: f64| (cosine_sum - v[1] * sum / v[0]) / denominator;
+    [
+        v[3] / v[0],
+        slope(v[3], v[4]),
+        slope(v[5], v[6]),
+        (v[7] / v[0]).sqrt(),
+    ]
+}
+#[test]
+fn cylinder_curvature_regression_removes_weight_bias() {
+    // Unequal samples and weights: y=10+2*cos(theta), reference=10+3*cos(theta).
+    let mut sums = [0.; 8];
+    for (c, w) in [(-1., 1.), (-0.2, 3.), (0.3, 2.), (1., 4.)] {
+        let y = 10. + 2. * c;
+        let r = 10. + 3. * c;
+        let values = [
+            w,
+            w * c,
+            w * c * c,
+            w * y,
+            w * y * c,
+            w * r,
+            w * r * c,
+            w * (y - r) * (y - r),
+        ];
+        for (sum, value) in sums.iter_mut().zip(values) {
+            *sum += value;
+        }
+    }
+    let fit = curvature_fit(sums);
+    assert!(
+        (fit[1] - 2.).abs() < 2e-6 && (fit[2] - 3.).abs() < 2e-6,
+        "{fit:?}"
+    );
+}
+fn curvature_probe(surface: &mut SurfaceState, volume: &Volume, g: &Geometry) -> ModeProbe {
+    let source = format!(
+        "const CYLINDER_RADIUS:f32={};const CYLINDER_EPSILON:f32={};const CYLINDER_K:f32={};\n{}",
+        g.mean_radius,
+        g.epsilon,
+        g.wavenumber,
+        include_str!("cylinder_curvature_probes.wgsl")
+    );
+    ModeProbe::with_source(surface, volume, &source)
+}
+#[test]
+fn cylinder_curvature_gpu_reduction_matches_readback() {
+    let _lock = crate::gpu_test_lock();
+    let (_gpu, volume, mut surface, g) = setup(4, 0.7, 0.01);
+    let probe = curvature_probe(&mut surface, &volume, &g);
+    let capture = |s: &SurfaceState| {
+        [
+            &s.fields[0],
+            &s.fields[1],
+            &s.normals,
+            &s.stats,
+            &s.checkpoint,
+        ]
+        .iter()
+        .map(|b| read_bytes(&s.context, b, 0, b.size()).unwrap())
+        .collect::<Vec<_>>()
+    };
+    let before = capture(&surface);
+    let raw = probe.raw_sample(&surface);
+    assert_eq!(before, capture(&surface));
+    let fields = bytemuck::cast_slice::<u8, [f32; 4]>(&before[surface.current]);
+    let mut expected = [0.; 8];
+    for (i, field) in fields.iter().enumerate() {
+        let alpha = f64::from(field[0]);
+        if alpha <= 1e-6 || alpha >= 1. - 1e-6 {
+            continue;
+        }
+        let z = i as u32 / (g.dims[0] * g.dims[1]);
+        let phase = 2. * PI * (z as f64 + 0.5) / g.dims[2] as f64;
+        let c = phase.cos();
+        let r = g.mean_radius * (1. + g.epsilon * c);
+        let rz = -g.mean_radius * g.epsilon * g.wavenumber * phase.sin();
+        let rzz = -g.mean_radius * g.epsilon * g.wavenumber.powi(2) * c;
+        let reference = 1. / (r * (1. + rz * rz).sqrt()) - rzz / (1. + rz * rz).powf(1.5);
+        let kappa = f64::from(field[1]);
+        let w = alpha * (1. - alpha);
+        let values = [
+            1.,
+            c,
+            c * c,
+            kappa,
+            kappa * c,
+            reference,
+            reference * c,
+            (kappa - reference).powi(2),
+        ];
+        for (sum, value) in expected.iter_mut().zip(values) {
+            *sum += w * value;
+        }
+    }
+    for (i, (&actual, &expected)) in raw.iter().zip(expected.iter()).enumerate() {
+        assert!(
+            (f64::from(actual) - expected).abs() < 2e-5 * expected.abs().max(1.),
+            "moment {i}: {actual} vs {expected}"
+        );
+    }
+}
+#[test]
+#[ignore = "Initial cylinder curvature harmonic diagnostic; writes CSV"]
+fn cylinder_initial_curvature_diagnostic() {
+    let _lock = crate::gpu_test_lock();
+    let mut csv = String::from(
+        "radius_cells,kr,mean_curvature,curvature_harmonic,reference_harmonic,harmonic_relative_error,curvature_rms_error\n",
+    );
+    for cells in [8, 10, 12, 16] {
+        let (_gpu, volume, mut surface, g) = setup(cells, 0.7, 0.01);
+        let probe = curvature_probe(&mut surface, &volume, &g);
+        let before =
+            read_bytes(&surface.context, surface.field(), 0, surface.field().size()).unwrap();
+        let fit = curvature_fit(probe.raw_sample(&surface));
+        assert_eq!(
+            before,
+            read_bytes(&surface.context, surface.field(), 0, surface.field().size()).unwrap()
+        );
+        eprintln!(
+            "Cylinder initial curvature R/h={cells}: {fit:?}, harmonic error={:.5}%",
+            100. * (fit[1] / fit[2] - 1.)
+        );
+        csv.push_str(&format!(
+            "{cells},{},{},{},{},{},{}\n",
+            g.mean_radius * g.wavenumber,
+            fit[0],
+            fit[1],
+            fit[2],
+            fit[1] / fit[2] - 1.,
+            fit[3]
+        ));
+    }
+    std::fs::create_dir_all("artifacts").unwrap();
+    std::fs::write("artifacts/cylinder-initial-curvature.csv", csv).unwrap();
 }
