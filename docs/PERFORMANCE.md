@@ -90,3 +90,28 @@ To compare the short probes, alternate the following commands after building onc
     MHD_DROP_LIQUID_NU=0.0002 MHD_DROP_GRIDS=48 MHD_DROP_PERIODS=0.04 cargo test --offline rayleigh_lamb_drop_oscillation -- --ignored --nocapture
 
 Both commands overwrite the generated 48³ viscous-drop CSV. Archive long diagnostic traces before running short probes.
+
+## Shared stress evaluation
+
+A timestamped 64³ stiff-drop probe attributed **93.5%** of GPU compute time to viscous stress evaluation. CPU wall time mostly charged the asynchronous queue wait to pressure, illustrating why stage wall time alone cannot identify the expensive kernel.
+
+The stabilized path caches cell viscosity once per macro-step and computes each stress tensor component once per stage, sharing it between adjacent momentum volumes. It borrows the existing pressure-work vector and temporary display lanes, with no additional buffer storage. Boundary edges without a cache entry retain direct evaluation. The [storage and stencil details](VISCOUS_STRESS.md) describe which lanes remain live.
+
+Three alternating before/after executable comparisons at 64³, liquid ν=2×10⁻⁴ m²/s, density ratio 7000:1, 13 ticks and 0.332491 s physical duration gave:
+
+| Method | Process wall times, s | Median |
+|---|---|---:|
+| RKC2, repeated direct stress evaluation | 6.063, 6.059, 6.040 | 6.059 s |
+| RKC2, shared stresses | 1.753, 1.739, 1.747 | 1.747 s |
+
+This is **3.47×** faster for this probe, after one warmup per executable. The new executable's first warmup took 18.0 s versus 1.75 s subsequently, so the table excludes substantial cold driver/shader-cache initialization. Both methods use at most 21 stabilized stages per tick. Maximum quadrupole difference is 2.33×10⁻⁹ of its initial value over the short comparison.
+
+A separate timestamped comparison recorded every compute pass. Viscous GPU time fell **4,865.7 → 524.3 ms** across the same 13 ticks (9.28×); pressure took about 303 → 284 ms. Total process speedup is smaller because initialization and other solver work remain.
+
+The reference executable was built from a6043c0. Executables were copied to separate artifact paths and identified by their test inventories before measurement. Cargo outputs must be isolated or rebuilt when comparing worktrees: sharing a target directory can leave an executable from the other checkout even when Cargo reports it fresh.
+
+To reproduce the current profiled probe:
+
+    MHD_DROP_PROFILE=1 MHD_DROP_LIQUID_NU=0.0002 MHD_DROP_GRIDS=64 MHD_DROP_PERIODS=0.02 cargo test --offline rayleigh_lamb_drop_oscillation -- --ignored --nocapture
+
+It writes artifacts/drop-performance-64.csv with CPU/GPU stages, accepted status and timestamp coverage. Short probes overwrite the generated drop trajectory; archive long traces first. This optimization does not change the open damping-accuracy findings in [the viscous-drop diagnostic](VISCOUS_DROP.md).

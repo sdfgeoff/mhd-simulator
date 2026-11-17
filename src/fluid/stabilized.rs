@@ -61,6 +61,8 @@ pub(super) struct StabilizedGpu {
     bind: [wgpu::BindGroup; 2],
     pipeline: wgpu::ComputePipeline,
     initialize: wgpu::ComputePipeline,
+    coefficients: wgpu::ComputePipeline,
+    tensor: wgpu::ComputePipeline,
     stride: u64,
     capacity: u32,
 }
@@ -127,6 +129,22 @@ impl StabilizedGpu {
             compilation_options: Default::default(),
             cache: None,
         });
+        let coefficients = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+            label: Some("Fixed stress material coefficients"),
+            layout: Some(&pipeline_layout),
+            module: shader,
+            entry_point: Some("stress_coefficients"),
+            compilation_options: Default::default(),
+            cache: None,
+        });
+        let tensor = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+            label: Some("Shared MAC stress tensor"),
+            layout: Some(&pipeline_layout),
+            module: shader,
+            entry_point: Some("stress_tensor"),
+            compilation_options: Default::default(),
+            cache: None,
+        });
         let bind = std::array::from_fn(|parity| {
             let mut state = buffers;
             if parity == 1 {
@@ -159,9 +177,34 @@ impl StabilizedGpu {
             bind,
             pipeline,
             initialize,
+            coefficients,
+            tensor,
             stride,
             capacity,
         }
+    }
+    pub(super) fn cache_coefficients(
+        &self,
+        context: &GpuContext,
+        encoder: &mut wgpu::CommandEncoder,
+        faces: [u32; 3],
+    ) {
+        let mut pass = context.compute_pass(encoder, Some("Fixed stress material coefficients"));
+        pass.set_pipeline(&self.coefficients);
+        pass.set_bind_group(0, &self.bind[0], &[0]);
+        pass.dispatch_workgroups(faces[0], faces[1], faces[2]);
+    }
+    pub(super) fn cache_tensor(
+        &self,
+        context: &GpuContext,
+        encoder: &mut wgpu::CommandEncoder,
+        faces: [u32; 3],
+        parity: usize,
+    ) {
+        let mut pass = context.compute_pass(encoder, Some("Shared MAC stress tensor"));
+        pass.set_pipeline(&self.tensor);
+        pass.set_bind_group(0, &self.bind[parity], &[0]);
+        pass.dispatch_workgroups(faces[0], faces[1], faces[2]);
     }
     pub(super) fn encode(
         &self,
@@ -179,6 +222,8 @@ impl StabilizedGpu {
                 .copy_from_slice(bytemuck::bytes_of(row));
         }
         context.queue.write_buffer(&self.uniform, 0, &data);
+        self.cache_coefficients(context, encoder, faces);
+        self.cache_tensor(context, encoder, faces, 0);
         {
             let mut pass = context.compute_pass(encoder, Some("Initial stress stage state"));
             pass.set_pipeline(&self.initialize);
@@ -187,6 +232,9 @@ impl StabilizedGpu {
             pass.dispatch_workgroups(faces[0], faces[1], faces[2]);
         }
         for i in 0..rows.len() {
+            if i > 0 {
+                self.cache_tensor(context, encoder, faces, i % 2);
+            }
             let mut pass = context.compute_pass(encoder, Some("Chebyshev stress stage"));
             pass.set_pipeline(&self.pipeline);
             pass.set_bind_group(0, &self.bind[i % 2], &[(i as u64 * self.stride) as u32]);

@@ -698,7 +698,7 @@ fn stabilized_variable_density_stress_dissipates_energy_and_preserves_momentum_a
         .iter()
         .zip(&packets)
     {
-        assert_eq!(c.pressure, old.pressure);
+        assert_eq!(c.pressure[0], old.pressure[0]);
         assert_eq!(c.reserved, old.reserved);
     }
     eprintln!(
@@ -792,10 +792,144 @@ fn failed_projection_after_stabilized_stress_restores_packets_and_retry_rebuilds
                     let average = 0.5 * (faces[idx(q)][a] + faces[idx(upper)][a]);
                     assert!((cell.velocity[a] - average).abs() < 1e-7);
                 }
+                let mut divergence = 0.;
+                for a in 0..3 {
+                    let q = [x, y, z];
+                    let mut upper = q;
+                    upper[a] = (upper[a] + 1) % n;
+                    let idx = |q: [u32; 3]| (q[0] + f[0] * (q[1] + f[1] * q[2])) as usize;
+                    divergence += faces[idx(upper)][a] - faces[idx(q)][a];
+                }
+                divergence /= s.grid.cell_m;
+                assert!((cell.pressure[1] - divergence).abs() < 1e-7);
+                assert_eq!(&cell.pressure[2..], &[0., 0.]);
                 assert_eq!(cell.force, [0.; 4]);
                 assert_eq!(&cell.reserved[..3], &[1., 1., 1.]);
                 assert_eq!(cell.reserved[3], 0.);
             }
+        }
+    }
+}
+
+#[test]
+fn cached_stress_matches_direct_operator_with_phase_walls_and_periodic_seams() {
+    let _lock = crate::gpu_test_lock();
+    let n = 10u32;
+    let mut materials = default_materials();
+    materials[3].density_kg_m3 = Some(7000.);
+    materials[3].dynamic_viscosity_pa_s = Some(1.4);
+    materials[3].surface_tension_n_m = Some(0.);
+    materials[0].density_kg_m3 = Some(1.);
+    materials[0].dynamic_viscosity_pa_s = Some(0.02);
+    let (gpu, v, _, _) = crate::surface::tests::box_fixture(
+        DomainSettings {
+            min_mm: [0.; 3],
+            max_mm: [1000.; 3],
+            cell_mm: 1000. / n as f32,
+        },
+        &materials,
+    );
+    for (case, periodic) in [[true; 3], [false; 3], [false; 3], [true, false, true]]
+        .into_iter()
+        .enumerate()
+    {
+        let state = FluidState::new(
+            gpu.context.clone(),
+            &v,
+            FluidConfig {
+                surface: crate::surface::SurfaceConfig { enabled: true },
+                periodic,
+                advection: false,
+                acceleration_m_s2: [0.; 3],
+                ..Default::default()
+            },
+            None,
+        )
+        .unwrap();
+        let f = state.params.faces;
+        let initial: Vec<[f32; 4]> = (0..f[3])
+            .map(|i| {
+                let q = [i % f[0], (i / f[0]) % f[1], i / (f[0] * f[1])].map(|x| x % n);
+                let at = (q[0] + n * (q[1] + n * q[2])) as f32;
+                [
+                    (at * 0.391).sin(),
+                    (at * 0.717).cos(),
+                    (at * 0.923).sin(),
+                    0.,
+                ]
+            })
+            .collect();
+        gpu.context
+            .queue
+            .write_buffer(&state.scratch, 0, bytemuck::cast_slice(&initial));
+        for change in [false, true] {
+            let mask: Vec<u32> = (0..n.pow(3))
+                .map(|i| {
+                    let [x, y, z] = [i % n, (i / n) % n, i / (n * n)];
+                    let wall = case >= 2
+                        && (((3..=5).contains(&x) && (2..=6).contains(&y) && z >= 4)
+                            || (change && x == 8 && y >= 3 && z <= 5));
+                    u32::from(!wall)
+                })
+                .collect();
+            let packets: Vec<FluidCell> = (0..n.pow(3))
+                .map(|i| {
+                    let a = if i % 29 == 0 {
+                        -0.000005
+                    } else if i % 37 == 0 {
+                        1.000005
+                    } else {
+                        0.5 + 0.5 * ((i as f32 + f32::from(change)) * 0.17).sin()
+                    };
+                    FluidCell {
+                        reserved: [1., if mask[i as usize] == 0 { 0. } else { 0.5 }, a, 0.],
+                        ..Default::default()
+                    }
+                })
+                .collect();
+            gpu.context
+                .queue
+                .write_buffer(&state._mask, 0, bytemuck::cast_slice(&mask));
+            gpu.context
+                .queue
+                .write_buffer(&state.result, 0, bytemuck::cast_slice(&packets));
+            state.dispatch(&[("stress_original_probe", groups(f[3]))]);
+            let original =
+                read_bytes(&gpu.context, &state.velocity, 0, state.velocity.size()).unwrap();
+            let original = bytemuck::cast_slice::<u8, [f32; 4]>(&original);
+            let mut encoder = gpu
+                .context
+                .device
+                .create_command_encoder(&Default::default());
+            state.stabilized.as_ref().unwrap().cache_coefficients(
+                &gpu.context,
+                &mut encoder,
+                groups(f[3]),
+            );
+            state.stabilized.as_ref().unwrap().cache_tensor(
+                &gpu.context,
+                &mut encoder,
+                groups(f[3]),
+                0,
+            );
+            gpu.context.queue.submit(Some(encoder.finish()));
+            state.dispatch(&[("stress_cached_probe", groups(f[3]))]);
+            let cached =
+                read_bytes(&gpu.context, &state.velocity, 0, state.velocity.size()).unwrap();
+            let cached = bytemuck::cast_slice::<u8, [f32; 4]>(&cached);
+            let mut error = 0.;
+            let mut norm = 0.;
+            for (a, b) in original.iter().zip(cached) {
+                for j in 0..3 {
+                    error += (a[j] as f64 - b[j] as f64).powi(2);
+                    norm += (a[j] as f64).powi(2);
+                }
+            }
+            let relative = (error / norm).sqrt();
+            eprintln!(
+                "Stress cache case={case} changed={change}: operator relative L2={relative:.8e}"
+            );
+            assert!(relative < 1e-6);
         }
     }
 }

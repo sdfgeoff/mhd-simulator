@@ -450,11 +450,16 @@ impl FluidState {
                 label: Some("MAC fluid solver"),
                 source: wgpu::ShaderSource::Wgsl(
                     format!(
-                        "{}\n{}\n{}\n{}",
+                        "{}\n{}\n{}\n{}\n{}",
                         include_str!("../periodic.wgsl"),
                         include_str!("viscosity.wgsl"),
                         include_str!("solver.wgsl"),
-                        include_str!("stabilized.wgsl")
+                        include_str!("stabilized.wgsl"),
+                        if cfg!(test) {
+                            include_str!("stress_probes.wgsl")
+                        } else {
+                            ""
+                        }
                     )
                     .into(),
                 ),
@@ -519,6 +524,11 @@ impl FluidState {
                 });
         let pipelines = entries
             .into_iter()
+            .chain(
+                ["stress_original_probe", "stress_cached_probe"]
+                    .into_iter()
+                    .filter(|_| cfg!(test)),
+            )
             .map(|entry| {
                 (
                     entry,
@@ -1064,6 +1074,10 @@ impl FluidState {
         Some(24. * mu / (density_floor * h * h) * (1. + 32. * f32::EPSILON as f64))
     }
     fn diffuse_surface_stress(&mut self) -> Result<(), String> {
+        let _stage = self
+            .context
+            .profiler
+            .stage(crate::profile::Stage::Viscosity);
         self.diagnostics.viscous_substeps = 0;
         let faces = groups(self.params.faces[3]);
         let count = if let Some(bound) = self

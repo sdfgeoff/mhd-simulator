@@ -279,6 +279,11 @@ fn simulate_drop(
     let mut csv = String::from(
         "step,time_s,quadrupole,linear_quadrupole,relative_volume_drift,centroid_drift_m,max_speed_m_s,rms_divergence_s_inv,min_alpha,max_alpha,viscous_substeps,material_volume_m3\n",
     );
+    let profile = dump && std::env::var_os("MHD_DROP_PROFILE").is_some();
+    gpu.context.profiler.set_enabled(profile);
+    let mut performance = String::from(
+        "step,time_s,accepted,stage,cpu_wall_ms,gpu_pass_ms,recorded_passes,total_passes\n",
+    );
     let mut crossings = Vec::new();
     let mut trace = Vec::new();
     let mut previous = a0;
@@ -316,16 +321,43 @@ fn simulate_drop(
         if step == steps {
             break;
         }
+        gpu.context.profiler.begin_step((step + 1) as u64, t);
         let result = (|| -> Result<(), String> {
-            fluid.step(&volume)?;
-            surface.advance_coupled(&volume, &mut fluid, None, dt)?;
-            fluid.update_surface(&volume, surface.field(), None)?;
+            {
+                let _stage = gpu.context.profiler.stage(crate::profile::Stage::Fluid);
+                fluid.step(&volume)?;
+            }
+            {
+                let _stage = gpu.context.profiler.stage(crate::profile::Stage::Surface);
+                surface.advance_coupled(&volume, &mut fluid, None, dt)?;
+            }
+            {
+                let _stage = gpu.context.profiler.stage(crate::profile::Stage::Phase);
+                fluid.update_surface(&volume, surface.field(), None)?;
+            }
             Ok(())
         })();
+        gpu.context.profiler.end_step(result.is_ok());
+        for timing in gpu.context.profiler.take_completed(false) {
+            performance.push_str(&timing.csv_rows());
+        }
         if let Err(error) = result {
+            for timing in gpu.context.profiler.take_completed(true) {
+                performance.push_str(&timing.csv_rows());
+            }
+            if profile {
+                std::fs::write(format!("artifacts/drop-performance-{n}.csv"), &performance)
+                    .unwrap();
+            }
             std::fs::write(&path, &csv).unwrap();
             panic!("Drop n={n} step {} dt={dt}: {error}", step + 1);
         }
+    }
+    for timing in gpu.context.profiler.take_completed(true) {
+        performance.push_str(&timing.csv_rows());
+    }
+    if profile {
+        std::fs::write(format!("artifacts/drop-performance-{n}.csv"), &performance).unwrap();
     }
     if let Some(reference) = viscous_reference.filter(|_| periods >= 1.) {
         report_viscous_fit(&trace, reference, period, n);
