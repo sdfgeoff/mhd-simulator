@@ -47,6 +47,8 @@ The [full 3D drop-oscillation benchmark](DROP_OSCILLATION.md) records earlier fo
 
 A separate [periodic-cylinder diagnostic](CYLINDER_INSTABILITY.md) compares full-3D Rayleigh–Plateau growth and stable short-wave oscillation with linear theory. Its measured rate/amplitude errors and nonmonotonic refinement remain explicit; it does not establish accurate breakup.
 
+An [exploratory pulsed-nozzle diagnostic](JET_EXPERIMENT.md) exercises CAD contact and ejection with a prescribed force. It records unforced startup motion and timestep failures explicitly; it is not validated droplet production.
+
 ## Interpretation and remaining work
 
 1. This is the first moving-interface implementation. It has **not validated nozzle pinch-off, satellite sizes or jetting thresholds**. Direction splitting, unresolved height stencils and CAD tessellation/quadrature still introduce errors in small drops. Resolve the intended droplet with many cells and demonstrate spatial/time convergence before trusting breakup; six cells across 0.5 mm is inadequate for that claim.

@@ -716,3 +716,6 @@ mod height_diagnostics;
 
 #[cfg(test)]
 mod cylinder_tests;
+
+#[cfg(test)]
+mod jet_tests;
