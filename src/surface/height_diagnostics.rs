@@ -199,8 +199,8 @@ fn extended_curvature_columns_preserve_origins_and_reject_extra_crossings() {
 fn column_probe(@builtin(global_invocation_id) g:vec3<u32>){
  if flat(g)!=0u{return;}
  let q=vec3<i32>(7,7,7);
- stats[0]=vec4<f32>(height(q,1u),0.);
- stats[1]=vec4<f32>(curvature_height(q,1u),0.);
+ stats[0]=vec4<f32>(height(q,1u,q),0.);
+ stats[1]=vec4<f32>(curvature_height(q,1u,q),0.);
 }
 "#,
     );

@@ -14,42 +14,43 @@ var<workgroup> bounds:array<vec4<f32>,256>;
 @compute @workgroup_size(256)
 fn initialize(@builtin(global_invocation_id) g:vec3<u32>){let i=flat(g);if i<p.dims.w{output_field[i]=vec4<f32>(select(0.0,1.0,original[i]==p.choice.x),0.0,0.0,0.0);}}
 @compute @workgroup_size(256)
-fn normal(@builtin(global_invocation_id) g:vec3<u32>){let i=flat(g);if i>=p.dims.w{return;}let q=point(i);var grad=vec3<f32>(0.0);
+fn normal(@builtin(global_invocation_id) g:vec3<u32>){let i=flat(g);if i>=p.dims.w{return;}let q=point(i);if wall(i){normals[i]=vec4<f32>(0.);return;}var grad=vec3<f32>(0.0);
  for(var z=-1;z<=1;z++){for(var y=-1;y<=1;y++){for(var x=-1;x<=1;x++){
- let o=vec3<i32>(x,y,z);let w=select(vec3<f32>(1.0),vec3<f32>(2.0),o==vec3<i32>(0));let a=alpha(q+o);
+ let o=vec3<i32>(x,y,z);let w=select(vec3<f32>(1.0),vec3<f32>(2.0),o==vec3<i32>(0));let a=alpha(q+o,q);
  grad+=vec3<f32>(f32(x)*w.y*w.z,f32(y)*w.x*w.z,f32(z)*w.x*w.y)*a;
  }}}let magnitude=length(grad);normals[i]=vec4<f32>(-grad/max(magnitude,1e-20),magnitude);
 }
 // Reflect transverse height columns at outer walls. This is a neutral (90°)
-// contact-angle extension for domain walls; fixed CAD walls remain voxel walls.
-fn height_range(q:vec3<i32>,axis:u32,radius:i32)->vec3<f32>{
+// contact-angle extension for domain walls. CAD samples additionally use the
+// reference-cell mirror extension; fluxes still see impermeable voxel walls.
+fn height_range(q:vec3<i32>,axis:u32,radius:i32,reference:vec3<i32>)->vec3<f32>{
  var center=bounded(q);center[axis]=q[axis];var h=0.0;
  var low=center;low[axis]-=radius;var high=center;high[axis]+=radius;
  if !inside(low)||!inside(high){return vec3<f32>(0.0);}
- let a=alpha(low);let b=alpha(high);var valid=(a>0.99&&b<0.01)||(b>0.99&&a<0.01);
+ let a=alpha(low,reference);let b=alpha(high,reference);var valid=(a>0.99&&b<0.01)||(b>0.99&&a<0.01);
  // Incomplete endpoints cannot define a height; the column sum is unused.
  if !valid{return vec3<f32>(0.0,0.0,sign(a-b));}
  let orientation=sign(a-b);var previous=a;
  for(var k=-radius;k<=radius;k++){
-  var at=center;at[axis]+=k;let value=alpha(at);h+=value;
+  var at=center;at[axis]+=k;let value=alpha(at,reference);h+=value;
   if orientation*(value-previous)>1e-5 {valid=false;}previous=value;
  }
  // A longer monotone column adds one liquid cell per extra radius. Subtract
  // that radius so neighboring columns share an origin even with mixed extents.
  return vec3<f32>(h-f32(radius),select(0.0,1.0,valid),orientation);
 }
-fn height(q:vec3<i32>,axis:u32)->vec3<f32>{
- let local=height_range(q,axis,3);if local.y>0.5{return local;}
- let extended=height_range(q,axis,4);if extended.y>0.5{return extended;}
+fn height(q:vec3<i32>,axis:u32,reference:vec3<i32>)->vec3<f32>{
+ let local=height_range(q,axis,3,reference);if local.y>0.5{return local;}
+ let extended=height_range(q,axis,4,reference);if extended.y>0.5{return extended;}
  return local;
 }
 // Curvature needs a complete 3×3 patch, including columns farther from the
 // interface than the central normal stencil. Extend only failed columns; reject
 // a second interface through the same monotonicity/orientation checks.
-fn curvature_height(q:vec3<i32>,axis:u32)->vec3<f32>{
- let local=height(q,axis);if local.y>0.5{return local;}
- let h5=height_range(q,axis,5);if h5.y>0.5{return h5;}
- let h6=height_range(q,axis,6);if h6.y>0.5{return h6;}
+fn curvature_height(q:vec3<i32>,axis:u32,reference:vec3<i32>)->vec3<f32>{
+ let local=height(q,axis,reference);if local.y>0.5{return local;}
+ let h5=height_range(q,axis,5,reference);if h5.y>0.5{return h5;}
+ let h6=height_range(q,axis,6,reference);if h6.y>0.5{return h6;}
  return local;
 }
 // Height gradients avoid Youngs' grid-crossing slope bias for nearly aligned
@@ -61,7 +62,7 @@ fn interface_normal(q:vec3<i32>,outward:vec3<f32>)->vec3<f32>{
  var axis=0u;if absolute.y>absolute.x{axis=1u;}if absolute.z>absolute[axis]{axis=2u;}
  let a=(axis+1u)%3u;let b=(axis+2u)%3u;
  var la=q;la[a]-=1;var ra=q;ra[a]+=1;var lb=q;lb[b]-=1;var rb=q;rb[b]+=1;
- let h0=height(q,axis);let hl=height(la,axis);let hr=height(ra,axis);let hb=height(lb,axis);let ht=height(rb,axis);
+ let h0=height(q,axis,q);let hl=height(la,axis,q);let hr=height(ra,axis,q);let hb=height(lb,axis,q);let ht=height(rb,axis,q);
  let orientation=sign(base[axis]);
  if h0.y>0.5&&hl.y>0.5&&hr.y>0.5&&hb.y>0.5&&ht.y>0.5&&
     h0.z==orientation&&hl.z==orientation&&hr.z==orientation&&hb.z==orientation&&ht.z==orientation {
@@ -73,6 +74,7 @@ fn interface_normal(q:vec3<i32>,outward:vec3<f32>)->vec3<f32>{
 @compute @workgroup_size(256)
 fn curvature(@builtin(global_invocation_id) g:vec3<u32>){let i=flat(g);if i>=p.dims.w{return;}let q=point(i);var k=0.0;
  for(var axis=0u;axis<3u;axis++){var l=q;var r=q;l[axis]-=1;r[axis]+=1;var nl=normals[index(bounded(l))][axis];var nr=normals[index(bounded(r))][axis];
+ if inside(l)&&wall(index(bounded(l))){nl=-normals[i][axis];}if inside(r)&&wall(index(bounded(r))){nr=-normals[i][axis];}
  if !periodic(axis) {if l[axis]<0 {nl=-nl;}if r[axis]>=i32(p.dims[axis]){nr=-nr;}}
  k+=(nr-nl)/(2.0*p.step.y);}
  let n=abs(normals[i].xyz);
@@ -81,7 +83,7 @@ fn curvature(@builtin(global_invocation_id) g:vec3<u32>){let i=flat(g);if i>=p.d
  if any(n>vec3<f32>(0.0)) {
  var axis=0u;if n.y>n.x{axis=1u;}if n.z>n[axis]{axis=2u;}
  let a=(axis+1u)%3u;let b=(axis+2u)%3u;var heights:array<f32,9>;var valid=true;
- for(var v=-1;v<=1&&valid;v++){for(var u=-1;u<=1&&valid;u++){var at=q;at[a]+=u;at[b]+=v;let h=curvature_height(at,axis);heights[u32((u+1)+3*(v+1))]=h.x;valid=valid&&h.y>0.5&&h.z==sign(normals[i][axis]);}}
+ for(var v=-1;v<=1&&valid;v++){for(var u=-1;u<=1&&valid;u++){var at=q;at[a]+=u;at[b]+=v;let h=curvature_height(at,axis,q);heights[u32((u+1)+3*(v+1))]=h.x;valid=valid&&h.y>0.5&&h.z==sign(normals[i][axis]);}}
  if valid {
  let hx=0.5*(heights[5]-heights[3]);let hy=0.5*(heights[7]-heights[1]);
  // Transverse filtering suppresses a 3D grid mode without changing extruded waves.
@@ -102,7 +104,7 @@ fn reconstruct(@builtin(global_invocation_id) g:vec3<u32>){
  let q=point(i);var grad=vec3<f32>(0.0);
  for(var z=-1;z<=1;z++){for(var y=-1;y<=1;y++){for(var x=-1;x<=1;x++){
   let o=vec3<i32>(x,y,z);let w=select(vec3<f32>(1.0),vec3<f32>(2.0),o==vec3<i32>(0));
-  grad-=vec3<f32>(f32(x)*w.y*w.z,f32(y)*w.x*w.z,f32(z)*w.x*w.y)*alpha(q+o);
+  grad-=vec3<f32>(f32(x)*w.y*w.z,f32(y)*w.x*w.z,f32(z)*w.x*w.y)*alpha(q+o,q);
  }}}
  let magnitude=abs(grad.x)+abs(grad.y)+abs(grad.z);
  if magnitude<=1e-12 {normals[i]=vec4<f32>(0.0);return;}

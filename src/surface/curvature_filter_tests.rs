@@ -179,10 +179,10 @@ fn drop_height_function_coverage() {
           for(var axis=0u;axis<3u;axis++){
             let a=(axis+1u)%3u;let b=(axis+2u)%3u;var valid=true;var wider_valid=true;
             for(var v=-1;v<=1;v++){for(var u=-1;u<=1;u++){
-              var at=q;at[a]+=u;at[b]+=v;let h=height(at,axis);
+              var at=q;at[a]+=u;at[b]+=v;let h=height(at,axis,q);
               valid=valid&&h.y>0.5&&h.z==sign(normals[i][axis]);
               // Diagnostic comparison only; production height() uses seven/nine cells.
-              let extended=height_range(at,axis,5);
+              let extended=height_range(at,axis,5,q);
               let w=select(extended,h,h.y>0.5);
               wider_valid=wider_valid&&w.y>0.5&&w.z==sign(normals[i][axis]);
             }}
@@ -257,7 +257,7 @@ fn extended_height_columns_keep_common_origin_in_both_orientations() {
           let i=flat(g);if i>=9u{return;}
           let u=i32(i%3u)-1;let v=i32(i/3u)-1;
           let q=vec3<i32>(8,8+u,8+v);
-          stats[i]=vec4<f32>(height(q,0u),height_range(q,0u,3).y);
+          stats[i]=vec4<f32>(height(q,0u,q),height_range(q,0u,3,q).y);
         }"#,
     );
     for inverse in [false, true] {

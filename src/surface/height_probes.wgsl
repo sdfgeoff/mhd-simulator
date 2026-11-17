@@ -1,18 +1,18 @@
 // Read-only comparison with complete, monotone columns over radii 3..6.
 // Constants HEIGHT_TARGET and HEIGHT_MARGIN are supplied by the diagnostic.
 var<workgroup> height_extra:array<vec4<f32>,256>;
-fn complete_range(q:vec3<i32>,axis:u32,radius:i32)->vec3<f32>{
+fn complete_range(q:vec3<i32>,axis:u32,radius:i32,reference:vec3<i32>)->vec3<f32>{
  var center=bounded(q);center[axis]=q[axis];var lo=center;var hi=center;lo[axis]-=radius;hi[axis]+=radius;
  if !inside(lo)||!inside(hi){return vec3<f32>(0.);}
- let a=alpha(lo);let b=alpha(hi);
+ let a=alpha(lo,reference);let b=alpha(hi,reference);
  if !((a>=1.-1e-6 && b<=1e-6)||(b>=1.-1e-6 && a<=1e-6)){return vec3<f32>(0.);}
- return height_range(q,axis,radius);
+ return height_range(q,axis,radius,reference);
 }
-fn complete_height(q:vec3<i32>,axis:u32)->vec3<f32>{
- let h3=complete_range(q,axis,3);if h3.y>0.5{return h3;}
- let h4=complete_range(q,axis,4);if h4.y>0.5{return h4;}
- let h5=complete_range(q,axis,5);if h5.y>0.5{return h5;}
- return complete_range(q,axis,6);
+fn complete_height(q:vec3<i32>,axis:u32,reference:vec3<i32>)->vec3<f32>{
+ let h3=complete_range(q,axis,3,reference);if h3.y>0.5{return h3;}
+ let h4=complete_range(q,axis,4,reference);if h4.y>0.5{return h4;}
+ let h5=complete_range(q,axis,5,reference);if h5.y>0.5{return h5;}
+ return complete_range(q,axis,6,reference);
 }
 // x=strict curvature, y=current HF valid, z=strict HF valid, w=column difference.
 fn height_comparison(q:vec3<i32>,i:u32)->vec4<f32>{
@@ -21,7 +21,7 @@ fn height_comparison(q:vec3<i32>,i:u32)->vec4<f32>{
  let a=(axis+1u)%3u;let b=(axis+2u)%3u;let orientation=sign(normals[i][axis]);
  var heights:array<f32,9>;var current=true;var strict=true;var difference=0.;
  for(var v=-1;v<=1;v++){for(var u=-1;u<=1;u++){
-  var at=q;at[a]+=u;at[b]+=v;let hc=curvature_height(at,axis);let hs=complete_height(at,axis);
+  var at=q;at[a]+=u;at[b]+=v;let hc=curvature_height(at,axis,q);let hs=complete_height(at,axis,q);
   let cv=hc.y>0.5&&hc.z==orientation;let sv=hs.y>0.5&&hs.z==orientation;
   current=current&&cv;strict=strict&&sv;heights[u32((u+1)+3*(v+1))]=hs.x;
   if cv&&sv{difference=max(difference,abs(hc.x-hs.x));}

@@ -335,7 +335,7 @@ fn height_columns_reject_multiple_crossings_and_preserve_orientation() {
         @compute @workgroup_size(256)
         fn probe(@builtin(global_invocation_id) g:vec3<u32>){
             if flat(g)!=0u{return;}
-            stats[0]=vec4<f32>(height(vec3<i32>(3,3,3),1u),0.0);
+            stats[0]=vec4<f32>(height(vec3<i32>(3,3,3),1u,vec3<i32>(3,3,3)),0.0);
         }"#,
     );
 

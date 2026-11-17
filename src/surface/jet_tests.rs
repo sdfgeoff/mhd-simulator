@@ -291,7 +291,14 @@ fn pulsed_nozzle_experiment() {
     let grid = volume.inputs.snapshot().grid.clone();
     let h = grid.cell_m as f64;
     let (mut surface, _) = SurfaceState::new(gpu.context.clone(), &volume, 3).unwrap();
-    surface.initialize_cad(&volume, &model, None).unwrap();
+    let initialization = std::env::var("MHD_JET_INITIALIZATION").unwrap_or_else(|_| "cad".into());
+    match initialization.as_str() {
+        "cad" => surface.initialize_cad(&volume, &model, None).unwrap(),
+        // Diagnostic control: use the same cell-centre approximation as the
+        // fixed voxel walls, instead of integrating the liquid mesh volume.
+        "voxel" => (),
+        _ => panic!("MHD_JET_INITIALIZATION must be cad or voxel"),
+    }
     let pulse = Pulse::new(&surface, &grid);
     pulse.update(&surface, 0.);
     let factor: f64 = std::env::var("MHD_JET_DT_FACTOR")
@@ -332,7 +339,7 @@ fn pulsed_nozzle_experiment() {
     std::fs::create_dir_all(out).unwrap();
     std::fs::write(
         out.join("grid.json"),
-        serde_json::to_string_pretty(&serde_json::json!({"origin_m":grid.origin_m,"cell_m":grid.cell_m,"dims":grid.dims,"dt_s":dt,"pulse_s":pulse_s,"force_peak_n_m3":peak})).unwrap(),
+        serde_json::to_string_pretty(&serde_json::json!({"origin_m":grid.origin_m,"cell_m":grid.cell_m,"dims":grid.dims,"dt_s":dt,"pulse_s":pulse_s,"force_peak_n_m3":peak,"initialization":initialization})).unwrap(),
     )
     .unwrap();
     let mut csv = String::from(

@@ -719,3 +719,6 @@ mod cylinder_tests;
 
 #[cfg(test)]
 mod jet_tests;
+
+#[cfg(test)]
+mod wall_tests;

@@ -119,3 +119,9 @@ f32 per cell: `(u_x,u_y,u_z,p)`. Snapshots occur every 20 steps and at completio
 
 Plot saved snapshots with `python scripts/plot_jet.py OUTPUT_DIRECTORY` (optional
 NumPy/Matplotlib postprocessing; no additional simulation implementation).
+
+`MHD_JET_INITIALIZATION=voxel` is a test-only initialization control that uses
+cell-centre liquid occupancy alongside cell-centre walls. The default `cad`
+retains fractional CAD integration. Their initial volumes differ; compare them
+as different initial geometry approximations, not as an exact mass-preserving
+initialization change. [Neutral-wall investigation and measurements](NEUTRAL_WALLS.md).
