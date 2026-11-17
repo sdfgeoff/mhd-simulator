@@ -747,7 +747,7 @@ fn check_failed_projection_after_stabilized_stress(multigrid: bool) {
         None,
     )
     .unwrap();
-    s.experimental_multigrid = multigrid;
+    s.force_multigrid = Some(multigrid);
     let f = s.params.faces;
     let initial: Vec<[f32; 4]> = (0..f[3])
         .map(|i| {

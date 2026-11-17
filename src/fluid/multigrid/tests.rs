@@ -319,6 +319,7 @@ fn compare_projection(
     };
     write();
     let start = std::time::Instant::now();
+    state.force_multigrid = Some(false);
     let baseline = state.project(false);
     let baseline_time = start.elapsed().as_secs_f64();
     let baseline_velocity = packets(&state.context, &state.velocity);
@@ -327,9 +328,9 @@ fn compare_projection(
         .context
         .queue
         .write_buffer(&state.scratch, 0, bytemuck::cast_slice(&candidate));
-    let mg = Multigrid::new(&state).unwrap();
+    state.force_multigrid = Some(true);
     let start = std::time::Instant::now();
-    let prototype = project_inner(&state, &mg, false);
+    let prototype = state.project(false);
     let prototype_time = start.elapsed().as_secs_f64();
     let output = packets(&state.context, &state.velocity);
     let norm = candidate
@@ -462,4 +463,46 @@ fn hierarchy_uses_exact_ceil_half_workspace_and_checked_indices() {
     assert!(hierarchy([0, 1, 1, 0], [1; 4], 0).is_err());
     assert!(hierarchy([u32::MAX, 1, 1, u32::MAX], [1; 4], 0).is_err());
     assert!(hierarchy([u32::MAX; 4], [1; 4], 0).is_err());
+}
+
+#[test]
+fn optional_workspace_is_lazy_accounted_reused_and_can_be_unavailable() {
+    let _lock = crate::gpu_test_lock();
+    let (mut state, mask) = fixture([17, 13, 9], [true; 3], false, false);
+    state.force_multigrid = Some(true);
+    let base_bytes = state.bytes;
+    // Zero divergence never needs the optional allocation.
+    state.project(false).unwrap();
+    assert!(state.multigrid.is_none() && !state.multigrid_attempted);
+    assert_eq!(state.bytes, base_bytes);
+    state.dispatch(&[("pressure_coefficients", groups(state.params.faces[3]))]);
+    let candidate = manufactured_gradient(&state, &mask, false);
+    state
+        .context
+        .queue
+        .write_buffer(&state.scratch, 0, bytemuck::cast_slice(&candidate));
+    state.project(false).unwrap();
+    let mg = state.multigrid.as_ref().unwrap();
+    let actual_bytes = mg.coeff.size()
+        + mg.value.size()
+        + mg.levels.len() as u64 * std::mem::size_of::<Level>() as u64;
+    assert_eq!(state.bytes, base_bytes + actual_bytes);
+    state
+        .context
+        .queue
+        .write_buffer(&state.scratch, 0, bytemuck::cast_slice(&candidate));
+    state.project(false).unwrap();
+    assert_eq!(state.bytes, base_bytes + actual_bytes);
+    // Exercise the cached allocation-refusal state without provoking GPU OOM.
+    // The normal projection must still work with the original fine equation.
+    state.multigrid = None;
+    state.bytes = base_bytes;
+    assert!(state.multigrid_attempted);
+    state
+        .context
+        .queue
+        .write_buffer(&state.scratch, 0, bytemuck::cast_slice(&candidate));
+    state.project(false).unwrap();
+    assert!(state.multigrid.is_none());
+    assert_eq!(state.bytes, base_bytes);
 }

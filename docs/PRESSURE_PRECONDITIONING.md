@@ -1,6 +1,6 @@
-# Experimental GPU pressure preconditioning
+# GPU pressure preconditioning
 
-This investigation changes the pressure preconditioner, retaining the fine pressure equation, pressure gauge, tolerances and independent physical-residual check. It is currently compiled only for tests. The application continues to use diagonal-preconditioned conjugate gradients (Jacobi-CG).
+The solver retains the fine pressure equation, pressure gauge, tolerances and independent physical-residual check. Grids with at least 884,736 cells (96³) use a fixed aggregation-multigrid preconditioner when its optional workspace fits. Smaller grids use diagonal-preconditioned conjugate gradients (Jacobi-CG). This automatic threshold follows the measurements below; performance still depends on geometry and hardware.
 
 ## Operator and cycle
 
@@ -21,17 +21,18 @@ The fine correction uses `work.w`; Jacobi ping-pong uses `predicted.w`. During p
 
 Only coarse levels allocate new volume storage: two vec4 packets per coarse cell, plus small immutable level uniforms. At 256³, the hierarchy contains 2,396,736 coarse cells and its two data buffers need 76,695,552 bytes (73.14 MiB). Thin odd domains require their actual level sum: a 33×1×1 domain has 34 coarse cells, so the usual three-dimensional `N/7` estimate is inappropriate there.
 
-The prototype checks coordinate/index arithmetic, individual device buffer limits and the live driver memory budget before allocation. Production adoption still needs optional-allocation fallback and integration with displayed working-memory accounting. No fixed memory budget is introduced.
+Allocation occurs only at the first nontrivial pressure solve. The solver checks coordinate/index arithmetic, individual device buffer limits and the live driver memory budget. If the workspace cannot fit, the run keeps Jacobi-CG; a new run rechecks availability. Accepted allocations are included in the fluid working-memory total, which the worker updates after each step. No fixed memory budget is introduced.
 
 ## Verification
 
 The headless probes cover:
 
-1. GPU coarse action versus the restricted GPU child action at every level, plus the prototype fine action versus the existing GPU pressure stencil.
+1. GPU coarse action versus the restricted GPU child action at every level, plus the multigrid fine action versus the existing GPU pressure stencil.
 2. Density contrast 7000:1 in both orientations; odd periodic, closed, disconnected, thin and small domains.
 3. Preconditioner symmetry and positivity, along with unchanged live vector lanes and display packets.
 4. Manufactured gradient projection using the existing physical-residual acceptance check.
 5. Fused coarse iteration versus the same fixed Jacobi sequence, and late pressure failure after stabilized viscosity with byte-for-byte restoration and a successful retry.
+6. Lazy allocation, actual buffer-byte accounting, reuse and successful Jacobi projection when the optional workspace is unavailable. Thermal mobility tests also exercise frozen-region topology with both preconditioners.
 
 Run the regular probes with:
 
@@ -48,7 +49,7 @@ MHD_DROP_PRESSURE_MG=1 \
 cargo test --offline --lib rayleigh_lamb_drop_oscillation -- --ignored --nocapture
 ```
 
-Omit `MHD_DROP_PRESSURE_MG` for Jacobi-CG. Omit `MHD_DROP_PROFILE` when measuring process time without timestamp instrumentation. Short runs check pressure acceptance, volume and bounded shape; they do not establish long-time oscillation accuracy.
+Set `MHD_DROP_PRESSURE_MG=0` to force Jacobi-CG, or leave it unset to use automatic selection. This override exists only in the test diagnostic. Omit `MHD_DROP_PROFILE` when measuring process time without timestamp instrumentation. Short runs check pressure acceptance, volume and bounded shape; they do not establish long-time oscillation accuracy.
 
 ## Measurements and remaining limits
 
@@ -65,8 +66,18 @@ The current one-pre/one-post candidate uses eight coarse sweeps and batches the 
 
 The 64³ run contains 13 ticks and the 96³ run contains 24 ticks, each spanning the same 0.02 drop periods. Every profiling pass was recorded. Driver-cache warmup was excluded. The small 64³ process-time difference does not establish a pressure GPU improvement; 96³ shows approximately 9.9% lower unprofiled process time and 21.9% lower pressure GPU time.
 
-Combining compute passes preserves the previous eight-sweep candidate's entire short 96³ physical CSV byte-for-byte. Its final quadrupole is 0.0297699759853 versus 0.0297699758589 for Jacobi-CG. These short synthetic measurements on the development GPU are not a general hardware or project-wide speedup claim. Longer coupled checks remain necessary.
+Combining compute passes preserves the previous eight-sweep candidate's entire short 96³ physical CSV byte-for-byte. Its final quadrupole is 0.0297699759853 versus 0.0297699758589 for Jacobi-CG. These short synthetic measurements on the development GPU are not a general hardware or project-wide speedup claim. Full 1.5-period checks also pass at 64³ and 96³. Frequency errors are 2.652% and 0.668%, versus 2.655% and 0.694% for the earlier Jacobi trajectories. Maximum shape differences are 0.168% and 0.336% of initial quadrupole amplitude. These checks preserve the existing frequency, volume and mode-amplitude bounds; coarse frequency bias and capillary velocity noise remain.
 
 The manufactured benchmark is also sensitive to the right-hand side. A smooth 64³ gradient failed the unchanged relative target of 1e-5 in **both** methods even after 20,000 iterations: true relative residuals were approximately 2.91e-5 and 3.79e-5. A binary triangular potential reached that target with both methods and strongly favored multigrid, but does not resolve the smooth-case precision limit. The benchmark keeps the target intact; the coupled path must continue to pass the physical check.
 
-A default-method decision needs complete solve costs, unprofiled timings, representative project geometries and longer coupled trajectories. A large isolated iteration-count improvement is insufficient evidence.
+## V6 hotend comparison
+
+Three alternating warmed executable pairs ran three combined EM/fluid/thermal ticks at 10 µs on the local `hotend-cad-v6.mhd.json` project, preserving both the project and GLB input hashes:
+
+| Quantity | Jacobi-CG | Multigrid-CG |
+| --- | ---: | ---: |
+| Median process time | 29.045 s | 25.782 s |
+| Median pressure GPU time | 4,953.79 ms | 1,977.36 ms |
+| Median EM solve GPU time | 20,991.06 ms | 20,842.01 ms |
+
+This is about 11.2% lower process time and 60.1% lower pressure GPU time; every profiling pass was recorded. EM now dominates this short probe. Maximum recorded-speed differences are below 10⁻⁸ m/s, material-volume CSV values are identical, and both paths satisfy the same physical pressure criterion. This compares diagnostics, not every field value. The development adapter is an NVIDIA GeForce RTX 3060 Laptop GPU; these timings are not a general hardware guarantee.

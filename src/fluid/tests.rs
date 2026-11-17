@@ -349,7 +349,7 @@ fn check_thermal_phase_weighted_projection(multigrid: bool) {
             ..Default::default()
         },
     );
-    s.experimental_multigrid = multigrid;
+    s.force_multigrid = Some(multigrid);
     let count = s.grid.dims.iter().map(|n| *n as usize).product::<usize>();
     let mut data = vec![crate::thermal::ThermalCell::default(); count];
     for (i, c) in data.iter_mut().enumerate() {

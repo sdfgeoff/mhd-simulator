@@ -62,8 +62,6 @@ fn build(@builtin(global_invocation_id) g:vec3<u32>){
  }}}
  coeff[p.location.x+i]=c;value[p.location.x+i]=vec4<f32>(0.,0.,0.,diag);
 }
-@compute @workgroup_size(256)
-fn clear(@builtin(global_invocation_id) g:vec3<u32>){if scalars[1].z>0.5{return;}let i=flat(g);if i>=p.dims.w{return;}if p.location.z==0u {work[i].w=0.;}else{value[p.location.x+i].y=0.;}}
 fn jacobi_step(i:u32,temp:bool){if scalars[1].z>0.5{return;}
  if i>=p.dims.w{return;}let fine=p.location.z==0u;let q=decode(i,p.dims.xyz);var d=0.;var rhs=0.;
  if fine {d=cache[i].w;rhs=work[i].y;if !fine_active(i){d=0.;}}else{d=value[p.location.x+i].w;rhs=value[p.location.x+i].x;}
@@ -72,8 +70,6 @@ fn jacobi_step(i:u32,temp:bool){if scalars[1].z>0.5{return;}
 }
 @compute @workgroup_size(256)
 fn smooth_to_temp(@builtin(global_invocation_id) g:vec3<u32>){jacobi_step(flat(g),false);}
-@compute @workgroup_size(256)
-fn smooth_from_temp(@builtin(global_invocation_id) g:vec3<u32>){jacobi_step(flat(g),true);}
 @compute @workgroup_size(256)
 fn restrict_residual(@builtin(global_invocation_id) g:vec3<u32>){if scalars[1].z>0.5{return;}
  let i=flat(g);if i>=p.dims.w{return;}let q=decode(i,p.dims.xyz);let fine=p.location.z==1u;var rhs=0.;
@@ -89,9 +85,6 @@ fn prolong(@builtin(global_invocation_id) g:vec3<u32>){if scalars[1].z>0.5{retur
  let i=flat(g);if i>=p.child.w{return;}let q=decode(i,p.child.xyz);let correction=value[p.location.x+index(q/2,p.dims.xyz)].y;
  if p.location.z==1u {if fine_active(i){work[i].w+=correction;}}else{value[p.location.y+i].y+=correction;}
 }
-// Test-only entry points are kept separate from the production CG operator.
-@compute @workgroup_size(256)
-fn probe_action(@builtin(global_invocation_id) g:vec3<u32>){let i=flat(g);if i>=p.dims.w{return;}let a=action(decode(i,p.dims.xyz),p.dims.xyz,p.location.x,p.location.z==0u,false);if p.location.z==0u{predicted[i].w=a;}else{value[p.location.x+i].z=a;}}
 
 fn dot_partial(g:vec3<u32>,local:u32,group:vec3<u32>,initial:bool){
  let groups=(p.dims.w+255u)/256u;let gi=group.x+group.y*65535u;if gi>=groups{return;}

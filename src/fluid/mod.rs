@@ -171,9 +171,9 @@ pub struct FluidState {
     #[cfg(test)]
     pub(crate) euler_viscosity_reference: bool,
     #[cfg(test)]
-    pub(crate) experimental_multigrid: bool,
-    #[cfg(test)]
+    pub(crate) force_multigrid: Option<bool>,
     multigrid: Option<multigrid::Multigrid>,
+    multigrid_attempted: bool,
 }
 impl FluidState {
     pub fn new(
@@ -623,9 +623,9 @@ impl FluidState {
             #[cfg(test)]
             euler_viscosity_reference: false,
             #[cfg(test)]
-            experimental_multigrid: false,
-            #[cfg(test)]
+            force_multigrid: None,
             multigrid: None,
+            multigrid_attempted: false,
             max_face_speed: 0.,
         };
         state.initialize_velocity()?;
@@ -967,10 +967,6 @@ impl FluidState {
         Ok((residual, s[6] > 0.5, s[7] as u32))
     }
     fn project(&mut self, warm_start: bool) -> Result<(u32, f32), String> {
-        #[cfg(test)]
-        if self.experimental_multigrid {
-            return multigrid::project(self, warm_start);
-        }
         let _stage = self.context.profiler.stage(crate::profile::Stage::Pressure);
         let cells = groups(self.params.dims[3]);
         // A transport correction solves for a small pressure increment. Starting
@@ -990,23 +986,46 @@ impl FluidState {
         });
         let mut iterations = 0;
         let mut residual = self.convergence()?;
+        let preferred = self.params.dims[3] >= multigrid::MIN_CELLS;
+        #[cfg(test)]
+        let preferred = self.force_multigrid.unwrap_or(preferred);
+        if preferred && !residual.1 && !self.multigrid_attempted {
+            // Optional acceleration must never make a fitting Jacobi solve fail.
+            // Attempt once per state; a new run rechecks the live memory budget.
+            self.multigrid_attempted = true;
+            if let Ok(mg) = multigrid::Multigrid::new(self) {
+                self.bytes += mg.bytes;
+                self.multigrid = Some(mg);
+            }
+        }
+        let mg = self.multigrid.as_ref().filter(|_| preferred);
+        if !residual.1
+            && let Some(mg) = mg
+        {
+            mg.build(&self.context);
+            mg.initialize(self);
+        }
         while !residual.1 && iterations < self.config.max_iterations {
             // The GPU guards converged iterations. Poll less often while still
             // stopping at each independent physical-residual check and the cap.
-            let batch = 32
+            let batch = (if mg.is_some() { 8u32 } else { 32u32 })
                 .min(self.config.max_iterations - iterations)
                 .min(64 - iterations % 64);
-            let mut stages = Vec::new();
-            for _ in 0..batch {
-                stages.extend([
-                    ("pressure_apply", cells),
-                    ("alpha_reduce", [1, 1, 1]),
-                    ("update", cells),
-                    ("beta_reduce", [1, 1, 1]),
-                    ("search", cells),
-                ]);
+            if let Some(mg) = mg {
+                mg.iterate(self, batch);
+            } else {
+                let mut stages = Vec::new();
+                for _ in 0..batch {
+                    stages.extend([
+                        ("pressure_apply", cells),
+                        ("alpha_reduce", [1, 1, 1]),
+                        ("update", cells),
+                        ("beta_reduce", [1, 1, 1]),
+                        ("search", cells),
+                    ]);
+                }
+                self.dispatch(&stages);
             }
-            self.dispatch(&stages);
             residual = self.convergence()?;
             if residual.2 <= iterations && !residual.1 {
                 return Err("Fluid pressure iteration made no progress".into());
@@ -1015,6 +1034,11 @@ impl FluidState {
             if residual.1 {
                 self.dispatch(&[("pressure_refresh", cells), ("initial_reduce", [1, 1, 1])]);
                 residual = self.convergence()?;
+                if !residual.1
+                    && let Some(mg) = mg
+                {
+                    mg.initialize(self);
+                }
             } else if iterations % 64 == 0 || iterations == self.config.max_iterations {
                 // Inspect the full physical equation without resetting CG conjugacy.
                 // The conservative inner gauge bound may be below f32 precision.
@@ -1427,5 +1451,4 @@ mod viscosity_tests;
 
 mod stabilized;
 
-#[cfg(test)]
 mod multigrid;

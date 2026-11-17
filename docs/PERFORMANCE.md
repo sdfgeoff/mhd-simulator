@@ -128,6 +128,10 @@ The complete diagnostic CSV and final accepted fraction/curvature packet were by
 
 As above, copy distinct compiled executables before alternating versions and archive generated trajectories before short probes. The measurement isolates the early exit; wider height columns and higher-order momentum reconstruction are separate numerical changes.
 
-## Experimental pressure preconditioning
+## Pressure preconditioning
 
-The [GPU aggregation-preconditioner investigation](PRESSURE_PRECONDITIONING.md) is currently test-only. Three alternating warmed 96³ drop probes measure median unprofiled process time **5.826 → 5.249 s** and pressure GPU time **2,286 → 1,785 ms** in separate profiled runs. All profiling passes are recorded. Smaller-grid results, memory costs, the unchanged physical-residual check and a smooth manufactured case that fails convergence in both methods are documented there. Longer coupled checks and optional-allocation integration are required before changing the application's default solver.
+Grids with at least 96³ cells use an optional GPU aggregation preconditioner, with Jacobi-CG retained for smaller grids or when the workspace cannot fit. Allocation is lazy, checked against device limits and available memory, and included in working-memory reporting. The fine equation and physical-residual acceptance check are unchanged.
+
+Three alternating warmed 96³ drop probes give median unprofiled process time **5.826 → 5.249 s** and pressure GPU time **2,286 → 1,785 ms** in separate profiled runs. Three combined EM/fluid/thermal ticks on the local V6 hotend give **29.045 → 25.782 s** process time and **4,954 → 1,977 ms** pressure GPU time; EM then dominates at about 20.8 s. Every profiling pass is recorded. Original project/GLB hashes are unchanged.
+
+[Method, full-duration checks, memory costs and measured limits](PRESSURE_PRECONDITIONING.md), including a smooth manufactured case that still fails convergence in both methods. These measurements do not establish a general speedup for other hardware or geometries.

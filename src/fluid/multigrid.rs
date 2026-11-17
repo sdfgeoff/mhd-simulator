@@ -1,6 +1,7 @@
-//! Experimental fixed symmetric GPU aggregation preconditioner.
+//! Fixed symmetric GPU aggregation preconditioner for the existing fine pressure equation.
 use super::*;
 const COARSE_SWEEPS: u32 = 8;
+pub(super) const MIN_CELLS: u32 = 96 * 96 * 96;
 
 #[repr(C)]
 #[derive(Clone, Copy, Pod, Zeroable)]
@@ -14,8 +15,12 @@ pub(super) struct Multigrid {
     levels: Vec<Level>,
     binds: Vec<wgpu::BindGroup>,
     pipelines: HashMap<&'static str, wgpu::ComputePipeline>,
+    #[cfg(test)]
     coeff: wgpu::Buffer,
+    #[cfg(test)]
     value: wgpu::Buffer,
+    pub(super) bytes: u64,
+    cycle: Vec<(usize, &'static str)>,
 }
 fn hierarchy(dims: [u32; 4], faces: [u32; 4], periodic: u32) -> Result<(Vec<Level>, u64), String> {
     let fine = dims;
@@ -59,8 +64,25 @@ fn hierarchy(dims: [u32; 4], faces: [u32; 4], periodic: u32) -> Result<(Vec<Leve
     Ok((levels, offset))
 }
 
+fn cycle_stages(level_count: usize) -> Vec<(usize, &'static str)> {
+    let mut stages = Vec::new();
+    for l in 0..level_count - 1 {
+        stages.extend([(l, "diagonal_start"), (l + 1, "restrict_residual")]);
+    }
+    let coarsest = level_count - 1;
+    stages.push((coarsest, "coarse_solve"));
+    for l in (0..coarsest).rev() {
+        stages.extend([
+            (l + 1, "prolong"),
+            (l, "smooth_to_temp"),
+            (l, "commit_smooth"),
+        ]);
+    }
+    stages
+}
+
 impl Multigrid {
-    fn new(state: &FluidState) -> Result<Self, String> {
+    pub(super) fn new(state: &FluidState) -> Result<Self, String> {
         let context = &state.context;
         let device = &context.device;
         let (levels, offset) =
@@ -70,10 +92,8 @@ impl Multigrid {
         if size > limits.max_storage_buffer_binding_size as u64 || size > limits.max_buffer_size {
             return Err("Coarse pressure workspace exceeds the GPU buffer binding limit".into());
         }
-        context.ensure_memory(
-            2 * size + levels.len() as u64 * std::mem::size_of::<Level>() as u64,
-            "Optional pressure preconditioner",
-        )?;
+        let bytes = 2 * size + levels.len() as u64 * std::mem::size_of::<Level>() as u64;
+        context.ensure_memory(bytes, "Optional pressure preconditioner")?;
         let buffer = |label| {
             device.create_buffer(&wgpu::BufferDescriptor {
                 label: Some(label),
@@ -114,24 +134,26 @@ impl Multigrid {
             push_constant_ranges: &[],
         });
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("Aggregation pressure prototype"),
+            label: Some("Aggregation pressure preconditioner"),
             source: wgpu::ShaderSource::Wgsl(
                 format!(
-                    "const COARSE_SWEEPS:u32={COARSE_SWEEPS}u;\n{}\n{}",
+                    "const COARSE_SWEEPS:u32={COARSE_SWEEPS}u;\n{}\n{}\n{}",
                     include_str!("../periodic.wgsl"),
-                    include_str!("multigrid.wgsl")
+                    include_str!("multigrid.wgsl"),
+                    if cfg!(test) {
+                        include_str!("multigrid_probes.wgsl")
+                    } else {
+                        ""
+                    }
                 )
                 .into(),
             ),
         });
         let pipelines = [
             "build",
-            "clear",
             "smooth_to_temp",
-            "smooth_from_temp",
             "restrict_residual",
             "prolong",
-            "probe_action",
             "initial_direction",
             "preconditioned_dot",
             "preconditioned_search",
@@ -140,6 +162,15 @@ impl Multigrid {
             "commit_smooth",
         ]
         .into_iter()
+        .chain(
+            if cfg!(test) {
+                &["clear", "smooth_from_temp", "probe_action"][..]
+            } else {
+                &[][..]
+            }
+            .iter()
+            .copied(),
+        )
         .map(|name| {
             (
                 name,
@@ -188,12 +219,17 @@ impl Multigrid {
                 })
             })
             .collect();
+        let cycle = cycle_stages(levels.len());
         Ok(Self {
             levels,
             binds,
             pipelines,
+            #[cfg(test)]
             coeff,
+            #[cfg(test)]
             value,
+            bytes,
+            cycle,
         })
     }
     fn encode(
@@ -227,7 +263,7 @@ impl Multigrid {
         self.encode(context, &mut encoder, stages);
         context.queue.submit(Some(encoder.finish()));
     }
-    fn build(&self, context: &GpuContext) {
+    pub(super) fn build(&self, context: &GpuContext) {
         self.dispatch(
             context,
             &(1..self.levels.len())
@@ -235,24 +271,8 @@ impl Multigrid {
                 .collect::<Vec<_>>(),
         );
     }
-    fn cycle_stages(&self) -> Vec<(usize, &'static str)> {
-        let mut stages = Vec::new();
-        for l in 0..self.levels.len() - 1 {
-            stages.extend([(l, "diagonal_start"), (l + 1, "restrict_residual")]);
-        }
-        let coarsest = self.levels.len() - 1;
-        stages.push((coarsest, "coarse_solve"));
-        for l in (0..coarsest).rev() {
-            stages.extend([
-                (l + 1, "prolong"),
-                (l, "smooth_to_temp"),
-                (l, "commit_smooth"),
-            ]);
-        }
-        stages
-    }
     fn apply(&self, context: &GpuContext) {
-        self.dispatch(context, &self.cycle_stages());
+        self.dispatch(context, &self.cycle);
     }
 }
 
@@ -263,40 +283,14 @@ fn encode_fluid(state: &FluidState, pass: &mut wgpu::ComputePass<'_>, stages: &[
         pass.dispatch_workgroups(g[0], g[1], g[2]);
     }
 }
-fn project_inner(
-    state: &FluidState,
-    mg: &Multigrid,
-    warm_start: bool,
-) -> Result<(u32, f32), String> {
-    let cells = groups(state.params.dims[3]);
-    let preparation = [
-        ("pressure_warm", groups(state.params.faces[3])),
-        ("pressure_coefficients", groups(state.params.faces[3])),
-        ("pressure_guess", cells),
-        ("pressure_refresh", cells),
-        ("initial_reduce", [1, 1, 1]),
-    ];
-    state.dispatch(if warm_start {
-        &preparation
-    } else {
-        &preparation[1..]
-    });
-    let mut residual = state.convergence()?;
-    let initialize = || {
-        mg.apply(&state.context);
-        mg.dispatch(&state.context, &[(0, "initial_direction")]);
+impl Multigrid {
+    pub(super) fn initialize(&self, state: &FluidState) {
+        self.apply(&state.context);
+        self.dispatch(&state.context, &[(0, "initial_direction")]);
         state.dispatch(&[("initial_reduce", [1, 1, 1])]);
-    };
-    if !residual.1 {
-        mg.build(&state.context);
-        initialize();
     }
-    let mut iterations = 0;
-    let cycle_stages = mg.cycle_stages();
-    while !residual.1 && iterations < state.config.max_iterations {
-        let batch = 8
-            .min(state.config.max_iterations - iterations)
-            .min(64 - iterations % 64);
+    pub(super) fn iterate(&self, state: &FluidState, batch: u32) {
+        let cells = groups(state.params.dims[3]);
         let mut encoder = state
             .context
             .device
@@ -315,57 +309,14 @@ fn project_inner(
                         ("update", cells),
                     ],
                 );
-                mg.encode_stages(&mut pass, &cycle_stages);
-                mg.encode_stages(&mut pass, &[(0, "preconditioned_dot")]);
+                self.encode_stages(&mut pass, &self.cycle);
+                self.encode_stages(&mut pass, &[(0, "preconditioned_dot")]);
                 encode_fluid(state, &mut pass, &[("beta_reduce", [1, 1, 1])]);
-                mg.encode_stages(&mut pass, &[(0, "preconditioned_search")]);
+                self.encode_stages(&mut pass, &[(0, "preconditioned_search")]);
             }
         }
         state.context.queue.submit(Some(encoder.finish()));
-        residual = state.convergence()?;
-        if residual.2 <= iterations && !residual.1 {
-            return Err("No prototype progress".into());
-        }
-        iterations = residual.2;
-        if residual.1 {
-            state.dispatch(&[("pressure_refresh", cells), ("initial_reduce", [1, 1, 1])]);
-            residual = state.convergence()?;
-            if !residual.1 {
-                initialize();
-            }
-        } else if iterations % 64 == 0 || iterations == state.config.max_iterations {
-            state.dispatch(&[("pressure_check", cells), ("check_reduce", [1, 1, 1])]);
-            residual = state.convergence()?;
-        }
     }
-    if !residual.1 {
-        return Err(format!(
-            "Fluid pressure solve (experimental multigrid) did not converge after {iterations} iterations, residual {}",
-            residual.0
-        ));
-    }
-    let completion = [
-        ("correct", groups(state.params.faces[3])),
-        ("pressure_commit", cells),
-    ];
-    state.dispatch(if warm_start {
-        &completion
-    } else {
-        &completion[..1]
-    });
-    Ok((iterations, residual.0))
-}
-
-pub(super) fn project(state: &mut FluidState, warm_start: bool) -> Result<(u32, f32), String> {
-    let profiler = state.context.profiler.clone();
-    let _stage = profiler.stage(crate::profile::Stage::Pressure);
-    let mg = match state.multigrid.take() {
-        Some(mg) => mg,
-        None => Multigrid::new(state)?,
-    };
-    let result = project_inner(state, &mg, warm_start);
-    state.multigrid = Some(mg);
-    result
 }
 
 #[cfg(test)]
