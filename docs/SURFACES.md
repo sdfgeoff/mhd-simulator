@@ -43,6 +43,8 @@ cargo test periodic_ -- --nocapture
 ./run.sh --run-check assets/hotend-free-surface.mhd.json 24
 ```
 
+A separate [full 3D drop-oscillation benchmark](DROP_OSCILLATION.md) gives mode-frequency errors **1.84% → 1.31%** on 48³/64³ grids, while demonstrating much larger coarse-grid shape error. Its initialization uses integrated analytic fractions; it does not validate the CAD occupancy initialization.
+
 ## Interpretation and remaining work
 
 1. This is the first moving-interface implementation. It has **not validated nozzle pinch-off, satellite sizes or jetting thresholds**. Direction splitting, unresolved height stencils and initial cell-centre CAD occupancy still introduce errors in small drops. Resolve the intended droplet with many cells and demonstrate spatial/time convergence before trusting breakup; six cells across 0.5 mm is inadequate for that claim.

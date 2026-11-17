@@ -59,3 +59,7 @@ MHD_CAPILLARY_DENSITY_RATIO=1000 cargo test standing_capillary_wave -- --ignored
 ```
 
 The long benchmark writes `artifacts/capillary-wave-N.csv`. `MHD_CAPILLARY_DUMP=1` additionally writes raw fraction/curvature and fluid snapshots every 100 steps for headless analysis. Density-ratio controls support further investigation; the frequency table above uses ratio one.
+
+## Three-dimensional drop dynamics
+
+[The Rayleigh–Lamb drop benchmark](DROP_OSCILLATION.md) complements this planar-wave check. Its mode-frequency error decreases from 1.84% to 1.31% with refinement, and its coarse-grid/timestep probes expose a spatial-resolution limitation that the planar interface does not capture.

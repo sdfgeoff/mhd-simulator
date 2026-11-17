@@ -635,3 +635,6 @@ mod capillary_tests;
 
 #[cfg(test)]
 mod periodic_tests;
+
+#[cfg(test)]
+mod drop_tests;
