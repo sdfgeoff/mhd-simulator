@@ -294,10 +294,25 @@ fn pulsed_nozzle_experiment() {
     let initialization = std::env::var("MHD_JET_INITIALIZATION").unwrap_or_else(|_| "cad".into());
     match initialization.as_str() {
         "cad" => surface.initialize_cad(&volume, &model, None).unwrap(),
+        "raw" => {
+            let started = std::time::Instant::now();
+            let workspace = crate::domain::fractions::initialize_raw(
+                &gpu.context,
+                &volume,
+                &model,
+                3,
+                surface.field(),
+                None,
+            )
+            .unwrap();
+            surface.refresh(&volume).unwrap();
+            surface.diagnostics.initial_workspace_bytes = workspace;
+            surface.diagnostics.initial_sampling_ms = started.elapsed().as_secs_f64() * 1000.;
+        }
         // Diagnostic control: use the same cell-centre approximation as the
         // fixed voxel walls, instead of integrating the liquid mesh volume.
         "voxel" => (),
-        _ => panic!("MHD_JET_INITIALIZATION must be cad or voxel"),
+        _ => panic!("MHD_JET_INITIALIZATION must be cad, raw or voxel"),
     }
     let pulse = Pulse::new(&surface, &grid);
     pulse.update(&surface, 0.);

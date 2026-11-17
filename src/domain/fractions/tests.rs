@@ -350,3 +350,177 @@ fn raster_tiles_preserve_fraction_at_partial_last_tile() {
         );
     }
 }
+
+#[test]
+fn wall_conditioned_projection_keeps_free_surface_fraction_and_initial_temperature() {
+    let _lock = crate::gpu_test_lock();
+    let gpu = GpuDomain::new().unwrap();
+    let mut wall = body(
+        "Wall",
+        box_triangles(Vec3::ZERO, Vec3::new(410., 1000., 1000.)),
+        100.,
+    );
+    wall.simulation.material_id = 2;
+    let model = Model {
+        bodies: vec![
+            wall,
+            body(
+                "Liquid",
+                box_triangles(Vec3::new(410., 0., 0.), Vec3::new(1000., 1000., 420.)),
+                250.,
+            ),
+        ],
+        ..Default::default()
+    };
+    let (volume, mut surface, evolving) = sample(&gpu, &model);
+    let mut thermal =
+        ThermalState::new(gpu.context.clone(), &volume, ThermalConfig::default()).unwrap();
+    initialize(
+        &gpu.context,
+        &volume,
+        &model,
+        3,
+        surface.field(),
+        Some(thermal.initial_surface_buffers()),
+    )
+    .unwrap();
+    surface.refresh(&volume).unwrap();
+    surface.update_materials(&volume, &evolving);
+    thermal.recover_initial_surface(&evolving).unwrap();
+    let values = fractions(&gpu, &surface);
+    let bytes = read_bytes(
+        &gpu.context,
+        thermal.result_buffer(),
+        0,
+        thermal.result_buffer().size(),
+    )
+    .unwrap();
+    let temperatures = bytemuck::cast_slice::<u8, ThermalCell>(&bytes);
+    for (i, (alpha, temperature)) in values.iter().zip(temperatures).enumerate() {
+        let x = i % 8;
+        let z = i / 64;
+        let expected = if x < 3 || z > 3 {
+            0.
+        } else if z == 3 {
+            45. / 125.
+        } else {
+            1.
+        };
+        assert!(
+            (alpha[0] - expected).abs() < 2e-6,
+            "cell {i}: {alpha:?}, expected {expected}"
+        );
+        if x < 3 {
+            assert!((temperature.state[0] - 373.15).abs() < 0.002);
+        } else if expected > 0. {
+            assert!(
+                (temperature.state[0] - 523.15).abs() < 0.002,
+                "cell {i}: {:?}",
+                temperature.state
+            );
+            assert!((temperature.state[3] - expected).abs() < 2e-6);
+        }
+    }
+    // The wall's voxel boundary lies at 375 mm: this projected domain's liquid
+    // volume is 0.625*1*0.420, rather than the source CAD volume 0.590*1*0.420.
+    assert!((surface.diagnostics.volume_m3 - 0.2625).abs() < 2e-7);
+}
+
+#[test]
+fn conditioned_projection_preserves_isolated_cad_fractions_byte_for_byte() {
+    let _lock = crate::gpu_test_lock();
+    let gpu = GpuDomain::new().unwrap();
+    let mut distant = body(
+        "Unrelated wall",
+        box_triangles(Vec3::splat(875.), Vec3::splat(1000.)),
+        100.,
+    );
+    distant.simulation.material_id = 2;
+    let model = Model {
+        bodies: vec![
+            body(
+                "Free liquid",
+                box_triangles(Vec3::new(153., 201., 271.), Vec3::new(733., 866., 952.)),
+                250.,
+            ),
+            distant,
+        ],
+        ..Default::default()
+    };
+    let (volume, mut surface, _) = sample(&gpu, &model);
+    initialize_raw(&gpu.context, &volume, &model, 3, surface.field(), None).unwrap();
+    surface.refresh(&volume).unwrap();
+    let original = fractions(&gpu, &surface);
+    initialize(&gpu.context, &volume, &model, 3, surface.field(), None).unwrap();
+    surface.refresh(&volume).unwrap();
+    assert_eq!(original, fractions(&gpu, &surface));
+}
+#[test]
+fn conditioned_projection_rejects_subcell_liquid_solid_overlap() {
+    let _lock = crate::gpu_test_lock();
+    let gpu = GpuDomain::new().unwrap();
+    let mut wall = body(
+        "Wall",
+        box_triangles(Vec3::ZERO, Vec3::new(410., 1000., 1000.)),
+        100.,
+    );
+    wall.simulation.material_id = 2;
+    let model = Model {
+        bodies: vec![
+            wall,
+            body(
+                "Intersecting liquid",
+                box_triangles(Vec3::new(400., 0., 0.), Vec3::splat(1000.)),
+                250.,
+            ),
+        ],
+        ..Default::default()
+    };
+    let (volume, surface, _) = sample(&gpu, &model);
+    assert_eq!(volume.overlaps, 0);
+    let error = initialize(&gpu.context, &volume, &model, 3, surface.field(), None).unwrap_err();
+    assert!(error.contains("overlapping liquid/solid"), "{error}");
+}
+
+#[test]
+#[ignore = "Compare raw/conditioned initialization of MHD_CAD_PROJECT without editing it"]
+fn project_wall_conditioning_diagnostic() {
+    let _lock = crate::gpu_test_lock();
+    let filename =
+        std::env::var("MHD_CAD_PROJECT").expect("Set MHD_CAD_PROJECT to a project JSON path");
+    let project = crate::project::load(std::path::Path::new(&filename)).unwrap();
+    let gpu = GpuDomain::new().unwrap();
+    let volume = gpu
+        .build(&project.model, &project.settings, &project.materials)
+        .unwrap();
+    let material = project.fluid.material_id;
+    let (mut surface, _) = SurfaceState::new(gpu.context.clone(), &volume, material).unwrap();
+    initialize_raw(
+        &gpu.context,
+        &volume,
+        &project.model,
+        material,
+        surface.field(),
+        None,
+    )
+    .unwrap();
+    surface.refresh(&volume).unwrap();
+    let raw = surface.diagnostics.volume_m3;
+    let start = std::time::Instant::now();
+    let workspace = initialize(
+        &gpu.context,
+        &volume,
+        &project.model,
+        material,
+        surface.field(),
+        None,
+    )
+    .unwrap();
+    surface.refresh(&volume).unwrap();
+    eprintln!(
+        "Project conditioned initialization {filename}: raw volume={raw:.9e}, conditioned={:.9e}, relative change={:.6e}, workspace={workspace} bytes, wall={:.3}s",
+        surface.diagnostics.volume_m3,
+        surface.diagnostics.volume_m3 / raw - 1.,
+        start.elapsed().as_secs_f64()
+    );
+}

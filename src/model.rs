@@ -77,6 +77,9 @@ impl Body {
     pub fn geometry_id(&self) -> u64 {
         self.geometry_id
     }
+    pub(crate) fn bounds(&self) -> (Vec3, Vec3) {
+        self.bounds
+    }
     pub fn volume_mm3(&self) -> f64 {
         self.triangles
             .iter()

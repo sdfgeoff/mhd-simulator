@@ -62,6 +62,8 @@ claim that the nozzle geometry/contact physics is accurate.
 
 ## Startup observations
 
+The first runs below predate neutral wall geometry and CAD phase projection.
+
 A first 25 µm-grid attempt with capillary timestep factor 0.3 stops at the
 conservative CFL check after its early 35.4 µs snapshot. The force pulse is still
 weak at that point. A zero-force control at factor 0.1 completes 50 µs, developing
@@ -120,8 +122,19 @@ f32 per cell: `(u_x,u_y,u_z,p)`. Snapshots occur every 20 steps and at completio
 Plot saved snapshots with `python scripts/plot_jet.py OUTPUT_DIRECTORY` (optional
 NumPy/Matplotlib postprocessing; no additional simulation implementation).
 
-`MHD_JET_INITIALIZATION=voxel` is a test-only initialization control that uses
+`MHD_JET_INITIALIZATION=voxel` is a test-only initialization control using
 cell-centre liquid occupancy alongside cell-centre walls. The default `cad`
-retains fractional CAD integration. Their initial volumes differ; compare them
-as different initial geometry approximations, not as an exact mass-preserving
-initialization change. [Neutral-wall investigation and measurements](NEUTRAL_WALLS.md).
+uses the application's fractional integration and projection into the voxel
+wall domain. `raw` retains the unconditioned CAD-volume integral for comparison.
+Their initial volumes differ; compare them as different initial geometry
+approximations, not as a mass-preserving conversion between geometries.
+
+With neutral wall geometry, the matched 50.0417 µs unforced control changes from
+**6.85 nJ** with raw fractions to **1.51×10⁻¹⁴ J** with CAD phase projection.
+Initial liquid volume changes **0.83878 → 0.85200 mm³** (+1.58%). The projected
+case completes 1 ms with maximum sampled speed **2.73 mm/s**, peak kinetic energy
+**4.07×10⁻¹⁴ J**, no boundary contact and negligible expelled volume. Residual
+motion and discrete wall/meniscus errors remain. These controls support the
+initialization change; they do not validate a physical wetting model or breakup.
+
+[Neutral-wall investigation](NEUTRAL_WALLS.md) and [projection definition](CAD_INITIALIZATION.md).

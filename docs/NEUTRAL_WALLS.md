@@ -70,9 +70,12 @@ have partial liquid occupancy. Solid intrusion into those cells is not carried
 as a separate cut-cell volume, so the flow model interprets the missing fraction
 as air. A diagnostic using the same voxel initialization as the walls reduces
 50 µs kinetic energy to **1.37×10⁻¹⁴ J**, but changes initial volume by **+1.58%**.
-That control is not the application's default and is not a calibrated hotend
-initial condition. It demonstrates why liquid/solid geometry consistency needs
-attention alongside the wall normal/curvature boundary.
+That binary control is not a calibrated hotend initial condition. The application
+now addresses the inconsistency through [CAD phase projection](CAD_INITIALIZATION.md):
+liquid occupancy and enthalpy are divided by available non-solid fraction before
+mapping into the voxel wall domain. Isolated free surfaces retain their fractional
+geometry. This changes the approximated initial volume; it does not add cut-cell
+flow or preserve source CAD volume across the conversion.
 
 These are short controls. They do not validate long-duration nozzle equilibrium,
 detachment, satellite sizes or a real solder/material contact angle.

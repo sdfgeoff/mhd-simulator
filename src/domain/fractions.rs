@@ -27,6 +27,28 @@ pub(crate) fn initialize(
     output: &wgpu::Buffer,
     thermal: Option<InitialThermal<'_>>,
 ) -> Result<u64, String> {
+    initialize_impl(context, volume, model, material, output, thermal, true)
+}
+#[cfg(test)]
+pub(crate) fn initialize_raw(
+    context: &GpuContext,
+    volume: &Volume,
+    model: &Model,
+    material: u32,
+    output: &wgpu::Buffer,
+    thermal: Option<InitialThermal<'_>>,
+) -> Result<u64, String> {
+    initialize_impl(context, volume, model, material, output, thermal, false)
+}
+fn initialize_impl(
+    context: &GpuContext,
+    volume: &Volume,
+    model: &Model,
+    material: u32,
+    output: &wgpu::Buffer,
+    thermal: Option<InitialThermal<'_>>,
+    conditioned: bool,
+) -> Result<u64, String> {
     if volume.overlaps > 0 {
         return Err(
             "Resolve overlapping CAD components before moving-interface initialization".into(),
@@ -44,7 +66,7 @@ pub(crate) fn initialize(
             "CAD geometry changed; rebuild the domain before initializing liquid fractions".into(),
         );
     }
-    let selected: Vec<_> = model
+    let mut selected: Vec<_> = model
         .bodies
         .iter()
         .enumerate()
@@ -55,10 +77,24 @@ pub(crate) fn initialize(
     if selected.is_empty() {
         return Err("No included CAD solid is assigned to the moving material".into());
     }
+    if conditioned {
+        let liquid_bounds: Vec<_> = selected.iter().map(|(_, body)| body.bounds()).collect();
+        let padding = glam::Vec3::splat(volume.settings.cell_mm);
+        selected.extend(model.bodies.iter().enumerate().filter(|(i, body)| {
+            let component = &snapshot.components[*i];
+            let (lo, hi) = body.bounds();
+            component.included
+                && component.material_id != 0
+                && component.material_id != material
+                && liquid_bounds.iter().any(|&(liquid_lo, liquid_hi)| {
+                    (hi.cmpge(liquid_lo - padding)).all() && (lo.cmple(liquid_hi + padding)).all()
+                })
+        }));
+    }
     for (_, body) in &selected {
         if !body.closed() || !body.consistently_oriented() {
             return Err(format!(
-                "{} needs closed, consistently oriented faces for fractional liquid initialization",
+                "{} needs closed, consistently oriented faces for CAD fraction initialization",
                 body.name
             ));
         }
@@ -130,7 +166,9 @@ pub(crate) fn initialize(
                         u32::from(ordinal == 0),
                         u32::from(ordinal + 1 == selected.len()),
                         u32::from(thermal.is_some()),
-                        0,
+                        u32::from(
+                            conditioned && snapshot.components[*body].material_id != material,
+                        ),
                     ],
                 };
                 let row = (tile_index * nz as usize + z as usize) * selected.len() + ordinal;
@@ -165,7 +203,7 @@ pub(crate) fn initialize(
             let count = values.len() as u32;
             (
                 device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                    label: Some("Oriented liquid CAD triangles"),
+                    label: Some("Oriented CAD triangles"),
                     contents: bytemuck::cast_slice(&values),
                     usage: wgpu::BufferUsages::VERTEX,
                 }),
@@ -226,13 +264,21 @@ pub(crate) fn initialize(
         bind_group_layouts: &[&layout],
         push_constant_ranges: &[],
     });
+    let accumulator = include_str!("fractions/accumulate.wgsl");
+    #[cfg(test)]
+    let accumulator = if conditioned {
+        accumulator
+    } else {
+        include_str!("fractions/raw_accumulate.wgsl")
+    };
     let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
         label: Some("Oriented CAD volume integral"),
         source: wgpu::ShaderSource::Wgsl(
             format!(
-                "{}\n{}",
+                "{}\n{}\n{}",
                 include_str!("../thermal/enthalpy.wgsl"),
-                include_str!("fractions.wgsl")
+                include_str!("fractions.wgsl"),
+                accumulator
             )
             .into(),
         ),
@@ -381,6 +427,9 @@ pub(crate) fn initialize(
         return Err(
             "CAD liquid fractions exceed one; resolve intersecting liquid components".into(),
         );
+    }
+    if flags & 4 != 0 {
+        return Err("Wall-conditioned initialization has unresolved open volume or overlapping liquid/solid fractions; refine the grid or resolve CAD intersections".into());
     }
     Ok(workspace)
 }
