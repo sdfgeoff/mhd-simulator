@@ -160,3 +160,37 @@ difference is not presented as a speedup; EM still accounts for about 20.9 s.
 Fluid velocities intentionally differ because the curvature changes. The
 validation guide records the short local-peak-speed tradeoff and the revised
 energy-based regression explicitly.
+
+## Direct air neighbor loads
+
+Strict scalar-air eligibility already proves all six same-component neighbors
+are valid and excludes constrained boundary edges. The operator now loads them
+by flat lattice stride, avoiding repeated coordinate/bounds work and leaving
+coordinate decoding for material/boundary edges. The x/y/z addition order is
+preserved. The full uncached curl/gauge equation remains the acceptance check;
+CG iterations, tolerances, timestep, resolution and working storage are unchanged.
+
+Three alternating warmed executable pairs ran three combined V6 ticks at 10 µs:
+
+| Quantity | Previous indexing | Direct loads |
+| --- | ---: | ---: |
+| Median process time | 26.396 s | 25.067 s |
+| Median EM solve GPU time | 21,316.63 ms | 19,817.81 ms |
+| Median pressure GPU time | 2,022.63 ms | 2,024.59 ms |
+
+This gives **5.0% lower process time** and **7.0% lower EM GPU time** in this
+probe. Every profiling pass is recorded. All eight trajectory/energy diagnostic
+CSVs, including warmups, are byte-identical; EM iterations remain 858/864/873.
+Owner project/GLB hashes and the 1,715.4 MiB working-storage total are unchanged.
+The full 135-test headless suite and strict all-target Clippy pass.
+
+A separate synthetic-vector operator microbenchmark has overlapping ranges:
+**3.80–5.13 ms** before and **4.25–4.90 ms** after. Its short dispatch groups do
+not establish an isolated throughput gain. The combined-run comparison above is
+the performance evidence; these RTX 3060 Laptop GPU measurements are not a
+hardware-wide guarantee.
+
+The earlier local-block preconditioner trials remain on a
+[separate research branch](https://github.com/sdfgeoff/mhd-simulator/blob/research/em-tile-preconditioner-20261118/docs/EM_TILE_RESEARCH.md).
+They reduced iterations but did not establish an overall advantage, so the
+production EM method remains Jacobi-CG.

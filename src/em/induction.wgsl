@@ -120,22 +120,25 @@ fn initial_reduce(@builtin(local_invocation_index) l:u32){
     var v=vec4<f32>(0.0);let n=(scene.edges.w+255u)/256u;for(var i=l;i<n;i+=256u){v+=partials[i];}reduction[l]=v;let sum=sum_group(l);
     if l==0u {let threshold=sum.y*scene.physical.w+1e-38;scalars[0]=vec4<f32>(sum.x,sum.y,sum.y,threshold);scalars[1]=vec4<f32>(0.0,0.0,0.0,select(0.0,1.0,sum.y<=threshold));}
 }
-fn air_laplacian(e:vec4<u32>)->f32 {
-    let p=vec3<i32>(e.xyz);let center=work[edge_index(e.w,p)].z;
-    var result=0.0;
-    for(var a=0u;a<3u;a++) {
-        var lower=p;lower[a]-=1;var upper=p;upper[a]+=1;
-        result+=(center-a_edge(e.w,lower,1u))+(center-a_edge(e.w,upper,1u));
-    }
-    return result;
+// Strict scalar-air eligibility proves all six same-component neighbors are
+// inside this edge lattice, and excludes constrained boundary edges. Preserve
+// the x/y/z addition order while loading directly by flat lattice stride.
+fn air_laplacian(i:u32)->f32 {
+ var axis=0u;if i>=scene.edges.x {axis=1u;if i>=scene.edges.x+scene.edges.y {axis=2u;}}
+ let d=edge_dims(axis);let z_stride=d.x*d.y;let center=work[i].z;var result=0.;
+ result+=(center-work[i-1u].z)+(center-work[i+1u].z);
+ result+=(center-work[i-d.x].z)+(center-work[i+d.x].z);
+ result+=(center-work[i-z_stride].z)+(center-work[i+z_stride].z);
+ return result;
 }
 @compute @workgroup_size(256)
 fn apply_operator(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>){
     let i=flat_id(gid);var dot=0.0;
     if i<scene.edges.w && scalars[1].w==0.0 {
-        let e=edge_decode(i);var q=0.0;
-        if source[i+scene.edges.w].w>0.5 {q=air_laplacian(e);}else{q=adjoint(e,1u,false)+gauge(e,1u)+mass(i)*work[i].z;}
-        if boundary(e){q=work[i].z;}work[i].w=q;dot=work[i].z*q;
+        var q=0.0;
+        if source[i+scene.edges.w].w>0.5 {q=air_laplacian(i);}
+        else {let e=edge_decode(i);q=adjoint(e,1u,false)+gauge(e,1u)+mass(i)*work[i].z;if boundary(e){q=work[i].z;}}
+        work[i].w=q;dot=work[i].z*q;
     }
     reduction[l]=vec4<f32>(dot,0.0,0.0,0.0);let sum=sum_group(l);if l==0u && group_id(group)<(scene.edges.w+255u)/256u{partials[group_id(group)]=sum;}
 }
