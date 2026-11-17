@@ -699,7 +699,12 @@ impl FluidState {
                         label: Some("Fluid phase material"),
                         contents: bytemuck::cast_slice(&[
                             self.params.dims,
-                            [self.config.material_id, u32::from(thermal.is_some()), 0, 0],
+                            [
+                                self.config.material_id,
+                                u32::from(thermal.is_some()),
+                                crate::surface::FRACTION_TOLERANCE.to_bits(),
+                                0,
+                            ],
                         ]),
                         usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
                     });
@@ -725,7 +730,12 @@ impl FluidState {
             0,
             bytemuck::cast_slice(&[
                 self.params.dims,
-                [self.config.material_id, u32::from(thermal.is_some()), 0, 0],
+                [
+                    self.config.material_id,
+                    u32::from(thermal.is_some()),
+                    crate::surface::FRACTION_TOLERANCE.to_bits(),
+                    0,
+                ],
             ]),
         );
         self.context.queue.write_buffer(&phase.changed, 0, &[0; 4]);
@@ -773,7 +783,11 @@ impl FluidState {
         }
         self.context.queue.submit(Some(enc.finish()));
         let changed = read_bytes(&self.context, &phase.changed, 0, 4)?;
-        let changed = bytemuck::pod_read_unaligned::<u32>(&changed) != 0;
+        let flags = bytemuck::pod_read_unaligned::<u32>(&changed);
+        if flags & 2 != 0 {
+            return Err("Fluid interface fractions must be finite and within the accepted [0,1] roundoff tolerance".into());
+        }
+        let changed = flags & 1 != 0;
         if changed {
             let data = read_bytes(
                 &self.context,
@@ -997,22 +1011,49 @@ impl FluidState {
         self.max_face_speed = s[8];
         Ok(())
     }
+    /// Upper bound valid for every accepted fraction distribution, including
+    /// roundoff outside [0,1]. Keep density consistent with raw transported alpha.
+    fn global_viscous_bound(&self) -> Option<f64> {
+        let liquid = self.params.physical[3] as f64;
+        let ambient = self.params.surface[1] as f64;
+        let slack = crate::surface::FRACTION_TOLERANCE as f64 + 4. * f32::EPSILON as f64;
+        let density_floor = liquid.min(ambient) - (liquid - ambient).abs() * slack;
+        if density_floor <= 0. {
+            return None;
+        }
+        let mu =
+            (self.params.physical[2] * self.params.physical[3]).max(self.params.surface[3]) as f64;
+        let h = self.grid.cell_m as f64;
+        // Round upward to cover f32 mixture/edge/stencil arithmetic.
+        Some(24. * mu / (density_floor * h * h) * (1. + 32. * f32::EPSILON as f64))
+    }
     fn diffuse_surface_stress(&mut self) -> Result<(), String> {
         self.diagnostics.viscous_substeps = 0;
         let faces = groups(self.params.faces[3]);
-        self.dispatch(&[
-            ("viscosity_bound", faces),
-            ("viscosity_bound_reduce", [1, 1, 1]),
-        ]);
-        let bytes = read_bytes(&self.context, &self.scalars, 0, 4)?;
-        let bound = bytemuck::pod_read_unaligned::<f32>(&bytes);
-        if !bound.is_finite() || bound < 0. {
-            return Err("Nonfinite viscous stability bound".into());
-        }
-        if bound == 0. {
-            return Ok(());
-        }
-        let count = (self.config.dt_s * bound as f64 / 1.8).ceil().max(1.);
+        let count = if let Some(bound) = self
+            .global_viscous_bound()
+            .filter(|b| self.config.dt_s * b <= 1.8)
+        {
+            // One step is proved safe without GPU reductions or a scalar readback.
+            if bound == 0. {
+                return Ok(());
+            }
+            1.
+        } else {
+            self.dispatch(&[
+                ("viscosity_bound", faces),
+                ("viscosity_bound_reduce", [1, 1, 1]),
+            ]);
+            let bytes = read_bytes(&self.context, &self.scalars, 0, 4)?;
+            let bound = bytemuck::pod_read_unaligned::<f32>(&bytes);
+            if !bound.is_finite() || bound < 0. {
+                return Err("Nonfinite viscous stability bound".into());
+            }
+            if bound == 0. {
+                return Ok(());
+            }
+            (self.config.dt_s * bound as f64 / 1.8).ceil().max(1.)
+        };
         if count > self.config.max_viscous_substeps as f64 {
             return Err(format!(
                 "Viscosity requires {count:.0} substeps, above the {} limit; reduce the common timestep or increase Max viscosity substeps",

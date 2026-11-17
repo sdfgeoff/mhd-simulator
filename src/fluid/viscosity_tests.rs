@@ -392,3 +392,122 @@ fn excessive_viscosity_substeps_restore_state_and_allow_retry() {
     assert_eq!(state.time_s, 0.01);
     assert!(state.diagnostics.viscous_substeps > 1);
 }
+
+#[test]
+fn material_bound_covers_gpu_stencil_with_fraction_roundoff_and_walls() {
+    let _lock = crate::gpu_test_lock();
+    let n = 8u32;
+    let tolerance = crate::surface::FRACTION_TOLERANCE;
+    for (rho_l, rho_g) in [(7000., 1.), (1., 7000.), (1., 1.)] {
+        for periodic in [[true, false, true], [false; 3]] {
+            let mut materials = default_materials();
+            materials[3].density_kg_m3 = Some(rho_l);
+            materials[3].dynamic_viscosity_pa_s = Some(0.2);
+            materials[3].surface_tension_n_m = Some(0.);
+            materials[0].density_kg_m3 = Some(rho_g);
+            materials[0].dynamic_viscosity_pa_s = Some(0.01);
+            let (gpu, volume, _, _) = crate::surface::tests::box_fixture(
+                DomainSettings {
+                    min_mm: [0.; 3],
+                    max_mm: [1000.; 3],
+                    cell_mm: 125.,
+                },
+                &materials,
+            );
+            let (mut surface, _) =
+                SurfaceState::with_periodic_boundaries(gpu.context.clone(), &volume, 3, periodic)
+                    .unwrap();
+            let values: Vec<[f32; 4]> = (0..n.pow(3))
+                .map(|i| {
+                    let a = if rho_l == rho_g {
+                        1. + tolerance
+                    } else {
+                        match i % n % 4 {
+                            0 | 1 => 1. + tolerance,
+                            2 => -tolerance,
+                            _ => 0.4,
+                        }
+                    };
+                    [a, 0., 0., 0.]
+                })
+                .collect();
+            gpu.context
+                .queue
+                .write_buffer(surface.field(), 0, bytemuck::cast_slice(&values));
+            surface.refresh(&volume).unwrap();
+            let mut state = FluidState::new(
+                gpu.context.clone(),
+                &volume,
+                FluidConfig {
+                    surface: crate::surface::SurfaceConfig { enabled: true },
+                    periodic,
+                    advection: false,
+                    acceleration_m_s2: [0.; 3],
+                    dt_s: 1e-6,
+                    ..Default::default()
+                },
+                None,
+            )
+            .unwrap();
+            state
+                .update_surface(&volume, surface.field(), None)
+                .unwrap();
+            let upper = state.global_viscous_bound().unwrap();
+            state.dispatch(&[
+                ("viscosity_bound", groups(state.params.faces[3])),
+                ("viscosity_bound_reduce", [1, 1, 1]),
+            ]);
+            let bytes = read_bytes(&gpu.context, &state.scalars, 0, 4).unwrap();
+            let measured = bytemuck::pod_read_unaligned::<f32>(&bytes) as f64;
+            assert!(
+                measured <= upper,
+                "GPU bound {measured} exceeds material bound {upper}, densities {rho_l}/{rho_g}, periodic {periodic:?}"
+            );
+            // Exercise a step just below the proof's upper timestep. Zero velocity
+            // isolates stability selection from the independent interface CFL.
+            state.config.dt_s = 1.8 / upper * (1. - 1e-5);
+            state.step(&volume).unwrap();
+            assert_eq!(state.diagnostics.viscous_substeps, 1);
+            assert!(state.diagnostics.max_speed_m_s < 1e-6);
+        }
+    }
+}
+
+#[test]
+fn fluid_rejects_nonfinite_or_unbounded_interface_fractions() {
+    let _lock = crate::gpu_test_lock();
+    let (gpu, volume, mut surface, _) = crate::surface::tests::fixture(8);
+    let mut state = FluidState::new(
+        gpu.context.clone(),
+        &volume,
+        FluidConfig {
+            surface: crate::surface::SurfaceConfig { enabled: true },
+            acceleration_m_s2: [0.; 3],
+            ..Default::default()
+        },
+        None,
+    )
+    .unwrap();
+    let n = 8u32.pow(3) as usize;
+    let good = vec![[0.5f32, 0., 0., 0.]; n];
+    for bad in [f32::NAN, f32::INFINITY, -0.001, 1.001] {
+        let mut data = good.clone();
+        data[0][0] = bad;
+        gpu.context
+            .queue
+            .write_buffer(surface.field(), 0, bytemuck::cast_slice(&data));
+        let error = state
+            .update_surface(&volume, surface.field(), None)
+            .unwrap_err();
+        assert!(error.contains("fractions must be finite"), "{error}");
+        assert_eq!(state.time_s, 0.);
+    }
+    gpu.context
+        .queue
+        .write_buffer(surface.field(), 0, bytemuck::cast_slice(&good));
+    surface.refresh(&volume).unwrap();
+    state
+        .update_surface(&volume, surface.field(), None)
+        .unwrap();
+    state.step(&volume).unwrap();
+}

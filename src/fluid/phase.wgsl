@@ -20,7 +20,9 @@ fn phase(@builtin(global_invocation_id) gid:vec3<u32>){
 @compute @workgroup_size(256)
 fn surface(@builtin(global_invocation_id) gid:vec3<u32>){
  let i=gid.x+gid.y*65535u*256u;if i>=p.dims.w{return;}
- let a=interface_field[i].x;var f=1.0;if p.choice.y!=0u && a>0.0 {f=thermal[i].state.y;}
+ let a=interface_field[i].x;let epsilon=bitcast<f32>(p.choice.z);
+ if !(a>=-epsilon && a<=1.0+epsilon){atomicOr(&changed[0],2u);return;}
+ var f=1.0;if p.choice.y!=0u && a>0.0 {f=thermal[i].state.y;}
  let wall=materials[i]!=0u && materials[i]!=p.choice.x;
  let mobile=!wall && !(a>0.0 && f<=1e-6);let old=mask[i]!=0u;
  if mobile!=old {mask[i]=select(0u,1u,mobile);atomicOr(&changed[0],1u);}

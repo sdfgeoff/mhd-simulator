@@ -18,7 +18,7 @@ The tensor equation is also documented in the primary [Basilisk viscosity solver
 
 ## Stability and common time
 
-Density, occupancy and phase mobility are held fixed during the viscosity stage. The GPU measures a conservative absolute row-sum bound R on ρ⁻¹∇·τ. For component i at a face,
+Density, occupancy and phase mobility are held fixed during the viscosity stage. A conservative material-based bound first checks whether one viscosity step is guaranteed safe. Otherwise the GPU measures the actual maximum row-sum bound R on ρ⁻¹∇·τ. For component i at a face,
 
 Rᵢ = 4 [μnormal,left + μnormal,right + Σⱼ≠ᵢ (μedge,lower + μedge,upper)] / (ρface h²).
 
@@ -26,7 +26,9 @@ For uniform properties this is 24ν/h². Symmetry and dissipation give real nonp
 
 **Max viscosity substeps**, default 4096, bounds work per common tick. Exceeding it rejects the step and restores accepted velocity/output rather than using an unstable timestep. Reduce the common Δt or raise a lower configured cap. The accepted frame and headless log report the substep count.
 
-Substeps reuse the velocity/predictor buffers. Only the small reduction allocation grows to cover MAC faces; no new full-volume working buffer is added. The bound requires one scalar readback per moving-fluid step. Very stiff cases can still be expensive; implicit viscosity would be a separate solver improvement.
+The one-step proof uses Rglobal = 24 μmax/(ρfloor h²), rounded upward for f32 arithmetic. The density floor includes the full accepted fraction roundoff interval, rather than assuming fractions are exactly in [0,1]. Interface and fluid ingestion share that tolerance; the existing GPU phase pass rejects nonfinite or out-of-range fractions before using the proof. Density itself is not clipped, preserving mass/momentum consistency. If the density floor cannot be proved positive, or the global bound is too large, the measured GPU path remains in use.
+
+Substeps reuse the velocity/predictor buffers. Only the small reduction allocation grows to cover MAC faces; no new full-volume working buffer is added. Guaranteed one-step cases skip the GPU bound pass and scalar readback; other cases retain them. Very stiff cases can still be expensive; implicit viscosity would be a separate solver improvement.
 
 ## Validation
 
@@ -46,7 +48,7 @@ The long operator test writes artifacts/viscous-momentum.csv. Its deliberately l
 
 ## Coupled checks and cost
 
-The coupled hotend completes 24 ticks to 60 µs. The saved V6 project completes two 10 µs ticks; both examples need one viscosity substep per tick. V6 working storage remains **1,715.4 MiB** at the reported precision. In single-run measurements, the 24-tick hotend CPU step time increases from 4.18 s to 4.51 s, and the high-density two-grid wave diagnostic from 124.4 s to 136.1 s. The stress stencil and stability-bound synchronization add work; these are physics changes rather than speed improvements.
+The coupled hotend completes 24 ticks to 60 µs. The saved V6 project completes two 10 µs ticks; both examples need one viscosity substep per tick. V6 working storage remains **1,715.4 MiB** at the reported precision. In single-run measurements, the 24-tick hotend CPU step time increases from 4.18 s to 4.51 s, and the high-density two-grid wave diagnostic from 124.4 s to 136.1 s. The stress stencil and stability-bound synchronization added work; these measurements precede the one-step synchronization optimization. Three alternating comparisons of the optimized path preserve diagnostic CSV bytes exactly and reduce a fluid-only case from 6.41 s to 6.00 s median; the full hotend changes from 4.44 s to 4.36 s, within noticeable timing variation. See [performance details](PERFORMANCE.md).
 
 ## Limits
 

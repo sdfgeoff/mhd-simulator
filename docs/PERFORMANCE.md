@@ -49,3 +49,20 @@ MHD_BENCH_PROJECT=YOUR_PROJECT.mhd.json cargo test benchmark_em_kernels -- --ign
 `--run-check` writes `artifacts/run-performance.csv` and `artifacts/run-diagnostics.csv`. Use the same project and accepted physical time for comparisons, retain both CSVs, and alternate several reference/optimized runs. Separate checkouts and target directories keep build artifacts for the compared revisions independent. The V6 CAD/project used above are local user files and are not bundled in the repository.
 
 The optional kernel microbenchmark uses fixed synthetic vectors to identify dispatch/memory costs; it is not a simulation-accuracy benchmark. EM operator/vector passes still dominate the optimized V6 run. Improved preconditioning is the next substantial algorithmic opportunity. Direct applied-source summation was about 0.04 s across the two V6 ticks, so adding per-coil field caches would give a much smaller speed benefit here while consuming more memory.
+
+## Viscosity stability synchronization
+
+After the symmetric-stress implementation, a global material bound can prove a single viscosity step safe. This skips one GPU compute pass (two bound kernels) and one scalar readback per tick. Stiffer cases still measure the actual GPU bound and choose stable substeps. The proof includes the allowed interface-fraction roundoff range; the existing phase-classification readback also reports invalid fractions, so validation adds no new synchronization.
+
+Three alternating baseline/candidate runs on this machine gave:
+
+| Complete common-run check | Baseline median CPU step time | Optimized median | Diagnostic CSV |
+| --- | ---: | ---: | --- |
+| Hotend, 24 ticks at 2.5 µs | 4.436 s | 4.362 s | Byte-identical in all three pairs |
+| Fluid-only periodic annulus, 240 ticks at 10 µs | 6.411 s | 5.996 s | Byte-identical in all three pairs |
+
+The baseline is commit 3c957f0; both versions use the same symmetric stress, timesteps, geometry, tolerances and iteration limits. The fluid-only case uses the bundled periodic-advection project with its common timestep reduced to 10 µs, preserving material properties and initial velocity. Its final physical time is 2.4 ms. It exercises the guaranteed-one-step path; the example's usual 1 ms timestep can require the measured-bound fallback.
+
+The fluid-only median improves about **6.5%**, with 240 fewer GPU compute passes over 240 ticks. The hotend median improves about 1.7%, but run-to-run timing variation is significant and EM/pressure work dominates. These measurements do not support a large general speedup claim. V6's more conservative global bound still selects the measured GPU path.
+
+The [viscous-stress guide](VISCOUS_STRESS.md) gives the bound, numerical safeguards and fallback behavior. Regular GPU tests compare the proof with the measured stencil for both density orderings, periodic/no-slip boundaries and fractions at the accepted roundoff limits.

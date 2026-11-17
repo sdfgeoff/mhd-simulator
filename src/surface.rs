@@ -8,6 +8,8 @@ use bytemuck::{Pod, Zeroable};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use wgpu::util::DeviceExt;
+/// Accepted fraction roundoff, not a clipping or volume-renormalization rule.
+pub(crate) const FRACTION_TOLERANCE: f32 = 1e-5;
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct SurfaceConfig {
@@ -364,7 +366,11 @@ impl SurfaceState {
             32,
         )?;
         let s = bytemuck::cast_slice::<u8, f32>(&data);
-        if s.iter().any(|v| !v.is_finite()) || s[3] > 0. || s[4] < -1e-5 || s[5] > 1.00001 {
+        if s.iter().any(|v| !v.is_finite())
+            || s[3] > 0.
+            || s[4] < -FRACTION_TOLERANCE
+            || s[5] > 1. + FRACTION_TOLERANCE
+        {
             return Err(
                 "Liquid interface transport violated its face CFL, left [0,1], or became nonfinite; reduce timestep".into(),
             );
