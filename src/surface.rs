@@ -707,3 +707,6 @@ mod momentum_accuracy_tests;
 
 #[cfg(test)]
 mod curvature_filter_tests;
+
+#[cfg(test)]
+mod energy_tests;

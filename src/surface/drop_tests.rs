@@ -104,7 +104,7 @@ fn rayleigh_lamb_drop_oscillation() {
         .unwrap_or("7000".into())
         .parse()
         .unwrap();
-    assert!(periods > 0. && factor > 0. && factor <= 1. && epsilon > 0. && epsilon <= 0.1);
+    assert!(periods > 0. && factor > 0. && factor <= 1. && (0. ..=0.1).contains(&epsilon));
     std::fs::create_dir_all("artifacts").unwrap();
     let mut errors = Vec::new();
     for n in grids {
@@ -127,7 +127,7 @@ fn rayleigh_lamb_drop_oscillation() {
                     .unwrap(),
             },
         );
-        if periods >= 1.3 {
+        if periods >= 1.3 && epsilon > 0. {
             errors.push(check_frequency(n, &report.crossings, report.omega));
         }
     }
@@ -303,6 +303,16 @@ fn simulate_drop(
     );
     let profile = dump && std::env::var_os("MHD_DROP_PROFILE").is_some();
     let dump_geometry = dump && std::env::var_os("MHD_DROP_DUMP_GEOMETRY").is_some();
+    let audit_energy = dump && std::env::var_os("MHD_DROP_ENERGY").is_some();
+    if audit_energy {
+        super::energy_tests::install(&mut surface);
+    }
+    let mut energy_csv = String::from(
+        "step,time_s,kinetic_j,liquid_kinetic_j,ambient_kinetic_j,gradient_area_m2,plic_patch_area_m2,equivalent_sphere_area_m2,analytic_initial_area_m2,gradient_total_j,plic_total_j,gradient_delta_j,plic_delta_j,mixed_cells,degenerate_cells,quadrupole,max_speed_m_s,volume_m3\n",
+    );
+    let mut initial_energy = [0.; 2];
+    let amplitude_scale = if epsilon > 0. { a0 } else { 1. };
+    let amplitude_label = if epsilon > 0. { "q/q0" } else { "q" };
     gpu.context.profiler.set_enabled(profile);
     let mut performance = String::from(
         "step,time_s,accepted,stage,cpu_wall_ms,gpu_pass_ms,recorded_passes,total_passes\n",
@@ -323,9 +333,39 @@ fn simulate_drop(
             crossings.push(t - dt + dt * previous / (previous - a));
         }
         peak = peak.max(a.abs());
+        if audit_energy {
+            let patch = super::energy_tests::patch_energy(
+                &mut surface,
+                &volume,
+                fluid.face_buffer(),
+                [ratio, 1.],
+            );
+            let kinetic = fluid.diagnostics.kinetic_energy_j as f64;
+            assert!(
+                (patch.liquid_kinetic_j + patch.ambient_kinetic_j - kinetic).abs()
+                    <= 1e-5 * kinetic.max(1e-20)
+            );
+            let gradient_area = surface.diagnostics.area_m2;
+            let sigma = materials[3].surface_tension_n_m.unwrap() as f64;
+            let energy = [
+                kinetic + sigma * gradient_area,
+                kinetic + sigma * patch.area_m2,
+            ];
+            if step == 0 {
+                initial_energy = energy;
+            }
+            let sphere_area = 4. * PI * (3. * v / (4. * PI)).cbrt().powi(2);
+            let analytic_area = super::energy_tests::ellipsoid_area(r, epsilon);
+            energy_csv.push_str(&format!("{step},{t},{kinetic},{},{},{gradient_area},{},{sphere_area},{analytic_area},{},{},{},{},{},{},{a},{},{v}\n",patch.liquid_kinetic_j,patch.ambient_kinetic_j,patch.area_m2,energy[0],energy[1],energy[0]-initial_energy[0],energy[1]-initial_energy[1],patch.mixed_cells,patch.degenerate_cells,fluid.diagnostics.max_speed_m_s));
+            std::fs::write(format!("artifacts/drop-energy-{n}.csv"), &energy_csv).unwrap();
+        }
         csv.push_str(&format!(
             "{step},{t},{a},{},{},{drift},{},{},{},{},{},{v},{initial_center_m}\n",
-            a0 * (omega * t).cos(),
+            if epsilon > 0. {
+                a0 * (omega * t).cos()
+            } else {
+                0.
+            },
             v / v0 - 1.,
             fluid.diagnostics.max_speed_m_s,
             fluid.diagnostics.rms_divergence_s_inv,
@@ -335,8 +375,8 @@ fn simulate_drop(
         ));
         if step % 20 == 0 || step == steps {
             eprintln!(
-                "drop n={n} {step}/{steps}: q/q0={:.6}, speed={:.4e}, volume={:.3e}, pressure={} it, viscosity={} stages",
-                a / a0,
+                "drop n={n} {step}/{steps}: {amplitude_label}={:.6}, speed={:.4e}, volume={:.3e}, pressure={} it, viscosity={} stages",
+                a / amplitude_scale,
                 fluid.diagnostics.max_speed_m_s,
                 v / v0 - 1.,
                 fluid.diagnostics.iterations,
@@ -385,7 +425,7 @@ fn simulate_drop(
     if profile {
         std::fs::write(format!("artifacts/drop-performance-{n}.csv"), &performance).unwrap();
     }
-    if let Some(reference) = viscous_reference.filter(|_| periods >= 1.) {
+    if let Some(reference) = viscous_reference.filter(|_| periods >= 1. && epsilon > 0.) {
         report_viscous_fit(&trace, reference, period, n);
     }
     eprintln!(
@@ -396,16 +436,19 @@ fn simulate_drop(
         std::fs::write(&path, &csv).unwrap();
     }
     let drift = (surface.diagnostics.volume_m3 / v0 - 1.).abs();
+    let peak_label = if epsilon > 0. { "peak/q0" } else { "peak|q|" };
     eprintln!(
-        "drop n={n}: inviscid omega={omega:.8}, comparison omega={frequency_reference:.8}, peak/q0={:.5}, volume drift={drift:.4e}, crossings={crossings:?}",
-        peak / a0.abs()
+        "drop n={n}: inviscid omega={omega:.8}, comparison omega={frequency_reference:.8}, {peak_label}={:.5}, volume drift={drift:.4e}, crossings={crossings:?}",
+        peak / amplitude_scale.abs()
     );
     assert!(drift < 2e-6);
-    assert!(peak / a0.abs() < 1.1, "Unforced drop-mode amplitude grew");
+    if epsilon > 0. {
+        assert!(peak / a0.abs() < 1.1, "Unforced drop-mode amplitude grew");
+    }
     DropReport {
         omega: frequency_reference,
-        shape: previous / a0,
-        peak: peak / a0.abs(),
+        shape: previous / amplitude_scale,
+        peak: peak / amplitude_scale.abs(),
         crossings,
     }
 }
