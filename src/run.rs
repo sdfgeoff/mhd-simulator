@@ -165,6 +165,18 @@ impl RunState {
         if !em_enabled && !fluid_present && !config.thermal_enabled {
             return Err("No active physics: enable thermal evolution, assign a liquid material with density/viscosity for fluid motion, or configure a current/magnet source.".into());
         }
+        if fluid_present && fluid_config.periodic.iter().any(|p| *p) {
+            if em_enabled {
+                return Err(
+                    "Coupled electromagnetics requires nonperiodic fluid boundaries".into(),
+                );
+            }
+            if config.thermal_enabled {
+                return Err(
+                    "Thermal transport currently requires nonperiodic fluid boundaries".into(),
+                );
+            }
+        }
         // Refuse combined working allocations before creating any solver buffers.
         let [x, y, z] = volume.dims.map(u64::from);
         let n = x * y * z;
@@ -232,10 +244,11 @@ impl RunState {
             return Err("Attach heaters/thermostats to static CAD solids; source attachment to moving liquid is not defined".into());
         }
         let (surface, dynamic_volume) = if fluid_config.surface.enabled && fluid_present {
-            let (s, v) = crate::surface::SurfaceState::new(
+            let (s, v) = crate::surface::SurfaceState::with_periodic_boundaries(
                 context.clone(),
                 volume,
                 fluid_config.material_id,
+                fluid_config.periodic,
             )?;
             (Some(s), Some(v))
         } else {
@@ -408,15 +421,6 @@ impl RunState {
                 }
             }
             if let Some(thermal) = &mut self.thermal {
-                if self
-                    .fluid
-                    .as_ref()
-                    .is_some_and(|f| f.config().periodic.iter().any(|p| *p))
-                {
-                    return Err(
-                        "Thermal transport currently requires nonperiodic fluid boundaries".into(),
-                    );
-                }
                 thermal.step(
                     physics_volume,
                     self.config.dt_s,
@@ -1070,5 +1074,50 @@ mod thermal_run_tests {
                 );
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod periodic_setup_tests {
+    use super::*;
+    #[test]
+    fn incompatible_periodic_coupling_is_rejected_before_solving() {
+        let _lock = crate::gpu_test_lock();
+        let p = crate::project::load(std::path::Path::new("assets/hotend-free-surface.mhd.json"))
+            .unwrap();
+        let gpu = crate::domain::GpuDomain::new().unwrap();
+        let volume = gpu.build(&p.model, &p.settings, &p.materials).unwrap();
+        let mut fluid = p.fluid.clone();
+        fluid.periodic[0] = true;
+        let mut config = p.run.clone();
+        config.thermal_enabled = false;
+        let em_error = RunState::new(
+            gpu.context.clone(),
+            &volume,
+            &p.model,
+            config,
+            p.electromagnetics,
+            fluid.clone(),
+        )
+        .err()
+        .expect("Periodic EM coupling must fail during setup");
+        assert!(
+            em_error.contains("electromagnetics") && em_error.contains("nonperiodic"),
+            "{em_error}"
+        );
+        let heat_error = RunState::new(
+            gpu.context.clone(),
+            &volume,
+            &p.model,
+            p.run,
+            EmConfig::default(),
+            fluid,
+        )
+        .err()
+        .expect("Periodic thermal coupling must fail during setup");
+        assert!(
+            heat_error.contains("Thermal") && heat_error.contains("nonperiodic"),
+            "{heat_error}"
+        );
     }
 }

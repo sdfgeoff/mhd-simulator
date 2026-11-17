@@ -47,9 +47,6 @@ impl Default for FluidConfig {
 }
 impl FluidConfig {
     pub fn validate(&self) -> Result<(), String> {
-        if self.surface.enabled && self.periodic.iter().any(|p| *p) {
-            return Err("Moving-interface runs currently require nonperiodic domain faces".into());
-        }
         if !self.mushy_drag_rate_s_inv.is_finite()
             || self.mushy_drag_rate_s_inv <= 0.
             || !self.dt_s.is_finite()
@@ -429,7 +426,14 @@ impl FluidState {
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
                 label: Some("MAC fluid solver"),
-                source: wgpu::ShaderSource::Wgsl(include_str!("solver.wgsl").into()),
+                source: wgpu::ShaderSource::Wgsl(
+                    format!(
+                        "{}\n{}",
+                        include_str!("../periodic.wgsl"),
+                        include_str!("solver.wgsl")
+                    )
+                    .into(),
+                ),
             });
         let entries = [
             "initialize",

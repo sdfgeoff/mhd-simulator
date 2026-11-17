@@ -64,6 +64,20 @@ impl SurfaceState {
         volume: &Volume,
         material: u32,
     ) -> Result<(Self, Volume), String> {
+        Self::with_periodic_boundaries(context, volume, material, [false; 3])
+    }
+    pub fn with_periodic_boundaries(
+        context: GpuContext,
+        volume: &Volume,
+        material: u32,
+        periodic: [bool; 3],
+    ) -> Result<(Self, Volume), String> {
+        let boundary_flags = periodic
+            .iter()
+            .enumerate()
+            .fold(0u32, |bits, (axis, &enabled)| {
+                bits | (u32::from(enabled) << (axis + 2))
+            });
         if volume
             .inputs
             .snapshot()
@@ -103,7 +117,7 @@ impl SurfaceState {
         };
         let params = Params {
             dims: [grid.dims[0], grid.dims[1], grid.dims[2], n as u32],
-            choice: [material, 0, 0, 0],
+            choice: [material, 0, 0, boundary_flags],
             step: [0., grid.cell_m, 0., 0.],
         };
         let uniform = context
@@ -128,7 +142,8 @@ impl SurfaceState {
                 label: Some("Conservative liquid interface"),
                 source: wgpu::ShaderSource::Wgsl(
                     format!(
-                        "{}\n{}",
+                        "{}\n{}\n{}",
+                        include_str!("periodic.wgsl"),
                         include_str!("vof.wgsl"),
                         include_str!("surface.wgsl")
                     )
@@ -379,7 +394,8 @@ impl SurfaceState {
         self.params.choice[1] = u32::from(thermal.is_some());
         for sweep in 0..3 {
             self.params.choice[2] = (self.sweep_index + sweep) % 3;
-            self.params.choice[3] = u32::from(sweep == 0) | (u32::from(sweep == 2) << 1);
+            self.params.choice[3] =
+                (self.params.choice[3] & !3) | u32::from(sweep == 0) | (u32::from(sweep == 2) << 1);
             self.context
                 .queue
                 .write_buffer(&self.uniform, 0, bytemuck::bytes_of(&self.params));
@@ -457,3 +473,6 @@ mod tests;
 
 #[cfg(test)]
 mod capillary_tests;
+
+#[cfg(test)]
+mod periodic_tests;

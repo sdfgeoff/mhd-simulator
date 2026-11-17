@@ -20,6 +20,8 @@ For each common step from `tⁿ` to `tⁿ⁺¹`:
 
 This is first-order partitioned coupling with lagged velocity/field feedback, not a nonlinear converged monolithic solve. Refine the common timestep when interpreting results. Conservative explicit limits check `Δt v_A/h ≤ 0.5` and `Δt σ B²/ρ ≤ 0.5` using maximum total B and the selected liquid properties, in addition to the fluid viscous/velocity limits. The Alfvén estimate uses μ₀. The optional moving interface transports conductivity and heat with the material. Scalar bulk material coefficients remain constant; phase controls fluid mobility.
 
+Periodic fluid-only runs, including moving interfaces, are supported. Setup rejects periodic fluid coupling to EM or thermal evolution before allocating solver state: those solvers do not yet wrap their outer boundaries. The low-level interface tracer can carry enthalpy periodically, but this does not enable periodic thermal conduction in a common run.
+
 Low-level stationary EM and frozen-force fluid APIs/CLI checks remain useful isolated numerical diagnostics. The workbench's normal Simulate action always uses the common run; it does not require selecting an EM snapshot for fluid forcing.
 
 See [energy accounting and analytic coupling benchmarks](ENERGY.md) for the measured work/heat/loss terms and their limitations.

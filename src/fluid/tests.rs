@@ -554,7 +554,8 @@ fn cached_pressure_coefficients_match_original_operator_with_walls_phase_and_per
             // Independent GPU evaluation of the original physical stencil, without
             // introducing a duplicate CPU numerical implementation.
             let source = format!(
-                "{}\n@compute @workgroup_size(256) fn reference(@builtin(global_invocation_id) gid:vec3<u32>){{let i=flat_id(gid);if i<p.dims.w && mask[i]!=0u {{let pos=decode(i,p.dims.xyz);var a=laplacian(pos,1u);if (mask[i]&3u)==2u {{a=potential(pos,1u);}}work[i].w=a;work[i].y=diagonal(pos);}}}}",
+                "{}\n{}\n@compute @workgroup_size(256) fn reference(@builtin(global_invocation_id) gid:vec3<u32>){{let i=flat_id(gid);if i<p.dims.w && mask[i]!=0u {{let pos=decode(i,p.dims.xyz);var a=laplacian(pos,1u);if (mask[i]&3u)==2u {{a=potential(pos,1u);}}work[i].w=a;work[i].y=diagonal(pos);}}}}",
+                include_str!("../periodic.wgsl"),
                 include_str!("solver.wgsl")
             );
             let shader = state
@@ -622,4 +623,59 @@ fn cached_pressure_coefficients_match_original_operator_with_walls_phase_and_per
             );
         }
     }
+}
+
+#[test]
+fn periodic_shear_uses_correct_neighbors_on_non_power_of_two_grids() {
+    let _lock = crate::gpu_test_lock();
+    let n = 15u32;
+    let (gpu, volume, mut state) = channel(
+        n,
+        FluidConfig {
+            dt_s: 3e-5,
+            acceleration_m_s2: [0.; 3],
+            periodic: [true; 3],
+            ..Default::default()
+        },
+    );
+    let dims = state.params.faces;
+    let velocities: Vec<[f32; 4]> = (0..dims[3])
+        .map(|i| {
+            let y = (i / dims[0]) % dims[1];
+            [
+                (std::f32::consts::TAU * (y as f32 + 0.5) / n as f32).sin(),
+                0.,
+                0.,
+                0.,
+            ]
+        })
+        .collect();
+    gpu.context
+        .queue
+        .write_buffer(&state.velocity, 0, bytemuck::cast_slice(&velocities));
+    for _ in 0..20 {
+        state.step(&volume).unwrap();
+    }
+    let decay = (1.
+        - 4. * state.params.physical[2] * state.params.physical[1] / state.grid.cell_m.powi(2)
+            * (std::f32::consts::PI / n as f32).sin().powi(2))
+    .powi(20);
+    let mut error = 0f64;
+    let mut norm = 0f64;
+    for y in 0..n {
+        let point = [
+            1.5 * state.grid.cell_m * 1000.,
+            (y as f32 + 0.5) * state.grid.cell_m * 1000.,
+            1.5 * state.grid.cell_m * 1000.,
+        ];
+        let actual = state.probe(point).unwrap().unwrap().velocity[0];
+        let expected = decay * (std::f32::consts::TAU * (y as f32 + 0.5) / n as f32).sin();
+        error += (actual as f64 - expected as f64).powi(2);
+        norm += (expected as f64).powi(2);
+    }
+    assert!(
+        (error / norm).sqrt() < 2e-5,
+        "non-power-of-two shear error {}",
+        (error / norm).sqrt()
+    );
 }

@@ -196,3 +196,106 @@ mod memory_tests {
         }
     }
 }
+
+#[cfg(test)]
+mod periodic_index_tests {
+    use super::*;
+    use wgpu::util::DeviceExt;
+    #[test]
+    fn shader_periodic_indices_match_euclidean_wrapping_including_non_power_of_two_sizes() {
+        let _lock = crate::gpu_test_lock();
+        let context = GpuContext::headless().unwrap();
+        let mut cases = Vec::<[i32; 2]>::new();
+        for size in [1, 2, 3, 7, 16, 24, 31, 48, 257, 768, 1024, 65535] {
+            for value in [
+                i32::MIN,
+                -100000,
+                -65,
+                -49,
+                -48,
+                -25,
+                -24,
+                -23,
+                -1,
+                0,
+                1,
+                23,
+                24,
+                25,
+                48,
+                49,
+                i32::MAX,
+            ] {
+                cases.push([value, size]);
+            }
+        }
+        let input = context
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Signed periodic coordinate cases"),
+                contents: bytemuck::cast_slice(&cases),
+                usage: wgpu::BufferUsages::STORAGE,
+            });
+        let output = context.device.create_buffer(&wgpu::BufferDescriptor {
+            label: None,
+            size: cases.len() as u64 * 4,
+            usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
+            mapped_at_creation: false,
+        });
+        let source = format!(
+            "{}\n@group(0) @binding(0) var<storage,read> cases:array<vec2<i32>>; @group(0) @binding(1) var<storage,read_write> output:array<i32>; @compute @workgroup_size(64) fn main(@builtin(global_invocation_id) g:vec3<u32>){{if g.x>=arrayLength(&cases){{return;}}let c=cases[g.x];output[g.x]=wrap_periodic(c.x,u32(c.y));}}",
+            include_str!("periodic.wgsl")
+        );
+        let shader = context
+            .device
+            .create_shader_module(wgpu::ShaderModuleDescriptor {
+                label: Some("Portable periodic index regression"),
+                source: wgpu::ShaderSource::Wgsl(source.into()),
+            });
+        let pipeline = context
+            .device
+            .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+                label: None,
+                layout: None,
+                module: &shader,
+                entry_point: Some("main"),
+                compilation_options: Default::default(),
+                cache: None,
+            });
+        let bind = context
+            .device
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                label: None,
+                layout: &pipeline.get_bind_group_layout(0),
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: input.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: output.as_entire_binding(),
+                    },
+                ],
+            });
+        let mut enc = context.device.create_command_encoder(&Default::default());
+        {
+            let mut pass = enc.begin_compute_pass(&Default::default());
+            pass.set_pipeline(&pipeline);
+            pass.set_bind_group(0, &bind, &[]);
+            pass.dispatch_workgroups((cases.len() as u32).div_ceil(64), 1, 1);
+        }
+        context.queue.submit(Some(enc.finish()));
+        let bytes = read_bytes(&context, &output, 0, output.size()).unwrap();
+        let actual = bytemuck::cast_slice::<u8, i32>(&bytes);
+        for (case, result) in cases.iter().zip(actual) {
+            assert_eq!(
+                *result,
+                case[0].rem_euclid(case[1]),
+                "coordinate {} size {}",
+                case[0],
+                case[1]
+            );
+        }
+    }
+}

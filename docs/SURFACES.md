@@ -8,7 +8,7 @@
 4. Simulate. **Liquid occupancy** displays material volume fraction α, including any frozen portion; **Liquid fraction** in the thermal views displays melt fraction f within that material. Actual molten volume is the integral of αf. Velocity and pressure also include the surrounding air. Both viewports sample the retained fields at the same time. The 3D view reconstructs the current α=0.5 surface; CAD hatching/outlines on its cut match the native 2D section.
 5. Try `assets/hotend-free-surface.mhd.json`. It combines initially 250 °C solder, the CAD coil/magnets, thermal transport and a moving interface. Its default timestep is **2.5 µs**, with a larger EM iteration cap. The fixed-region and heating examples remain available separately. Repeating Simulate continues the run.
 
-The pool can change shape and level as material moves into the surrounding air. Domain outer faces are impermeable: include sufficient air padding and keep interfaces away from them. This is an incompressible liquid/air model in a finite box, not a vented-gas or compressible-jet model. Periodic moving-interface runs are not implemented.
+The pool can change shape and level as material moves into the surrounding air. Domain outer faces are impermeable by default: include sufficient air padding and keep interfaces away from them. Fluid-only runs can instead make any axis periodic; material, velocity and curvature then wrap across matching faces. This is an incompressible liquid/air model, not a vented-gas or compressible-jet model. Common runs reject periodic fluid boundaries when EM or thermal evolution is enabled because those solvers still use nonperiodic boundaries.
 
 ## Scheme
 
@@ -30,11 +30,14 @@ Each run owns a private evolving material-ID buffer. EM uses α-weighted conduct
 2. For a sphere of radius 0.25 m, exact volume-fraction initialization gives curvature RMS error **2.81% → 1.01%** on 24³/48³ grids. The deliberately large dimensional sphere is a numerical benchmark, not the target apparatus size.
 3. With σ=0.5 N/m, Laplace pressure is **2σ/R=4 Pa**. Reconstructed curvature gives pressure-jump errors about **0.560% → 0.294%**, with decreasing parasitic velocity. A separate constant-curvature check isolates force/pressure balance from reconstruction error. The interface is transported and reconstructed during the reconstructed-drop check. These are short pressure-balance checks, not long-duration drop-stability tests.
 4. A nearly inviscid equal-density standing capillary wave gives frequency errors **1.20% → 0.87%** on 32×32×4 / 64×64×4 grids. A short half-period stability check is included in regular tests; [dynamic capillarity details](CAPILLARITY.md) cover the reference, wall extension and limits.
-5. A common moving-material/thermal test preserves volume, keeps uniform temperature, conserves enthalpy and verifies synchronized clocks, immutable Setup geometry and movement into initially empty cells. Offscreen checks compare live hatched caps at 256/512 pixels and render the complete Setup/Simulation workflow without desktop windows.
+5. A sphere transported through each periodic seam on a 24³ grid gives **2.26%** relative fraction L1 error, volume drift below **9×10⁻⁸** and co-transported enthalpy drift below **3×10⁻⁷**. Uniform velocity remains uniform at 7000:1 density contrast; this does not establish momentum conservation for nonuniform flow. `assets/periodic-advection.mhd.json` is a source-free periodic annulus translation example with surface tension disabled.
+6. A common moving-material/thermal test preserves volume, keeps uniform temperature, conserves enthalpy and verifies synchronized clocks, immutable Setup geometry and movement into initially empty cells. Offscreen checks compare live hatched caps at 256/512 pixels and render the complete Setup/Simulation workflow without desktop windows.
 
 ```sh
 cargo test surface::tests -- --nocapture
 cargo test moving_liquid -- --nocapture
+cargo test periodic_ -- --nocapture
+./run.sh --run-check assets/periodic-advection.mhd.json 240
 ./run.sh --run-check assets/hotend-free-surface.mhd.json 24
 ```
 

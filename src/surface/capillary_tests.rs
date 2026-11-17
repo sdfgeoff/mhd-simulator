@@ -334,7 +334,8 @@ fn height_columns_reject_multiple_crossings_and_preserve_orientation() {
     let _lock = crate::gpu_test_lock();
     let (gpu, volume, mut surface, _) = super::tests::fixture(8);
     let source = format!(
-        "{}\n{}\n@compute @workgroup_size(256) fn probe(@builtin(global_invocation_id) g:vec3<u32>){{if flat(g)!=0u{{return;}}stats[0]=vec4<f32>(height(vec3<i32>(3,3,3),1u),0.0);}}",
+        "{}\n{}\n{}\n@compute @workgroup_size(256) fn probe(@builtin(global_invocation_id) g:vec3<u32>){{if flat(g)!=0u{{return;}}stats[0]=vec4<f32>(height(vec3<i32>(3,3,3),1u),0.0);}}",
+        include_str!("../periodic.wgsl"),
         include_str!("../vof.wgsl"),
         include_str!("../surface.wgsl")
     );

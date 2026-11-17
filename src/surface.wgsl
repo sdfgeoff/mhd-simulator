@@ -14,8 +14,23 @@ var<workgroup> bounds:array<vec4<f32>,256>;
 fn flat(g:vec3<u32>)->u32{return g.x+g.y*65535u*256u;}
 fn index(q:vec3<i32>)->u32{return u32(q.x)+p.dims.x*(u32(q.y)+p.dims.y*u32(q.z));}
 fn point(i:u32)->vec3<i32>{return vec3<i32>(i32(i%p.dims.x),i32((i/p.dims.x)%p.dims.y),i32(i/(p.dims.x*p.dims.y)));}
-fn inside(q:vec3<i32>)->bool{return all(q>=vec3<i32>(0))&&all(q<vec3<i32>(p.dims.xyz));}
-fn bounded(q:vec3<i32>)->vec3<i32>{return clamp(q,vec3<i32>(0),vec3<i32>(p.dims.xyz)-vec3<i32>(1));}
+// Low bits select first/last split sweep; bits 2..4 are periodic axes.
+fn periodic(axis:u32)->bool{return (p.choice.w & (4u<<axis))!=0u;}
+fn inside(q:vec3<i32>)->bool{
+ if (p.choice.w&28u)==0u {return all(q>=vec3<i32>(0))&&all(q<vec3<i32>(p.dims.xyz));}
+ for(var axis=0u;axis<3u;axis++){if !periodic(axis)&&(q[axis]<0||q[axis]>=i32(p.dims[axis])){return false;}}
+ return true;
+}
+fn bounded(q:vec3<i32>)->vec3<i32>{
+ if (p.choice.w&28u)==0u {return clamp(q,vec3<i32>(0),vec3<i32>(p.dims.xyz)-vec3<i32>(1));}
+ var at=q;
+ for(var axis=0u;axis<3u;axis++){
+  let length=i32(p.dims[axis]);
+  if periodic(axis) {at[axis]=wrap_periodic(at[axis],p.dims[axis]);}
+  else {at[axis]=clamp(at[axis],0,length-1);}
+ }
+ return at;
+}
 fn alpha(q:vec3<i32>)->f32{return input_field[index(bounded(q))].x;}
 fn wall(i:u32)->bool{return original[i]!=0u && original[i]!=p.choice.x;}
 @compute @workgroup_size(256)
@@ -62,7 +77,7 @@ fn interface_normal(q:vec3<i32>,outward:vec3<f32>)->vec3<f32>{
 @compute @workgroup_size(256)
 fn curvature(@builtin(global_invocation_id) g:vec3<u32>){let i=flat(g);if i>=p.dims.w{return;}let q=point(i);var k=0.0;
  for(var axis=0u;axis<3u;axis++){var l=q;var r=q;l[axis]-=1;r[axis]+=1;var nl=normals[index(bounded(l))][axis];var nr=normals[index(bounded(r))][axis];
- if l[axis]<0 {nl=-nl;}if r[axis]>=i32(p.dims[axis]){nr=-nr;}
+ if !periodic(axis) {if l[axis]<0 {nl=-nl;}if r[axis]>=i32(p.dims[axis]){nr=-nr;}}
  k+=(nr-nl)/(2.0*p.step.y);}
  let n=abs(normals[i].xyz);var axis=0u;if n.y>n.x{axis=1u;}if n.z>n[axis]{axis=2u;}
  let a=(axis+1u)%3u;let b=(axis+2u)%3u;var heights:array<f32,9>;var valid=true;
@@ -96,16 +111,17 @@ fn reconstruct(@builtin(global_invocation_id) g:vec3<u32>){
 // Each neighboring cell evaluates this identical expression: no atomics or
 // independently limited per-cell fluxes can break flux cancellation.
 fn geometric_flux(at:vec3<i32>,axis:u32)->vec4<f32>{
- var left=at;left[axis]-=1;
- if !inside(at)||!inside(left){return vec4<f32>(0.0);}
- if wall(index(at))||wall(index(left)){return vec4<f32>(0.0);}
- let fd=p.dims.xyz+vec3<u32>(1);let fi=u32(at.x)+fd.x*(u32(at.y)+fd.y*u32(at.z));
+ var previous=at;previous[axis]-=1;
+ if !inside(at)||!inside(previous){return vec4<f32>(0.0);}
+ let right=bounded(at);let left=bounded(previous);
+ if wall(index(right))||wall(index(left)){return vec4<f32>(0.0);}
+ let fd=p.dims.xyz+vec3<u32>(1);let fi=u32(right.x)+fd.x*(u32(right.y)+fd.y*u32(right.z));
  let displacement=velocity[fi][axis]*p.step.x/p.step.y;
  // Independently verify the actual face CFL, even if a caller supplied an
  // incorrect speed bound. Returning a flag avoids unsafe geometry arithmetic.
  if !(abs(displacement)<=0.150001) {return vec4<f32>(0.0,0.0,0.0,1.0);}
  if displacement==0.0{return vec4<f32>(0.0);}
- let donor=index(select(at,left,displacement>0.0));let a=input_field[donor].x;
+ let donor=index(select(right,left,displacement>0.0));let a=input_field[donor].x;
  var fraction=a;let plane=normals[donor];
  if dot(abs(plane.xyz),vec3<f32>(1.0))>0.5 {
   fraction=slab_fraction(plane.xyz,plane.w,axis,abs(displacement),sign(displacement));

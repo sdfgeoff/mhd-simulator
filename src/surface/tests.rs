@@ -58,7 +58,7 @@ pub(crate) fn box_fixture(
     let (surface, evolving) = SurfaceState::new(gpu.context.clone(), &volume, 3).unwrap();
     (gpu, volume, surface, evolving)
 }
-fn sphere(n: u32, center: Vec3, r: f32) -> Vec<[f32; 4]> {
+pub(crate) fn sphere(n: u32, center: Vec3, r: f32) -> Vec<[f32; 4]> {
     let h = 1. / n as f32;
     let half_diagonal = 3f32.sqrt() * 0.5 * h;
     let mut values = Vec::new();

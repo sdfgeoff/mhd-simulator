@@ -22,7 +22,7 @@ fn count_groups()->u32 {return (p.dims.w+255u)/256u;}
 fn periodic(axis:u32)->bool {return (p.flags.x&(1u<<axis))!=0u;}
 fn wrap_cell(pos:vec3<i32>)->vec3<i32> {
     var q=pos;
-    for(var axis=0u;axis<3u;axis++) {if periodic(axis) {let n=i32(p.dims[axis]);q[axis]=((q[axis]%n)+n)%n;}}
+    for(var axis=0u;axis<3u;axis++) {if periodic(axis) {q[axis]=wrap_periodic(q[axis],p.dims[axis]);}}
     return q;
 }
 fn valid_cell(pos:vec3<i32>)->bool {return all(pos>=vec3<i32>(0))&&all(pos<vec3<i32>(p.dims.xyz));}
