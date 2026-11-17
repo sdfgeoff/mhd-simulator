@@ -27,6 +27,8 @@ fn height(q:vec3<i32>,axis:u32)->vec3<f32>{
  var low=center;low[axis]-=3;var high=center;high[axis]+=3;
  if !inside(low)||!inside(high){return vec3<f32>(0.0);}
  let a=alpha(low);let b=alpha(high);var valid=(a>0.99&&b<0.01)||(b>0.99&&a<0.01);
+ // Incomplete endpoints cannot define a height; the column sum is unused.
+ if !valid{return vec3<f32>(0.0,0.0,sign(a-b));}
  let orientation=sign(a-b);var previous=a;
  for(var k=-3;k<=3;k++){
   var at=center;at[axis]+=k;let value=alpha(at);h+=value;

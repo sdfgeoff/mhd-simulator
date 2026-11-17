@@ -115,3 +115,15 @@ To reproduce the current profiled probe:
     MHD_DROP_PROFILE=1 MHD_DROP_LIQUID_NU=0.0002 MHD_DROP_GRIDS=64 MHD_DROP_PERIODS=0.02 cargo test --offline rayleigh_lamb_drop_oscillation -- --ignored --nocapture
 
 It writes artifacts/drop-performance-64.csv with CPU/GPU stages, accepted status and timestamp coverage. Short probes overwrite the generated drop trajectory; archive long traces first. This optimization does not change the open damping-accuracy findings in [the viscous-drop diagnostic](VISCOUS_DROP.md).
+
+## Incomplete height columns
+
+Height integration now returns immediately when its endpoint fractions cannot bracket a single interface. Those columns were already marked invalid, and their summed height was unused. Valid columns retain their original sum and monotonicity check; buffer storage and solver algorithms are unchanged.
+
+Three alternating executable pairs compared this change with 9660f91 on the seven-cell-height baseline, using an inviscid 64³ drop, density ratio 7000:1, 32 ticks and 0.831227 s physical duration. Each executable had one warmup. GPU timestamps covered every compute pass. Median interface/heat-stage GPU time fell **53.83 → 49.68 ms (7.7%)**. Process medians were **2.277 → 2.285 s**: this does **not** demonstrate an overall speedup. Pressure remained dominant at about 0.86 s of GPU time.
+
+The complete diagnostic CSV and final accepted fraction/curvature packet were byte-identical in all eight runs, including warmups. Reproduce the profiled probe with:
+
+    MHD_DROP_PROFILE=1 MHD_DROP_LIQUID_NU=0 MHD_DROP_GRIDS=64 MHD_DROP_PERIODS=0.05 MHD_DROP_DT_FACTOR=0.4 cargo test --offline rayleigh_lamb_drop_oscillation -- --ignored --nocapture
+
+As above, copy distinct compiled executables before alternating versions and archive generated trajectories before short probes. The measurement isolates the early exit; wider height columns and higher-order momentum reconstruction are separate numerical changes.
