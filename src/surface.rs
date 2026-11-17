@@ -28,6 +28,15 @@ pub struct EnthalpyTransport<'a> {
     pub output: &'a wgpu::Buffer,
     pub checkpoint: &'a wgpu::Buffer,
 }
+/// Fluid-owned storage reused only after the velocity/force step has succeeded.
+#[derive(Clone, Copy)]
+pub(crate) struct MomentumTransport<'a> {
+    pub velocity: &'a wgpu::Buffer,
+    pub scratch: &'a wgpu::Buffer,
+    pub advector: &'a wgpu::Buffer,
+    pub mask: &'a wgpu::Buffer,
+    pub density: [f32; 2],
+}
 #[derive(Clone, Debug, Default)]
 pub struct SurfaceDiagnostics {
     pub material_id: u32,
@@ -57,6 +66,7 @@ pub struct SurfaceState {
     pipelines: HashMap<&'static str, wgpu::ComputePipeline>,
     layout: wgpu::BindGroupLayout,
     id_pipeline: wgpu::ComputePipeline,
+    momentum_pipeline: wgpu::ComputePipeline,
 }
 impl SurfaceState {
     pub fn new(
@@ -142,9 +152,10 @@ impl SurfaceState {
                 label: Some("Conservative liquid interface"),
                 source: wgpu::ShaderSource::Wgsl(
                     format!(
-                        "{}\n{}\n{}",
+                        "{}\n{}\n{}\n{}",
                         include_str!("periodic.wgsl"),
                         include_str!("vof.wgsl"),
+                        include_str!("surface_geometry.wgsl"),
                         include_str!("surface.wgsl")
                     )
                     .into(),
@@ -206,6 +217,32 @@ impl SurfaceState {
             )
         })
         .collect();
+        let momentum_shader = context
+            .device
+            .create_shader_module(wgpu::ShaderModuleDescriptor {
+                label: Some("Mass-consistent MAC momentum"),
+                source: wgpu::ShaderSource::Wgsl(
+                    format!(
+                        "{}\n{}\n{}\n{}",
+                        include_str!("periodic.wgsl"),
+                        include_str!("vof.wgsl"),
+                        include_str!("surface_geometry.wgsl"),
+                        include_str!("surface_momentum.wgsl")
+                    )
+                    .into(),
+                ),
+            });
+        let momentum_pipeline =
+            context
+                .device
+                .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+                    label: Some("Geometric momentum transport"),
+                    layout: None,
+                    module: &momentum_shader,
+                    entry_point: Some("momentum"),
+                    compilation_options: Default::default(),
+                    cache: None,
+                });
         let idshader = context
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -244,6 +281,7 @@ impl SurfaceState {
             pipelines,
             layout,
             id_pipeline,
+            momentum_pipeline,
         };
         s.dispatch(volume, None, None, &["initialize"]);
         s.current = 1;
@@ -340,6 +378,47 @@ impl SurfaceState {
         self.diagnostics.max_curvature_m_inv = s[6];
         Ok(())
     }
+    /// Transport a moving fluid with the same mass fluxes as its interface.
+    /// Call FluidState::update_surface afterward to project with the new density.
+    pub fn advance_coupled(
+        &mut self,
+        volume: &Volume,
+        fluid: &mut crate::fluid::FluidState,
+        thermal: Option<EnthalpyTransport<'_>>,
+        dt: f64,
+    ) -> Result<(), String> {
+        if fluid.grid != self.grid
+            || !fluid.config().surface.enabled
+            || fluid.config().material_id != self.params.choice[0]
+            || fluid
+                .config()
+                .periodic
+                .iter()
+                .enumerate()
+                .any(|(axis, &enabled)| enabled != ((self.params.choice[3] & (4 << axis)) != 0))
+        {
+            return Err(
+                "Coupled interface and fluid grids, material and boundaries must match".into(),
+            );
+        }
+        let speed = fluid.max_face_speed();
+        let result = if let Some(momentum) = fluid.begin_momentum_transport()? {
+            self.advance_transport(
+                volume,
+                momentum.advector,
+                thermal,
+                dt,
+                speed,
+                Some(momentum),
+            )
+        } else {
+            self.advance_transport(volume, fluid.face_buffer(), thermal, dt, speed, None)
+        };
+        if result.is_ok() {
+            fluid.finish_momentum_transport();
+        }
+        result
+    }
     pub fn advance(
         &mut self,
         volume: &Volume,
@@ -347,6 +426,17 @@ impl SurfaceState {
         thermal: Option<EnthalpyTransport<'_>>,
         dt: f64,
         max_speed: f32,
+    ) -> Result<(), String> {
+        self.advance_transport(volume, velocity, thermal, dt, max_speed, None)
+    }
+    fn advance_transport(
+        &mut self,
+        volume: &Volume,
+        velocity: &wgpu::Buffer,
+        thermal: Option<EnthalpyTransport<'_>>,
+        dt: f64,
+        max_speed: f32,
+        momentum: Option<MomentumTransport<'_>>,
     ) -> Result<(), String> {
         if dt <= 0.
             || !dt.is_finite()
@@ -391,6 +481,9 @@ impl SurfaceState {
         }
         self.context.queue.submit(Some(enc.finish()));
         self.params.step[0] = dt as f32;
+        if let Some(m) = momentum {
+            self.params.step[2..4].copy_from_slice(&m.density);
+        }
         self.params.choice[1] = u32::from(thermal.is_some());
         for sweep in 0..3 {
             self.params.choice[2] = (self.sweep_index + sweep) % 3;
@@ -407,6 +500,9 @@ impl SurfaceState {
                 }
             });
             self.dispatch(volume, Some(velocity), heat, &["reconstruct", "sweep"]);
+            if let Some(m) = momentum {
+                self.dispatch_momentum(volume, m, sweep);
+            }
             self.current = 1 - self.current;
         }
         if let Err(e) = self.refresh(volume) {
@@ -415,6 +511,9 @@ impl SurfaceState {
                 .device
                 .create_command_encoder(&Default::default());
             enc.copy_buffer_to_buffer(&self.checkpoint, 0, self.field(), 0, self.field().size());
+            if let Some(m) = momentum {
+                enc.copy_buffer_to_buffer(m.advector, 0, m.velocity, 0, m.velocity.size());
+            }
             if let Some(t) = thermal {
                 enc.copy_buffer_to_buffer(t.checkpoint, 0, t.input, 0, t.input.size());
             }
@@ -423,10 +522,64 @@ impl SurfaceState {
             self.step_divergence_m3 = old_divergence;
             return Err(e);
         }
+        if let Some(m) = momentum {
+            let mut enc = self
+                .context
+                .device
+                .create_command_encoder(&Default::default());
+            enc.copy_buffer_to_buffer(m.scratch, 0, m.velocity, 0, m.velocity.size());
+            self.context.queue.submit(Some(enc.finish()));
+        }
         self.sweep_index = (self.sweep_index + 1) % 3;
         self.diagnostics.transport_error_m3 += self.diagnostics.volume_m3 - old;
         self.diagnostics.transport_divergence_m3 += self.step_divergence_m3;
         Ok(())
+    }
+    fn dispatch_momentum(&self, volume: &Volume, m: MomentumTransport<'_>, sweep: u32) {
+        let (input, output) = if sweep % 2 == 0 {
+            (m.velocity, m.scratch)
+        } else {
+            (m.scratch, m.velocity)
+        };
+        let buffers = [
+            &self.uniform,
+            volume.material_ids(),
+            self.field(),
+            &self.fields[1 - self.current],
+            m.advector,
+            input,
+            output,
+            &self.normals,
+            m.mask,
+        ];
+        let bind = self
+            .context
+            .device
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                label: Some("Shared liquid/momentum flux"),
+                layout: &self.momentum_pipeline.get_bind_group_layout(0),
+                entries: &buffers
+                    .iter()
+                    .enumerate()
+                    .map(|(i, b)| wgpu::BindGroupEntry {
+                        binding: i as u32,
+                        resource: b.as_entire_binding(),
+                    })
+                    .collect::<Vec<_>>(),
+            });
+        let mut enc = self
+            .context
+            .device
+            .create_command_encoder(&Default::default());
+        {
+            let mut pass = self.context.compute_pass(&mut enc, None);
+            pass.set_pipeline(&self.momentum_pipeline);
+            pass.set_bind_group(0, &bind, &[]);
+            let count = self.grid.dims.map(|n| n + 1).iter().product();
+            let g = groups(count);
+            pass.dispatch_workgroups(g[0], g[1], g[2]);
+        }
+        self.context.queue.submit(Some(enc.finish()));
     }
     pub fn update_materials(&self, original: &Volume, evolving: &Volume) {
         let buffers = [

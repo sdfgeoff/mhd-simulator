@@ -153,6 +153,7 @@ pub struct FluidState {
     air_density_kg_m3: f32,
     force_max: f32,
     max_face_speed: f32,
+    momentum_projection_pending: bool,
 }
 impl FluidState {
     pub fn new(
@@ -238,7 +239,7 @@ impl FluidState {
             80,
             n * 64,
             nf * 16,
-            n * 64,
+            (n * 64).max(nf * 16),
             if config.use_em_force {
                 if shared_force { 0 } else { n * 64 }
             } else {
@@ -349,7 +350,7 @@ impl FluidState {
                     .iter()
                     .enumerate()
                     .fold(0, |bits, (i, &v)| bits | ((v as u32) << i)),
-                u32::from(config.advection),
+                u32::from(config.advection && !config.surface.enabled),
                 u32::from(config.use_em_force),
                 0,
             ],
@@ -408,7 +409,7 @@ impl FluidState {
         let scalars = buffer("Fluid diagnostics", 80);
         let result = buffer("Fluid display fields", n * 64);
         let previous = buffer("Velocity checkpoint", nf * 16);
-        let checkpoint = buffer("Fluid field checkpoint", n * 64);
+        let checkpoint = buffer("Fluid field / advector checkpoint", (n * 64).max(nf * 16));
         if config.surface.enabled {
             let packets: Vec<_> = bytemuck::cast_slice::<u8, u32>(&ids)
                 .iter()
@@ -573,6 +574,7 @@ impl FluidState {
             surface_tension_n_m,
             air_density_kg_m3,
             force_max: 0.,
+            momentum_projection_pending: false,
             max_face_speed: 0.,
         };
         state.dispatch(&[("initialize", groups(nf as u32))]);
@@ -582,7 +584,7 @@ impl FluidState {
             .create_command_encoder(&Default::default());
         encoder.copy_buffer_to_buffer(&state.velocity, 0, &state.scratch, 0, state.velocity.size());
         state.context.queue.submit(Some(encoder.finish()));
-        let (iterations, residual) = state.project()?;
+        let (iterations, residual) = state.project(true)?;
         state.dispatch(&[("fields", groups(n as u32)), ("diagnostics", [1, 1, 1])]);
         state.read_diagnostics(iterations, residual, 0.)?;
         Ok(state)
@@ -788,7 +790,7 @@ impl FluidState {
         let mut iterations = self.diagnostics.iterations;
         let mut residual = self.diagnostics.relative_residual;
         let mut elapsed = self.diagnostics.elapsed_ms;
-        if changed {
+        if changed || self.momentum_projection_pending {
             let started = std::time::Instant::now();
             self.dispatch(&[("phase_faces", groups(self.params.faces[3]))]);
             let mut enc = self
@@ -797,7 +799,12 @@ impl FluidState {
                 .create_command_encoder(&Default::default());
             enc.copy_buffer_to_buffer(&self.velocity, 0, &self.scratch, 0, self.velocity.size());
             self.context.queue.submit(Some(enc.finish()));
-            let (extra, r) = self.project()?;
+            let (extra, r) = self.project(!self.momentum_projection_pending)?;
+            if self.momentum_projection_pending {
+                // This solve is the pressure increment caused by momentum
+                // transport. Retain the preceding force-balance pressure too.
+                self.dispatch(&[("pressure_commit", groups(self.params.dims[3]))]);
+            }
             iterations += extra;
             residual = r;
             elapsed += started.elapsed().as_secs_f64() * 1000.;
@@ -807,7 +814,34 @@ impl FluidState {
             ("diagnostics", [1, 1, 1]),
         ]);
         self.read_diagnostics(iterations, residual, elapsed)?;
+        self.momentum_projection_pending = false;
         Ok(())
+    }
+    pub(crate) fn begin_momentum_transport(
+        &mut self,
+    ) -> Result<Option<crate::surface::MomentumTransport<'_>>, String> {
+        if self.momentum_projection_pending {
+            return Err("Updated momentum still requires interface projection".into());
+        }
+        if !self.config.advection {
+            return Ok(None);
+        }
+        let mut enc = self
+            .context
+            .device
+            .create_command_encoder(&Default::default());
+        enc.copy_buffer_to_buffer(&self.velocity, 0, &self.checkpoint, 0, self.velocity.size());
+        self.context.queue.submit(Some(enc.finish()));
+        Ok(Some(crate::surface::MomentumTransport {
+            velocity: &self.velocity,
+            scratch: &self.scratch,
+            advector: &self.checkpoint,
+            mask: &self._mask,
+            density: [self.params.physical[3], self.air_density_kg_m3],
+        }))
+    }
+    pub(crate) fn finish_momentum_transport(&mut self) {
+        self.momentum_projection_pending = self.config.advection;
     }
     pub fn surface_tension_n_m(&self) -> f32 {
         self.surface_tension_n_m
@@ -851,16 +885,24 @@ impl FluidState {
         }
         Ok((residual, s[6] > 0.5, s[7] as u32))
     }
-    fn project(&mut self) -> Result<(u32, f32), String> {
+    fn project(&mut self, warm_start: bool) -> Result<(u32, f32), String> {
         let _stage = self.context.profiler.stage(crate::profile::Stage::Pressure);
         let cells = groups(self.params.dims[3]);
-        self.dispatch(&[
+        // A transport correction solves for a small pressure increment. Starting
+        // from the preceding force-balance pressure wastes iterations and changes
+        // the relative-residual scale; its physical contribution is added later.
+        let preparation = [
             ("pressure_warm", groups(self.params.faces[3])),
             ("pressure_coefficients", groups(self.params.faces[3])),
             ("pressure_guess", cells),
             ("pressure_refresh", cells),
             ("initial_reduce", [1, 1, 1]),
-        ]);
+        ];
+        self.dispatch(if warm_start {
+            &preparation
+        } else {
+            &preparation[1..]
+        });
         let mut iterations = 0;
         let mut residual = self.convergence()?;
         while !residual.1 && iterations < self.config.max_iterations {
@@ -903,10 +945,15 @@ impl FluidState {
                 self.config.absolute_divergence_tolerance
             ));
         }
-        self.dispatch(&[
+        let completion = [
             ("correct", groups(self.params.faces[3])),
             ("pressure_commit", cells),
-        ]);
+        ];
+        self.dispatch(if warm_start {
+            &completion
+        } else {
+            &completion[..1]
+        });
         Ok((iterations, residual.0))
     }
     fn read_diagnostics(
@@ -937,6 +984,12 @@ impl FluidState {
         Ok(())
     }
     pub fn step(&mut self, volume: &Volume) -> Result<&FluidDiagnostics, String> {
+        if self.momentum_projection_pending {
+            return Err(
+                "Refresh the interface and project updated momentum before another fluid step"
+                    .into(),
+            );
+        }
         if !self.is_current(volume) {
             return Err("Fluid inputs changed; initialize fluids again".into());
         }
@@ -984,7 +1037,7 @@ impl FluidState {
                 self.velocity.size(),
             );
             self.context.queue.submit(Some(encoder.finish()));
-            self.project()
+            self.project(true)
         };
         let result = run().and_then(|(iterations, residual)| {
             self.dispatch(&[

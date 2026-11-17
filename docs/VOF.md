@@ -35,6 +35,6 @@ cargo test moving_liquid -- --nocapture
 ./run.sh --run-check assets/hotend-free-surface.mhd.json 24
 ```
 
-These tests establish geometric transport behavior, not nozzle pinch-off or jetting thresholds. Initial CAD occupancy and walls are still voxel based. Momentum transport is not yet a geometrically consistent mass/momentum scheme, and contact angle, wetting and oxide films remain absent.
+These tests establish geometric transport behavior, not nozzle pinch-off or jetting thresholds. Initial CAD occupancy and walls are still voxel based. Moving-interface [momentum transport](MOMENTUM.md) now shares the geometric mass flux with arithmetic MAC dual-volume averaging. Its first-order upwind velocity reconstruction remains dissipative; contact angle, wetting and oxide films remain absent.
 
 [Dynamic capillary validation](CAPILLARITY.md) explains why height-derived reconstruction normals are important for a nearly grid-aligned moving interface. The static curvature fallback remains separate from those transport normals.

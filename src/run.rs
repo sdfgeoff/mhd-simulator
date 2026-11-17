@@ -193,8 +193,12 @@ impl RunState {
                 + 128;
         }
         if fluid_present {
-            working +=
-                n * 148 + nf * 48 + n.div_ceil(256) * 48 + 80 + if em_enabled { 0 } else { 64 };
+            working += n * 84
+                + (n * 64).max(nf * 16)
+                + nf * 48
+                + n.div_ceil(256) * 48
+                + 80
+                + if em_enabled { 0 } else { 64 };
         }
         if config.thermal_enabled {
             working += n * 192 + (n.div_ceil(256) + 1) * 48;
@@ -405,14 +409,13 @@ impl RunState {
             } else {
                 None
             };
-            if let (Some(surface), Some(fluid)) = (&mut self.surface, &self.fluid) {
+            if let (Some(surface), Some(fluid)) = (&mut self.surface, &mut self.fluid) {
                 let _stage = self.context.profiler.stage(crate::profile::Stage::Surface);
-                surface.advance(
+                surface.advance_coupled(
                     volume,
-                    fluid.face_buffer(),
+                    fluid,
                     self.thermal.as_ref().map(|t| t.surface_transport()),
                     self.config.dt_s,
-                    fluid.max_face_speed(),
                 )?;
                 surface.update_materials(volume, physics_volume);
                 if let Some(thermal) = &mut self.thermal {

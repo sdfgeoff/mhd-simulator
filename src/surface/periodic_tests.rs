@@ -179,13 +179,7 @@ fn uniform_periodic_metal_drop_preserves_velocity_and_integrated_momentum() {
     for _ in 0..64 {
         fluid.step(&volume).unwrap();
         surface
-            .advance(
-                &volume,
-                fluid.face_buffer(),
-                None,
-                1. / 64.,
-                fluid.max_face_speed(),
-            )
+            .advance_coupled(&volume, &mut fluid, None, 1. / 64.)
             .unwrap();
         fluid
             .update_surface(&volume, surface.field(), None)
@@ -253,8 +247,16 @@ fn mac_integrals(
 #[test]
 #[ignore = "Nonuniform high-density momentum transport diagnostic; writes artifacts/periodic-momentum.csv"]
 fn nonuniform_periodic_metal_drop_momentum_transport() {
+    check_nonuniform_transport(24, 64, true);
+}
+
+#[test]
+fn nonuniform_high_density_momentum_is_conserved() {
+    check_nonuniform_transport(16, 16, false);
+}
+
+fn check_nonuniform_transport(n: u32, steps: u32, dump: bool) {
     let _lock = crate::gpu_test_lock();
-    let n = 24u32;
     let mut materials = default_materials();
     materials[3].density_kg_m3 = Some(7000.);
     materials[3].dynamic_viscosity_pa_s = Some(1e-6);
@@ -318,7 +320,7 @@ fn nonuniform_periodic_metal_drop_momentum_transport() {
     let mut csv = String::from(
         "step,time_s,px,py,pz,kinetic_j,relative_momentum_error,relative_volume_error\n",
     );
-    for step in 0..=64 {
+    for step in 0..=steps {
         let (p, k) = mac_integrals(&gpu.context, &surface, &fluid, n);
         let error = (p.iter().zip(p0).map(|(a, b)| (a - b).powi(2)).sum::<f64>()
             / p0.iter().map(|a| a * a).sum::<f64>())
@@ -333,29 +335,124 @@ fn nonuniform_periodic_metal_drop_momentum_transport() {
             error,
             surface.diagnostics.volume_m3 / v0 - 1.
         ));
-        if step == 64 {
+        if step == steps {
             eprintln!(
                 "nonuniform periodic: relative momentum error={error:.6e}, K/K0={}, volume drift={:.3e}",
                 k / k0,
                 surface.diagnostics.volume_m3 / v0 - 1.
             );
-            assert!(error.is_finite() && k.is_finite());
+            assert!(error < 1e-5, "Relative momentum drift {error}");
+            assert!(
+                k / k0 <= 1.00001,
+                "Kinetic energy grew without forcing: {}",
+                k / k0
+            );
+            assert!((surface.diagnostics.volume_m3 / v0 - 1.).abs() < 2e-6);
             break;
         }
         fluid.step(&volume).unwrap();
         surface
-            .advance(
-                &volume,
-                fluid.face_buffer(),
-                None,
-                0.01,
-                fluid.max_face_speed(),
-            )
+            .advance_coupled(&volume, &mut fluid, None, 0.01)
             .unwrap();
+        if step == 0 {
+            assert!(
+                fluid
+                    .step(&volume)
+                    .unwrap_err()
+                    .contains("project updated momentum")
+            );
+        }
         fluid
             .update_surface(&volume, surface.field(), None)
             .unwrap();
     }
-    std::fs::create_dir_all("artifacts").unwrap();
-    std::fs::write("artifacts/periodic-momentum.csv", csv).unwrap();
+    if dump {
+        std::fs::create_dir_all("artifacts").unwrap();
+        std::fs::write("artifacts/periodic-momentum.csv", csv).unwrap();
+    }
+}
+
+#[test]
+fn coupled_transport_restores_interface_momentum_and_heat_after_gpu_cfl_rejection() {
+    let _lock = crate::gpu_test_lock();
+    let n = 12;
+    let (gpu, volume, _, _) = super::tests::fixture(n);
+    let (mut surface, _) =
+        SurfaceState::with_periodic_boundaries(gpu.context.clone(), &volume, 3, [true; 3]).unwrap();
+    let initial = super::tests::sphere(n, Vec3::splat(0.5), 0.2);
+    gpu.context
+        .queue
+        .write_buffer(surface.field(), 0, bytemuck::cast_slice(&initial));
+    surface.refresh(&volume).unwrap();
+    let (input, output, checkpoint) = seed_heat(&gpu.context, &initial);
+    let mut fluid = FluidState::new(
+        gpu.context.clone(),
+        &volume,
+        FluidConfig {
+            surface: SurfaceConfig { enabled: true },
+            periodic: [true; 3],
+            acceleration_m_s2: [0.; 3],
+            initial_velocity_m_s: [0.; 3],
+            ..Default::default()
+        },
+        None,
+    )
+    .unwrap();
+    fluid
+        .update_surface(&volume, surface.field(), None)
+        .unwrap();
+    // The cached speed bound is zero. Force the GPU's independent check to reject.
+    let velocities = vec![[0.25f32, 0.125, -0.0625, 0.]; (n + 1).pow(3) as usize];
+    gpu.context
+        .queue
+        .write_buffer(fluid.face_buffer(), 0, bytemuck::cast_slice(&velocities));
+    let before_alpha =
+        read_bytes(&gpu.context, surface.field(), 0, surface.field().size()).unwrap();
+    let before_u = read_bytes(
+        &gpu.context,
+        fluid.face_buffer(),
+        0,
+        fluid.face_buffer().size(),
+    )
+    .unwrap();
+    let before_h = read_bytes(&gpu.context, &input, 0, input.size()).unwrap();
+    assert!(
+        surface
+            .advance_coupled(
+                &volume,
+                &mut fluid,
+                Some(EnthalpyTransport {
+                    input: &input,
+                    output: &output,
+                    checkpoint: &checkpoint
+                }),
+                1.
+            )
+            .is_err()
+    );
+    assert_eq!(
+        before_alpha,
+        read_bytes(&gpu.context, surface.field(), 0, surface.field().size()).unwrap()
+    );
+    assert_eq!(
+        before_u,
+        read_bytes(
+            &gpu.context,
+            fluid.face_buffer(),
+            0,
+            fluid.face_buffer().size()
+        )
+        .unwrap()
+    );
+    assert_eq!(
+        before_h,
+        read_bytes(&gpu.context, &input, 0, input.size()).unwrap()
+    );
+    // A valid retry must be possible without a pending-projection flag from the failure.
+    surface
+        .advance_coupled(&volume, &mut fluid, None, 0.001)
+        .unwrap();
+    fluid
+        .update_surface(&volume, surface.field(), None)
+        .unwrap();
 }

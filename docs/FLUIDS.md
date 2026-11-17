@@ -18,7 +18,7 @@ Velocity components live on their respective MAC faces; pressure potential is ce
 
 Density ρ and dynamic viscosity μ are uniform within the selected fluid material, with ν=μ/ρ. The first-order split step is:
 
-1. Midpoint backtrace and trilinear semi-Lagrangian interpolation advect the velocity: `uᵃ = SL_RK2(uⁿ)`.
+1. Fixed-region flow uses midpoint backtrace and trilinear semi-Lagrangian velocity interpolation: `uᵃ = SL_RK2(uⁿ)`. Moving-interface flow instead uses [mass-consistent MAC momentum transport](MOMENTUM.md) alongside geometric VOF, with a projection using the updated density. It does not apply the semi-Lagrangian advection as well.
 2. Explicit viscosity and forcing give `u* = uᵃ + Δt (ν Lₕ uᵃ + a + f_EM/ρ)`.
 3. Solve `A φ = −h² Dₕ u*`, where `A = −h² Dₕ Gₕ` is the positive pressure graph Laplacian.
 4. Project `uⁿ⁺¹ = u* − Gₕ φ`; report gauge pressure `p = ρ φ / Δt`.

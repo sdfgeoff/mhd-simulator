@@ -291,7 +291,7 @@ fn balanced_surface_force_and_reconstructed_static_drop_refine() {
             let config = crate::fluid::FluidConfig {
                 acceleration_m_s2: [0.; 3],
                 dt_s: 0.001,
-                advection: false,
+                advection: !exact,
                 relative_tolerance: 1e-6,
                 max_iterations: 4000,
                 surface: SurfaceConfig {
@@ -306,14 +306,7 @@ fn balanced_surface_force_and_reconstructed_static_drop_refine() {
             for _ in 0..5 {
                 fluid.step(&volume).unwrap();
                 if !exact {
-                    s.advance(
-                        &volume,
-                        fluid.face_buffer(),
-                        None,
-                        0.001,
-                        fluid.max_face_speed(),
-                    )
-                    .unwrap();
+                    s.advance_coupled(&volume, &mut fluid, None, 0.001).unwrap();
                     fluid.update_surface(&volume, s.field(), None).unwrap();
                 }
             }
