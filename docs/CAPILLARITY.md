@@ -21,7 +21,14 @@ The measured amplitude is the cosine Fourier coefficient of column-integrated li
 
 At 32×32×4, reducing the timestep by four gives frequency error 1.21%, close to the 1.20% value above; the remaining error is primarily spatial for this case.
 
-The integrated volume remains constant to the reported f32 reduction precision. This test currently establishes the equal-density case. High density contrast, viscous damping and droplet breakup need separate validation.
+The integrated volume remains constant to the reported f32 reduction precision. Further runs vary liquid density while keeping gas density at 1 kg/m³, surface tension at 1 N/m and liquid viscosity at 10⁻⁶ Pa·s:
+
+| Liquid/gas density ratio | Frequency error, 32×32×4 | Frequency error, 64×64×4 |
+| --- | ---: | ---: |
+| 1000:1 | 0.584% | 0.145% |
+| 7000:1 | 0.573% | 0.140% |
+
+These cases also preserve reduced volume and remain oscillatory over 1.5 periods. The regular half-period regression checks both 1:1 and 7000:1 ratios. They establish capillary frequency behavior at large density contrast, while viscous damping, global momentum conservation under advection and droplet breakup still need separate validation.
 
 ## Failure found and correction
 

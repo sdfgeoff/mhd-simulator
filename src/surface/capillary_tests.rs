@@ -145,22 +145,24 @@ impl Wave {
 #[test]
 fn capillary_wave_restores_without_spurious_amplitude_growth() {
     let _lock = crate::gpu_test_lock();
-    let mut wave = Wave::new(16, 0.5, 0.8, 1.);
-    let mut last = wave.a0;
-    let mut peak = last.abs();
-    for _ in 0..wave.steps {
-        let (a, _) = wave.step();
-        last = a;
-        peak = peak.max(a.abs());
+    for density_ratio in [1., 7000.] {
+        let mut wave = Wave::new(16, 0.5, 0.8, density_ratio);
+        let mut last = wave.a0;
+        let mut peak = last.abs();
+        for _ in 0..wave.steps {
+            let (a, _) = wave.step();
+            last = a;
+            peak = peak.max(a.abs());
+        }
+        eprintln!(
+            "Half-period capillary wave density ratio {density_ratio}: amplitude ratio {}, peak ratio {}",
+            last / wave.a0,
+            peak / wave.a0
+        );
+        assert!((last / wave.a0 + 1.).abs() < 0.25);
+        assert!(peak / wave.a0 < 1.1);
+        assert!((wave.surface.diagnostics.volume_m3 / wave.volume0 - 1.).abs() < 2e-6);
     }
-    eprintln!(
-        "Half-period capillary wave: amplitude ratio {}, peak ratio {}",
-        last / wave.a0,
-        peak / wave.a0
-    );
-    assert!((last / wave.a0 + 1.).abs() < 0.25);
-    assert!(peak / wave.a0 < 1.1);
-    assert!((wave.surface.diagnostics.volume_m3 / wave.volume0 - 1.).abs() < 2e-6);
 }
 
 #[test]
