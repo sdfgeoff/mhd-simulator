@@ -713,3 +713,6 @@ mod energy_tests;
 
 #[cfg(test)]
 mod height_diagnostics;
+
+#[cfg(test)]
+mod cylinder_tests;

@@ -45,6 +45,8 @@ cargo test periodic_ -- --nocapture
 
 The [full 3D drop-oscillation benchmark](DROP_OSCILLATION.md) records earlier four-grid studies; the latest [curvature-only extension](HEIGHT_CURVATURE.md) gives mode-frequency errors **1.59% / 0.0134%** on 64³ / 96³. The coarse results remain nonmonotonic; frequency agreement does not establish accurate breakup. Its default initialization uses integrated analytic fractions; a separate CAD option exercises the raster initialization described in [CAD initialization](CAD_INITIALIZATION.md).
 
+A separate [periodic-cylinder diagnostic](CYLINDER_INSTABILITY.md) compares full-3D Rayleigh–Plateau growth and stable short-wave oscillation with linear theory. Its measured rate/amplitude errors and nonmonotonic refinement remain explicit; it does not establish accurate breakup.
+
 ## Interpretation and remaining work
 
 1. This is the first moving-interface implementation. It has **not validated nozzle pinch-off, satellite sizes or jetting thresholds**. Direction splitting, unresolved height stencils and CAD tessellation/quadrature still introduce errors in small drops. Resolve the intended droplet with many cells and demonstrate spatial/time convergence before trusting breakup; six cells across 0.5 mm is inadequate for that claim.
