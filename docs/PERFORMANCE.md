@@ -127,3 +127,7 @@ The complete diagnostic CSV and final accepted fraction/curvature packet were by
     MHD_DROP_PROFILE=1 MHD_DROP_LIQUID_NU=0 MHD_DROP_GRIDS=64 MHD_DROP_PERIODS=0.05 MHD_DROP_DT_FACTOR=0.4 cargo test --offline rayleigh_lamb_drop_oscillation -- --ignored --nocapture
 
 As above, copy distinct compiled executables before alternating versions and archive generated trajectories before short probes. The measurement isolates the early exit; wider height columns and higher-order momentum reconstruction are separate numerical changes.
+
+## Experimental pressure preconditioning
+
+The [GPU aggregation-preconditioner investigation](PRESSURE_PRECONDITIONING.md) is currently test-only. Three alternating warmed 96³ drop probes measure median unprofiled process time **5.826 → 5.249 s** and pressure GPU time **2,286 → 1,785 ms** in separate profiled runs. All profiling passes are recorded. Smaller-grid results, memory costs, the unchanged physical-residual check and a smooth manufactured case that fails convergence in both methods are documented there. Longer coupled checks and optional-allocation integration are required before changing the application's default solver.

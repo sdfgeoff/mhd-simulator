@@ -273,6 +273,7 @@ fn simulate_drop(
         None,
     )
     .unwrap();
+    fluid.experimental_multigrid = dump && std::env::var_os("MHD_DROP_PRESSURE_MG").is_some();
     fluid.euler_viscosity_reference =
         dump && std::env::var_os("MHD_DROP_EULER_VISCOSITY").is_some();
     fluid

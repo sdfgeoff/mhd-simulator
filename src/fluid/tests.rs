@@ -335,6 +335,11 @@ fn viscous_shear_matches_discrete_decay_and_enforces_cfl() {
 #[test]
 fn thermal_phase_topology_and_weighted_projection_preserve_hydrostatic_rest() {
     let _lock = crate::gpu_test_lock();
+    for multigrid in [false, true] {
+        check_thermal_phase_weighted_projection(multigrid);
+    }
+}
+fn check_thermal_phase_weighted_projection(multigrid: bool) {
     let (gpu, v, mut s) = channel(
         8,
         FluidConfig {
@@ -344,6 +349,7 @@ fn thermal_phase_topology_and_weighted_projection_preserve_hydrostatic_rest() {
             ..Default::default()
         },
     );
+    s.experimental_multigrid = multigrid;
     let count = s.grid.dims.iter().map(|n| *n as usize).product::<usize>();
     let mut data = vec![crate::thermal::ThermalCell::default(); count];
     for (i, c) in data.iter_mut().enumerate() {

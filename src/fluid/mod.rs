@@ -170,6 +170,10 @@ pub struct FluidState {
     momentum_projection_pending: bool,
     #[cfg(test)]
     pub(crate) euler_viscosity_reference: bool,
+    #[cfg(test)]
+    pub(crate) experimental_multigrid: bool,
+    #[cfg(test)]
+    multigrid: Option<multigrid::Multigrid>,
 }
 impl FluidState {
     pub fn new(
@@ -618,6 +622,10 @@ impl FluidState {
             momentum_projection_pending: false,
             #[cfg(test)]
             euler_viscosity_reference: false,
+            #[cfg(test)]
+            experimental_multigrid: false,
+            #[cfg(test)]
+            multigrid: None,
             max_face_speed: 0.,
         };
         state.initialize_velocity()?;
@@ -959,6 +967,10 @@ impl FluidState {
         Ok((residual, s[6] > 0.5, s[7] as u32))
     }
     fn project(&mut self, warm_start: bool) -> Result<(u32, f32), String> {
+        #[cfg(test)]
+        if self.experimental_multigrid {
+            return multigrid::project(self, warm_start);
+        }
         let _stage = self.context.profiler.stage(crate::profile::Stage::Pressure);
         let cells = groups(self.params.dims[3]);
         // A transport correction solves for a small pressure increment. Starting
@@ -1414,3 +1426,6 @@ mod tests;
 mod viscosity_tests;
 
 mod stabilized;
+
+#[cfg(test)]
+mod multigrid;
