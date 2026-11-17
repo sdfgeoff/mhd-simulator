@@ -78,7 +78,7 @@ The deformed 64³ energy proxies disagree strongly: after half a period, the gra
 
 A second test-only probe compares production curvature with complete monotone
 height columns, trying centred radii 3–6 cells and requiring endpoint fractions
-within 10⁻⁶ of their pure phases. Production currently tries radii 3–4 and accepts
+within 10⁻⁶ of their pure phases. The baseline at 7b9bde7 tries radii 3–4 and accepts
 endpoints beyond 0.99 / below 0.01. This probe does not modify accepted fields,
 normal buffers, checkpoints or production reduction storage; a planar-interface
 GPU test verifies that contract and zero curvature on an oblique plane.
@@ -94,7 +94,7 @@ same integrated sphere geometry, including half-cell placement controls. Error
 comparisons use the common valid subset or explicitly identify recovered cells;
 `NaN` means an empty subset, not a nonfinite GPU result.
 
-At 64³, production provides heights for 2,832 of 2,984 mixed cells; the complete
+On that baseline at 64³, production provides heights for 2,832 of 2,984 mixed cells; the complete
 longer columns cover 2,952. On the common subset the relative RMS error stays
 0.5964%, and the maximum column-height difference is only 2.4×10⁻⁷ cells.
 On the 120 recovered cells the relative RMS error falls from 9.26% (production
@@ -110,3 +110,11 @@ checks, and any candidate needs dynamic capillary and transport controls before
 integration. The complete-column principle follows
 [Basilisk's height construction](https://basilisk.fr/src/heights.h); the probe is
 an independent diagnostic using this solver's existing column/Hessian formulas.
+
+Rerunning the probe compares the currently installed production stencil with
+the independent strict-endpoint reference; its current-stencil columns therefore
+change after an upgrade.
+
+The subsequent [curvature-only extension](HEIGHT_CURVATURE.md) integrates wider
+columns and records new dynamic controls, including the local-speed tradeoff.
+The tables above remain the preceding solver’s audit measurements.

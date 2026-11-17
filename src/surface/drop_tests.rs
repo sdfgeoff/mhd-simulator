@@ -158,6 +158,7 @@ fn check_frequency_refinement(errors: &[f64]) {
 }
 
 struct DropReport {
+    peak_kinetic_j: f64,
     omega: f64,
     shape: f64,
     peak: f64,
@@ -176,6 +177,26 @@ fn three_dimensional_drop_restores_on_the_rayleigh_lamb_timescale() {
         report.shape
     );
     assert!(report.peak <= 1.1);
+}
+
+#[test]
+fn initially_static_drop_kinetic_energy_refines_over_a_quarter_period() {
+    let _lock = crate::gpu_test_lock();
+    let mut energies = Vec::new();
+    for n in [48, 64] {
+        let report = simulate_drop(n, 0.25, 0.4, 0., 7000., DropOptions::default());
+        // Normalize with the analytic equilibrium surface energy, not either
+        // evolving area proxy. This bounds numerical motion, not energy drift.
+        let capillary_energy = 4. * PI * 0.2f64.powi(2);
+        let relative = report.peak_kinetic_j / capillary_energy;
+        eprintln!(
+            "Static drop n={n}: peak K={:.8e} J, K/(sigma A0)={relative:.8e}",
+            report.peak_kinetic_j
+        );
+        assert!(relative.is_finite() && relative < 1e-4);
+        energies.push(report.peak_kinetic_j);
+    }
+    assert!(energies[1] < energies[0], "{energies:?}");
 }
 
 #[derive(Default)]
@@ -321,6 +342,7 @@ fn simulate_drop(
     let mut trace = Vec::new();
     let mut previous = a0;
     let mut peak = a0.abs();
+    let mut peak_kinetic_j = 0f64;
     for step in 0..=steps {
         let bytes = read_bytes(&gpu.context, surface.field(), 0, surface.field().size()).unwrap();
         if dump_geometry && (step % 100 == 0 || step == steps) {
@@ -333,6 +355,7 @@ fn simulate_drop(
             crossings.push(t - dt + dt * previous / (previous - a));
         }
         peak = peak.max(a.abs());
+        peak_kinetic_j = peak_kinetic_j.max(fluid.diagnostics.kinetic_energy_j as f64);
         if audit_energy {
             let patch = super::energy_tests::patch_energy(
                 &mut surface,
@@ -446,6 +469,7 @@ fn simulate_drop(
         assert!(peak / a0.abs() < 1.1, "Unforced drop-mode amplitude grew");
     }
     DropReport {
+        peak_kinetic_j,
         omega: frequency_reference,
         shape: previous / amplitude_scale,
         peak: peak / amplitude_scale.abs(),

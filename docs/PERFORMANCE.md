@@ -148,3 +148,15 @@ Three alternating warmed pairs per grid, using inviscid 7000:1 drops over 0.02 p
 | 96³, 24 ticks | 679.88 → 666.68 ms | 4.996 → 5.169 s |
 
 Every profiling pass was recorded. The interface stage improves about 2%, while these process timings do **not** demonstrate an overall speedup. All 20 comparison runs preserve the corresponding trajectory CSV and final accepted fraction/curvature packet byte-for-byte, including shifted and viscous controls. The 28 regular surface/interface tests pass. The change adds no buffers.
+
+## Curvature-only longer columns
+
+[Eleven/thirteen-cell curvature fallback columns](HEIGHT_CURVATURE.md) improve
+static-drop motion and oscillation checks without allocating another volume
+buffer. On three alternating warmed V6 three-tick pairs, interface/heat GPU
+medians are **229.60 → 230.08 ms** and process medians **26.031 → 25.814 s**.
+All passes are recorded and owner input hashes are unchanged. The small process
+difference is not presented as a speedup; EM still accounts for about 20.9 s.
+Fluid velocities intentionally differ because the curvature changes. The
+validation guide records the short local-peak-speed tradeoff and the revised
+energy-based regression explicitly.

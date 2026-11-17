@@ -43,6 +43,15 @@ fn height(q:vec3<i32>,axis:u32)->vec3<f32>{
  let extended=height_range(q,axis,4);if extended.y>0.5{return extended;}
  return local;
 }
+// Curvature needs a complete 3×3 patch, including columns farther from the
+// interface than the central normal stencil. Extend only failed columns; reject
+// a second interface through the same monotonicity/orientation checks.
+fn curvature_height(q:vec3<i32>,axis:u32)->vec3<f32>{
+ let local=height(q,axis);if local.y>0.5{return local;}
+ let h5=height_range(q,axis,5);if h5.y>0.5{return h5;}
+ let h6=height_range(q,axis,6);if h6.y>0.5{return h6;}
+ return local;
+}
 // Height gradients avoid Youngs' grid-crossing slope bias for nearly aligned
 // interfaces. Fall back to the local volume gradient when no single crossing
 // exists or neighboring columns disagree on liquid orientation.
@@ -72,7 +81,7 @@ fn curvature(@builtin(global_invocation_id) g:vec3<u32>){let i=flat(g);if i>=p.d
  if any(n>vec3<f32>(0.0)) {
  var axis=0u;if n.y>n.x{axis=1u;}if n.z>n[axis]{axis=2u;}
  let a=(axis+1u)%3u;let b=(axis+2u)%3u;var heights:array<f32,9>;var valid=true;
- for(var v=-1;v<=1&&valid;v++){for(var u=-1;u<=1&&valid;u++){var at=q;at[a]+=u;at[b]+=v;let h=height(at,axis);heights[u32((u+1)+3*(v+1))]=h.x;valid=valid&&h.y>0.5&&h.z==sign(normals[i][axis]);}}
+ for(var v=-1;v<=1&&valid;v++){for(var u=-1;u<=1&&valid;u++){var at=q;at[a]+=u;at[b]+=v;let h=curvature_height(at,axis);heights[u32((u+1)+3*(v+1))]=h.x;valid=valid&&h.y>0.5&&h.z==sign(normals[i][axis]);}}
  if valid {
  let hx=0.5*(heights[5]-heights[3]);let hy=0.5*(heights[7]-heights[1]);
  // Transverse filtering suppresses a 3D grid mode without changing extruded waves.

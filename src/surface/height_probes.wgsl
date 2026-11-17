@@ -21,7 +21,7 @@ fn height_comparison(q:vec3<i32>,i:u32)->vec4<f32>{
  let a=(axis+1u)%3u;let b=(axis+2u)%3u;let orientation=sign(normals[i][axis]);
  var heights:array<f32,9>;var current=true;var strict=true;var difference=0.;
  for(var v=-1;v<=1;v++){for(var u=-1;u<=1;u++){
-  var at=q;at[a]+=u;at[b]+=v;let hc=height(at,axis);let hs=complete_height(at,axis);
+  var at=q;at[a]+=u;at[b]+=v;let hc=curvature_height(at,axis);let hs=complete_height(at,axis);
   let cv=hc.y>0.5&&hc.z==orientation;let sv=hs.y>0.5&&hs.z==orientation;
   current=current&&cv;strict=strict&&sv;heights[u32((u+1)+3*(v+1))]=hs.x;
   if cv&&sv{difference=max(difference,abs(hc.x-hs.x));}

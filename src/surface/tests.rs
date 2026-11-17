@@ -270,7 +270,7 @@ fn sphere_height_curvature_refines_towards_laplace_jump() {
 #[test]
 fn balanced_surface_force_and_reconstructed_static_drop_refine() {
     let _lock = crate::gpu_test_lock();
-    let mut speeds = Vec::new();
+    let mut energies = Vec::new();
     let mut errors = Vec::new();
     for n in [24, 48] {
         let (gpu, volume, mut s, _) = fixture(n);
@@ -313,8 +313,9 @@ fn balanced_surface_force_and_reconstructed_static_drop_refine() {
             let error = ((center - air) / 4. - 1.).abs();
             let speed = fluid.diagnostics.max_speed_m_s;
             eprintln!(
-                "static drop n={n} exact={exact}: dp={}, error={error:.4e}, umax={speed:.4e}, iterations={}",
+                "static drop n={n} exact={exact}: dp={}, error={error:.4e}, umax={speed:.4e}, K={:.8e}, iterations={}",
                 center - air,
+                fluid.diagnostics.kinetic_energy_j,
                 fluid.diagnostics.iterations
             );
             if exact {
@@ -322,13 +323,16 @@ fn balanced_surface_force_and_reconstructed_static_drop_refine() {
                 assert!(speed < 1e-5);
             } else {
                 errors.push(error);
-                speeds.push(speed);
+                // Curvature changes can move a local peak to another cell. Keep an
+                // absolute speed bound and refine the density-weighted energy.
+                assert!(speed < 1e-5);
+                energies.push(fluid.diagnostics.kinetic_energy_j);
                 assert!(error < 0.15);
             }
         }
     }
     assert!(errors[1] < errors[0], "{errors:?}");
-    assert!(speeds[1] < speeds[0], "{speeds:?}");
+    assert!(energies[1] < energies[0], "{energies:?}");
 }
 
 #[test]

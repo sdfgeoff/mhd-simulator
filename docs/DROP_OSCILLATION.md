@@ -38,7 +38,7 @@ The coarse 24³ drop has not crossed its spherical state. Reducing the 32³ time
 
 ## Extended heights and limited bulk reconstruction
 
-The current scheme extends incomplete height columns from seven to nine cells, with a common origin between lengths, and filters transverse 3D height second differences. Momentum uses MC–Hancock reconstruction in homogeneous phase stencils and upwind velocity near density jumps. Both geometry and momentum matter; the isolated shear accuracy gain alone did not fix capillary behavior.
+That scheme extends incomplete height columns from seven to nine cells, with a common origin between lengths, and filters transverse 3D height second differences. Momentum uses MC–Hancock reconstruction in homogeneous phase stencils and upwind velocity near density jumps. Both geometry and momentum matter; the isolated shear accuracy gain alone did not fix capillary behavior.
 
 | Grid | Cells across initial diameter | Measured ω, rad/s | Frequency error |
 |---|---:|---:|---:|
@@ -50,6 +50,17 @@ The current scheme extends incomplete height columns from seven to nine cells, w
 The coarse results are nonmonotonic. The substantial reduction at 96³ does not establish a clean convergence order. The default diagnostic includes all four grids, retains the 3% frequency bound at each grid, and requires the final error to be smaller than the first. A separate 48³/64³-only run still fails that refinement assertion.
 
 At 64³, shifting the initial drop by half a cell along all three axes gives 2.32% frequency error, compared with 2.65% when centered. The shifted case completes three reference periods without mode-amplitude growth or volume drift above 6×10⁻⁸. Its final quadrupole is only 0.663 of the initial value, compared with a linear inviscid reference of one: appreciable numerical damping and phase error remain. Completion of the run does not establish energy conservation. Halving the centered 64³ timestep changes frequency error from 2.65% to 2.61%, leaving the spatial bias largely intact.
+
+## Curvature-only wider columns
+
+Curvature now additionally tries eleven/thirteen cells when shorter columns
+fail; transport normals retain seven/nine cells. Full 1.5-period checks give
+**1.59% / 0.0134% frequency error** at 64³/96³, with the existing amplitude and
+volume bounds intact. Earlier tables remain historical measurements; the new
+stencil has not yet repeated their complete placement/viscosity/CAD matrix.
+[Curvature validation](HEIGHT_CURVATURE.md) includes reduced static-drop motion
+and the short local-peak-speed regression tradeoff. Local velocity noise still
+prevents a general accuracy claim from these frequency results.
 
 ## Run it
 
@@ -71,7 +82,7 @@ An optional GPU diagnostic reports which mixed cells have complete height stenci
 
     MHD_HEIGHT_GRID=64 MHD_HEIGHT_OFFSET=0.5 cargo test --offline drop_height_function_coverage -- --ignored --nocapture
 
-MHD_DROP_DUMP_GEOMETRY=1 saves raw accepted geometry every 100 steps and at completion. Set MHD_HEIGHT_INPUT to one of those artifacts/drop-geometry-N-STEP.bin files to inspect an evolved interface while retaining its recorded curvature. The coverage CSV also reports a hypothetical eleven-cell stencil for research; production still uses seven/nine cells.
+MHD_DROP_DUMP_GEOMETRY=1 saves raw accepted geometry every 100 steps and at completion. Set MHD_HEIGHT_INPUT to one of those artifacts/drop-geometry-N-STEP.bin files to inspect an evolved interface while retaining its recorded curvature. The coverage CSV also reports a hypothetical eleven-cell stencil for research; production curvature now also tries eleven/thirteen cells; transport normals retain seven/nine.
 
 ## Limits
 
