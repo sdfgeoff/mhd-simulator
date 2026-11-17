@@ -42,6 +42,8 @@ pub(crate) struct MomentumTransport<'a> {
 #[derive(Clone, Debug, Default)]
 pub struct SurfaceDiagnostics {
     pub material_id: u32,
+    pub initial_sampling_ms: f64,
+    pub initial_workspace_bytes: u64,
     pub volume_m3: f64,
     pub area_m2: f64,
     pub min_fraction: f32,
@@ -290,6 +292,26 @@ impl SurfaceState {
         s.refresh(volume)?;
         s.update_materials(volume, &evolving);
         Ok((s, evolving))
+    }
+    pub(crate) fn initialize_cad(
+        &mut self,
+        volume: &Volume,
+        model: &crate::model::Model,
+        thermal: Option<crate::domain::fractions::InitialThermal<'_>>,
+    ) -> Result<(), String> {
+        let started = std::time::Instant::now();
+        let workspace = crate::domain::fractions::initialize(
+            &self.context,
+            volume,
+            model,
+            self.params.choice[0],
+            self.field(),
+            thermal,
+        )?;
+        self.refresh(volume)?;
+        self.diagnostics.initial_sampling_ms = started.elapsed().as_secs_f64() * 1000.;
+        self.diagnostics.initial_workspace_bytes = workspace;
+        Ok(())
     }
     pub fn working_bytes(&self) -> u64 {
         self.fields.iter().map(wgpu::Buffer::size).sum::<u64>()

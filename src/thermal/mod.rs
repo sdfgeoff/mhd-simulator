@@ -294,7 +294,14 @@ impl ThermalState {
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
                 label: Some("Conservative enthalpy and phase"),
-                source: wgpu::ShaderSource::Wgsl(include_str!("solver.wgsl").into()),
+                source: wgpu::ShaderSource::Wgsl(
+                    format!(
+                        "{}\n{}",
+                        include_str!("enthalpy.wgsl"),
+                        include_str!("solver.wgsl")
+                    )
+                    .into(),
+                ),
             });
         let pl = context
             .device
@@ -477,6 +484,35 @@ impl ThermalState {
     }
     pub fn result_buffer(&self) -> &wgpu::Buffer {
         &self.states[self.current]
+    }
+    pub(crate) fn initial_surface_buffers(&self) -> crate::domain::fractions::InitialThermal<'_> {
+        crate::domain::fractions::InitialThermal {
+            cells: self.result_buffer(),
+            catalog: &self.catalog,
+            body_offset: self.params.meta[1],
+        }
+    }
+    pub(crate) fn recover_initial_surface(&mut self, volume: &Volume) -> Result<(), String> {
+        if self.time_s != 0. {
+            return Err("Initial CAD enthalpy can only be recovered at time zero".into());
+        }
+        let bind = self.bind(volume, self.current, None, None)?;
+        let mut enc = self
+            .context
+            .device
+            .create_command_encoder(&Default::default());
+        self.dispatch(
+            &mut enc,
+            &bind,
+            "surface_recover",
+            groups(self.params.dims[3]),
+        );
+        self.context.queue.submit(Some(enc.finish()));
+        self.refresh(volume, None, None, 0)?;
+        self.transport_delta_j = 0.;
+        self.diagnostics.delta_enthalpy_j = 0.;
+        self.diagnostics.energy_error_j = 0.;
+        Ok(())
     }
     pub fn surface_transport(&self) -> crate::surface::EnthalpyTransport<'_> {
         crate::surface::EnthalpyTransport {

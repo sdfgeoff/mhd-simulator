@@ -101,6 +101,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             memory.surface as f64 / 1048576.,
             memory.total() as f64 / 1048576.
         );
+        if let Some(surface) = &state.surface {
+            println!(
+                "CAD fractional initialization: {:.1} ms · {:.2} MiB temporary workspace",
+                surface.diagnostics.initial_sampling_ms,
+                surface.diagnostics.initial_workspace_bytes as f64 / 1048576.
+            );
+        }
         let mut performance = String::from(
             "step,time_s,accepted,stage,cpu_wall_ms,gpu_pass_ms,recorded_passes,total_passes\n",
         );

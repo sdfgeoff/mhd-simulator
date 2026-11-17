@@ -22,11 +22,7 @@ fn material_id(i:u32)->u32 {let id=ids[i];return select(id,id&255u,(id&0x8000000
 fn row(i:u32)->vec4<f32>{return catalog[material_id(i)*2u];}
 fn transition(i:u32)->vec4<f32>{return catalog[material_id(i)*2u+1u];}
 fn body(i:u32)->u32{if bodies[i]==0u{return p.control.y;}return p.control.y+2u+2u*firstTrailingBit(bodies[i]);}
-fn enthalpy(i:u32,t:f32)->f32 {
-    let m=row(i);let phase=transition(i);var f=0.0;
-    if phase.z>0.5 {if phase.x==phase.y {f=select(0.0,1.0,t>phase.x);}else{f=clamp((t-phase.x)/(phase.y-phase.x),0.0,1.0);}}
-    return m.x*(m.y*(t-273.15)+m.w*f);
-}
+fn enthalpy(i:u32,t:f32)->f32 {return material_enthalpy(row(i),transition(i),t);}
 // Return T, liquid fraction, and an invalid/missing-phase-data indicator.
 fn invert(i:u32,h:f32)->vec3<f32>{
     let m=row(i);let phase=transition(i);let cp=m.x*m.y;
@@ -52,7 +48,7 @@ fn boundary_rate(b:vec4<f32>,k:f32,t:f32,a:f32)->f32 {
 fn initialize(@builtin(global_invocation_id) gid:vec3<u32>){
     let i=flat(gid);if i>=p.dims.w{return;}var c=Cell(vec4<f32>(0.0),vec4<f32>(0.0),vec4<f32>(0.0),vec4<f32>(0.0));
     if ids[i]!=0u && bodies[i]!=0u {
-        let b=body(i);var t=catalog[b].x;if catalog[b+1u].x>0.5{t=catalog[b].y;}
+        let b=body(i);let t=initial_body_temperature(catalog[b],catalog[b+1u]);
         let h=enthalpy(i,t);let phase=invert(i,h);
         c.state=vec4<f32>(phase.xy,h,1.0);c.valid=vec4<f32>(1.0,0.0,0.0,0.0);c.budget.w=phase.z;
     }cells_out[i]=c;

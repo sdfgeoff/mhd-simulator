@@ -590,17 +590,33 @@ impl FluidState {
             momentum_projection_pending: false,
             max_face_speed: 0.,
         };
-        state.dispatch(&[("initialize", groups(nf as u32))]);
-        let mut encoder = state
+        state.initialize_velocity()?;
+        Ok(state)
+    }
+    fn initialize_velocity(&mut self) -> Result<(), String> {
+        self.dispatch(&[("initialize", groups(self.params.faces[3]))]);
+        let mut encoder = self
             .context
             .device
             .create_command_encoder(&Default::default());
-        encoder.copy_buffer_to_buffer(&state.velocity, 0, &state.scratch, 0, state.velocity.size());
-        state.context.queue.submit(Some(encoder.finish()));
-        let (iterations, residual) = state.project(true)?;
-        state.dispatch(&[("fields", groups(n as u32)), ("diagnostics", [1, 1, 1])]);
-        state.read_diagnostics(iterations, residual, 0.)?;
-        Ok(state)
+        encoder.copy_buffer_to_buffer(&self.velocity, 0, &self.scratch, 0, self.velocity.size());
+        self.context.queue.submit(Some(encoder.finish()));
+        let (iterations, residual) = self.project(false)?;
+        self.dispatch(&[
+            ("fields", groups(self.params.dims[3])),
+            ("diagnostics", [1, 1, 1]),
+        ]);
+        self.read_diagnostics(iterations, residual, 0.)
+    }
+    /// Apply the requested initial field after the actual density/phase is known.
+    pub(crate) fn reset_initial_velocity(&mut self) -> Result<(), String> {
+        if self.time_s != 0. {
+            return Err("Initial velocity can only be reset at time zero".into());
+        }
+        if self.config.initial_velocity_m_s.iter().any(|u| *u != 0.) {
+            self.initialize_velocity()?;
+        }
+        Ok(())
     }
     /// Replace the driving Lorentz force before a coupled step (GPU to GPU).
     pub fn update_force(&mut self, field: ForceField<'_>) -> Result<(), String> {

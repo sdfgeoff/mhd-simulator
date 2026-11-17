@@ -12,6 +12,7 @@ pub struct Body {
     pub boundary_edges: usize,
     pub nonmanifold_edges: usize,
     pub winding: f32,
+    orientation_consistent: bool,
 }
 impl Body {
     pub fn new(name: String, triangles: Vec<[Vec3; 3]>) -> Result<Self, String> {
@@ -41,7 +42,9 @@ impl Body {
                 let a = key(t[i]);
                 let b = key(t[(i + 1) % 3]);
                 let e = if a < b { (a, b) } else { (b, a) };
-                *edges.entry(e).or_insert(0usize) += 1;
+                let edge = edges.entry(e).or_insert((0usize, 0i32));
+                edge.0 += 1;
+                edge.1 += if a < b { 1 } else { -1 };
             }
         }
         let signed_volume: f64 = triangles
@@ -61,8 +64,11 @@ impl Body {
             triangles: triangles.into(),
             visible: true,
             simulation: Default::default(),
-            boundary_edges: edges.values().filter(|&&n| n == 1).count(),
-            nonmanifold_edges: edges.values().filter(|&&n| n > 2).count(),
+            boundary_edges: edges.values().filter(|&&(n, _)| n == 1).count(),
+            nonmanifold_edges: edges.values().filter(|&&(n, _)| n > 2).count(),
+            orientation_consistent: edges
+                .values()
+                .all(|&(n, direction)| n == 2 && direction == 0),
         })
     }
     pub fn triangles(&self) -> &[[Vec3; 3]] {
@@ -77,6 +83,9 @@ impl Body {
             .map(|t| t[0].as_dvec3().dot(t[1].as_dvec3().cross(t[2].as_dvec3())) / 6.)
             .sum::<f64>()
             .abs()
+    }
+    pub fn consistently_oriented(&self) -> bool {
+        self.orientation_consistent
     }
     pub fn closed(&self) -> bool {
         self.boundary_edges == 0 && self.nonmanifold_edges == 0

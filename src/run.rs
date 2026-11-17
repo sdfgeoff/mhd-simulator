@@ -247,7 +247,7 @@ impl RunState {
         {
             return Err("Attach heaters/thermostats to static CAD solids; source attachment to moving liquid is not defined".into());
         }
-        let (surface, dynamic_volume) = if fluid_config.surface.enabled && fluid_present {
+        let (mut surface, dynamic_volume) = if fluid_config.surface.enabled && fluid_present {
             let (s, v) = crate::surface::SurfaceState::with_periodic_boundaries(
                 context.clone(),
                 volume,
@@ -259,6 +259,26 @@ impl RunState {
             (None, None)
         };
         let physics_volume = dynamic_volume.as_ref().unwrap_or(volume);
+        let mut thermal = if config.thermal_enabled {
+            Some(ThermalState::new(
+                context.clone(),
+                volume,
+                config.thermal.clone(),
+            )?)
+        } else {
+            None
+        };
+        if let Some(surface) = &mut surface {
+            surface.initialize_cad(
+                volume,
+                model,
+                thermal.as_ref().map(|t| t.initial_surface_buffers()),
+            )?;
+            surface.update_materials(volume, physics_volume);
+            if let Some(thermal) = &mut thermal {
+                thermal.recover_initial_surface(physics_volume)?;
+            }
+        }
         let em = if em_enabled {
             Some(EmState::new(
                 context.clone(),
@@ -266,15 +286,6 @@ impl RunState {
                 model,
                 em_config.clone(),
                 Mode::Induction,
-            )?)
-        } else {
-            None
-        };
-        let thermal = if config.thermal_enabled {
-            Some(ThermalState::new(
-                context.clone(),
-                volume,
-                config.thermal.clone(),
             )?)
         } else {
             None
@@ -301,6 +312,9 @@ impl RunState {
                 )?;
             } else if let Some(thermal) = &thermal {
                 fluid.update_phase(volume, thermal.result_buffer())?;
+            }
+            if surface.is_some() || thermal.is_some() {
+                fluid.reset_initial_velocity()?;
             }
         }
         let magnetic_j = em

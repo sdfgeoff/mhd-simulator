@@ -2,7 +2,7 @@
 
 ## Use it
 
-1. Assign the solder material and temperature in Setup. Imported liquid geometry supplies the initial material distribution; other included CAD solids remain fixed walls.
+1. Assign the solder material and temperature in Setup. Imported liquid geometry supplies [fractional initial occupancy](CAD_INITIALIZATION.md); other included CAD solids remain fixed walls.
 2. In Simulation, enable **Fluid motion → Moving liquid / air interface**. Enable **Thermal / phase evolution** to transport heat and let melting/freezing control mobility. Without thermal evolution the selected material is treated as liquid.
 3. Set **Surface tension vs ambient** on the liquid material in Setup; set ambient density and viscosity on **Air / void** in the same material library. The solder materials’ initial **0.5 N/m is illustrative**, not a calibrated value for either solder or its oxide-covered surface. Choose a small common timestep; capillary, viscosity and conservative advection limits are checked explicitly.
 4. Simulate. **Liquid occupancy** displays material volume fraction α, including any frozen portion; **Liquid fraction** in the thermal views displays melt fraction f within that material. Actual molten volume is the integral of αf. Velocity and pressure also include the surrounding air. Both viewports sample the retained fields at the same time. The 3D view reconstructs the current α=0.5 surface; CAD hatching/outlines on its cut match the native 2D section.
@@ -43,11 +43,11 @@ cargo test periodic_ -- --nocapture
 ./run.sh --run-check assets/hotend-free-surface.mhd.json 24
 ```
 
-A separate [full 3D drop-oscillation benchmark](DROP_OSCILLATION.md) gives mode-frequency errors **1.84% → 1.31%** on 48³/64³ grids, while demonstrating much larger coarse-grid shape error. Its initialization uses integrated analytic fractions; it does not validate the CAD occupancy initialization.
+A separate [full 3D drop-oscillation benchmark](DROP_OSCILLATION.md) gives mode-frequency errors **1.84% → 1.31%** on 48³/64³ grids, while demonstrating much larger coarse-grid shape error. Its default initialization uses integrated analytic fractions; a separate CAD option exercises the raster initialization described in [CAD initialization](CAD_INITIALIZATION.md).
 
 ## Interpretation and remaining work
 
-1. This is the first moving-interface implementation. It has **not validated nozzle pinch-off, satellite sizes or jetting thresholds**. Direction splitting, unresolved height stencils and initial cell-centre CAD occupancy still introduce errors in small drops. Resolve the intended droplet with many cells and demonstrate spatial/time convergence before trusting breakup; six cells across 0.5 mm is inadequate for that claim.
+1. This is the first moving-interface implementation. It has **not validated nozzle pinch-off, satellite sizes or jetting thresholds**. Direction splitting, unresolved height stencils and CAD tessellation/quadrature still introduce errors in small drops. Resolve the intended droplet with many cells and demonstrate spatial/time convergence before trusting breakup; six cells across 0.5 mm is inadequate for that claim.
 2. Prescribed CAD contact angles/wetting, oxide skins, evaporation, compressible air, variable material-property curves and moving wire-feed mechanics remain absent. Subcell CAD wall treatment and higher-order momentum reconstruction remain useful numerical improvements. The simulation box uses a neutral 90° geometric extension; imported CAD wall contact physics is not resolved. Surface behaviour against staircase walls should be treated cautiously.
 3. The explicit partitioned method has temporal splitting and interface/density-advection errors. The energy panel reports capillary work and estimated surface energy `σ ∫|∇α| dV`, plus their mismatch. This area estimate includes voxel/contact artifacts and is not an exact geometric-area or total-energy-conservation claim. Fluid loss includes unresolved numerical/interface work and is not deposited as heat.
 4. Diffuse conductive tails can make the single-precision EM system poorly conditioned. The example passes its 60 µs check at 2.5 µs steps; a 10 µs run failed the strict EM residual check at a later tick. Use timestep refinement and the reported residuals. Failed solves stop explicitly rather than retaining an inaccurate result. Better EM preconditioning remains useful.

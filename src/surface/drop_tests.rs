@@ -104,7 +104,15 @@ fn rayleigh_lamb_drop_oscillation() {
     std::fs::create_dir_all("artifacts").unwrap();
     let mut errors = Vec::new();
     for n in grids {
-        let report = simulate_drop(n, periods, factor, epsilon, ratio, true);
+        let report = simulate_drop(
+            n,
+            periods,
+            factor,
+            epsilon,
+            ratio,
+            true,
+            std::env::var_os("MHD_DROP_CAD").is_some(),
+        );
         if periods >= 1.3 {
             assert!(
                 report.crossings.len() >= 3,
@@ -139,7 +147,7 @@ struct DropReport {
 fn three_dimensional_drop_restores_on_the_rayleigh_lamb_timescale() {
     let _lock = crate::gpu_test_lock();
     let periods = 0.35;
-    let report = simulate_drop(48, periods, 0.4, 0.03, 7000., false);
+    let report = simulate_drop(48, periods, 0.4, 0.03, 7000., false, false);
     let reference = (2. * PI * periods).cos();
     assert!(
         (report.shape - reference).abs() < 0.1,
@@ -156,6 +164,7 @@ fn simulate_drop(
     epsilon: f64,
     ratio: f32,
     dump: bool,
+    cad: bool,
 ) -> DropReport {
     let mut materials = default_materials();
     materials[3].density_kg_m3 = Some(ratio);
@@ -163,23 +172,36 @@ fn simulate_drop(
     materials[3].surface_tension_n_m = Some(1.);
     materials[0].density_kg_m3 = Some(1.);
     materials[0].dynamic_viscosity_pa_s = Some(0.);
-    let (gpu, volume, _, _) = super::tests::box_fixture(
-        DomainSettings {
-            min_mm: [0.; 3],
-            max_mm: [1000.; 3],
-            cell_mm: 1000. / n as f32,
-        },
-        &materials,
-    );
+    let settings = DomainSettings {
+        min_mm: [0.; 3],
+        max_mm: [1000.; 3],
+        cell_mm: 1000. / n as f32,
+    };
+    let model = cad_ellipsoid(epsilon);
+    let (gpu, volume) = if cad {
+        let gpu = crate::domain::GpuDomain::new().unwrap();
+        let volume = gpu.build(&model, &settings, &materials).unwrap();
+        (gpu, volume)
+    } else {
+        let (gpu, volume, _, _) = super::tests::box_fixture(settings, &materials);
+        (gpu, volume)
+    };
     assert_eq!(volume.dims, [n; 3]);
     let h = volume.inputs.snapshot().grid.cell_m as f64;
     let r = 0.2;
-    let initial = ellipsoid(n, h, r, epsilon);
     let (mut surface, _) = SurfaceState::new(gpu.context.clone(), &volume, 3).unwrap();
-    gpu.context
-        .queue
-        .write_buffer(surface.field(), 0, bytemuck::cast_slice(&initial));
-    surface.refresh(&volume).unwrap();
+    let initial = if cad {
+        surface.initialize_cad(&volume, &model, None).unwrap();
+        let bytes = read_bytes(&gpu.context, surface.field(), 0, surface.field().size()).unwrap();
+        bytemuck::cast_slice(&bytes).to_vec()
+    } else {
+        let initial = ellipsoid(n, h, r, epsilon);
+        gpu.context
+            .queue
+            .write_buffer(surface.field(), 0, bytemuck::cast_slice(&initial));
+        surface.refresh(&volume).unwrap();
+        initial
+    };
     let (a0, v0, _) = moments(n, h, r, &initial);
     // Potential flow inside r^l and outside r^(-l-1), with Laplace jump:
     // omega_l^2=l(l-1)(l+1)(l+2)sigma/[R^3((l+1)rho_l+l rho_g)].
@@ -208,7 +230,9 @@ fn simulate_drop(
         .update_surface(&volume, surface.field(), None)
         .unwrap();
     std::fs::create_dir_all("artifacts").unwrap();
-    let path = if dump {
+    let path = if cad {
+        format!("artifacts/drop-oscillation-cad-{n}.csv")
+    } else if dump {
         format!("artifacts/drop-oscillation-{n}.csv")
     } else {
         format!("artifacts/drop-oscillation-regular-{n}.csv")
@@ -276,4 +300,100 @@ fn simulate_drop(
         peak: peak / a0.abs(),
         crossings,
     }
+}
+
+fn cad_ellipsoid(epsilon: f64) -> crate::model::Model {
+    use crate::model::{Body, Model};
+    use glam::Vec3;
+    let latitude: u32 = std::env::var("MHD_DROP_CAD_LATITUDES")
+        .unwrap_or("64".into())
+        .parse()
+        .unwrap();
+    assert!((8..=512).contains(&latitude));
+    let longitude = 2 * latitude;
+    let axes = Vec3::new(
+        (200. / (1. + epsilon).sqrt()) as f32,
+        (200. / (1. + epsilon).sqrt()) as f32,
+        (200. * (1. + epsilon)) as f32,
+    );
+    let center = Vec3::splat(500.);
+    let point = |j: u32, k: u32| {
+        if j == 0 {
+            return center + Vec3::Z * axes.z;
+        }
+        if j == latitude {
+            return center - Vec3::Z * axes.z;
+        }
+        let theta = PI * j as f64 / latitude as f64;
+        let phi = 2. * PI * (k % longitude) as f64 / longitude as f64;
+        center
+            + Vec3::new(
+                (theta.sin() * phi.cos()) as f32,
+                (theta.sin() * phi.sin()) as f32,
+                theta.cos() as f32,
+            ) * axes
+    };
+    let mut triangles = Vec::new();
+    for k in 0..longitude {
+        triangles.push([point(0, 0), point(1, k), point(1, k + 1)]);
+        for j in 1..latitude - 1 {
+            triangles.push([point(j, k), point(j + 1, k), point(j + 1, k + 1)]);
+            triangles.push([point(j, k), point(j + 1, k + 1), point(j, k + 1)]);
+        }
+        triangles.push([
+            point(latitude - 1, k),
+            point(latitude, 0),
+            point(latitude - 1, k + 1),
+        ]);
+    }
+    let mut body = Body::new("Liquid ellipsoid".into(), triangles).unwrap();
+    body.simulation.material_id = 3;
+    assert!(body.closed());
+    Model {
+        bodies: vec![body],
+        ..Default::default()
+    }
+}
+
+#[test]
+#[ignore = "CAD fractional initialization diagnostic"]
+fn imported_drop_initialization_diagnostic() {
+    let _lock = crate::gpu_test_lock();
+    let model = cad_ellipsoid(0.03);
+    let mesh_volume = model.bodies[0].volume_mm3() * 1e-9;
+    let mut csv = String::from("grid,relative_volume_error,relative_fraction_l1,quadrupole\n");
+    for n in [32u32, 48, 64] {
+        let gpu = crate::domain::GpuDomain::new().unwrap();
+        let volume = gpu
+            .build(
+                &model,
+                &DomainSettings {
+                    min_mm: [0.; 3],
+                    max_mm: [1000.; 3],
+                    cell_mm: 1000. / n as f32,
+                },
+                &default_materials(),
+            )
+            .unwrap();
+        let (mut surface, _) = SurfaceState::new(gpu.context.clone(), &volume, 3).unwrap();
+        surface.initialize_cad(&volume, &model, None).unwrap();
+        let h = volume.inputs.snapshot().grid.cell_m as f64;
+        let exact = ellipsoid(n, h, 0.2, 0.03);
+        let bytes = read_bytes(&gpu.context, surface.field(), 0, surface.field().size()).unwrap();
+        let values = bytemuck::cast_slice::<u8, [f32; 4]>(&bytes);
+        let (q, v, _) = moments(n, h, 0.2, values);
+        let l1 = values
+            .iter()
+            .zip(&exact)
+            .map(|(a, b)| (a[0] as f64 - b[0] as f64).abs() * h.powi(3))
+            .sum::<f64>()
+            / mesh_volume;
+        eprintln!(
+            "CAD initial n={n}: volume error={:.7e}, fraction L1={l1:.7e}, q={q:.7e}",
+            v / mesh_volume - 1.
+        );
+        csv.push_str(&format!("{n},{},{l1},{q}\n", v / mesh_volume - 1.));
+    }
+    std::fs::create_dir_all("artifacts").unwrap();
+    std::fs::write("artifacts/cad-initialization.csv", csv).unwrap();
 }

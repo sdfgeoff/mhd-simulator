@@ -1264,3 +1264,5 @@ mod input_update_tests {
         assert_eq!(gpu.read_masks(&volume), masks);
     }
 }
+
+pub(crate) mod fractions;

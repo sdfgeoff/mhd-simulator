@@ -50,4 +50,16 @@ CSV files artifacts/drop-oscillation-N.csv contain the quadrupole, analytic trac
 
 ## Limits
 
-Initialization uses analytically integrated fractions, rather than cell-centre CAD occupancy. Imported-model initial-interface error remains separate work. The benchmark does not yet establish accurate local velocities, physical viscous damping, nozzle pinch-off or satellite sizes. Curvature fallback, arithmetic face density, first-order momentum reconstruction and splitting still introduce errors; further refinement and additional observables are needed for those claims.
+The default diagnostic uses analytically integrated fractions. The CAD option below measures imported-model initialization separately. The benchmark does not yet establish accurate local velocities, physical viscous damping, nozzle pinch-off or satellite sizes. Curvature fallback, arithmetic face density, first-order momentum reconstruction and splitting still introduce errors; further refinement and additional observables are needed for those claims.
+
+## CAD initialization option
+
+Set MHD_DROP_CAD=1 to initialize the diagnostic from a tessellated CAD ellipsoid through the production GPU fraction initializer. Its output is artifacts/drop-oscillation-cad-N.csv. The default diagnostic retains independently integrated analytic fractions so geometric initialization error can be assessed separately. Both paths use the same fluid/surface kernels.
+
+    MHD_DROP_CAD=1 MHD_DROP_GRIDS=48 MHD_DROP_PERIODS=1.5 cargo test rayleigh_lamb_drop_oscillation -- --ignored --nocapture
+
+MHD_DROP_CAD_LATITUDES controls the diagnostic mesh: longitude divisions are twice the latitude count. Its default of 64 produces 16,128 triangles. With that fixed mesh, frequency errors are 1.52% at 48³ and 2.45% at 64³: the paired-grid refinement assertion fails. Good volume conservation does not establish curvature accuracy.
+
+At 64³, doubling to 128 latitude divisions (65,024 triangles) reduces frequency error to 1.31%, with relative volume drift below 4×10⁻⁸ and no measured quadrupole amplification. A further refinement to 256 latitude divisions (261,120 triangles) gives 1.24% error, also without quadrupole amplification. These are close to the 1.31% analytic-initialization frequency error at that grid. Refining the fluid grid alone while holding a coarse curved CAD tessellation fixed can therefore give a misleading convergence trend.
+
+See [CAD initialization](CAD_INITIALIZATION.md) for static fraction measurements and the remaining wall/tessellation limitations.
