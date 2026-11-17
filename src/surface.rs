@@ -556,7 +556,7 @@ impl SurfaceState {
                 .queue
                 .write_buffer(&self.uniform, 0, bytemuck::bytes_of(&self.params));
             let heat = thermal.map(|t| {
-                if sweep % 2 == 0 {
+                if sweep.is_multiple_of(2) {
                     (t.input, t.output)
                 } else {
                     (t.output, t.input)
@@ -599,7 +599,7 @@ impl SurfaceState {
         Ok(())
     }
     fn dispatch_momentum(&self, volume: &Volume, m: MomentumTransport<'_>, sweep: u32) {
-        let (input, output) = if sweep % 2 == 0 {
+        let (input, output) = if sweep.is_multiple_of(2) {
             (m.velocity, m.scratch)
         } else {
             (m.scratch, m.velocity)

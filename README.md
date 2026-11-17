@@ -60,6 +60,7 @@ The shared library includes aluminium 6061-T6. All named presets have conductivi
 ```sh
 cargo test -- --nocapture
 cargo fmt --check
+cargo clippy --all-targets -- -D warnings
 ./run.sh --inspect assets/hotend.gltf
 ./run.sh --inspect vendor/step-loupe/sample/nist-ctc05.step
 ./run.sh --gpu-check assets/hotend.gltf

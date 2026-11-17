@@ -359,6 +359,10 @@ impl Viewport {
     pub(crate) fn output_texture(&self) -> &wgpu::Texture {
         &self.target.as_ref().unwrap().0
     }
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "A frame combines camera, section, mesh and optional field inputs."
+    )]
     pub fn draw(
         &mut self,
         camera: Camera,
@@ -383,6 +387,10 @@ impl Viewport {
         )
     }
     #[cfg(test)]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "Tests pass explicit section geometry and fields to match the viewport."
+    )]
     pub fn draw_section(
         &mut self,
         model: &Model,
@@ -396,6 +404,10 @@ impl Viewport {
     ) -> egui::TextureId {
         self.draw_section_with_surface(model, caps, plane, volume, options, span, n, field, None)
     }
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "Section rendering combines geometry, style and optional simulation buffers."
+    )]
     pub fn draw_section_with_surface(
         &mut self,
         model: &Model,
@@ -453,6 +465,10 @@ impl Viewport {
             true,
         )
     }
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "Both viewports share one renderer with explicit view and field inputs."
+    )]
     fn draw_view(
         &mut self,
         camera: Camera,
@@ -663,29 +679,27 @@ impl Viewport {
                     .is_none_or(|s| b.simulation.material_id != s.1)
         }) {
             let c = COLORS[i % COLORS.len()].map(|v| v as f32 / 255.);
-            if cut {
-                if let Some(cap) = caps.get(i) {
-                    if hatched && domain.as_ref().is_none_or(|d| d.volume.is_none() || d.cad) {
-                        let color = [
-                            linear(c[0] * 0.45 + 0.55),
-                            linear(c[1] * 0.45 + 0.55),
-                            linear(c[2] * 0.45 + 0.55),
-                            1.,
-                        ];
-                        for t in &cap.triangles {
-                            for &p in t {
-                                let mut v = vertex(p, color, 1.);
-                                if i % 2 == 1 {
-                                    v.uv[0] = -v.uv[0];
-                                }
-                                vertices.push(v);
+            if cut && let Some(cap) = caps.get(i) {
+                if hatched && domain.as_ref().is_none_or(|d| d.volume.is_none() || d.cad) {
+                    let color = [
+                        linear(c[0] * 0.45 + 0.55),
+                        linear(c[1] * 0.45 + 0.55),
+                        linear(c[2] * 0.45 + 0.55),
+                        1.,
+                    ];
+                    for t in &cap.triangles {
+                        for &p in t {
+                            let mut v = vertex(p, color, 1.);
+                            if i % 2 == 1 {
+                                v.uv[0] = -v.uv[0];
                             }
+                            vertices.push(v);
                         }
                     }
-                    for segment in &cap.contours {
-                        for &p in segment {
-                            lines.push(vertex(p, [0.7, 0.85, 0.9, 1.], 2.));
-                        }
+                }
+                for segment in &cap.contours {
+                    for &p in segment {
+                        lines.push(vertex(p, [0.7, 0.85, 0.9, 1.], 2.));
                     }
                 }
             }
@@ -849,6 +863,14 @@ impl Viewport {
         }
         queue.submit(Some(encoder.finish()));
         self.texture.unwrap()
+    }
+}
+
+fn linear(c: f32) -> f32 {
+    if c <= 0.04045 {
+        c / 12.92
+    } else {
+        ((c + 0.055) / 1.055).powf(2.4)
     }
 }
 
@@ -1726,13 +1748,5 @@ mod tests {
             ppm.extend(&p[..3]);
         }
         std::fs::write("artifacts/hatch-test.ppm", ppm).unwrap();
-    }
-}
-
-fn linear(c: f32) -> f32 {
-    if c <= 0.04045 {
-        c / 12.92
-    } else {
-        ((c + 0.055) / 1.055).powf(2.4)
     }
 }

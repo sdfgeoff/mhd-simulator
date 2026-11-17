@@ -123,56 +123,55 @@ impl Gizmo {
     ) -> (bool, bool) {
         let pointer = ui.input(|i| i.pointer.interact_pos());
         let mut changed = false;
-        if response.drag_started_by(egui::PointerButton::Primary) {
-            if let Some(start) = ui.input(|i| i.pointer.press_origin()) {
-                if let Some(handle) = self.hit(camera, *plane, start) {
-                    let radial = match handle {
-                        Handle::Rotate(i) => radial(camera, start, plane.position, AXES[i])
-                            .unwrap_or_else(|| {
-                                let q = start - camera.project(plane.position);
-                                let (_, d) = camera.ray(start);
-                                let screen = camera.rotation.inverse() * Vec3::new(q.x, 0., -q.y);
-                                let r = screen - AXES[i] * screen.dot(AXES[i]);
-                                r.try_normalize()
-                                    .unwrap_or(d.cross(AXES[i]).normalize_or_zero())
-                            }),
-                        _ => Vec3::ZERO,
-                    };
-                    self.drag = Some(Drag {
-                        handle,
-                        initial: *plane,
-                        start,
-                        radial,
-                    });
+        if response.drag_started_by(egui::PointerButton::Primary)
+            && let Some(start) = ui.input(|i| i.pointer.press_origin())
+            && let Some(handle) = self.hit(camera, *plane, start)
+        {
+            let radial = match handle {
+                Handle::Rotate(i) => {
+                    radial(camera, start, plane.position, AXES[i]).unwrap_or_else(|| {
+                        let q = start - camera.project(plane.position);
+                        let (_, d) = camera.ray(start);
+                        let screen = camera.rotation.inverse() * Vec3::new(q.x, 0., -q.y);
+                        let r = screen - AXES[i] * screen.dot(AXES[i]);
+                        r.try_normalize()
+                            .unwrap_or(d.cross(AXES[i]).normalize_or_zero())
+                    })
                 }
-            }
+                _ => Vec3::ZERO,
+            };
+            self.drag = Some(Drag {
+                handle,
+                initial: *plane,
+                start,
+                radial,
+            });
         }
-        if response.dragged_by(egui::PointerButton::Primary) {
-            if let (Some(drag), Some(p)) = (self.drag, pointer) {
-                *plane = drag.initial;
-                match drag.handle {
-                    Handle::Move(i) => {
-                        let screen = camera.vector(AXES[i]);
-                        if screen.length_sq() > 1e-4 {
-                            plane.position +=
-                                AXES[i] * ((p - drag.start).dot(screen) / screen.length_sq());
-                        }
-                    }
-                    Handle::Rotate(i) => {
-                        let axis = AXES[i];
-                        let angle = if let Some(current) = radial(camera, p, plane.position, axis) {
-                            axis.dot(drag.radial.cross(current))
-                                .atan2(drag.radial.dot(current))
-                        } else {
-                            let tangent =
-                                camera.vector(axis.cross(drag.radial)) * (59. / camera.scale);
-                            (p - drag.start).dot(tangent) / tangent.length_sq().max(1.)
-                        };
-                        plane.rotate_world(axis, angle);
+        if response.dragged_by(egui::PointerButton::Primary)
+            && let (Some(drag), Some(p)) = (self.drag, pointer)
+        {
+            *plane = drag.initial;
+            match drag.handle {
+                Handle::Move(i) => {
+                    let screen = camera.vector(AXES[i]);
+                    if screen.length_sq() > 1e-4 {
+                        plane.position +=
+                            AXES[i] * ((p - drag.start).dot(screen) / screen.length_sq());
                     }
                 }
-                changed = true;
+                Handle::Rotate(i) => {
+                    let axis = AXES[i];
+                    let angle = if let Some(current) = radial(camera, p, plane.position, axis) {
+                        axis.dot(drag.radial.cross(current))
+                            .atan2(drag.radial.dot(current))
+                    } else {
+                        let tangent = camera.vector(axis.cross(drag.radial)) * (59. / camera.scale);
+                        (p - drag.start).dot(tangent) / tangent.length_sq().max(1.)
+                    };
+                    plane.rotate_world(axis, angle);
+                }
             }
+            changed = true;
         }
         let captured = self.drag.is_some();
         if response.drag_stopped() {
@@ -197,12 +196,12 @@ impl Gizmo {
         let hovered = ui
             .input(|i| i.pointer.hover_pos())
             .and_then(|p| self.hit(camera, plane, p));
-        for axis in 0..3 {
+        for (axis, axis_color) in COLORS.iter().enumerate() {
             let selected = self.drag.map(|d| d.handle).or(hovered) == Some(Handle::Rotate(axis));
             let color = if selected {
                 Color32::WHITE
             } else {
-                COLORS[axis]
+                *axis_color
             };
             let mut points = Vec::new();
             for i in 0..=96 {
@@ -321,12 +320,12 @@ mod tests {
         let c = camera();
         let g = Gizmo::default();
         let initial = SectionPlane::new(Vec3::ZERO);
-        for axis in 0..3 {
-            let start = c.project(AXES[axis] * (75. / c.scale));
+        for (axis, direction) in AXES.iter().enumerate() {
+            let start = c.project(*direction * (75. / c.scale));
             assert_eq!(g.hit(c, initial, start), Some(Handle::Move(axis)));
-            let p = drag(c, start, start + c.vector(AXES[axis] * 1.7));
+            let p = drag(c, start, start + c.vector(*direction * 1.7));
             assert!(
-                (p.position - AXES[axis] * 1.7).length() < 1e-4,
+                (p.position - *direction * 1.7).length() < 1e-4,
                 "Translation {axis}: {:?}",
                 p.position
             );
@@ -336,7 +335,7 @@ mod tests {
                 .find(|&r| g.hit(c, initial, c.project(r)) == Some(Handle::Rotate(axis)))
                 .expect("Every rotation ring must be selectable");
             let angle = 0.45;
-            let expected = Quat::from_axis_angle(AXES[axis], angle);
+            let expected = Quat::from_axis_angle(*direction, angle);
             let p = drag(c, c.project(radial), c.project(expected * radial));
             assert!(p.position.length() < 1e-5);
             assert!(

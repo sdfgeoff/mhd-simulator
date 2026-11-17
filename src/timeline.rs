@@ -196,8 +196,10 @@ mod tests {
     }
     #[test]
     fn retention_selection_and_restart() {
-        let mut t = Timeline::default();
-        t.capacity_frames = 3;
+        let mut t = Timeline {
+            capacity_frames: 3,
+            ..Default::default()
+        };
         for i in 0..3 {
             t.push(Sample {
                 time_s: i as f64,

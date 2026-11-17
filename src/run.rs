@@ -647,14 +647,15 @@ impl RunFrame {
     pub fn make_resident(&mut self, context: &GpuContext) -> Result<(), String> {
         let mut required = 0;
         for f in [
-            &self.em.as_ref().map(|f| &f.result),
-            &self.fluid.as_ref().map(|f| &f.result),
-            &self.thermal.as_ref().map(|f| &f.result),
-        ] {
-            if let Some(f) = f {
-                if !f.is_resident() {
-                    required += f.host_bytes();
-                }
+            self.em.as_ref().map(|f| &f.result),
+            self.fluid.as_ref().map(|f| &f.result),
+            self.thermal.as_ref().map(|f| &f.result),
+        ]
+        .into_iter()
+        .flatten()
+        {
+            if !f.is_resident() {
+                required += f.host_bytes();
             }
         }
         context.ensure_memory(required, "Selected history frame GPU cache")?;
@@ -928,10 +929,7 @@ mod thermal_run_tests {
             crate::gpu::read_bytes(&gpu.context, volume.material_ids(), 0, 16u64.pow(3) * 4)
                 .unwrap();
         let fc = FluidConfig {
-            surface: crate::surface::SurfaceConfig {
-                enabled: true,
-                ..Default::default()
-            },
+            surface: crate::surface::SurfaceConfig { enabled: true },
             acceleration_m_s2: [0., 0., -0.1],
             ..Default::default()
         };

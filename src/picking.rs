@@ -20,11 +20,12 @@ pub fn pick(
     let mut nearest = f32::INFINITY;
     for (id, body) in model.bodies.iter().enumerate().filter(|(_, b)| b.visible) {
         for t in body.triangles() {
-            if let Some(d) = triangle(origin, direction, *t) {
-                if d < nearest && kept(origin + direction * d) {
-                    nearest = d;
-                    solid = Some(Object::Solid(id));
-                }
+            if let Some(d) = triangle(origin, direction, *t)
+                && d < nearest
+                && kept(origin + direction * d)
+            {
+                nearest = d;
+                solid = Some(Object::Solid(id));
             }
         }
         // Match the rendered cap, so a cut through a body remains selectable.
@@ -137,8 +138,10 @@ mod tests {
     }
     #[test]
     fn picks_nearest_visible_solid_clipped_caps_and_front_centrelines() {
-        let mut m = Model::default();
-        m.bodies = vec![cube(-2.), cube(1.)];
+        let mut m = Model {
+            bodies: vec![cube(-2.), cube(1.)],
+            ..Default::default()
+        };
         let camera = Camera {
             rect: Rect::from_min_size(Pos2::ZERO, vec2(400., 400.)),
             center: Vec3::ZERO,

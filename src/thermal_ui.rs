@@ -133,8 +133,8 @@ impl ThermalUi {
         if !self.show || self.kind != 12 {
             return;
         }
-        if let Some(f) = frame {
-            if let Err(e) = self.overlay.update(
+        if let Some(f) = frame
+            && let Err(e) = self.overlay.update(
                 time,
                 gpu,
                 VectorField {
@@ -152,9 +152,9 @@ impl ThermalUi {
                 span,
                 self.range(Some(f)),
                 dirty,
-            ) {
-                self.error = e;
-            }
+            )
+        {
+            self.error = e;
         }
     }
     pub fn panel(&self, ui: &mut egui::Ui, f: Option<&ThermalFrame>) {

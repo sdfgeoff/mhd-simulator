@@ -699,7 +699,7 @@ impl EmState {
             &self.result,
             &self._source,
             volume.material_ids(),
-            &properties,
+            properties,
         ];
         let entries: Vec<_> = buffers
             .iter()

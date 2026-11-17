@@ -29,14 +29,15 @@ fn solve(mut matrix: [[f64; 6]; 5]) -> [f64; 5] {
         matrix.swap(i, pivot);
         let d = matrix[i][i];
         assert!(d.is_finite() && d.abs() > 1e-16, "Singular shape-mode fit");
-        for j in i..6 {
-            matrix[i][j] /= d;
+        for value in &mut matrix[i][i..] {
+            *value /= d;
         }
-        for k in 0..5 {
+        let normalized = matrix[i];
+        for (k, row) in matrix.iter_mut().enumerate() {
             if k != i {
-                let d = matrix[k][i];
-                for j in i..6 {
-                    matrix[k][j] -= d * matrix[i][j];
+                let d = row[i];
+                for (value, pivot) in row[i..].iter_mut().zip(&normalized[i..]) {
+                    *value -= d * *pivot;
                 }
             }
         }

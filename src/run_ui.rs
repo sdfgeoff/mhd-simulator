@@ -25,8 +25,8 @@ struct Statistics {
 }
 
 enum Event {
-    Frame(RunFrame),
-    Done(Result<RunState, String>),
+    Frame(Box<RunFrame>),
+    Done(Box<Result<RunState, String>>),
 }
 pub struct RunUi {
     pub config: RunConfig,
@@ -146,7 +146,7 @@ impl RunUi {
                     memory
                         .queued_ram_bytes
                         .fetch_add(bytes, AtomicOrdering::Relaxed);
-                    if tx.send(Event::Frame(frame)).is_err() {
+                    if tx.send(Event::Frame(Box::new(frame))).is_err() {
                         memory
                             .queued_ram_bytes
                             .fetch_sub(bytes, AtomicOrdering::Relaxed);
@@ -219,7 +219,7 @@ impl RunUi {
                     Ok(state)
                 }
             };
-            let _ = tx.send(Event::Done(run()));
+            let _ = tx.send(Event::Done(Box::new(run())));
         });
     }
     pub fn poll(&mut self, ctx: &egui::Context, volume: Option<&Volume>) -> bool {
@@ -229,6 +229,7 @@ impl RunUi {
             loop {
                 match rx.try_recv() {
                     Ok(Event::Frame(frame)) if self.accept => {
+                        let frame = *frame;
                         let bytes = frame.ram_bytes();
                         self.recording_memory
                             .queued_ram_bytes
@@ -248,7 +249,7 @@ impl RunUi {
                     Ok(Event::Done(result)) => {
                         done = true;
                         changed = true;
-                        match result {
+                        match *result {
                             Ok(state)
                                 if self.accept && volume.is_some_and(|v| state.is_current(v)) =>
                             {
@@ -400,10 +401,9 @@ impl RunUi {
             if ui
                 .checkbox(&mut self.profiling, "Profile solver stages")
                 .changed()
+                && let Some(c) = &self.context
             {
-                if let Some(c) = &self.context {
-                    c.profiler.set_enabled(self.profiling);
-                }
+                c.profiler.set_enabled(self.profiling);
             }
         });
         if !self.view_error.is_empty() {
@@ -428,10 +428,10 @@ impl RunUi {
             ui.horizontal(|ui| {
                 ui.spinner();
                 ui.label("Advancing coupled simulation…");
-                if ui.button("Stop after step").clicked() {
-                    if let Some(c) = &self.cancel {
-                        c.store(true, Ordering::Relaxed);
-                    }
+                if ui.button("Stop after step").clicked()
+                    && let Some(c) = &self.cancel
+                {
+                    c.store(true, Ordering::Relaxed);
                 }
             });
         }

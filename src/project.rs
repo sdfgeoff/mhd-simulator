@@ -44,6 +44,10 @@ pub struct Loaded {
     pub materials: Vec<Material>,
     pub plane: SectionPlane,
 }
+#[expect(
+    clippy::too_many_arguments,
+    reason = "A project serializes independent setup and physics configurations together."
+)]
 pub fn save(
     path: &Path,
     model: &Model,
@@ -126,7 +130,7 @@ pub fn load(path: &Path) -> Result<Loaded, String> {
         serde_json::from_slice(&std::fs::read(path).map_err(|e| e.to_string())?)
             .map_err(|e| e.to_string())?;
     let mut f: File = serde_json::from_value(raw.clone()).map_err(|e| e.to_string())?;
-    if !matches!(f.version, 1 | 2 | 3) {
+    if !matches!(f.version, 1..=3) {
         return Err("Unsupported project version".into());
     }
     f.domain.dims()?;
@@ -204,28 +208,24 @@ pub fn load(path: &Path) -> Result<Loaded, String> {
         if let Some(t) = raw["fluid"]["surface"]["tension_n_m"]
             .as_f64()
             .or_else(|| f.fluid.surface.enabled.then_some(0.5))
-        {
-            if let Some(m) = f
+            && let Some(m) = f
                 .materials
                 .iter_mut()
                 .find(|m| m.id == liquid && missing.contains(&m.id))
-            {
-                m.surface_tension_n_m = Some(t as f32);
-                m.notes.push_str(
-                    " Surface tension migrated from the former global interface setting.",
-                );
-            }
+        {
+            m.surface_tension_n_m = Some(t as f32);
+            m.notes
+                .push_str(" Surface tension migrated from the former global interface setting.");
         }
         if let Some(d) = raw["fluid"]["surface"]["air_density_kg_m3"]
             .as_f64()
             .or_else(|| f.fluid.surface.enabled.then_some(1.2))
+            && let Some(m) = f.materials.iter_mut().find(|m| m.id == 0)
         {
-            if let Some(m) = f.materials.iter_mut().find(|m| m.id == 0) {
-                if m.density_kg_m3.is_none() || m.density_kg_m3 == Some(1.2) {
-                    m.density_kg_m3 = Some(d as f32);
-                } else if m.density_kg_m3 != Some(d as f32) {
-                    m.notes.push_str(" Ambient material density takes precedence over the former global air-density setting.");
-                }
+            if m.density_kg_m3.is_none() || m.density_kg_m3 == Some(1.2) {
+                m.density_kg_m3 = Some(d as f32);
+            } else if m.density_kg_m3 != Some(d as f32) {
+                m.notes.push_str(" Ambient material density takes precedence over the former global air-density setting.");
             }
         }
     }

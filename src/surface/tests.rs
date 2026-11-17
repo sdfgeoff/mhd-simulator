@@ -295,10 +295,7 @@ fn balanced_surface_force_and_reconstructed_static_drop_refine() {
                 relative_tolerance: 1e-7,
                 absolute_divergence_tolerance: 1e-7,
                 max_iterations: 4000,
-                surface: SurfaceConfig {
-                    enabled: true,
-                    ..Default::default()
-                },
+                surface: SurfaceConfig { enabled: true },
                 ..Default::default()
             };
             let mut fluid =
@@ -359,10 +356,7 @@ fn frozen_material_remains_in_recorded_occupancy_while_air_can_move() {
             usage: wgpu::BufferUsages::STORAGE,
         });
     let config = crate::fluid::FluidConfig {
-        surface: SurfaceConfig {
-            enabled: true,
-            ..Default::default()
-        },
+        surface: SurfaceConfig { enabled: true },
         acceleration_m_s2: [0.; 3],
         ..Default::default()
     };

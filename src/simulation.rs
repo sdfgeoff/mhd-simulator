@@ -472,11 +472,11 @@ impl SimulationSnapshot {
     ) -> Result<(), String> {
         self.validate()?;
         for material in &self.materials {
-            if !(include_air && material.id == 0)
-                && !self
+            if !(include_air && material.id == 0
+                || self
                     .components
                     .iter()
-                    .any(|c| c.included && c.material_id == material.id)
+                    .any(|c| c.included && c.material_id == material.id))
             {
                 continue;
             }

@@ -104,6 +104,10 @@ impl VectorUi {
         }
         changed
     }
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "Vector overlays combine GPU fields, section geometry and animation timing."
+    )]
     pub fn update(
         &mut self,
         time: f64,

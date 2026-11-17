@@ -271,8 +271,10 @@ fn permeability_contrast_matches_sphere_polarization() {
 fn implicit_diffusion_matches_discrete_eigenmode_and_time_refines() {
     let _lock = crate::gpu_test_lock();
     let (gpu, volume, model) = setup(16);
-    let mut cfg = EmConfig::default();
-    cfg.max_iterations = 2000;
+    let cfg = EmConfig {
+        max_iterations: 2000,
+        ..Default::default()
+    };
     let mut state =
         EmState::new(gpu.context.clone(), &volume, &model, cfg, Mode::Induction).unwrap();
     // Manufactured homogeneous conductor/electrode boundary case isolates the

@@ -113,11 +113,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
         let mut failure = None;
         for i in 0..=steps {
-            if i > 0 {
-                if let Err(error) = state.step(&p.model, &volume) {
-                    failure = Some(error);
-                    break;
-                }
+            if i > 0
+                && let Err(error) = state.step(&p.model, &volume)
+            {
+                failure = Some(error);
+                break;
             }
             for report in gpu.context.profiler.take_completed(false) {
                 performance.push_str(&report.csv_rows());
@@ -434,8 +434,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         None
     };
-    let mut setup = egui_wgpu::WgpuSetupCreateNew::default();
-    setup.device_descriptor = std::sync::Arc::new(crate::gpu::device_descriptor);
+    let setup = egui_wgpu::WgpuSetupCreateNew {
+        device_descriptor: std::sync::Arc::new(crate::gpu::device_descriptor),
+        ..Default::default()
+    };
     let options = eframe::NativeOptions {
         wgpu_options: egui_wgpu::WgpuConfiguration {
             wgpu_setup: egui_wgpu::WgpuSetup::CreateNew(setup),

@@ -154,17 +154,17 @@ impl GpuContext {
     }
     /// Check only additional allocations: existing geometry/history already count in usage.
     pub fn ensure_memory(&self, additional_bytes: u64, purpose: &str) -> Result<(), String> {
-        if let Some(m) = self.memory_status() {
-            if additional_bytes > m.available_bytes {
-                return Err(format!(
-                    "{purpose} needs {:.0} MiB additional GPU memory; {:.0} MiB currently available ({}, process usage {:.0} / budget {:.0} MiB). Reduce resolution or retained history",
-                    additional_bytes as f64 / 1048576.,
-                    m.available_bytes as f64 / 1048576.,
-                    m.source,
-                    m.used_bytes as f64 / 1048576.,
-                    m.budget_bytes as f64 / 1048576.
-                ));
-            }
+        if let Some(m) = self.memory_status()
+            && additional_bytes > m.available_bytes
+        {
+            return Err(format!(
+                "{purpose} needs {:.0} MiB additional GPU memory; {:.0} MiB currently available ({}, process usage {:.0} / budget {:.0} MiB). Reduce resolution or retained history",
+                additional_bytes as f64 / 1048576.,
+                m.available_bytes as f64 / 1048576.,
+                m.source,
+                m.used_bytes as f64 / 1048576.,
+                m.budget_bytes as f64 / 1048576.
+            ));
         }
         Ok(())
     }

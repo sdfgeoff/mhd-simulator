@@ -51,17 +51,17 @@ impl Reference {
                 .unwrap();
             matrix.swap(i, row);
             let pivot = matrix[i][i];
-            for j in i..5 {
-                matrix[i][j] /= pivot;
+            for value in &mut matrix[i][i..] {
+                *value /= pivot;
             }
             let normalized = matrix[i];
-            for r in 0..4 {
+            for (r, row) in matrix.iter_mut().enumerate() {
                 if r == i {
                     continue;
                 }
-                let scale = matrix[r][i];
-                for j in i..5 {
-                    matrix[r][j] -= scale * normalized[j];
+                let scale = row[i];
+                for (value, pivot) in row[i..].iter_mut().zip(&normalized[i..]) {
+                    *value -= scale * *pivot;
                 }
             }
         }

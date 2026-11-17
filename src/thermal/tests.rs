@@ -5,6 +5,10 @@ use crate::{
     simulation::{DomainSettings, ThermalProperties, default_materials},
 };
 use glam::Vec3;
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Reference cases keep dimensional material and source parameters explicit."
+)]
 fn fixture(
     n: u32,
     length: f32,

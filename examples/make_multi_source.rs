@@ -84,10 +84,7 @@ fn main() -> Result<(), String> {
     heated.bodies[0].simulation.fixed_temperature_c = Some(250.);
     config.max_iterations = 4000;
     let fluid = mhd_workbench::fluid::FluidConfig {
-        surface: mhd_workbench::surface::SurfaceConfig {
-            enabled: true,
-            ..Default::default()
-        },
+        surface: mhd_workbench::surface::SurfaceConfig { enabled: true },
         ..Default::default()
     };
     project::save(

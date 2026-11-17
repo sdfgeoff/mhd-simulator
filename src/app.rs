@@ -437,17 +437,16 @@ impl App {
                 (self.zoom * ui.input(|i| (i.smooth_scroll_delta.y * 0.001).exp())).clamp(0.2, 8.);
         }
         camera = self.camera(rect);
-        if self.setup && response.clicked() {
-            if let Some(p) = response.interact_pointer_pos() {
-                if !self.show_gizmo || !self.gizmo.hit_test(camera, self.plane, p) {
-                    self.selection =
-                        crate::picking::pick(&self.model, camera, p, self.cut, self.plane);
-                    if let Some(crate::picking::Object::Solid(i)) = self.selection {
-                        self.material_selection = self.model.bodies[i].simulation.material_id;
-                    }
-                    self.dirty = true;
-                }
+        if self.setup
+            && response.clicked()
+            && let Some(p) = response.interact_pointer_pos()
+            && (!self.show_gizmo || !self.gizmo.hit_test(camera, self.plane, p))
+        {
+            self.selection = crate::picking::pick(&self.model, camera, p, self.cut, self.plane);
+            if let Some(crate::picking::Object::Solid(i)) = self.selection {
+                self.material_selection = self.model.bodies[i].simulation.material_id;
             }
+            self.dirty = true;
         }
 
         let ready = self.fields_ready();
@@ -805,8 +804,8 @@ impl App {
                     ui.add_enabled_ui(
                         id < 3
                             || (id < 9 && self.run_ui.em_frame().is_some())
-                            || (id >= 9 && id < 12 && self.run_ui.fluid_frame().is_some())
-                            || (id >= 12 && id < 15 && self.run_ui.thermal_frame().is_some())
+                            || ((9..12).contains(&id) && self.run_ui.fluid_frame().is_some())
+                            || ((12..15).contains(&id) && self.run_ui.thermal_frame().is_some())
                             || (id == 15
                                 && self
                                     .run_ui
@@ -820,9 +819,9 @@ impl App {
                 }
             });
         if selected != previous {
-            self.em_ui.show = selected >= 3 && selected < 9;
-            self.fluid_ui.show = (selected >= 9 && selected < 12) || selected == 15;
-            self.thermal_ui.show = selected >= 12 && selected < 15;
+            self.em_ui.show = (3..9).contains(&selected);
+            self.fluid_ui.show = (9..12).contains(&selected) || selected == 15;
+            self.thermal_ui.show = (12..15).contains(&selected);
             if selected == 15 {
                 self.analysis = Analysis::Fluid;
                 self.fluid_ui.kind = 13;
@@ -1058,15 +1057,14 @@ impl App {
                                         "Component {} · Material ID {}",
                                         pixel.body, pixel.material
                                     ));
-                                    if let Some(v) = &self.volume {
-                                        if let Some((_, name)) = v
+                                    if let Some(v) = &self.volume
+                                        && let Some((_, name)) = v
                                             .material_names
                                             .iter()
                                             .find(|(id, _)| *id == pixel.material)
                                         {
                                             ui.label(name);
                                         }
-                                    }
                                 }
                             }
                         }
@@ -1300,10 +1298,10 @@ impl App {
                     );
                 }
             });
-        if self.selection != previous_selection {
-            if let Some(Object::Solid(i)) = self.selection {
-                self.material_selection = self.model.bodies[i].simulation.material_id;
-            }
+        if self.selection != previous_selection
+            && let Some(Object::Solid(i)) = self.selection
+        {
+            self.material_selection = self.model.bodies[i].simulation.material_id;
         }
         match self.selection {
             Some(Object::Solid(i)) => {
@@ -1368,14 +1366,12 @@ impl App {
                     .materials
                     .iter()
                     .find(|m| m.id == body.simulation.material_id)
-                {
-                    if let Some(f) = body
+                    && let Some(f) = body
                         .simulation
                         .temperature_c
                         .and_then(|t| m.thermal.liquid_fraction(t))
-                    {
-                        ui.small(format!("Initial liquid fraction: {:.1}%", f * 100.));
-                    }
+                {
+                    ui.small(format!("Initial liquid fraction: {:.1}%", f * 100.));
                 }
                 self.dirty |= self.em_ui.body_source_properties(ui, i, body.closed());
             }
@@ -1503,23 +1499,23 @@ impl App {
                 ui.hyperlink_to("Reference", r);
             }
         }
-        if ui.button("Create material").clicked() {
-            if let Some(id) = (1..255).find(|id| self.materials.iter().all(|m| m.id != *id)) {
-                self.materials.push(Material {
-                    surface_tension_n_m: None,
-                    id,
-                    name: format!("Material {id}"),
-                    conductivity_s_m: None,
-                    relative_permeability: None,
-                    density_kg_m3: None,
-                    dynamic_viscosity_pa_s: None,
-                    thermal: Default::default(),
-                    notes: String::new(),
-                    reference: None,
-                });
-                self.material_selection = id;
-                self.inputs_pending = true;
-            }
+        if ui.button("Create material").clicked()
+            && let Some(id) = (1..255).find(|id| self.materials.iter().all(|m| m.id != *id))
+        {
+            self.materials.push(Material {
+                surface_tension_n_m: None,
+                id,
+                name: format!("Material {id}"),
+                conductivity_s_m: None,
+                relative_permeability: None,
+                density_kg_m3: None,
+                dynamic_viscosity_pa_s: None,
+                thermal: Default::default(),
+                notes: String::new(),
+                reference: None,
+            });
+            self.material_selection = id;
+            self.inputs_pending = true;
         }
     }
 }

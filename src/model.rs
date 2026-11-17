@@ -339,7 +339,7 @@ fn centreline_paths(
     }
     let edges: Vec<_> = match mode {
         Mode::Lines => {
-            if indices.len() % 2 != 0 {
+            if !indices.len().is_multiple_of(2) {
                 return Err("Incomplete centreline edge".into());
             }
             indices.chunks_exact(2).map(|p| (p[0], p[1])).collect()

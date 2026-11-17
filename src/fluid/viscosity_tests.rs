@@ -169,8 +169,9 @@ fn closed_wall_stress_is_symmetric_and_dissipative() {
                 let x = i % n;
                 let y = (i / n) % n;
                 let z = i / (n * n);
-                let blocked = (x >= 3 && x <= 5 && y >= 3 && y <= 5 && z >= 3 && z <= 5)
-                    || (x >= 5 && y >= 1 && z >= 4);
+                let blocked =
+                    ((3..=5).contains(&x) && (3..=5).contains(&y) && (3..=5).contains(&z))
+                        || (x >= 5 && y >= 1 && z >= 4);
                 u32::from(!internal_wall || !blocked)
             })
             .collect();
