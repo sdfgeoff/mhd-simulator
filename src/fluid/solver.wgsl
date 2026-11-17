@@ -143,16 +143,15 @@ fn viscous(@builtin(global_invocation_id) gid:vec3<u32>) {
     let i=flat_id(gid);if i>=p.faces.w {return;}let pos=decode(i,p.faces.xyz);var out=vec4<f32>(0.0);
     for(var axis=0u;axis<3u;axis++) {
         if !open_face(pos,axis) {continue;}let center=face(pos,axis,true);var laplace=0.0;
-        for(var d=0u;d<3u;d++) {for(var sign=-1;sign<=1;sign+=2) {
+        if p.surface.x<0.5 {for(var d=0u;d<3u;d++) {for(var sign=-1;sign<=1;sign+=2) {
             var q=pos;q[d]+=sign;var neighbor=face(q,axis,true);
             if !open_face(q,axis)&&d!=axis {neighbor=-center;}laplace+=neighbor-center;
-        }}
+        }}}
         var left=pos;left[axis]-=1;
         var rho=p.physical.w;var capillary=0.0;var viscosity=p.physical.z;
         if p.surface.x>0.5 {
-            rho=face_density(pos,axis);let al=occupancy(left);let ar=occupancy(pos);
+            rho=face_density(pos,axis);
             capillary=capillary_force(pos,axis)/rho;
-            viscosity*=0.5*(al+ar);
         }
         let acceleration=p.acceleration[axis]+(em_force(left)[axis]+em_force(pos)[axis])/(2.0*rho)+capillary;
         var beta=mobility(pos,axis);if p.surface.x>0.5{beta*=rho/p.physical.w;}

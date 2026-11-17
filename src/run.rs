@@ -196,7 +196,7 @@ impl RunState {
             working += n * 84
                 + (n * 64).max(nf * 16)
                 + nf * 48
-                + n.div_ceil(256) * 48
+                + nf.max(n).div_ceil(256) * 48
                 + 80
                 + if em_enabled { 0 } else { 64 };
         }

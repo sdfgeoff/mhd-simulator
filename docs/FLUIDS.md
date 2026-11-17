@@ -4,7 +4,7 @@ The GPU MAC solver supports fixed-region validation, temperature-driven mobility
 
 ## Fixed-region workflow
 
-1. In **Setup**, import geometry, select solid objects and assign a material with positive density and liquid viscosity. The solder presets start with an illustrative **0.002 Pa·s**, not calibrated operating-temperature data. The shared material editor affects all assigned objects.
+1. In **Setup**, import geometry, select solid objects and assign a material with positive density and a dynamic viscosity (zero selects an inviscid approximation). The solder presets start with an illustrative **0.002 Pa·s**, not calibrated operating-temperature data. The shared material editor affects all assigned objects.
 2. In **Simulation**, enable **Fluid motion**, select the material defining the fixed liquid region, choose the common timestep and click **Simulate**. Electrical sources are optional. When present, EM and fluid steps exchange updated Lorentz force and motional `u × B` on the same clock; see [coupling equations and workflow](RUNS.md).
 3. Choose **Fluid velocity**, **Fluid pressure (gauge)** or **Velocity divergence** in **Section view**. Pressure/divergence use signed colours and SI units. Both viewports sample the retained 3D output directly. Arrows/trails always use velocity, including when pressure supplies the background colour.
 4. The common timeline retains a configurable frame count, default ten. Scrubbing changes all active fields, diagnostics and trails together. Animation has a separate clock and does not advance the fluid. **Hide below** defaults to 10⁻⁷ m/s for vector cues; it does not change solver data. Trail speed is a direction cue, not physical particle tracking.
@@ -16,10 +16,11 @@ Multiple disconnected regions of the selected material are supported with indepe
 
 Velocity components live on their respective MAC faces; pressure potential is cell-centred. A face is open only when both adjacent cells belong to the liquid region. Closed normal faces have zero velocity. Tangential viscous ghost values use odd reflection at voxel walls to impose no-slip at the wall location. Geometry remains a staircase; fractional boundary treatment is not implemented yet.
 
-Density ρ and dynamic viscosity μ are uniform within the selected fluid material, with ν=μ/ρ. The first-order split step is:
+For a fixed liquid region, density ρ and dynamic viscosity μ are uniform, with ν=μ/ρ. Moving interfaces mix liquid/ambient coefficients and use the [symmetric stress formulation](VISCOUS_STRESS.md). The first-order split step is:
 
 1. Fixed-region flow uses midpoint backtrace and trilinear semi-Lagrangian velocity interpolation: `uᵃ = SL_RK2(uⁿ)`. Moving-interface flow instead uses [mass-consistent MAC momentum transport](MOMENTUM.md) alongside geometric VOF, with a projection using the updated density. It does not apply the semi-Lagrangian advection as well.
-2. Explicit viscosity and forcing give `u* = uᵃ + Δt (ν Lₕ uᵃ + a + f_EM/ρ)`.
+2. For a fixed region, explicit viscosity and forcing give `u* = uᵃ + Δt (ν Lₕ uᵃ + a + f_EM/ρ)`.
+   Moving interfaces instead substep the full stress divergence using a GPU-measured stability bound, then add forcing/drag once.
 3. Solve `A φ = −h² Dₕ u*`, where `A = −h² Dₕ Gₕ` is the positive pressure graph Laplacian.
 4. Project `uⁿ⁺¹ = u* − Gₕ φ`; report gauge pressure `p = ρ φ / Δt`.
 
@@ -31,7 +32,7 @@ Acceptance combines relative pressure-correction residual and absolute RMS diver
 
 The absolute term prevents chasing f32 roundoff in an almost divergence-free predictor. A relative residual above the relative setting can therefore be acceptable when the absolute divergence criterion controls. Diagnostics show the resulting actual maximum/RMS divergence, not just the algebraic residual. Iteration counts report actual GPU iterations. Submissions contain up to 32 iterations; GPU convergence guards stop updates within a submission. CPU polling still stops at the independent physical checks every 64 iterations and at the configured cap.
 
-The explicit viscous bound is `Δt ≤ 0.95 h²/(6ν)`. A conservative face-velocity CFL check limits backtraces. Failed pressure solves, nonfinite fields and invalid input revisions do not advance time; accepted velocity/output buffers are restored after a failed step. Display velocity is reconstructed at cell centres; energy uses averages of **squared face velocities**, rather than squaring the cell-centre average. Pressure is relative to a zero gauge per connected region, not absolute thermodynamic pressure.
+For fixed regions, the explicit viscous bound is `Δt ≤ 0.95 h²/(6ν)`. Moving-interface viscosity uses stable substeps within the common Δt; the configured substep cap rejects excessive work. Both liquid and ambient viscosity are material properties. A conservative face-velocity CFL check limits backtraces. Failed pressure solves, nonfinite fields and invalid input revisions do not advance time; accepted velocity/output buffers are restored after a failed step. Display velocity is reconstructed at cell centres; energy uses averages of **squared face velocities**, rather than squaring the cell-centre average. Pressure is relative to a zero gauge per connected region, not absolute thermodynamic pressure.
 
 Reference equations and channel-test definitions are available in the primary [Basilisk incompressible solver documentation](https://basilisk.fr/src/navier-stokes/centered.h) and [Poiseuille test](https://basilisk.fr/src/test/poiseuille.c). This workbench implements the GPU scheme above; it does not embed Basilisk or a duplicate CPU fluid solver.
 

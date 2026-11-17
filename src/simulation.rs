@@ -73,7 +73,11 @@ pub fn default_materials() -> Vec<Material> {
         conductivity_s_m: Some(sigma),
         relative_permeability: Some(mu),
         density_kg_m3: Some(density),
-        dynamic_viscosity_pa_s: ((id == 3) || (id == 4)).then_some(0.002),
+        dynamic_viscosity_pa_s: match id {
+            0 => Some(1.8e-5),
+            3 | 4 => Some(0.002),
+            _ => None,
+        },
         notes: if id == 3 || id == 4 {
             format!(
                 "{notes} Liquid viscosity 0.002 Pa·s, surface tension 0.5 N/m and latent heat are illustrative starting assumptions; Sn60Pb40 heat capacity is also an estimate. Replace them with operating-temperature data."
@@ -90,8 +94,8 @@ pub fn default_materials() -> Vec<Material> {
             0.,
             1.,
             1.2,
-            "EM vacuum/insulator approximation; approximate air density at room temperature. No temperature dependence.",
-            "",
+            "EM vacuum/insulator approximation; approximate density and dynamic viscosity near room temperature. Constant properties; temperature dependence is not modeled.",
+            "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/air-properties-definitions/",
         ),
         Material {
             id: 1,
@@ -260,7 +264,7 @@ pub fn validate_materials(materials: &[Material]) -> Result<(), String> {
             ("conductivity", m.conductivity_s_m, true),
             ("permeability", m.relative_permeability, false),
             ("density", m.density_kg_m3, false),
-            ("dynamic viscosity", m.dynamic_viscosity_pa_s, false),
+            ("dynamic viscosity", m.dynamic_viscosity_pa_s, true),
             ("surface tension", m.surface_tension_n_m, true),
             ("heat capacity", m.thermal.heat_capacity_j_kg_k, false),
             ("thermal conductivity", m.thermal.conductivity_w_m_k, false),

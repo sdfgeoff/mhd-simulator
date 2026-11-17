@@ -26,6 +26,7 @@ pub struct FluidConfig {
     pub relative_tolerance: f32,
     pub absolute_divergence_tolerance: f32,
     pub max_iterations: u32,
+    pub max_viscous_substeps: u32,
 }
 impl Default for FluidConfig {
     fn default() -> Self {
@@ -42,6 +43,7 @@ impl Default for FluidConfig {
             relative_tolerance: 1e-5,
             absolute_divergence_tolerance: 1e-5,
             max_iterations: 1000,
+            max_viscous_substeps: 4096,
         }
     }
 }
@@ -62,8 +64,11 @@ impl FluidConfig {
             || self.absolute_divergence_tolerance < 0.
             || !(1e-7..=1e-2).contains(&self.relative_tolerance)
             || !(1..=20000).contains(&self.max_iterations)
+            || !(1..=4096).contains(&self.max_viscous_substeps)
         {
-            return Err("Invalid fluid timestep, initial condition or pressure tolerance".into());
+            return Err(
+                "Invalid fluid timestep, initial condition or solver limits/tolerances".into(),
+            );
         }
         Ok(())
     }
@@ -71,6 +76,7 @@ impl FluidConfig {
 #[derive(Clone, Debug, Default)]
 pub struct FluidDiagnostics {
     pub iterations: u32,
+    pub viscous_substeps: u32,
     pub relative_residual: f32,
     pub elapsed_ms: f64,
     pub max_speed_m_s: f32,
@@ -197,9 +203,10 @@ impl FluidState {
             .ok_or("Fluid material needs a positive density")?;
         let mu = material
             .dynamic_viscosity_pa_s
-            .filter(|v| v.is_finite() && *v > 0.)
-            .ok_or("Fluid material needs a positive liquid viscosity")?;
-        let (surface_tension_n_m, air_density_kg_m3) = if config.surface.enabled {
+            .filter(|v| v.is_finite() && *v >= 0.)
+            .ok_or("Fluid material needs a nonnegative dynamic viscosity")?;
+        let (surface_tension_n_m, air_density_kg_m3, air_viscosity_pa_s) = if config.surface.enabled
+        {
             let tension = material
                 .surface_tension_n_m
                 .ok_or("Liquid material needs surface tension against the ambient material")?;
@@ -213,16 +220,18 @@ impl FluidState {
             let air = ambient
                 .density_kg_m3
                 .ok_or("Ambient material needs a density")?;
-            (tension, air)
+            (tension, air, ambient.dynamic_viscosity_pa_s.unwrap_or(0.))
         } else {
-            (0., rho)
+            (0., rho, 0.)
         };
         let nu = mu / rho;
-        if !nu.is_finite() || nu <= 0. {
+        if !nu.is_finite() || nu < 0. {
             return Err("Fluid viscosity/density ratio is outside the numerical range".into());
         }
         let grid = volume.inputs.snapshot().grid.clone();
-        if config.dt_s as f32 > grid.cell_m * grid.cell_m / (6. * nu) * 0.95 {
+        if !config.surface.enabled
+            && config.dt_s as f32 > grid.cell_m * grid.cell_m / (6. * nu) * 0.95
+        {
             return Err(
                 "Fluid timestep exceeds the explicit viscosity limit h²/(6ν); reduce Δt".into(),
             );
@@ -235,7 +244,7 @@ impl FluidState {
             nf * 16,
             nf * 16,
             n * 16,
-            n.div_ceil(256) * 48,
+            nf.max(n).div_ceil(256) * 48,
             80,
             n * 64,
             nf * 16,
@@ -340,7 +349,7 @@ impl FluidState {
                 f32::from(config.surface.enabled),
                 air_density_kg_m3,
                 surface_tension_n_m,
-                0.,
+                air_viscosity_pa_s,
             ],
             dims: [grid.dims[0], grid.dims[1], grid.dims[2], n as u32],
             faces: [f[0], f[1], f[2], nf as u32],
@@ -405,7 +414,7 @@ impl FluidState {
         let velocity = buffer("MAC face velocities", nf * 16);
         let scratch = buffer("Predicted face velocities", nf * 16);
         let work = buffer("Pressure PCG state", n * 16);
-        let partials = buffer("Fluid reductions", n.div_ceil(256) * 48);
+        let partials = buffer("Fluid reductions", nf.max(n).div_ceil(256) * 48);
         let scalars = buffer("Fluid diagnostics", 80);
         let result = buffer("Fluid display fields", n * 64);
         let previous = buffer("Velocity checkpoint", nf * 16);
@@ -429,8 +438,9 @@ impl FluidState {
                 label: Some("MAC fluid solver"),
                 source: wgpu::ShaderSource::Wgsl(
                     format!(
-                        "{}\n{}",
+                        "{}\n{}\n{}",
                         include_str!("../periodic.wgsl"),
+                        include_str!("viscosity.wgsl"),
                         include_str!("solver.wgsl")
                     )
                     .into(),
@@ -440,6 +450,9 @@ impl FluidState {
             "initialize",
             "predict",
             "viscous",
+            "viscosity_bound",
+            "viscosity_bound_reduce",
+            "stress_diffuse",
             "pressure_coefficients",
             "pressure_guess",
             "pressure_warm",
@@ -969,6 +982,7 @@ impl FluidState {
         }
         self.diagnostics = FluidDiagnostics {
             iterations,
+            viscous_substeps: self.diagnostics.viscous_substeps,
             relative_residual: residual,
             elapsed_ms: elapsed,
             max_speed_m_s: s[0],
@@ -981,6 +995,56 @@ impl FluidState {
         };
         self.force_max = s[6];
         self.max_face_speed = s[8];
+        Ok(())
+    }
+    fn diffuse_surface_stress(&mut self) -> Result<(), String> {
+        self.diagnostics.viscous_substeps = 0;
+        let faces = groups(self.params.faces[3]);
+        self.dispatch(&[
+            ("viscosity_bound", faces),
+            ("viscosity_bound_reduce", [1, 1, 1]),
+        ]);
+        let bytes = read_bytes(&self.context, &self.scalars, 0, 4)?;
+        let bound = bytemuck::pod_read_unaligned::<f32>(&bytes);
+        if !bound.is_finite() || bound < 0. {
+            return Err("Nonfinite viscous stability bound".into());
+        }
+        if bound == 0. {
+            return Ok(());
+        }
+        let count = (self.config.dt_s * bound as f64 / 1.8).ceil().max(1.);
+        if count > self.config.max_viscous_substeps as f64 {
+            return Err(format!(
+                "Viscosity requires {count:.0} substeps, above the {} limit; reduce the common timestep or increase Max viscosity substeps",
+                self.config.max_viscous_substeps
+            ));
+        }
+        let count = count as u32;
+        self.diagnostics.viscous_substeps = count;
+        self.params.physical[1] = (self.config.dt_s / count as f64) as f32;
+        self.context
+            .queue
+            .write_buffer(&self._uniform, 0, bytemuck::bytes_of(&self.params));
+        let mut enc = self
+            .context
+            .device
+            .create_command_encoder(&Default::default());
+        for _ in 0..count {
+            {
+                let mut pass = self
+                    .context
+                    .compute_pass(&mut enc, Some("Viscous stress substep"));
+                pass.set_bind_group(0, &self.bind, &[]);
+                pass.set_pipeline(&self.pipelines["stress_diffuse"]);
+                pass.dispatch_workgroups(faces[0], faces[1], faces[2]);
+            }
+            enc.copy_buffer_to_buffer(&self.velocity, 0, &self.scratch, 0, self.velocity.size());
+        }
+        self.context.queue.submit(Some(enc.finish()));
+        self.params.physical[1] = self.config.dt_s as f32;
+        self.context
+            .queue
+            .write_buffer(&self._uniform, 0, bytemuck::bytes_of(&self.params));
         Ok(())
     }
     pub fn step(&mut self, volume: &Volume) -> Result<&FluidDiagnostics, String> {
@@ -1024,7 +1088,11 @@ impl FluidState {
         self.context.queue.submit(Some(encoder.finish()));
         let mut run = || -> Result<(u32, f32), String> {
             let faces = groups(self.params.faces[3]);
-            self.dispatch(&[("predict", faces), ("viscous", faces)]);
+            self.dispatch(&[("predict", faces)]);
+            if self.config.surface.enabled {
+                self.diffuse_surface_stress()?;
+            }
+            self.dispatch(&[("viscous", faces)]);
             let mut encoder = self
                 .context
                 .device
@@ -1229,3 +1297,6 @@ fn anchors(mask: &mut [u32], dims: [u32; 3], periodic: [bool; 3]) -> usize {
 }
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod viscosity_tests;

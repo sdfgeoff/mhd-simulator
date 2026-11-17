@@ -63,6 +63,7 @@ impl Wave {
         materials[3].dynamic_viscosity_pa_s = Some(1e-6);
         materials[3].surface_tension_n_m = Some(1.);
         materials[0].density_kg_m3 = Some(1.);
+        materials[0].dynamic_viscosity_pa_s = Some(0.);
         let (gpu, volume, mut surface, _) = super::tests::box_fixture(
             DomainSettings {
                 min_mm: [0.; 3],

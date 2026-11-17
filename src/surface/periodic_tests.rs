@@ -142,6 +142,7 @@ fn uniform_periodic_metal_drop_preserves_velocity_and_integrated_momentum() {
     materials[3].dynamic_viscosity_pa_s = Some(1e-6);
     materials[3].surface_tension_n_m = Some(0.);
     materials[0].density_kg_m3 = Some(1.);
+    materials[0].dynamic_viscosity_pa_s = Some(0.);
     let (gpu, volume, _, _) = super::tests::box_fixture(
         DomainSettings {
             min_mm: [0.; 3],
@@ -262,6 +263,7 @@ fn check_nonuniform_transport(n: u32, steps: u32, dump: bool) {
     materials[3].dynamic_viscosity_pa_s = Some(1e-6);
     materials[3].surface_tension_n_m = Some(0.);
     materials[0].density_kg_m3 = Some(1.);
+    materials[0].dynamic_viscosity_pa_s = Some(0.);
     let (gpu, volume, _, _) = super::tests::box_fixture(
         DomainSettings {
             min_mm: [0.; 3],
@@ -294,24 +296,7 @@ fn check_nonuniform_transport(n: u32, steps: u32, dump: bool) {
         None,
     )
     .unwrap();
-    let fd = n + 1;
-    let velocities: Vec<[f32; 4]> = (0..fd.pow(3))
-        .map(|i| {
-            let x = (i % fd) as f32;
-            let y = ((i / fd) % fd) as f32;
-            let k = std::f32::consts::TAU / n as f32;
-            // A staggered streamfunction curl: discrete divergence is zero.
-            [
-                0.25 + 0.05 * (k * x).sin() * (k * (y + 0.5)).cos(),
-                0.125 - 0.05 * (k * (x + 0.5)).cos() * (k * y).sin(),
-                -0.0625,
-                0.,
-            ]
-        })
-        .collect();
-    gpu.context
-        .queue
-        .write_buffer(fluid.face_buffer(), 0, bytemuck::cast_slice(&velocities));
+    seed_vortex(&gpu.context, &fluid, n);
     fluid
         .update_surface(&volume, surface.field(), None)
         .unwrap();
@@ -455,4 +440,113 @@ fn coupled_transport_restores_interface_momentum_and_heat_after_gpu_cfl_rejectio
     fluid
         .update_surface(&volume, surface.field(), None)
         .unwrap();
+}
+
+fn seed_vortex(context: &GpuContext, fluid: &FluidState, n: u32) {
+    let fd = n + 1;
+    let velocities: Vec<[f32; 4]> = (0..fd.pow(3))
+        .map(|i| {
+            let x = (i % fd) as f32;
+            let y = ((i / fd) % fd) as f32;
+            let k = std::f32::consts::TAU / n as f32;
+            // A staggered streamfunction curl: discrete divergence is zero.
+            [
+                0.25 + 0.05 * (k * x).sin() * (k * (y + 0.5)).cos(),
+                0.125 - 0.05 * (k * (x + 0.5)).cos() * (k * y).sin(),
+                -0.0625,
+                0.,
+            ]
+        })
+        .collect();
+    context
+        .queue
+        .write_buffer(fluid.face_buffer(), 0, bytemuck::cast_slice(&velocities));
+}
+
+#[test]
+#[ignore = "Isolated variable-density viscosity momentum diagnostic"]
+fn variable_density_viscous_momentum_balance() {
+    check_viscous_balance(24, 50., 0., 64, true);
+}
+
+#[test]
+fn viscous_high_density_stress_preserves_momentum_and_dissipates_energy() {
+    check_viscous_balance(12, 10., 0.1, 32, false);
+}
+
+fn check_viscous_balance(n: u32, mu: f32, air_mu: f32, steps: u32, dump: bool) {
+    let _lock = crate::gpu_test_lock();
+    let mut materials = default_materials();
+    materials[3].density_kg_m3 = Some(7000.);
+    materials[3].dynamic_viscosity_pa_s = Some(mu);
+    materials[3].surface_tension_n_m = Some(0.);
+    materials[0].density_kg_m3 = Some(1.);
+    materials[0].dynamic_viscosity_pa_s = Some(air_mu);
+    let (gpu, volume, _, _) = super::tests::box_fixture(
+        DomainSettings {
+            min_mm: [0.; 3],
+            max_mm: [1000.; 3],
+            cell_mm: 1000. / n as f32,
+        },
+        &materials,
+    );
+    let (mut surface, _) =
+        SurfaceState::with_periodic_boundaries(gpu.context.clone(), &volume, 3, [true; 3]).unwrap();
+    let initial = super::tests::sphere(n, Vec3::new(0.75, 0.5, 0.5), 0.14);
+    gpu.context
+        .queue
+        .write_buffer(surface.field(), 0, bytemuck::cast_slice(&initial));
+    surface.refresh(&volume).unwrap();
+    let mut fluid = FluidState::new(
+        gpu.context.clone(),
+        &volume,
+        FluidConfig {
+            surface: SurfaceConfig { enabled: true },
+            periodic: [true; 3],
+            advection: false,
+            acceleration_m_s2: [0.; 3],
+            initial_velocity_m_s: [0.25, 0.125, -0.0625],
+            dt_s: 0.005,
+            relative_tolerance: 1e-6,
+            absolute_divergence_tolerance: 1e-6,
+            max_iterations: 4000,
+            ..Default::default()
+        },
+        None,
+    )
+    .unwrap();
+    seed_vortex(&gpu.context, &fluid, n);
+    fluid
+        .update_surface(&volume, surface.field(), None)
+        .unwrap();
+    let (p0, k0) = mac_integrals(&gpu.context, &surface, &fluid, n);
+    let mut csv = String::from("step,relative_momentum_error,kinetic_energy_ratio\n");
+    for step in 0..=steps {
+        let (p, k) = mac_integrals(&gpu.context, &surface, &fluid, n);
+        let error = (p.iter().zip(p0).map(|(a, b)| (a - b).powi(2)).sum::<f64>()
+            / p0.iter().map(|a| a * a).sum::<f64>())
+        .sqrt();
+        csv.push_str(&format!("{step},{error},{}\n", k / k0));
+        if step == steps {
+            eprintln!(
+                "Viscous high-density periodic: momentum drift={error:.7e}, K/K0={}, substeps={}",
+                k / k0,
+                fluid.diagnostics.viscous_substeps
+            );
+            assert!(error < 3e-6, "Viscous momentum drift {error}");
+            assert!(
+                k / k0 < 0.99999 && k / k0 > 0.9,
+                "Viscous energy ratio {}",
+                k / k0
+            );
+            assert!(fluid.diagnostics.viscous_substeps > 1);
+            break;
+        }
+        // Freeze occupancy and disable transport to isolate the viscous/pressure operators.
+        fluid.step(&volume).unwrap();
+    }
+    if dump {
+        std::fs::create_dir_all("artifacts").unwrap();
+        std::fs::write("artifacts/viscous-momentum.csv", csv).unwrap();
+    }
 }

@@ -554,8 +554,9 @@ fn cached_pressure_coefficients_match_original_operator_with_walls_phase_and_per
             // Independent GPU evaluation of the original physical stencil, without
             // introducing a duplicate CPU numerical implementation.
             let source = format!(
-                "{}\n{}\n@compute @workgroup_size(256) fn reference(@builtin(global_invocation_id) gid:vec3<u32>){{let i=flat_id(gid);if i<p.dims.w && mask[i]!=0u {{let pos=decode(i,p.dims.xyz);var a=laplacian(pos,1u);if (mask[i]&3u)==2u {{a=potential(pos,1u);}}work[i].w=a;work[i].y=diagonal(pos);}}}}",
+                "{}\n{}\n{}\n@compute @workgroup_size(256) fn reference(@builtin(global_invocation_id) gid:vec3<u32>){{let i=flat_id(gid);if i<p.dims.w && mask[i]!=0u {{let pos=decode(i,p.dims.xyz);var a=laplacian(pos,1u);if (mask[i]&3u)==2u {{a=potential(pos,1u);}}work[i].w=a;work[i].y=diagonal(pos);}}}}",
                 include_str!("../periodic.wgsl"),
+                include_str!("viscosity.wgsl"),
                 include_str!("solver.wgsl")
             );
             let shader = state

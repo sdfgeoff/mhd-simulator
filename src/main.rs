@@ -125,7 +125,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .as_ref()
                 .map_or(0., |f| f.diagnostics.rms_divergence_s_inv);
             println!(
-                "t={:.3} µs Bmax={:.3e} T Umax={:.3e} m/s rms_div={:.3e} s^-1 · EM {} it / {:.3e} · pressure {} it / {:.3e}",
+                "t={:.3} µs Bmax={:.3e} T Umax={:.3e} m/s rms_div={:.3e} s^-1 · EM {} it / {:.3e} · pressure {} it / {:.3e} · viscosity {} substeps",
                 state.time_s * 1e6,
                 b,
                 u,
@@ -139,7 +139,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 state
                     .fluid
                     .as_ref()
-                    .map_or(0., |f| f.diagnostics.relative_residual)
+                    .map_or(0., |f| f.diagnostics.relative_residual),
+                state
+                    .fluid
+                    .as_ref()
+                    .map_or(0, |f| f.diagnostics.viscous_substeps)
             );
             let e = &state.energy;
             csv.push_str(&format!(

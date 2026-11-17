@@ -622,7 +622,7 @@ fn groups(n: u32) -> [u32; 3] {
     [n.min(65535), n.div_ceil(65535), 1]
 }
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;
 
 #[cfg(test)]
 mod capillary_tests;

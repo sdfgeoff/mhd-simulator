@@ -1433,12 +1433,15 @@ impl App {
                 optional(ui, "Density", &mut m.density_kg_m3, 1000., 10., " kg/m³");
             self.inputs_pending |= optional(
                 ui,
-                "Liquid viscosity",
+                "Dynamic viscosity",
                 &mut m.dynamic_viscosity_pa_s,
-                0.002,
-                0.0001,
+                if m.id == 0 { 1.8e-5 } else { 0.002 },
+                if m.id == 0 { 1e-6 } else { 0.0001 },
                 " Pa·s",
             );
+            if m.id == 0 && m.dynamic_viscosity_pa_s.is_none() {
+                ui.small("Ambient viscosity is unspecified; flow uses the inviscid-ambient approximation.");
+            }
             self.inputs_pending |= optional(
                 ui,
                 "Surface tension vs ambient",

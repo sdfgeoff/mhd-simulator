@@ -60,7 +60,7 @@ impl FluidUi {
             .changed();
         if self.config.surface.enabled {
             ui.small("Imported liquid is the initial distribution; other CAD solids remain walls. Low-density air participates in pressure and motion.");
-            ui.small("Surface tension comes from the liquid material; ambient density comes from Air / void in the material library.");
+            ui.small("Surface tension comes from the liquid material; ambient density and viscosity come from Air / void in the material library.");
         } else {
             ui.label(if phase_driven {
                 "Phase-driven flow · fixed material boundary"
@@ -85,6 +85,9 @@ impl FluidUi {
                 changed|=ui.add(egui::DragValue::new(&mut self.config.relative_tolerance).speed(1e-6).range(1e-7..=1e-2).prefix("Pressure relative tolerance ")).changed();
                 changed|=ui.add(egui::DragValue::new(&mut self.config.absolute_divergence_tolerance).speed(1e-6).range(0. ..=1.).prefix("Divergence tolerance ").suffix(" s⁻¹")).changed();
                 changed|=ui.add(egui::DragValue::new(&mut self.config.max_iterations).range(1..=20000).prefix("Max pressure iterations ")).changed();
+                if self.config.surface.enabled {
+                    changed|=ui.add(egui::DragValue::new(&mut self.config.max_viscous_substeps).range(1..=4096).prefix("Max viscosity substeps ")).changed();
+                }
                 ui.small("Explicit viscosity and velocity CFL limits are checked each step. Density and liquid viscosity come from the selected material.");
             });
         });
@@ -216,6 +219,9 @@ impl FluidUi {
             ui.small("Gauge pressure: one zero reference per connected fluid region.");
         }
         ui.monospace(format!("Speed {:.3e} m/s\nPressure |p| {:.3e} Pa\nmax |div u| {:.3e} s⁻¹\nrms div u {:.3e} s⁻¹\nNet flux {:.3e} m³/s\nKinetic energy {:.3e} J\nLiquid mass {:.3e} kg",d.max_speed_m_s,d.max_pressure_pa,d.max_divergence_s_inv,d.rms_divergence_s_inv,d.net_flux_m3_s,d.kinetic_energy_j,d.fluid_mass_kg));
+        if d.viscous_substeps > 0 {
+            ui.small(format!("Viscosity: {} substeps", d.viscous_substeps));
+        }
         ui.small(format!(
             "Pressure solve: {} iterations · rel residual {:.2e} · {:.1} ms",
             d.iterations, d.relative_residual, d.elapsed_ms
