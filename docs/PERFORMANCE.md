@@ -66,3 +66,27 @@ The baseline is commit 3c957f0; both versions use the same symmetric stress, tim
 The fluid-only median improves about **6.5%**, with 240 fewer GPU compute passes over 240 ticks. The hotend median improves about 1.7%, but run-to-run timing variation is significant and EM/pressure work dominates. These measurements do not support a large general speedup claim. V6's more conservative global bound still selects the measured GPU path.
 
 The [viscous-stress guide](VISCOUS_STRESS.md) gives the bound, numerical safeguards and fallback behavior. Regular GPU tests compare the proof with the measured stencil for both density orderings, periodic/no-slip boundaries and fractions at the accepted roundoff limits.
+
+## Stabilized viscous diffusion
+
+Stiff moving-interface cases use second-order Runge–Kutta–Chebyshev stages instead of many Euler substeps, retaining the same symmetric stress operator. The small-work path is unchanged. Initial face values/operator data temporarily occupy display lanes that are rebuilt before frame publication; no additional volume buffer is required. A uniform coefficient table adds about 49 KiB at 256-byte device alignment. See [viscous stresses](VISCOUS_STRESS.md) for stability, memory and the work cap.
+
+Three alternating 48³ drop probes on the RTX 3060 Laptop GPU used liquid ν=2×10⁻⁴ m²/s, density ratio 7000:1, inviscid ambient, 17 ticks and the same 0.664981 s physical duration:
+
+| Method | Process wall times, s | Median | Maximum stress stages per tick |
+|---|---|---:|---:|
+| Euler subcycling | 16.347, 16.290, 16.384 | 16.347 s | 123 |
+| RKC2 | 3.649, 3.707, 3.724 | 3.707 s | 20 |
+
+The median speedup is **4.41×**, including initialization. Maximum quadrupole difference between methods is 4.22×10⁻⁷ of its initial value over this short probe. These are algorithm comparisons with different truncation errors, not byte-identical trajectories.
+
+A full 48³, 1.5-period RKC2 trajectory completes in 113.6 s and differs from the Euler trajectory by at most 0.0341% of the initial quadrupole. Zero-crossing frequency differs by 0.0011%, and fitted late-window decay rates by about 0.1%. A 64³ RKC2 trajectory takes 436.9 s. Pressure iterations and repeated stress-stencil evaluation still matter; the method does not eliminate spatial or splitting error. [Damping measurements](VISCOUS_DROP.md) show unresolved excess decay on the finer grid.
+
+The bundled free-surface hotend's 24 ticks and the local V6 model's two saved ticks both use one stress stage. Their complete diagnostic CSVs remain byte-identical to the preceding implementation; no acceleration is claimed for those one-stage cases. V6 storage still rounds to 1,715.4 MiB.
+
+To compare the short probes, alternate the following commands after building once. Use the reported internal wall times or invoke the compiled test executable directly to exclude compilation:
+
+    MHD_DROP_LIQUID_NU=0.0002 MHD_DROP_GRIDS=48 MHD_DROP_PERIODS=0.04 MHD_DROP_EULER_VISCOSITY=1 cargo test --offline rayleigh_lamb_drop_oscillation -- --ignored --nocapture
+    MHD_DROP_LIQUID_NU=0.0002 MHD_DROP_GRIDS=48 MHD_DROP_PERIODS=0.04 cargo test --offline rayleigh_lamb_drop_oscillation -- --ignored --nocapture
+
+Both commands overwrite the generated 48³ viscous-drop CSV. Archive long diagnostic traces before running short probes.

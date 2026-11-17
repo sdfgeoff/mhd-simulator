@@ -132,7 +132,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .as_ref()
                 .map_or(0., |f| f.diagnostics.rms_divergence_s_inv);
             println!(
-                "t={:.3} µs Bmax={:.3e} T Umax={:.3e} m/s rms_div={:.3e} s^-1 · EM {} it / {:.3e} · pressure {} it / {:.3e} · viscosity {} substeps",
+                "t={:.3} µs Bmax={:.3e} T Umax={:.3e} m/s rms_div={:.3e} s^-1 · EM {} it / {:.3e} · pressure {} it / {:.3e} · viscosity {} stages",
                 state.time_s * 1e6,
                 b,
                 u,

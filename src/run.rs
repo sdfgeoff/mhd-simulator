@@ -193,6 +193,9 @@ impl RunState {
                 + 128;
         }
         if fluid_present {
+            working += fluid_config.stress_workspace_bytes(
+                context.device.limits().min_uniform_buffer_offset_alignment,
+            );
             working += n * 84
                 + (n * 64).max(nf * 16)
                 + nf * 48

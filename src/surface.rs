@@ -660,3 +660,9 @@ mod periodic_tests;
 
 #[cfg(test)]
 mod drop_tests;
+
+#[cfg(test)]
+mod viscous_reference;
+
+#[cfg(test)]
+mod drop_fit;

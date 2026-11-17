@@ -48,6 +48,13 @@ impl Default for FluidConfig {
     }
 }
 impl FluidConfig {
+    pub(crate) fn stress_workspace_bytes(&self, alignment: u32) -> u64 {
+        if self.surface.enabled {
+            stabilized::bytes(alignment)
+        } else {
+            0
+        }
+    }
     pub fn validate(&self) -> Result<(), String> {
         if !self.mushy_drag_rate_s_inv.is_finite()
             || self.mushy_drag_rate_s_inv <= 0.
@@ -64,7 +71,7 @@ impl FluidConfig {
             || self.absolute_divergence_tolerance < 0.
             || !(1e-7..=1e-2).contains(&self.relative_tolerance)
             || !(1..=20000).contains(&self.max_iterations)
-            || !(1..=4096).contains(&self.max_viscous_substeps)
+            || !(1..=stabilized::MAX_EULER_STEPS).contains(&self.max_viscous_substeps)
         {
             return Err(
                 "Invalid fluid timestep, initial condition or solver limits/tolerances".into(),
@@ -153,6 +160,7 @@ pub struct FluidState {
     shared_force: bool,
     bind: wgpu::BindGroup,
     energy_bind: wgpu::BindGroup,
+    stabilized: Option<stabilized::StabilizedGpu>,
     phase_gpu: Option<PhaseGpu>,
     pipelines: HashMap<&'static str, wgpu::ComputePipeline>,
     surface_tension_n_m: f32,
@@ -160,6 +168,8 @@ pub struct FluidState {
     force_max: f32,
     max_face_speed: f32,
     momentum_projection_pending: bool,
+    #[cfg(test)]
+    pub(crate) euler_viscosity_reference: bool,
 }
 impl FluidState {
     pub fn new(
@@ -255,7 +265,9 @@ impl FluidState {
                 64
             },
         ];
-        let bytes = sizes.iter().sum::<u64>();
+        let stage_bytes = config
+            .stress_workspace_bytes(context.device.limits().min_uniform_buffer_offset_alignment);
+        let bytes = sizes.iter().sum::<u64>() + stage_bytes;
         let limits = context.device.limits();
         if sizes.iter().any(|&s| {
             s > limits.max_buffer_size || s > limits.max_storage_buffer_binding_size as u64
@@ -438,10 +450,11 @@ impl FluidState {
                 label: Some("MAC fluid solver"),
                 source: wgpu::ShaderSource::Wgsl(
                     format!(
-                        "{}\n{}\n{}",
+                        "{}\n{}\n{}\n{}",
                         include_str!("../periodic.wgsl"),
                         include_str!("viscosity.wgsl"),
-                        include_str!("solver.wgsl")
+                        include_str!("solver.wgsl"),
+                        include_str!("stabilized.wgsl")
                     )
                     .into(),
                 ),
@@ -539,6 +552,10 @@ impl FluidState {
                     })
                     .collect::<Vec<_>>(),
             });
+        let stabilized = config
+            .surface
+            .enabled
+            .then(|| stabilized::StabilizedGpu::new(&context, &shader, buffers));
         let energy_buffers = [
             &uniform, &mask, &velocity, &previous, &work, &partials, &scalars, &result, &force,
         ];
@@ -582,12 +599,15 @@ impl FluidState {
             shared_force,
             bind,
             energy_bind,
+            stabilized,
             phase_gpu: None,
             pipelines,
             surface_tension_n_m,
             air_density_kg_m3,
             force_max: 0.,
             momentum_projection_pending: false,
+            #[cfg(test)]
+            euler_viscosity_reference: false,
             max_face_speed: 0.,
         };
         state.initialize_velocity()?;
@@ -1072,11 +1092,32 @@ impl FluidState {
         };
         if count > self.config.max_viscous_substeps as f64 {
             return Err(format!(
-                "Viscosity requires {count:.0} substeps, above the {} limit; reduce the common timestep or increase Max viscosity substeps",
+                "Viscosity requires {count:.0} equivalent Euler substeps, above the {} work limit; reduce the common timestep or increase Viscosity work limit",
                 self.config.max_viscous_substeps
             ));
         }
         let count = count as u32;
+        let accelerated = count > 8;
+        #[cfg(test)]
+        let accelerated = accelerated && !self.euler_viscosity_reference;
+        if accelerated {
+            let rows = stabilized::schedule(self.config.dt_s, count);
+            let mut encoder = self
+                .context
+                .device
+                .create_command_encoder(&Default::default());
+            self.stabilized.as_ref().unwrap().encode(
+                &self.context,
+                &mut encoder,
+                &rows,
+                faces,
+                &self.velocity,
+                &self.scratch,
+            );
+            self.context.queue.submit(Some(encoder.finish()));
+            self.diagnostics.viscous_substeps = rows.len() as u32;
+            return Ok(());
+        }
         self.diagnostics.viscous_substeps = count;
         self.params.physical[1] = (self.config.dt_s / count as f64) as f32;
         self.context
@@ -1357,3 +1398,5 @@ mod tests;
 
 #[cfg(test)]
 mod viscosity_tests;
+
+mod stabilized;

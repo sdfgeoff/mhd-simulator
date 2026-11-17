@@ -63,3 +63,5 @@ MHD_DROP_CAD_LATITUDES controls the diagnostic mesh: longitude divisions are twi
 At 64³, doubling to 128 latitude divisions (65,024 triangles) reduces frequency error to 1.31%, with relative volume drift below 4×10⁻⁸ and no measured quadrupole amplification. A further refinement to 256 latitude divisions (261,120 triangles) gives 1.24% error, also without quadrupole amplification. These are close to the 1.31% analytic-initialization frequency error at that grid. Refining the fluid grid alone while holding a coarse curved CAD tessellation fixed can therefore give a misleading convergence trend.
 
 See [CAD initialization](CAD_INITIALIZATION.md) for static fraction measurements and the remaining wall/tessellation limitations.
+
+For nonzero liquid viscosity, [the viscous-drop diagnostic](VISCOUS_DROP.md) uses the full linear viscous frequency and reports decay fits over several time windows. It also documents the remaining damping error.

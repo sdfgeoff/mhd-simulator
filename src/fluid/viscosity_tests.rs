@@ -511,3 +511,291 @@ fn fluid_rejects_nonfinite_or_unbounded_interface_fractions() {
         .unwrap();
     state.step(&volume).unwrap();
 }
+
+#[test]
+fn stabilized_stress_diffusion_matches_shear_decay_and_time_refines() {
+    let _lock = crate::gpu_test_lock();
+    let n = 32u32;
+    let mut materials = default_materials();
+    materials[3].density_kg_m3 = Some(1.);
+    materials[3].dynamic_viscosity_pa_s = Some(1.);
+    materials[3].surface_tension_n_m = Some(0.);
+    let (gpu, volume, _, _) = crate::surface::tests::box_fixture(
+        DomainSettings {
+            min_mm: [0.; 3],
+            max_mm: [1000., 1000., 125.],
+            cell_mm: 1000. / n as f32,
+        },
+        &materials,
+    );
+    let total_time = 0.016;
+    let lambda = 4. * (n as f64).powi(2) * (std::f64::consts::PI / n as f64).sin().powi(2);
+    let exact = (-lambda * total_time).exp();
+    let mut errors = Vec::new();
+    for ticks in [1, 2, 4, 8] {
+        let mut state = FluidState::new(
+            gpu.context.clone(),
+            &volume,
+            FluidConfig {
+                surface: crate::surface::SurfaceConfig { enabled: true },
+                periodic: [true; 3],
+                advection: false,
+                acceleration_m_s2: [0.; 3],
+                dt_s: total_time / ticks as f64,
+                ..Default::default()
+            },
+            None,
+        )
+        .unwrap();
+        let f = state.params.faces;
+        let initial: Vec<[f32; 4]> = (0..f[3])
+            .map(|i| {
+                let y = (i / f[0]) % f[1];
+                [
+                    (std::f64::consts::TAU * (y as f64 + 0.5) / n as f64).cos() as f32,
+                    0.,
+                    0.,
+                    0.,
+                ]
+            })
+            .collect();
+        gpu.context
+            .queue
+            .write_buffer(&state.scratch, 0, bytemuck::cast_slice(&initial));
+        gpu.context
+            .queue
+            .write_buffer(&state.velocity, 0, bytemuck::cast_slice(&initial));
+        for _ in 0..ticks {
+            state.diffuse_surface_stress().unwrap();
+        }
+        assert!(state.diagnostics.viscous_substeps > 1);
+        let bytes = read_bytes(&gpu.context, &state.scratch, 0, state.scratch.size()).unwrap();
+        let result = bytemuck::cast_slice::<u8, [f32; 4]>(&bytes);
+        let mut error = 0.;
+        let mut norm = 0.;
+        for z in 0..4 {
+            for y in 0..n {
+                for x in 0..n {
+                    let i = (x + f[0] * (y + f[1] * z)) as usize;
+                    error += (result[i][0] as f64 - exact * initial[i][0] as f64).powi(2);
+                    norm += (initial[i][0] as f64).powi(2);
+                    assert!(result[i][1].abs() < 1e-6 && result[i][2].abs() < 1e-6);
+                }
+            }
+        }
+        let error = (error / norm).sqrt();
+        eprintln!(
+            "RKC shear ticks={ticks}: relative L2={error:.7e}, stages={}",
+            state.diagnostics.viscous_substeps
+        );
+        errors.push(error);
+    }
+    assert!(errors.windows(2).all(|w| w[1] < 0.3 * w[0]), "{errors:?}");
+    assert!(*errors.last().unwrap() < 0.01);
+}
+
+#[test]
+fn stabilized_variable_density_stress_dissipates_energy_and_preserves_momentum_and_live_lanes() {
+    let _lock = crate::gpu_test_lock();
+    let n = 12u32;
+    let mut materials = default_materials();
+    materials[3].density_kg_m3 = Some(7000.);
+    materials[3].dynamic_viscosity_pa_s = Some(1.4);
+    materials[3].surface_tension_n_m = Some(0.);
+    materials[0].density_kg_m3 = Some(1.);
+    materials[0].dynamic_viscosity_pa_s = Some(0.);
+    let (gpu, v, _, _) = crate::surface::tests::box_fixture(
+        DomainSettings {
+            min_mm: [0.; 3],
+            max_mm: [1000.; 3],
+            cell_mm: 1000. / n as f32,
+        },
+        &materials,
+    );
+    let mut state = FluidState::new(
+        gpu.context.clone(),
+        &v,
+        FluidConfig {
+            surface: crate::surface::SurfaceConfig { enabled: true },
+            periodic: [true; 3],
+            advection: false,
+            acceleration_m_s2: [0.; 3],
+            dt_s: 0.2,
+            ..Default::default()
+        },
+        None,
+    )
+    .unwrap();
+    let packets: Vec<FluidCell> = (0..n * n * n)
+        .map(|i| FluidCell {
+            pressure: [i as f32 * 0.01, 2., 3., 4.],
+            reserved: [1., 1., f32::from(i % n < n / 2), 5.],
+            ..Default::default()
+        })
+        .collect();
+    gpu.context
+        .queue
+        .write_buffer(&state.result, 0, bytemuck::cast_slice(&packets));
+    let f = state.params.faces;
+    let initial: Vec<[f32; 4]> = (0..f[3])
+        .map(|i| {
+            let q = [i % f[0], (i / f[0]) % f[1], i / (f[0] * f[1])].map(|x| x % n);
+            let at = (q[0] + n * (q[1] + n * q[2])) as f32;
+            [
+                (at * 0.391).sin(),
+                (at * 0.717).cos(),
+                (at * 0.923).sin(),
+                0.,
+            ]
+        })
+        .collect();
+    gpu.context
+        .queue
+        .write_buffer(&state.scratch, 0, bytemuck::cast_slice(&initial));
+    gpu.context
+        .queue
+        .write_buffer(&state.velocity, 0, bytemuck::cast_slice(&initial));
+    state.diffuse_surface_stress().unwrap();
+    assert!(state.diagnostics.viscous_substeps > 8);
+    let bytes = read_bytes(&gpu.context, &state.scratch, 0, state.scratch.size()).unwrap();
+    let result = bytemuck::cast_slice::<u8, [f32; 4]>(&bytes);
+    let measure = |field: &[[f32; 4]]| {
+        let mut energy = 0.;
+        let mut p = [0.; 3];
+        let mut scale = 0.;
+        let rho = |q: [u32; 3]| if q[0] < n / 2 { 7000. } else { 1. };
+        for z in 0..n {
+            for y in 0..n {
+                for x in 0..n {
+                    let i = (x + f[0] * (y + f[1] * z)) as usize;
+                    for a in 0..3 {
+                        let mut left = [x, y, z];
+                        left[a] = (left[a] + n - 1) % n;
+                        let mass = 0.5 * (rho(left) + rho([x, y, z]));
+                        let u = field[i][a] as f64;
+                        energy += 0.5 * mass * u * u;
+                        p[a] += mass * u;
+                        scale += mass * u.abs();
+                    }
+                }
+            }
+        }
+        (energy, p, scale)
+    };
+    let before = measure(&initial);
+    let after = measure(result);
+    assert!(after.0 < before.0, "{} -> {}", before.0, after.0);
+    for a in 0..3 {
+        assert!(
+            (after.1[a] - before.1[a]).abs() / before.2 < 2e-6,
+            "momentum {a}: {} -> {}",
+            before.1[a],
+            after.1[a]
+        );
+    }
+    let bytes = read_bytes(&gpu.context, &state.result, 0, state.result.size()).unwrap();
+    for (c, old) in bytemuck::cast_slice::<u8, FluidCell>(&bytes)
+        .iter()
+        .zip(&packets)
+    {
+        assert_eq!(c.pressure, old.pressure);
+        assert_eq!(c.reserved, old.reserved);
+    }
+    eprintln!(
+        "RKC density contrast: stages={}, kinetic ratio={:.8}",
+        state.diagnostics.viscous_substeps,
+        after.0 / before.0
+    );
+}
+
+#[test]
+fn failed_projection_after_stabilized_stress_restores_packets_and_retry_rebuilds_display() {
+    let _lock = crate::gpu_test_lock();
+    let n = 12u32;
+    let mut materials = default_materials();
+    materials[3].density_kg_m3 = Some(1.);
+    materials[3].dynamic_viscosity_pa_s = Some(1.);
+    materials[3].surface_tension_n_m = Some(0.);
+    let (gpu, v, _, _) = crate::surface::tests::box_fixture(
+        DomainSettings {
+            min_mm: [0.; 3],
+            max_mm: [1000.; 3],
+            cell_mm: 1000. / n as f32,
+        },
+        &materials,
+    );
+    let mut s = FluidState::new(
+        gpu.context.clone(),
+        &v,
+        FluidConfig {
+            surface: crate::surface::SurfaceConfig { enabled: true },
+            periodic: [true; 3],
+            acceleration_m_s2: [0.; 3],
+            advection: false,
+            dt_s: 0.01,
+            relative_tolerance: 1e-7,
+            absolute_divergence_tolerance: 0.,
+            max_iterations: 1,
+            ..Default::default()
+        },
+        None,
+    )
+    .unwrap();
+    let f = s.params.faces;
+    let initial: Vec<[f32; 4]> = (0..f[3])
+        .map(|i| {
+            let q = [i % f[0], (i / f[0]) % f[1], i / (f[0] * f[1])].map(|x| x % n);
+            let at = (q[0] + n * (q[1] + n * q[2])) as f32;
+            [
+                0.01 * (at * 0.391).sin(),
+                0.01 * (at * 0.717).cos(),
+                0.01 * (at * 0.923).sin(),
+                0.,
+            ]
+        })
+        .collect();
+    gpu.context
+        .queue
+        .write_buffer(&s.velocity, 0, bytemuck::cast_slice(&initial));
+    s.dispatch(&[("fields", groups(n.pow(3))), ("diagnostics", [1, 1, 1])]);
+    s.read_diagnostics(0, 0., 0.).unwrap();
+    let accepted = read_bytes(&gpu.context, &s.result, 0, s.result.size()).unwrap();
+    let velocity = read_bytes(&gpu.context, &s.velocity, 0, s.velocity.size()).unwrap();
+    let error = s.step(&v).unwrap_err();
+    assert!(error.contains("pressure solve"), "{error}");
+    assert_eq!(s.time_s, 0.);
+    assert_eq!(
+        read_bytes(&gpu.context, &s.result, 0, s.result.size()).unwrap(),
+        accepted
+    );
+    assert_eq!(
+        read_bytes(&gpu.context, &s.velocity, 0, s.velocity.size()).unwrap(),
+        velocity
+    );
+    s.config.max_iterations = 1000;
+    s.step(&v).unwrap();
+    assert!(s.diagnostics.viscous_substeps > 1);
+    assert_eq!(s.time_s, 0.01);
+    let bytes = read_bytes(&gpu.context, &s.velocity, 0, s.velocity.size()).unwrap();
+    let faces = bytemuck::cast_slice::<u8, [f32; 4]>(&bytes);
+    let bytes = read_bytes(&gpu.context, &s.result, 0, s.result.size()).unwrap();
+    let cells = bytemuck::cast_slice::<u8, FluidCell>(&bytes);
+    for z in 0..n {
+        for y in 0..n {
+            for x in 0..n {
+                let cell = &cells[(x + n * (y + n * z)) as usize];
+                for a in 0..3 {
+                    let q = [x, y, z];
+                    let mut upper = q;
+                    upper[a] = (upper[a] + 1) % n;
+                    let idx = |q: [u32; 3]| (q[0] + f[0] * (q[1] + f[1] * q[2])) as usize;
+                    let average = 0.5 * (faces[idx(q)][a] + faces[idx(upper)][a]);
+                    assert!((cell.velocity[a] - average).abs() < 1e-7);
+                }
+                assert_eq!(cell.force, [0.; 4]);
+                assert_eq!(&cell.reserved[..3], &[1., 1., 1.]);
+                assert_eq!(cell.reserved[3], 0.);
+            }
+        }
+    }
+}

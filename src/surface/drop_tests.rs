@@ -110,24 +110,37 @@ fn rayleigh_lamb_drop_oscillation() {
             factor,
             epsilon,
             ratio,
-            true,
-            std::env::var_os("MHD_DROP_CAD").is_some(),
+            DropOptions {
+                dump: true,
+                cad: std::env::var_os("MHD_DROP_CAD").is_some(),
+                liquid_nu: std::env::var("MHD_DROP_LIQUID_NU")
+                    .unwrap_or("0".into())
+                    .parse()
+                    .unwrap(),
+            },
         );
         if periods >= 1.3 {
-            assert!(
-                report.crossings.len() >= 3,
-                "Drop did not complete three half-period crossings"
-            );
-            let measured = 2. * PI / (report.crossings[2] - report.crossings[0]);
-            let error = (measured / report.omega - 1.).abs();
-            eprintln!("drop n={n}: measured omega={measured:.8}, frequency error={error:.6e}");
-            assert!(
-                error < 0.03,
-                "Drop frequency differs from Rayleigh-Lamb reference by more than 3%"
-            );
-            errors.push(error);
+            errors.push(check_frequency(n, &report.crossings, report.omega));
         }
     }
+    check_frequency_refinement(&errors);
+}
+
+fn check_frequency(n: u32, crossings: &[f64], reference: f64) -> f64 {
+    assert!(
+        crossings.len() >= 3,
+        "Drop did not complete three half-period crossings"
+    );
+    let measured = 2. * PI / (crossings[2] - crossings[0]);
+    let error = (measured / reference - 1.).abs();
+    eprintln!("drop n={n}: measured omega={measured:.8}, frequency error={error:.6e}");
+    assert!(
+        error < 0.03,
+        "Drop frequency differs from its linear mode reference by more than 3%"
+    );
+    error
+}
+fn check_frequency_refinement(errors: &[f64]) {
     if errors.len() > 1 {
         assert!(
             errors.last().unwrap() < &errors[0],
@@ -147,7 +160,7 @@ struct DropReport {
 fn three_dimensional_drop_restores_on_the_rayleigh_lamb_timescale() {
     let _lock = crate::gpu_test_lock();
     let periods = 0.35;
-    let report = simulate_drop(48, periods, 0.4, 0.03, 7000., false, false);
+    let report = simulate_drop(48, periods, 0.4, 0.03, 7000., DropOptions::default());
     let reference = (2. * PI * periods).cos();
     assert!(
         (report.shape - reference).abs() < 0.1,
@@ -157,18 +170,32 @@ fn three_dimensional_drop_restores_on_the_rayleigh_lamb_timescale() {
     assert!(report.peak <= 1.1);
 }
 
+#[derive(Default)]
+struct DropOptions {
+    dump: bool,
+    cad: bool,
+    /// Liquid kinematic viscosity in m²/s; ambient remains inviscid.
+    liquid_nu: f32,
+}
+
 fn simulate_drop(
     n: u32,
     periods: f64,
     factor: f64,
     epsilon: f64,
     ratio: f32,
-    dump: bool,
-    cad: bool,
+    options: DropOptions,
 ) -> DropReport {
+    let DropOptions {
+        dump,
+        cad,
+        liquid_nu,
+    } = options;
+    assert!(liquid_nu.is_finite() && liquid_nu >= 0.);
+    let wall_started = std::time::Instant::now();
     let mut materials = default_materials();
     materials[3].density_kg_m3 = Some(ratio);
-    materials[3].dynamic_viscosity_pa_s = Some(0.);
+    materials[3].dynamic_viscosity_pa_s = Some(ratio * liquid_nu);
     materials[3].surface_tension_n_m = Some(1.);
     materials[0].density_kg_m3 = Some(1.);
     materials[0].dynamic_viscosity_pa_s = Some(0.);
@@ -207,6 +234,14 @@ fn simulate_drop(
     // omega_l^2=l(l-1)(l+1)(l+2)sigma/[R^3((l+1)rho_l+l rho_g)].
     let effective_r = (3. * v0 / (4. * PI)).cbrt();
     let omega = (24. / (effective_r.powi(3) * (3. * ratio as f64 + 2.))).sqrt();
+    let viscous_reference = (liquid_nu > 0.).then(|| {
+        super::viscous_reference::eigenvalue(
+            (8. / (ratio as f64 * effective_r.powi(3))).sqrt(),
+            liquid_nu as f64,
+            effective_r,
+        )
+    });
+    let frequency_reference = viscous_reference.map_or(omega, |r| r.im);
     let period = 2. * PI / omega;
     let capillary = ((ratio as f64 + 1.) * h.powi(3) / (2. * PI)).sqrt();
     let steps = (periods * period / (factor * capillary)).ceil() as u32;
@@ -226,11 +261,15 @@ fn simulate_drop(
         None,
     )
     .unwrap();
+    fluid.euler_viscosity_reference =
+        dump && std::env::var_os("MHD_DROP_EULER_VISCOSITY").is_some();
     fluid
         .update_surface(&volume, surface.field(), None)
         .unwrap();
     std::fs::create_dir_all("artifacts").unwrap();
-    let path = if cad {
+    let path = if liquid_nu > 0. {
+        format!("artifacts/drop-oscillation-viscous-{n}.csv")
+    } else if cad {
         format!("artifacts/drop-oscillation-cad-{n}.csv")
     } else if dump {
         format!("artifacts/drop-oscillation-{n}.csv")
@@ -238,35 +277,39 @@ fn simulate_drop(
         format!("artifacts/drop-oscillation-regular-{n}.csv")
     };
     let mut csv = String::from(
-        "step,time_s,quadrupole,linear_quadrupole,relative_volume_drift,centroid_drift_m,max_speed_m_s,rms_divergence_s_inv,min_alpha,max_alpha\n",
+        "step,time_s,quadrupole,linear_quadrupole,relative_volume_drift,centroid_drift_m,max_speed_m_s,rms_divergence_s_inv,min_alpha,max_alpha,viscous_substeps,material_volume_m3\n",
     );
     let mut crossings = Vec::new();
+    let mut trace = Vec::new();
     let mut previous = a0;
     let mut peak = a0.abs();
     for step in 0..=steps {
         let bytes = read_bytes(&gpu.context, surface.field(), 0, surface.field().size()).unwrap();
         let (a, v, drift) = moments(n, h, r, bytemuck::cast_slice(&bytes));
         let t = step as f64 * dt;
+        trace.push((t, a));
         if step > 0 && a * previous < 0. {
             crossings.push(t - dt + dt * previous / (previous - a));
         }
         peak = peak.max(a.abs());
         csv.push_str(&format!(
-            "{step},{t},{a},{},{},{drift},{},{},{},{}\n",
+            "{step},{t},{a},{},{},{drift},{},{},{},{},{},{v}\n",
             a0 * (omega * t).cos(),
             v / v0 - 1.,
             fluid.diagnostics.max_speed_m_s,
             fluid.diagnostics.rms_divergence_s_inv,
             surface.diagnostics.min_fraction,
-            surface.diagnostics.max_fraction
+            surface.diagnostics.max_fraction,
+            fluid.diagnostics.viscous_substeps
         ));
         if step % 20 == 0 || step == steps {
             eprintln!(
-                "drop n={n} {step}/{steps}: q/q0={:.6}, speed={:.4e}, volume={:.3e}, pressure={} it",
+                "drop n={n} {step}/{steps}: q/q0={:.6}, speed={:.4e}, volume={:.3e}, pressure={} it, viscosity={} stages",
                 a / a0,
                 fluid.diagnostics.max_speed_m_s,
                 v / v0 - 1.,
-                fluid.diagnostics.iterations
+                fluid.diagnostics.iterations,
+                fluid.diagnostics.viscous_substeps
             );
         }
         previous = a;
@@ -284,6 +327,13 @@ fn simulate_drop(
             panic!("Drop n={n} step {} dt={dt}: {error}", step + 1);
         }
     }
+    if let Some(reference) = viscous_reference.filter(|_| periods >= 1.) {
+        report_viscous_fit(&trace, reference, period, n);
+    }
+    eprintln!(
+        "drop n={n}: complete wall {:.3} s",
+        wall_started.elapsed().as_secs_f64()
+    );
     if dump {
         std::fs::write(&path, &csv).unwrap();
     }
@@ -295,7 +345,7 @@ fn simulate_drop(
     assert!(drift < 2e-6);
     assert!(peak / a0.abs() < 1.1, "Unforced drop-mode amplitude grew");
     DropReport {
-        omega,
+        omega: frequency_reference,
         shape: previous / a0,
         peak: peak / a0.abs(),
         crossings,
@@ -396,4 +446,68 @@ fn imported_drop_initialization_diagnostic() {
     }
     std::fs::create_dir_all("artifacts").unwrap();
     std::fs::write("artifacts/cad-initialization.csv", csv).unwrap();
+}
+
+fn report_viscous_fit(
+    trace: &[(f64, f64)],
+    reference: num_complex::Complex64,
+    period: f64,
+    n: u32,
+) {
+    for start in [0., 0.25 * period, 0.5 * period] {
+        let fit = super::drop_fit::fit(trace, start, reference.re, reference.im);
+        eprintln!(
+            "viscous drop n={n}, fit t>={start:.5}: beta={:.9} omega={:.9} RMS={:.6e}, reference beta={:.9} omega={:.9}",
+            fit.decay, fit.omega, fit.rms, reference.re, reference.im
+        );
+    }
+}
+#[test]
+#[ignore = "Analyze saved viscous-drop CSVs without rerunning the GPU"]
+fn viscous_drop_saved_diagnostics() {
+    let grids = std::env::var("MHD_DROP_GRIDS").unwrap_or("48,64".into());
+    let nu: f64 = std::env::var("MHD_DROP_LIQUID_NU")
+        .unwrap_or("0.0002".into())
+        .parse()
+        .unwrap();
+    let ratio: f64 = std::env::var("MHD_DROP_DENSITY_RATIO")
+        .unwrap_or("7000".into())
+        .parse()
+        .unwrap();
+    let mut errors = Vec::new();
+    for n in grids.split(',').map(|v| v.parse::<u32>().unwrap()) {
+        let path = format!("artifacts/drop-oscillation-viscous-{n}.csv");
+        let text = std::fs::read_to_string(&path).unwrap();
+        let mut lines = text.lines();
+        let header: Vec<_> = lines.next().unwrap().split(',').collect();
+        let col = |name: &str| header.iter().position(|v| *v == name).unwrap();
+        let time = col("time_s");
+        let q = col("quadrupole");
+        let mut radius = 0.2f64;
+        let rows: Vec<Vec<f64>> = lines
+            .map(|l| l.split(',').map(|s| s.parse().unwrap()).collect())
+            .collect();
+        if let Some(v) = header.iter().position(|v| *v == "material_volume_m3") {
+            radius = (3. * rows[0][v] / (4. * PI)).cbrt();
+        }
+        let trace: Vec<_> = rows.iter().map(|r| (r[time], r[q])).collect();
+        let reference = super::viscous_reference::eigenvalue(
+            (8. / (ratio * radius.powi(3))).sqrt(),
+            nu,
+            radius,
+        );
+        let period = 2. * PI / (24. / (radius.powi(3) * (3. * ratio + 2.))).sqrt();
+        let mut crossings = Vec::new();
+        for pair in trace.windows(2) {
+            let [(t0, q0), (t1, q1)] = pair else {
+                unreachable!()
+            };
+            if q0 * q1 < 0. {
+                crossings.push(t0 + (t1 - t0) * q0 / (q0 - q1));
+            }
+        }
+        errors.push(check_frequency(n, &crossings, reference.im));
+        report_viscous_fit(&trace, reference, period, n);
+    }
+    check_frequency_refinement(&errors);
 }
