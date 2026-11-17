@@ -48,7 +48,7 @@ def main():
             ))
         ax.axhline(.15, color="#cc5500", lw=.7, ls=":")
         ax.set(
-            xlabel="x (mm)", ylabel="z (mm)", ylim=(-1.2, 1.5),
+            xlabel="x (mm)", ylabel="z (mm)", ylim=(origin_mm[2], origin_mm[2] + dims[2] * spacing_mm),
             title=f"{step * grid['dt_s'] * 1e6:.1f} µs",
         )
         ax.set_aspect("equal")

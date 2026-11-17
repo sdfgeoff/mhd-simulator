@@ -264,6 +264,11 @@ fn pulsed_nozzle_experiment() {
         .parse()
         .unwrap();
     assert!((0.00625..=0.05).contains(&h_mm) && end > 0. && pulse_s > 0. && peak >= 0.);
+    let z_min_mm: f32 = std::env::var("MHD_JET_Z_MIN_MM")
+        .unwrap_or_else(|_| "-2.0".into())
+        .parse()
+        .unwrap();
+    assert!((-4.0..=-1.2).contains(&z_min_mm));
     let mut materials = crate::simulation::default_materials();
     materials[3].density_kg_m3 = Some(7000.);
     materials[3].dynamic_viscosity_pa_s = Some(0.002);
@@ -276,7 +281,7 @@ fn pulsed_nozzle_experiment() {
         .build(
             &model,
             &crate::simulation::DomainSettings {
-                min_mm: [-0.9, -0.9, -1.2],
+                min_mm: [-0.9, -0.9, z_min_mm],
                 max_mm: [0.9, 0.9, 1.5],
                 cell_mm: h_mm,
             },
@@ -331,7 +336,7 @@ fn pulsed_nozzle_experiment() {
     )
     .unwrap();
     let mut csv = String::from(
-        "step,time_s,force_peak_n_m3,volume_m3,relative_volume_drift,max_speed_m_s,kinetic_j,pressure_iterations,rms_divergence_s_inv,expelled_m3,front_z_m,max_liquid_cell_speed_m_s,max_air_cell_speed_m_s,max_mixed_cell_speed_m_s,core_count_alpha_0_01,core_count_alpha_0_5,nonlargest_core_volume_alpha_0_5_m3\n",
+        "step,time_s,force_peak_n_m3,volume_m3,relative_volume_drift,max_speed_m_s,kinetic_j,pressure_iterations,rms_divergence_s_inv,expelled_m3,front_z_m,max_liquid_cell_speed_m_s,max_air_cell_speed_m_s,max_mixed_cell_speed_m_s,core_count_alpha_0_01,core_count_alpha_0_5,nonlargest_core_volume_alpha_0_5_m3,max_outer_boundary_alpha\n",
     );
     eprintln!(
         "Jet grid={:?}, h={h:.8e}, dt={dt:.8e}, steps={steps}, initial volume={initial:.8e}",
@@ -422,10 +427,24 @@ fn pulsed_nozzle_experiment() {
                 bytemuck::cast_slice(&fields.iter().map(|v| v[0]).collect::<Vec<_>>()),
             )
             .unwrap();
+            let mut boundary_alpha = 0f32;
+            for (i, v) in fields.iter().enumerate() {
+                let [nx, ny, nz] = grid.dims;
+                let q = [i as u32 % nx, (i as u32 / nx) % ny, i as u32 / (nx * ny)];
+                if q[0] == 0
+                    || q[0] + 1 == nx
+                    || q[1] == 0
+                    || q[1] + 1 == ny
+                    || q[2] == 0
+                    || q[2] + 1 == nz
+                {
+                    boundary_alpha = boundary_alpha.max(v[0]);
+                }
+            }
             let low_core = core_components(fields, grid.dims, 0.01);
             let high_core = core_components(fields, grid.dims, 0.5);
             csv.push_str(&format!(
-                "{step},{time},{force},{},{drift},{},{},{},{},{expelled},{front},{},{},{},{},{},{}\n",
+                "{step},{time},{force},{},{drift},{},{},{},{},{expelled},{front},{},{},{},{},{},{},{}\n",
                 surface.diagnostics.volume_m3,
                 fluid.diagnostics.max_speed_m_s,
                 fluid.diagnostics.kinetic_energy_j,
@@ -433,9 +452,13 @@ fn pulsed_nozzle_experiment() {
                 fluid.diagnostics.rms_divergence_s_inv,
                 phase_speed[0],
                 phase_speed[1],
-                phase_speed[2], low_core.0, high_core.0, high_core.1*h.powi(3)
+                phase_speed[2], low_core.0, high_core.0, high_core.1*h.powi(3), boundary_alpha
             ));
             std::fs::write(out.join("diagnostics.csv"), &csv).unwrap();
+            assert!(
+                boundary_alpha <= 0.01,
+                "Jet step {step}, t={time}: liquid reached the closed outer boundary (alpha={boundary_alpha}); enlarge the domain"
+            );
             eprintln!(
                 "Jet {step}/{steps}, t={time:.6e}, expelled={expelled:.5e}, front={front:.5e}, U={:.5e}, pressure={}it",
                 fluid.diagnostics.max_speed_m_s, fluid.diagnostics.iterations

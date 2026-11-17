@@ -13,8 +13,8 @@ occupies the reservoir from z=−0.75 mm to z=0, and the aperture to z=0.15 mm.
 The back surface is exposed to air: no sealed pressure chamber or liquid inlet
 is imposed. The 96-sided revolved CAD meshes are closed and consistently
 oriented, with a scalar volume check. All outer simulation faces are closed;
-the air domain is finite, extending ±0.9 mm transversely and −1.2 to +1.5 mm
-axially. This is a synthetic nozzle, not a model of the owner's hotend.
+the air domain is finite, extending ±0.9 mm transversely and −2.0 to +1.5 mm
+axially by default. The first study below used the smaller −1.2 mm lower bound. This is a synthetic nozzle, not a model of the owner's hotend.
 
 The liquid uses constant density 7000 kg/m³, viscosity 0.002 Pa·s and surface
 tension 0.5 N/m; air uses 1.2 kg/m³ and 1.8×10⁻⁵ Pa·s. These are illustrative
@@ -53,6 +53,10 @@ and at most 10,000 iterations. Conservative advection and capillary limits remai
 enforced. The requested timestep is a fixed fraction of the capillary bound,
 rounded down to reach the requested end time in an integer number of steps.
 A CFL failure stops the experiment; it is not bypassed or accepted as ejection.
+Saved snapshots also report maximum outer-boundary fraction. Values above 0.01
+stop the experiment with a request to enlarge the box, after writing the sample.
+This sampled guard can miss contact between snapshots; it is not an open-air
+boundary condition.
 The solver's residual is a criterion for the discrete pressure equation, not a
 claim that the nozzle geometry/contact physics is accurate.
 
@@ -80,7 +84,11 @@ cells across and is a demonstration, not a resolved nozzle study. The matching
 zero-force run also completes 1 ms and retracts into the nozzle, ending with its
 leading occupied centre at z=0.075 mm and negligible volume beyond the exit.
 This establishes a different response to the prescribed pulse in this setup;
-it does not establish a correct physical jetting threshold.
+it does not establish a correct physical jetting threshold. **The unforced rear
+surface reaches the closed lower boundary by the saved 0.550 ms snapshot.**
+Its subsequent trajectory is boundary-influenced, so the 1 ms comparison cannot
+isolate an unbounded-air response. The pulse case does not touch the outer
+boundary in its saved snapshots. A larger-domain control is in progress.
 
 These runs are exploratory. Expelled volume is not detached-drop volume, and a
 neck disappearing below one cell is not a validated physical detachment event.
@@ -96,9 +104,11 @@ MHD_JET_CELL_MM=0.05 MHD_JET_END_S=0.001 MHD_JET_DT_FACTOR=0.05 \
   cargo test --offline --lib pulsed_nozzle_experiment -- --ignored --nocapture
 ```
 
+The first smaller-box results above predate the boundary guard.
 Defaults use 50 µm cells, 1 ms duration and timestep factor 0.05. Default peak force is 5×10⁷ N/m³ and duration 0.5 ms. Set
 `MHD_JET_FORCE_N_M3=0` for the unforced control, `MHD_JET_PULSE_S` for pulse
 duration, and `MHD_JET_CELL_MM`/`MHD_JET_DT_FACTOR` for spatial/time controls.
+`MHD_JET_Z_MIN_MM` changes the lower bound (−2.0 mm by default).
 Use a distinct output directory for every control: snapshots are not cleaned on
 rerun, and differing step counts can otherwise leave stale files.
 
@@ -106,3 +116,6 @@ rerun, and differing step counts can otherwise leave stale files.
 `alpha-NNNNN.bin` is little-endian f32, X-fastest. `flow-NNNNN.bin` stores four
 f32 per cell: `(u_x,u_y,u_z,p)`. Snapshots occur every 20 steps and at completion;
 `diagnostics.csv` uses the same samples. No desktop window opens.
+
+Plot saved snapshots with `python scripts/plot_jet.py OUTPUT_DIRECTORY` (optional
+NumPy/Matplotlib postprocessing; no additional simulation implementation).
