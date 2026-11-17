@@ -542,6 +542,10 @@ impl EmState {
                 "A conductor touches the EM outer boundary; add air padding to the domain".into(),
             );
         }
+        #[cfg(test)]
+        if std::env::var_os("MHD_EM_TILE").is_some() {
+            tile::install(&mut state);
+        }
         state.advance_to(model, 0., true)?;
         Ok(state)
     }
@@ -563,6 +567,10 @@ impl EmState {
             .write_buffer(&self.uniform, 0, bytemuck::bytes_of(&self.params));
     }
     fn dispatch(&self, commands: &[(&str, [u32; 3])]) {
+        #[cfg(test)]
+        let expanded = tile::expand_commands(self, commands);
+        #[cfg(test)]
+        let commands: &[(&str, [u32; 3])] = expanded.as_ref();
         let mut encoder = self
             .context
             .device
@@ -1031,3 +1039,6 @@ fn validate_model_inputs(volume: &Volume, model: &Model) -> Result<(), String> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tile;
