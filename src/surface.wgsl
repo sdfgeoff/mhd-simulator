@@ -66,15 +66,20 @@ fn curvature(@builtin(global_invocation_id) g:vec3<u32>){let i=flat(g);if i>=p.d
  for(var axis=0u;axis<3u;axis++){var l=q;var r=q;l[axis]-=1;r[axis]+=1;var nl=normals[index(bounded(l))][axis];var nr=normals[index(bounded(r))][axis];
  if !periodic(axis) {if l[axis]<0 {nl=-nl;}if r[axis]>=i32(p.dims[axis]){nr=-nr;}}
  k+=(nr-nl)/(2.0*p.step.y);}
- let n=abs(normals[i].xyz);var axis=0u;if n.y>n.x{axis=1u;}if n.z>n[axis]{axis=2u;}
+ let n=abs(normals[i].xyz);
+ // A valid height has orientation ±1. With a zero local normal it cannot
+ // match sign(normal[axis])=0, so only the divergence estimate can be used.
+ if any(n>vec3<f32>(0.0)) {
+ var axis=0u;if n.y>n.x{axis=1u;}if n.z>n[axis]{axis=2u;}
  let a=(axis+1u)%3u;let b=(axis+2u)%3u;var heights:array<f32,9>;var valid=true;
- for(var v=-1;v<=1;v++){for(var u=-1;u<=1;u++){var at=q;at[a]+=u;at[b]+=v;let h=height(at,axis);heights[u32((u+1)+3*(v+1))]=h.x;valid=valid&&h.y>0.5&&h.z==sign(normals[i][axis]);}}
+ for(var v=-1;v<=1&&valid;v++){for(var u=-1;u<=1&&valid;u++){var at=q;at[a]+=u;at[b]+=v;let h=height(at,axis);heights[u32((u+1)+3*(v+1))]=h.x;valid=valid&&h.y>0.5&&h.z==sign(normals[i][axis]);}}
  if valid {
  let hx=0.5*(heights[5]-heights[3]);let hy=0.5*(heights[7]-heights[1]);
  // Transverse filtering suppresses a 3D grid mode without changing extruded waves.
  let hessian=height_hessian(heights,p.step.y);
  let hxx=hessian.x;let hyy=hessian.y;let hxy=hessian.z;
  k=-(hxx*(1.0+hy*hy)+hyy*(1.0+hx*hx)-2.0*hxy*hx*hy)/pow(1.0+hx*hx+hy*hy,1.5);
+ }
  }
  output_field[i]=vec4<f32>(input_field[i].x,clamp(k,-2.0/p.step.y,2.0/p.step.y),input_field[i].zw);
 }

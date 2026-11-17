@@ -135,3 +135,16 @@ Grids with at least 96³ cells use an optional GPU aggregation preconditioner, w
 Three alternating warmed 96³ drop probes give median unprofiled process time **5.826 → 5.249 s** and pressure GPU time **2,286 → 1,785 ms** in separate profiled runs. Three combined EM/fluid/thermal ticks on the local V6 hotend give **29.045 → 25.782 s** process time and **4,954 → 1,977 ms** pressure GPU time; EM then dominates at about 20.8 s. Every profiling pass is recorded. Original project/GLB hashes are unchanged.
 
 [Method, full-duration checks, memory costs and measured limits](PRESSURE_PRECONDITIONING.md), including a smooth manufactured case that still fails convergence in both methods. These measurements do not establish a general speedup for other hardware or geometries.
+
+## Skipping unusable height stencils
+
+A height column accepted by the curvature method has orientation +1 or −1. It cannot match a zero local normal, so those cells now retain the existing divergence estimate without querying heights. Once any column fails, the remaining columns are also skipped because the height Hessian cannot be used. These are exact pruning rules; height values and curvature formulas are unchanged.
+
+Three alternating warmed pairs per grid, using inviscid 7000:1 drops over 0.02 periods, give:
+
+| Grid | Interface-stage GPU median, before → after | Process median, before → after |
+| --- | ---: | ---: |
+| 64³, 13 ticks | 84.64 → 82.70 ms | 1.175 → 1.187 s |
+| 96³, 24 ticks | 679.88 → 666.68 ms | 4.996 → 5.169 s |
+
+Every profiling pass was recorded. The interface stage improves about 2%, while these process timings do **not** demonstrate an overall speedup. All 20 comparison runs preserve the corresponding trajectory CSV and final accepted fraction/curvature packet byte-for-byte, including shifted and viscous controls. The 28 regular surface/interface tests pass. The change adds no buffers.
