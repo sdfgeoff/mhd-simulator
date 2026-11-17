@@ -214,3 +214,148 @@ fn uniform_periodic_metal_drop_preserves_velocity_and_integrated_momentum() {
         );
     }
 }
+
+/// Integrate each component on its unique periodic MAC dual volumes.
+/// Cell-centred velocity interpolation would change this quadrature near the interface.
+fn mac_integrals(
+    context: &GpuContext,
+    surface: &SurfaceState,
+    fluid: &FluidState,
+    n: u32,
+) -> ([f64; 3], f64) {
+    let alpha = read_bytes(context, surface.field(), 0, surface.field().size()).unwrap();
+    let alpha = bytemuck::cast_slice::<u8, [f32; 4]>(&alpha);
+    let velocity = read_bytes(context, fluid.face_buffer(), 0, fluid.face_buffer().size()).unwrap();
+    let velocity = bytemuck::cast_slice::<u8, [f32; 4]>(&velocity);
+    let cell = |q: [u32; 3]| (q[0] + n * (q[1] + n * q[2])) as usize;
+    let mut momentum = [0.; 3];
+    let mut kinetic = 0.;
+    let dv = 1. / (n as f64).powi(3);
+    for z in 0..n {
+        for y in 0..n {
+            for x in 0..n {
+                let q = [x, y, z];
+                let v = velocity[(x + (n + 1) * (y + (n + 1) * z)) as usize];
+                for axis in 0..3 {
+                    let mut left = q;
+                    left[axis] = (q[axis] + n - 1) % n;
+                    let rho =
+                        1. + 6999. * 0.5 * (alpha[cell(q)][0] as f64 + alpha[cell(left)][0] as f64);
+                    momentum[axis] += rho * v[axis] as f64 * dv;
+                    kinetic += 0.5 * rho * (v[axis] as f64).powi(2) * dv;
+                }
+            }
+        }
+    }
+    (momentum, kinetic)
+}
+
+#[test]
+#[ignore = "Nonuniform high-density momentum transport diagnostic; writes artifacts/periodic-momentum.csv"]
+fn nonuniform_periodic_metal_drop_momentum_transport() {
+    let _lock = crate::gpu_test_lock();
+    let n = 24u32;
+    let mut materials = default_materials();
+    materials[3].density_kg_m3 = Some(7000.);
+    materials[3].dynamic_viscosity_pa_s = Some(1e-6);
+    materials[3].surface_tension_n_m = Some(0.);
+    materials[0].density_kg_m3 = Some(1.);
+    let (gpu, volume, _, _) = super::tests::box_fixture(
+        DomainSettings {
+            min_mm: [0.; 3],
+            max_mm: [1000.; 3],
+            cell_mm: 1000. / n as f32,
+        },
+        &materials,
+    );
+    let (mut surface, _) =
+        SurfaceState::with_periodic_boundaries(gpu.context.clone(), &volume, 3, [true; 3]).unwrap();
+    let initial = super::tests::sphere(n, Vec3::new(0.75, 0.5, 0.5), 0.14);
+    gpu.context
+        .queue
+        .write_buffer(surface.field(), 0, bytemuck::cast_slice(&initial));
+    surface.refresh(&volume).unwrap();
+    let mut fluid = FluidState::new(
+        gpu.context.clone(),
+        &volume,
+        FluidConfig {
+            periodic: [true; 3],
+            surface: SurfaceConfig { enabled: true },
+            initial_velocity_m_s: [0.25, 0.125, -0.0625],
+            acceleration_m_s2: [0.; 3],
+            dt_s: 0.01,
+            max_iterations: 4000,
+            relative_tolerance: 1e-6,
+            absolute_divergence_tolerance: 1e-6,
+            ..Default::default()
+        },
+        None,
+    )
+    .unwrap();
+    let fd = n + 1;
+    let velocities: Vec<[f32; 4]> = (0..fd.pow(3))
+        .map(|i| {
+            let x = (i % fd) as f32;
+            let y = ((i / fd) % fd) as f32;
+            let k = std::f32::consts::TAU / n as f32;
+            // A staggered streamfunction curl: discrete divergence is zero.
+            [
+                0.25 + 0.05 * (k * x).sin() * (k * (y + 0.5)).cos(),
+                0.125 - 0.05 * (k * (x + 0.5)).cos() * (k * y).sin(),
+                -0.0625,
+                0.,
+            ]
+        })
+        .collect();
+    gpu.context
+        .queue
+        .write_buffer(fluid.face_buffer(), 0, bytemuck::cast_slice(&velocities));
+    fluid
+        .update_surface(&volume, surface.field(), None)
+        .unwrap();
+    let (p0, k0) = mac_integrals(&gpu.context, &surface, &fluid, n);
+    let v0 = surface.diagnostics.volume_m3;
+    let mut csv = String::from(
+        "step,time_s,px,py,pz,kinetic_j,relative_momentum_error,relative_volume_error\n",
+    );
+    for step in 0..=64 {
+        let (p, k) = mac_integrals(&gpu.context, &surface, &fluid, n);
+        let error = (p.iter().zip(p0).map(|(a, b)| (a - b).powi(2)).sum::<f64>()
+            / p0.iter().map(|a| a * a).sum::<f64>())
+        .sqrt();
+        csv.push_str(&format!(
+            "{step},{},{},{},{},{},{},{}\n",
+            step as f64 * 0.01,
+            p[0],
+            p[1],
+            p[2],
+            k,
+            error,
+            surface.diagnostics.volume_m3 / v0 - 1.
+        ));
+        if step == 64 {
+            eprintln!(
+                "nonuniform periodic: relative momentum error={error:.6e}, K/K0={}, volume drift={:.3e}",
+                k / k0,
+                surface.diagnostics.volume_m3 / v0 - 1.
+            );
+            assert!(error.is_finite() && k.is_finite());
+            break;
+        }
+        fluid.step(&volume).unwrap();
+        surface
+            .advance(
+                &volume,
+                fluid.face_buffer(),
+                None,
+                0.01,
+                fluid.max_face_speed(),
+            )
+            .unwrap();
+        fluid
+            .update_surface(&volume, surface.field(), None)
+            .unwrap();
+    }
+    std::fs::create_dir_all("artifacts").unwrap();
+    std::fs::write("artifacts/periodic-momentum.csv", csv).unwrap();
+}
