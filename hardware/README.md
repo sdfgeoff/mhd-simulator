@@ -21,7 +21,7 @@ settled hydrostatic/wetting equilibrium.
 | Stock stainless V6, opposing tip contacts, permanent magnets | Wider 0.8 × 0.4 mm contacts: one approximately 0.595 mm component at 3.6 ms on the 100 µm grid, 200 A / 250 µs. Lumped drive requirement about 11 V. | Wider-contact grid refinement and full-domain gravity/repetition controls; the completed cropped zero-G two-pulse screen does not qualify repetition. Contact fabrication, wetting and cooling remain open. |
 | V6 with two milled collar flats and immersed tungsten pins | Cold 200 A model puts approximately 171 A through liquid, with 0.46 T mean liquid field. | Half-timestep full-domain trial completes4.2ms with no saved detached component; mounts, rod heat, feedstock clearance and compatibility remain unqualified. |
 | Same V6, smaller single-disc poles | 250 A / 250 µs coarse trial: one approximately 0.596 mm component, downward 0.212 m/s. Nominal magnet span 14.2 mm. | Mesh/repetition, stronger omitted local self-field, attachment and wetting remain unresolved. |
-| Custom chamber with one resonant coil | Native 250 A / 50 kHz EM/fluid trial completes 3.597 ms without resolved ejection on the 200 µm grid. | Coarse negative screen; zero-current control, geometry/source refinement and actual driver remain open. Approximately 62 W electrical heat at 200 Hz in the scaled cold estimate. |
+| Custom chamber with one resonant coil | Native 250 A / 50 kHz EM/fluid trial completes 3.597 ms without resolved ejection on the 200 µm grid. | Matched zero-current control confirms small interface response at this coarse resolution; geometry/source refinement and actual driver remain open. Approximately 62 W electrical heat at 200 Hz in the scaled cold estimate. |
 
 These are research candidates. The contact-driven trials use the normal fluid
 and interface engine with a research GPU charge solver; they are not a new GUI
@@ -817,3 +817,34 @@ velocity points upward. No saved liquid reaches the domain boundary, and
 relative volume drift stays below 2×10⁻⁷. This is a completed zero-gravity
 negative for that waveform, not a rejection of all immersed-electrode designs.
 See [milled-pin-flow-screening.json](milled-pin-flow-screening.json).
+
+
+## Contact hotspot refinement
+
+At the same 200 A / 250 µs waveform, refining the wider-contact cold field from
+100 to 50 µm raises the initial-field adiabatic steel maximum from **20.1 to
+34.7 K**, while steel pulse energy decreases 4.5%, terminal resistance decreases
+4.4% and cold axial liquid force increases 1.1%. Local current crowding and voxel
+contact edges are therefore much less resolved than the integrated quantities.
+The same stationary contact-current scaling at 250 A gives **54.2 K** for the
+compact-pole variant; that is an I² extrapolation, not a solved temperature.
+
+These figures exclude thermal diffusion, temperature-dependent conductivity,
+actual contact-edge radius and joint losses. The 20 K coarse figure must not
+be treated as a converged hardware hotspot. Full inputs, hashes and cold-field
+budgets: [tip-heat-grid-screening.json](tip-heat-grid-screening.json).
+
+
+## Single-coil zero-current control
+
+The zero-current case also completes the same 3500 accepted steps through
+3.597125 ms. Exported geometry, materials, effective fluid/run settings and
+static masks match the driven case; only winding current tables differ. Neither
+has resolved liquid below the exit. The driven case has measurable internal
+liquid motion: final liquid-weighted RMS speed is **0.0131 m/s**, versus
+**0.00180 m/s** without current. Final alpha L1 phase-volume difference is
+**14.3 nL**, against a 168,352 nL pool; this is an absolute interface-difference
+diagnostic, not ejected volume or lost mass. The native 200 µm interface response
+is small. It remains a coarse negative for this geometry/waveform, not a general
+induction-jetting rejection. Comparison and field hashes are retained in
+[single-coil-flow-screening.json](single-coil-flow-screening.json).

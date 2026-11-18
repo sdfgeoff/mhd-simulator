@@ -1,0 +1,180 @@
+{
+  "status": "Cold electrothermal extrapolation at50and100um; peak heating is not grid converged",
+  "cold_current_A": 30,
+  "pulse": "200A,250us,retract.25,20usramps; exactI\u00b2dt9.075A\u00b2s",
+  "uniform_acceleration_scope": "Cold stationary fields, gravity irrelevant to this electrical heat extrapolation",
+  "coarse": {
+    "inputs": {
+      "cold": "artifacts/hardware-research/v6-tip-wide-cold-30A-h010",
+      "project": "artifacts/hardware-research/cases/v6-tip-wide-pool35-medium-fit-sncu-h010.mhd.json",
+      "driver": "artifacts/hardware-research/v6-tip-wide-200A-250us-driver-budget.json"
+    },
+    "cold_current_a": 30.0,
+    "pulse_integral_i_squared_a2_s": 9.075000000000001,
+    "materials": [
+      {
+        "material": "Sn99.3Cu0.7 molten research properties",
+        "material_id": 4,
+        "pulse_energy_j": 0.0004334944710344242,
+        "average_power_w": 0.08669889420688484,
+        "maximum_initial_field_adiabatic_rise_k": 2.8642624583889633,
+        "maximum_position_mm": [
+          0.1500000071246177,
+          -0.04999988595955074,
+          0.14999989070929587
+        ],
+        "thermal_diffusion_length_over_pulse_pair_mm": 0.1202999329853491,
+        "volumetric_heat_capacity_j_m3_k": 1498000.0,
+        "thermal_conductivity_w_m_k": 60.5
+      },
+      {
+        "material": "Thin-wall stainless screening",
+        "material_id": 14,
+        "pulse_energy_j": 0.009150077060437654,
+        "average_power_w": 1.830015412087531,
+        "maximum_initial_field_adiabatic_rise_k": 20.05506401066667,
+        "maximum_position_mm": [
+          0.7500000356230885,
+          -0.34999990020878613,
+          0.5499999097082764
+        ],
+        "thermal_diffusion_length_over_pulse_pair_mm": 0.036657195746537946,
+        "volumetric_heat_capacity_j_m3_k": 4000000.0,
+        "thermal_conductivity_w_m_k": 15.0
+      },
+      {
+        "material": "Positive copper terminal",
+        "material_id": 16,
+        "pulse_energy_j": 3.8813657302232204e-05,
+        "average_power_w": 0.007762731460446441,
+        "maximum_initial_field_adiabatic_rise_k": 1.5196263700539974,
+        "maximum_position_mm": [
+          -0.7500000356230885,
+          0.3500001330394298,
+          0.44999990495853126
+        ],
+        "thermal_diffusion_length_over_pulse_pair_mm": 0.20076718249580555,
+        "volumetric_heat_capacity_j_m3_k": 3502660.0,
+        "thermal_conductivity_w_m_k": 394.0
+      },
+      {
+        "material": "Negative copper terminal",
+        "material_id": 17,
+        "pulse_energy_j": 3.882704956397383e-05,
+        "average_power_w": 0.007765409912794766,
+        "maximum_initial_field_adiabatic_rise_k": 1.520229759097372,
+        "maximum_position_mm": [
+          0.7500000356230885,
+          0.3500001330394298,
+          0.44999990495853126
+        ],
+        "thermal_diffusion_length_over_pulse_pair_mm": 0.20076718249580555,
+        "volumetric_heat_capacity_j_m3_k": 3502660.0,
+        "thermal_conductivity_w_m_k": 394.0
+      }
+    ],
+    "limits": [
+      "Initial cold-field extrapolation: fixed geometry, conductivity, current paths and material properties; no thermal PDE or temperature-dependent resistance.",
+      "No phase change, external contact heating, rod/lead losses or cooling. Local maxima depend on the voxel resolution.",
+      "Diffusion length is sqrt(k*t/(rho*cp)), an order-of-magnitude scale, not a simulated temperature correction.",
+      "Repetition power assumes identical electrical pulses, not demonstrated repeatable droplet formation."
+    ]
+  },
+  "fine": {
+    "inputs": {
+      "cold": "artifacts/hardware-research/v6-tip-wide-cold-30A-h0050",
+      "project": "artifacts/hardware-research/cases/v6-tip-wide-pool35-medium-fit-sncu-h0050.mhd.json",
+      "driver": "artifacts/hardware-research/v6-wide-driver-hot-allowance-200A-200Hz.json"
+    },
+    "cold_current_a": 30.000001907348633,
+    "pulse_integral_i_squared_a2_s": 9.075000000000001,
+    "materials": [
+      {
+        "material": "Sn99.3Cu0.7 molten research properties",
+        "material_id": 4,
+        "pulse_energy_j": 0.00045730683115848453,
+        "average_power_w": 0.0914613662316969,
+        "maximum_initial_field_adiabatic_rise_k": 3.294019791201566,
+        "maximum_position_mm": [
+          0.17500000831205398,
+          0.07500011997763067,
+          0.12499988952185959
+        ],
+        "thermal_diffusion_length_over_pulse_pair_mm": 0.1202999329853491,
+        "volumetric_heat_capacity_j_m3_k": 1498000.0,
+        "thermal_conductivity_w_m_k": 60.5
+      },
+      {
+        "material": "Thin-wall stainless screening",
+        "material_id": 14,
+        "pulse_energy_j": 0.008738977016467638,
+        "average_power_w": 1.7477954032935277,
+        "maximum_initial_field_adiabatic_rise_k": 34.71919221455961,
+        "maximum_position_mm": [
+          0.47500002256128937,
+          -0.2749998966464773,
+          0.12499988952185959
+        ],
+        "thermal_diffusion_length_over_pulse_pair_mm": 0.036657195746537946,
+        "volumetric_heat_capacity_j_m3_k": 4000000.0,
+        "thermal_conductivity_w_m_k": 15.0
+      },
+      {
+        "material": "Positive copper terminal",
+        "material_id": 16,
+        "pulse_energy_j": 2.1006844828268312e-05,
+        "average_power_w": 0.0042013689656536625,
+        "maximum_initial_field_adiabatic_rise_k": 1.8825260417935965,
+        "maximum_position_mm": [
+          -0.5250000249361619,
+          -0.2749998966464773,
+          0.12499988952185959
+        ],
+        "thermal_diffusion_length_over_pulse_pair_mm": 0.20076718249580555,
+        "volumetric_heat_capacity_j_m3_k": 3502660.0,
+        "thermal_conductivity_w_m_k": 394.0
+      },
+      {
+        "material": "Negative copper terminal",
+        "material_id": 17,
+        "pulse_energy_j": 2.1010405743940105e-05,
+        "average_power_w": 0.004202081148788021,
+        "maximum_initial_field_adiabatic_rise_k": 1.8827589222985874,
+        "maximum_position_mm": [
+          0.5250000249361619,
+          0.27500012947712094,
+          0.12499988952185959
+        ],
+        "thermal_diffusion_length_over_pulse_pair_mm": 0.20076718249580555,
+        "volumetric_heat_capacity_j_m3_k": 3502660.0,
+        "thermal_conductivity_w_m_k": 394.0
+      }
+    ],
+    "limits": [
+      "Initial cold-field extrapolation: fixed geometry, conductivity, current paths and material properties; no thermal PDE or temperature-dependent resistance.",
+      "No phase change, external contact heating, rod/lead losses or cooling. Local maxima depend on the voxel resolution.",
+      "Diffusion length is sqrt(k*t/(rho*cp)), an order-of-magnitude scale, not a simulated temperature correction.",
+      "Repetition power assumes identical electrical pulses, not demonstrated repeatable droplet formation."
+    ]
+  },
+  "relative_changes": {
+    "steel_peak_initial_adiabatic_rise": 0.7311932884429362,
+    "steel_total_pulse_energy": -0.04492858816976486,
+    "terminal_resistance": -0.043733811667311384,
+    "axial_liquid_force": 0.010801194609647569
+  },
+  "compact_250A_same_contact_cold_J_scaling": {
+    "factor": 1.5625,
+    "fine_initial_steel_peak_adiabatic_rise_K": 54.24873783524939,
+    "scope": "Stationary conduction J does not depend on applied magnet B; same nozzle/contact geometry and conductivity, scaledI\u00b2. Not a new thermal or moving-fluid run."
+  },
+  "limits": [
+    "No heat-transfer PDE, temperature-dependent conductivity, actual contact edge radius or external joint heat.",
+    "Electrical terminal corners/current crowding and voxel geometry affect the local maximum; do not quote20K coarse estimate as a converged hardware peak.",
+    "Total energy and cold force agree much more closely than peak local heating; this does not establish thermal convergence."
+  ],
+  "source_hashes": {
+    "artifacts/hardware-research/v6-tip-wide-cold-30A-h010/em.bin": "0c88bc2651d11e39c7a2b5975de7fed61c0a7803e6b6c53d227d8a724f35f9e9",
+    "artifacts/hardware-research/v6-tip-wide-cold-30A-h0050/em.bin": "dbfcbf419cd71b882826f736ea6075ba3fa40ee7fbf657def6b5b13709edc105"
+  }
+}
