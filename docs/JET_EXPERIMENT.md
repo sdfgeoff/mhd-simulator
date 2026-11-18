@@ -231,9 +231,13 @@ with the box, so the boundary-contact guard remains necessary.
 At 25 µm spacing, an X shift of 12.5 µm changes the initialized opening area
 from **0.07000 to 0.06750 mm²**, versus the polygonal CAD's 0.0706354 mm².
 Thus the unshifted grid's small area error is placement-dependent. Initial
-liquid volume changes from 0.856125 to 0.857625 mm³. The full shifted trajectory
-is still running; these initialization measurements do not establish release
-or a diameter/speed error bound.
+liquid volume changes from 0.856125 to 0.857625 mm³. The shifted run stops at **1.39233 ms**, step 2360, when a velocity spike exceeds
+the conservative CFL limit at the original 0.5899705 µs timestep. It is an
+incomplete control, not a completed 2 ms release result. The last saved frame
+at 1.35693 ms has a separated 37.68 nL core at `alpha>0.01`; the 0.5 cutoff
+also has several unresolved small components. Volume drift remains below
+1.95e-7 and no liquid reaches an outer boundary. A smaller-timestep rerun is
+needed before drawing late-time alignment conclusions.
 
 ```sh
 MHD_JET_CELL_MM=0.025 MHD_JET_GRID_SHIFT_X_MM=0.0125 \
