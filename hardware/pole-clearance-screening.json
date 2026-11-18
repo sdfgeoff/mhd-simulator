@@ -447,5 +447,56 @@
     "A matching scalarBy does not prove the same force distribution or jetting; full cold and moving-fluid checks required.",
     "Clearance is nominal: clamps, thermal growth, actual tolerance and hot magnet loadline unqualified.",
     "Fixed magnetization ignores material demagnetization and backiron."
-  ]
+  ],
+  "nearflush_full_cold": {
+    "report": {
+      "contact_resistivity_ohm_m2": 0.0,
+      "current_A": 29.999998092651367,
+      "iterations": 288,
+      "joule_power_W": 0.8932782411575317,
+      "limitations": [
+        "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+        "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+        "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+        "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+      ],
+      "liquid_force_N": [
+        -2.1525213638271775e-10,
+        1.0074076643790737e-09,
+        -0.0020783164505787854
+      ],
+      "liquid_joule_power_W": 0.07774377155396653,
+      "liquid_mean_By_T": -0.4275420476479937,
+      "mean_liquid_current_over_x_plus_minus_2mm_A": 1.472024418497291,
+      "mean_wall_current_over_x_plus_minus_2mm_A": 4.525419571273593,
+      "midplane_adjacent_cell_liquid_current_A": 14.688970533189718,
+      "midplane_adjacent_cell_wall_current_A": 15.307906103404024,
+      "power_relative_defect": 0.0,
+      "project": "artifacts/hardware-research/cases/v6-tip-flat08-shortbar-full-fit-sncu-h010.mhd.json",
+      "released_static_workspace_bytes": 253071836,
+      "return_current_A": -29.999996185302734,
+      "source_power_W": 0.8932782411575317,
+      "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+      "terminal_voltage_V": 0.029775943607091904,
+      "true_relative_residual": 7.018603355390951e-06
+    },
+    "outlet_land_downward_force_N_at30A": 0.0010173997359716695,
+    "outlet_land_downward_force_N_scaled150A": 0.005086998679858347,
+    "scope": "Full100um cold charge solve with source subdivisions4. No moving flow result."
+  },
+  "nearflush_fluid_trial": {
+    "status": "queued/running",
+    "project": "artifacts/hardware-research/cases/v6-tip-flat08-shortbar-full-fit-sncu-h010.mhd.json",
+    "output": "artifacts/hardware-research/v6-tip-flat08-shortbar-gravity-flow-150A-250us-h010",
+    "peak_A": 150,
+    "positive_us": 250,
+    "retract_fraction": 0.25,
+    "dt_us": 3,
+    "steps": 1200,
+    "acceleration_m_s2": [
+      0,
+      0,
+      -9.81
+    ]
+  }
 }

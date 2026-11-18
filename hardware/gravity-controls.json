@@ -675,7 +675,7 @@
     "interpretation": "Aligned native cells and identical static masks in shared region; initial alpha agrees within3.82e-6nL L1 roundoff, not bitwise equality. Changed lateral/vertical extent and periodic-to-nonperiodic air return together. Not an extent-only sensitivity. One detached component remains; speed changes about8%. No gravity result yet."
   },
   "shorter_stronger_pulse": {
-    "status": "Queued/running exploratory gravity-on short-pulse control; no result yet",
+    "status": "Complete3.6ms without detachment at saved thresholds",
     "project": "artifacts/hardware-research/cases/v6-tip-wide-fullheight-gravity-fit-sncu-h010.mhd.json",
     "output": "artifacts/hardware-research/v6-tip-wide-fullheight-gravity-250A-150us-r15-h010",
     "peak_A": 250,
@@ -1524,5 +1524,82 @@
     "any_saved_boundary_contact": false,
     "max_saved_relative_volume_drift": 1.091000823016941e-08,
     "scope": "Coarse100um single-pulse comparison. No grid convergence or repetition claim."
+  },
+  "completed_shorter_stronger_pulse": {
+    "run": {
+      "accepted_steps": 1200,
+      "contact_resistivity_ohm_m2": 0.0,
+      "error": null,
+      "field_every": 150,
+      "fluid_mechanical_work_J": 7.355866529189169e-07,
+      "frequency_hz": 0.0,
+      "grid": {
+        "cell_m": 0.00010000000474974513,
+        "dims": [
+          76,
+          76,
+          195
+        ]
+      },
+      "joule_generated_J": 0.008235810827290335,
+      "lagged_electrical_work_J": 0.008236255086132268,
+      "lagged_mechanical_work_J": 6.89244165286369e-07,
+      "limitations": [
+        "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+        "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+        "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+        "New research client; not a GUI electrode feature or frozen-baseline claim."
+      ],
+      "max_terminal_voltage_V": 0.2660781443119049,
+      "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+      "peak_A": 250.0,
+      "positive_duration_s": 0.00015,
+      "project": "artifacts/hardware-research/cases/v6-tip-wide-fullheight-gravity-fit-sncu-h010.mhd.json",
+      "released_static_workspace_bytes": 253065692,
+      "retract_fraction": 0.15000000596046448,
+      "rise_s": 2e-05,
+      "status": "complete",
+      "tail_timestep_s": 3e-06,
+      "tail_transition_not_before_s": 0.000225,
+      "time_s": 0.0035999999999999648,
+      "timestep_s": 3e-06
+    },
+    "final_saved_frame": {
+      "step": 1200,
+      "time_us": 3599.999999999965,
+      "first_nonnegative_cell_plane_z_mm": 0.04999988595955074,
+      "exit_plane_alpha_area_mm2": 0.12000002230638938,
+      "exit_plane_mean_uz_m_s": 0.2781490543467767,
+      "exit_plane_mean_pressure_pa": 2048.253343696281,
+      "exit_plane_downward_flux_proxy_nl_s": -33377.89272611432,
+      "liquid_volume_nl": 11348.000951694365,
+      "minimum_liquid_fraction": 0.0,
+      "maximum_liquid_fraction": 1.0,
+      "below_tip_maximum_liquid_fraction_at_cell_centres": 1.0,
+      "boundary_maximum_liquid_fraction": {
+        "z_min": 0.0,
+        "z_max": 0.0,
+        "y_min": 0.0,
+        "y_max": 0.0,
+        "x_min": 0.0,
+        "x_max": 0.0
+      },
+      "liquid_touches_domain_boundary_alpha01": false,
+      "below_tip_nl": 117.9169293009979,
+      "below_one_cell_guard_nl": 74.6881308479336,
+      "front_z_mm_alpha_half": -0.3500001330394298,
+      "detached_below_tip": [],
+      "connectivity_thresholds": {
+        "0.01": [],
+        "0.25": [],
+        "0.5": [],
+        "0.75": []
+      },
+      "below_tip_change_nl": 117.91690330591788,
+      "relative_liquid_volume_change": 1.0416735474194638e-08
+    },
+    "any_saved_detached": false,
+    "any_saved_boundary_contact": false,
+    "scope": "Completed3.6ms gravity-on trial, no saved detached component. Does not reject later breakup or other waveforms."
   }
 }
