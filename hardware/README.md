@@ -16,11 +16,11 @@ gravity-on. The matched gravity-on tip-contact control is now complete.
 
 | Configuration | Accepted evidence | Main unresolved issue |
 | --- | --- | --- |
-| Stainless V6 approximation, 0.4 mm bore, 0.8 × 0.4 mm external tip contacts, larger SmCo poles | Gravity-on full-height 100 µm case: one 0.59993 mm component moving down at 0.1795 m/s at 3.6 ms, with 200 A / 250 µs. | Wider-contact 50 µm refinement and refill/repetition; actual electrical wetting and contacts. |
+| Stainless V6 approximation, 0.4 mm bore, 0.8 × 0.4 mm external tip contacts, larger SmCo poles | Gravity-on full-height 100 µm case: one 0.59993 mm component moving down at 0.1795 m/s at 3.6 ms, with 200 A / 250 µs. | 50 µm result is oversized and materially faster; refill/repetition, electrical wetting and contacts remain open. |
 | Same tip contacts, one 10 × 5 mm SmCo disc per pole | 100 µm case: one 0.5962 mm component moving down at 0.212 m/s at 3.6 ms, with 250 A / 250 µs. | Higher peak current, local heating and omitted self-field; no fine-grid or gravity/repetition confirmation. |
 | V6 with two milled collar flats and immersed 1 mm tungsten pins | Fixed 1.5 µs rerun completes 4.2 ms without a detached component. The earlier 3 µs run hit its CFL guard at 2.154 ms. | Gas is drawn between the electrodes; a large cold force did not establish jetting. |
 | Custom stainless chamber, one ten-turn coil | Normal unified solver completes 3.597 ms at 250 A / 50 kHz without resolved ejection on the 200 µm grid. Matched zero-current control completes too. | Coarse interface; geometry, frequency and loaded driver remain open. |
-| Same custom chamber, two phased six-turn coils | Cold 200 A-per-coil phase reversal changes mean axial force from −0.059 to +0.096 N over 80–100 µs. Positive-phase timestep halving changes force 0.93%. | Moving-fluid trial running; coil placement is unoptimized and loaded two-port circuit unresolved. |
+| Same custom chamber, two phased six-turn coils | Cold 200 A-per-coil phase reversal changes mean axial force from −0.059 to +0.096 N over 80–100 µs. Positive-phase timestep halving changes force 0.93%. | Unified 200 µm flow completes 3.597 ms without resolved ejection; coil placement is unoptimized and loaded two-port circuit unresolved. |
 
 The single-coil chamber has **6 mm ID, 0.5 mm radial stainless wall, 0.5 mm
 aperture and 0.15 mm exit land**. The thin exit land must not be confused with
@@ -31,10 +31,12 @@ The original **smaller-contact** V6 reference completes 3.6 ms at 50 µm with a
 0.618 mm component moving down at 0.504 m/s. Its corresponding coarse result is
 0.591 mm / 0.289 m/s: velocity and breakup timing are **not mesh-converged**.
 This is a different contact geometry from the wider-contact candidate above.
-The wider-contact 50 µm run also has a separated component in its accepted
-2.4 ms prefix: 0.625 mm / 0.387 m/s downward at alpha 0.01. Its requested
-3.6 ms run remains unfinished; this is slightly above the size target.
-[Prefix record](tip-wide-fine-prefix.json).
+The wider-contact 50 µm run has now completed 3.6 ms with one separated component:
+0.6253 mm / 0.3781 m/s downward at alpha 0.01, or 0.6128 mm / 0.3833 m/s at alpha
+0.5. Its coarse counterpart is 0.5947 mm / 0.1608 m/s. This combined grid/timestep
+refinement changes diameter by 5.2% and speed by 135%; the result is not converged.
+No saved fine-grid liquid reaches a boundary; relative volume drift stays below
+4×10⁻⁸. [Completed record](tip-wide-fine-completed.json).
 
 Equivalent diameters in the table use six-neighbour connectivity at alpha 0.01,
 excluding the main pool and components smaller than one alpha-weighted cell.

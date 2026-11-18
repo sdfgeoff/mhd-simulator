@@ -166,7 +166,7 @@
     ]
   },
   "moving_fluid_trial": {
-    "status": "Queued after matched zero-current control",
+    "status": "Complete3.597125ms without resolved detached component at saved thresholds",
     "project": "artifacts/hardware-research/cases/foil-two-phase-plus90-200A-flow-zeroG-h020.mhd.json",
     "uniform_acceleration_m_s2": [
       0,
@@ -178,7 +178,63 @@
     "initial_dt_us": 0.125,
     "tail_dt_us": 3.0,
     "tail_after_us": 300.0,
-    "scope": "Exploratory response, not time/grid-converged or gravity-complete. Two-phase cold half-timestep refinement also running."
+    "scope": "Exploratory response, not time/grid-converged or gravity-complete. Two-phase cold half-timestep refinement also running.",
+    "run_status": {
+      "accepted_steps": 3500,
+      "electromagnetics": true,
+      "error": null,
+      "field_every": 200,
+      "final_timestep_s": 3e-06,
+      "fluids": true,
+      "initial_timestep_s": 1.25e-07,
+      "meaning": "Normal unified RunState; an explicit timestep schedule does not replace or freeze any physics subsystem.",
+      "project": "artifacts/hardware-research/cases/foil-two-phase-plus90-200A-flow-zeroG-h020.mhd.json",
+      "requested_steps": 3500,
+      "status": "complete",
+      "tail_schedule_s": [
+        0.0003,
+        3e-06
+      ],
+      "thermal": false,
+      "time_s": 0.0035971249999999636
+    },
+    "final_saved_frame": {
+      "step": 3500,
+      "time_us": 3597.1249999999636,
+      "first_nonnegative_cell_plane_z_mm": 0.10000000474974513,
+      "exit_plane_alpha_area_mm2": -1.3361946774924506e-09,
+      "exit_plane_mean_uz_m_s": null,
+      "exit_plane_mean_pressure_pa": null,
+      "exit_plane_downward_flux_proxy_nl_s": null,
+      "liquid_volume_nl": 168352.02377434462,
+      "minimum_liquid_fraction": -2.1474384936936985e-08,
+      "maximum_liquid_fraction": 1.0,
+      "below_tip_maximum_liquid_fraction_at_cell_centres": 4.7120644808273937e-07,
+      "boundary_maximum_liquid_fraction": {
+        "z_min": 0.0,
+        "z_max": 0.0,
+        "y_min": 0.0,
+        "y_max": 0.0,
+        "x_min": 0.0,
+        "x_max": 0.0
+      },
+      "liquid_touches_domain_boundary_alpha01": false,
+      "below_tip_nl": 4.720444634422032e-05,
+      "below_one_cell_guard_nl": 4.2636592572334764e-06,
+      "front_z_mm_alpha_half": 0.3000000142492354,
+      "detached_below_tip": [],
+      "connectivity_thresholds": {
+        "0.01": [],
+        "0.25": [],
+        "0.5": [],
+        "0.75": []
+      },
+      "below_tip_change_nl": 4.720444634422032e-05,
+      "relative_liquid_volume_change": 1.943295968587222e-09
+    },
+    "any_saved_detached": false,
+    "any_saved_boundary_contact": false,
+    "interpretation": "Coarse200um, zero gravity, no resolved ejection under this waveform. Does not reject all coil placements, frequencies or finer interface results."
   },
   "air_winding_matrix": {
     "project": "artifacts/hardware-research/cases/foil-two-phase-plus90-200A-h020.mhd.json",
