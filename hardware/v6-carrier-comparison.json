@@ -34,9 +34,207 @@
     "200um grid under-resolves the outlet.",
     "Same free level is not equal liquid mass; geometry is intentionally different."
   ],
-  "status": "v2 running; passed setup and first accepted EM steps",
+  "status": "Both matched cold cases complete120us; comparison and loaded-circuit prefix fits complete. No new fluid/ejection result.",
   "setup_failure": "artifacts/hardware-research/v6-carrier-matched-cold120-h020.log",
   "reproduction_command": "python scripts/make_v6_carrier_comparison.py hardware/designs/single-coil-250A/case.mhd.json OUTPUT_DIRECTORY",
   "reproduction_verified": "Tracked-source regeneration reproduces both effective project settings and geometry binary bytes. Custom geometry URI/source provenance differs only by location.",
-  "running_pid": 3212053
+  "running_pid": 3212053,
+  "completed_comparison": {
+    "actual_initial_and_final_metadata_settings_match": true,
+    "window_us": [
+      80.0,
+      120.0
+    ],
+    "runs": [
+      {
+        "directory": "artifacts/hardware-research/v6-carrier-matched-v2-cold120-h020",
+        "status": {
+          "ROI_z_m": [
+            0.0,
+            0.009000000000000001
+          ],
+          "accepted_steps": 960,
+          "cell_m": 0.00020000000949949026,
+          "diagnostic": "radial force moment per ROI volume, not a pressure solution or ejection criterion",
+          "dims": [
+            90,
+            90,
+            83
+          ],
+          "origin_m": [
+            -0.009000000543892384,
+            -0.009000000543892384,
+            -0.0020000000949949026
+          ],
+          "status": "complete",
+          "time_s": 0.0001200000000000021,
+          "warnings": []
+        },
+        "metrics": {
+          "mean_roi_force_z_N": -0.004215230201903002,
+          "mean_liquid_joule_power_W": 56.36070735381209,
+          "mean_solid_joule_power_W": 680.3777721285218,
+          "mean_radial_pressure_proxy_Pa": 1279.5158373316697,
+          "temporal_rms_of_spatial_mean_Bz_T": 0.12110406162684066
+        },
+        "diagnostics_sha256": "663af32d9b21ad6bf69852d32efc7fe91d465921fa401239e82c523690a7df71",
+        "initial_metadata_sha256": "acf7a30461f9b537fafd03cb10f1d60e48c836aca1744555117064e523b49de7",
+        "final_metadata_sha256": "7425bb2b8ce35ae40a019c790eba6640a8f7c11f598982ae539fc5ffc0fc39f6",
+        "project": "artifacts/hardware-research/cases/v6-carrier-matched-v2/v6-cold.mhd.json",
+        "project_sha256": "f214166da7c762927e661818b66040d8538ea4599097f4a4656f459045159b41"
+      },
+      {
+        "directory": "artifacts/hardware-research/custom-carrier-matched-v2-cold120-h020",
+        "status": {
+          "ROI_z_m": [
+            0.0,
+            0.009000000000000001
+          ],
+          "accepted_steps": 960,
+          "cell_m": 0.00020000000949949026,
+          "diagnostic": "radial force moment per ROI volume, not a pressure solution or ejection criterion",
+          "dims": [
+            90,
+            90,
+            83
+          ],
+          "origin_m": [
+            -0.009000000543892384,
+            -0.009000000543892384,
+            -0.0020000000949949026
+          ],
+          "status": "complete",
+          "time_s": 0.0001200000000000021,
+          "warnings": []
+        },
+        "metrics": {
+          "mean_roi_force_z_N": -0.02825609533373082,
+          "mean_liquid_joule_power_W": 325.05820100862485,
+          "mean_solid_joule_power_W": 593.6673198160202,
+          "mean_radial_pressure_proxy_Pa": 7049.980902168606,
+          "temporal_rms_of_spatial_mean_Bz_T": 0.09115854489300082
+        },
+        "diagnostics_sha256": "379dcd0fd5020361ace63a253c222b07db49dacb0fc95ea87ab15d2fca479d6f",
+        "initial_metadata_sha256": "6067f16b504a157cbfb1401c87834af8f5cf3dadb2927cbd416971257ba21430",
+        "final_metadata_sha256": "7a7f3d3d6f0d61ea00acc7c032a908a3a8a1510a95d8a8be0622f913bd90e975",
+        "project": "artifacts/hardware-research/cases/v6-carrier-matched-v2/custom-cold.mhd.json",
+        "project_sha256": "4ec24c07c9df5fc0f8577635a001d350d40dcf82b69bead080e2f2bd852aca17"
+      }
+    ],
+    "second_minus_first": {
+      "mean_roi_force_z_N": -0.024040865131827818,
+      "mean_liquid_joule_power_W": 268.6974936548128,
+      "mean_solid_joule_power_W": -86.71045231250162,
+      "mean_radial_pressure_proxy_Pa": 5770.465064836936,
+      "temporal_rms_of_spatial_mean_Bz_T": -0.02994551673383984
+    },
+    "scope": "Completed cold native EM observations; same source/current/settings but intentionally different internal geometry and liquid volume. ROI force is not outlet pressure or a droplet prediction. B metric is temporal RMS of spatial mean, not cellwise RMS. No circuit or sustained-rate qualification."
+  },
+  "circuit_prefix_fits": {
+    "v6": {
+      "method": "Interval V=R*I_mid + L_air*dI/dt + d(lambda_reaction)/dt. Fit V=R_eff*I_mid+L_eff*dI/dt over the stated steady carrier window. Series C cancels fitted L at the stated frequency; capacitor voltage integrates the actual current from zero initial charge.",
+      "inputs": {
+        "run": "artifacts/hardware-research/v6-carrier-matched-v2-cold120-h020",
+        "air_l_uh": 0.8262725,
+        "coil_r_ohm": 0.00904843,
+        "frequency_hz": 50000.0,
+        "fit_start_us": 80.0,
+        "fit_end_us": 120.0,
+        "series_r_ohm": 0.002,
+        "series_l_uh": 0.2,
+        "through_us": 120.0
+      },
+      "input_observed_through_us": 120.0000000000021,
+      "voltage_evaluated_through_us": 120.0000000000021,
+      "fitted_total_resistance_ohm": 0.03462406795446616,
+      "fitted_loaded_inductance_uh": 0.9770349787314553,
+      "series_capacitance_uf": 10.37027187848375,
+      "fit_residual_rms_v": 0.00040000741613493355,
+      "observed_coil_and_series_voltage_peak_v": 77.2166563890873,
+      "observed_capacitor_voltage_peak_v": 76.70662981435974,
+      "observed_drive_voltage_peak_v": 19.426406979126106,
+      "fit_average_input_w": 1081.5850477827153,
+      "observed_drive_net_work_j": 0.1303186495469605,
+      "observed_drive_peak_cumulative_work_j": 0.1303186495469605,
+      "observed_drive_minimum_cumulative_work_j": 0.0,
+      "initial_capacitor_charge_c": 0.0,
+      "initial_current_a": 0.0,
+      "discrete_field_energy_check": {
+        "through_us": 120.0000000000021,
+        "backward_euler_reciprocal_source_work_j": 0.06855012690151786,
+        "metal_joule_heat_j": 0.06670665880217025,
+        "reaction_numerical_loss_j": 0.0008656868920397173,
+        "final_reaction_energy_j": 0.0009777597151696682,
+        "relative_work_defect": 3.135244118915604e-07,
+        "numerical_loss_over_joule_heat": 0.012977518400480177,
+        "meaning": "Accepted backward-Euler field energy check, not physical inverter input energy. Its numerical loss must decrease under time refinement."
+      },
+      "limits": [
+        "Cold prescribed-current screen, not a circuit solution or switching implementation. Reported maxima are interval-mean voltages, not switch-node peaks.",
+        "Check waveform completion, time/grid refinement and energy/numerical losses before using component ratings.",
+        "Air L retains round-wire low-frequency/internal-inductance assumptions; AC resistance, proximity, real leads, capacitor ESR/ripple and control dynamics are unresolved.",
+        "No droplet or repetition-rate claim follows from electrical compliance.",
+        "Cumulative drive work uses interval-mean V and I and ideal energy recovery; DC-bus droop, ESR and switching ripple need a separate supply/capacitor budget."
+      ]
+    },
+    "custom": {
+      "method": "Interval V=R*I_mid + L_air*dI/dt + d(lambda_reaction)/dt. Fit V=R_eff*I_mid+L_eff*dI/dt over the stated steady carrier window. Series C cancels fitted L at the stated frequency; capacitor voltage integrates the actual current from zero initial charge.",
+      "inputs": {
+        "run": "artifacts/hardware-research/custom-carrier-matched-v2-cold120-h020",
+        "air_l_uh": 0.8262725,
+        "coil_r_ohm": 0.00904843,
+        "frequency_hz": 50000.0,
+        "fit_start_us": 80.0,
+        "fit_end_us": 120.0,
+        "series_r_ohm": 0.002,
+        "series_l_uh": 0.2,
+        "through_us": 120.0
+      },
+      "input_observed_through_us": 120.0000000000021,
+      "voltage_evaluated_through_us": 120.0000000000021,
+      "fitted_total_resistance_ohm": 0.0404476599735776,
+      "fitted_loaded_inductance_uh": 0.9383731308595988,
+      "series_capacitance_uf": 10.797536748470439,
+      "fit_residual_rms_v": 0.000646988603434952,
+      "observed_coil_and_series_voltage_peak_v": 74.40636097588732,
+      "observed_capacitor_voltage_peak_v": 73.67130342666375,
+      "observed_drive_voltage_peak_v": 20.10521248924861,
+      "fit_average_input_w": 1263.5021483539442,
+      "observed_drive_net_work_j": 0.14573001412768483,
+      "observed_drive_peak_cumulative_work_j": 0.14573001412768483,
+      "observed_drive_minimum_cumulative_work_j": 0.0,
+      "initial_capacitor_charge_c": 0.0,
+      "initial_current_a": 0.0,
+      "discrete_field_energy_check": {
+        "through_us": 120.0000000000021,
+        "backward_euler_reciprocal_source_work_j": 0.08586570845169707,
+        "metal_joule_heat_j": 0.08303988685834253,
+        "reaction_numerical_loss_j": 0.00155598057936443,
+        "final_reaction_energy_j": 0.0012698054779320955,
+        "relative_work_defect": 4.138562256534042e-07,
+        "numerical_loss_over_joule_heat": 0.01873774927004383,
+        "meaning": "Accepted backward-Euler field energy check, not physical inverter input energy. Its numerical loss must decrease under time refinement."
+      },
+      "limits": [
+        "Cold prescribed-current screen, not a circuit solution or switching implementation. Reported maxima are interval-mean voltages, not switch-node peaks.",
+        "Check waveform completion, time/grid refinement and energy/numerical losses before using component ratings.",
+        "Air L retains round-wire low-frequency/internal-inductance assumptions; AC resistance, proximity, real leads, capacitor ESR/ripple and control dynamics are unresolved.",
+        "No droplet or repetition-rate claim follows from electrical compliance.",
+        "Cumulative drive work uses interval-mean V and I and ideal energy recovery; DC-bus droop, ESR and switching ripple need a separate supply/capacitor budget."
+      ]
+    }
+  },
+  "interpretation": {
+    "force_ratio_custom_over_v6": 6.703333858486392,
+    "liquid_observation_volume_mm3": {
+      "v6": 53.85600767406402,
+      "custom": 168.3520239888474
+    },
+    "liquid_fraction_of_metal_Joule_power": {
+      "v6": 0.07650029002613477,
+      "custom": 0.35381427166282886
+    },
+    "scope": "Custom has6.7xdownwardforce but3.1xliquidvolume; not thin-wall-only shielding isolation. Solids include nozzle and stationary feedwire. Heat averages refer to activecarrier, not continuous supply or200Hz repetition power. Fittedresonance is an interval-mean, ideal120usprefix electrical check, not full300usburst/ringdown or switching qualification.",
+    "energy_check": "Discretefieldenergydefects3.1e-7/4.1e-7; numericalBE/Jouleloss1.30%/1.87% through120us. Spatial convergence and realhotcoil/capacitorlosses unresolved."
+  }
 }

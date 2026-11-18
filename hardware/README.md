@@ -51,11 +51,16 @@ the completed flat-tip 150 A case repeats with a 500 µs zero-current gap instea
 of 25 µs. Geometry, pulse amplitudes/durations and gravity remain fixed. It is
 queued behind the first near-flush trial; no result is assumed.
 
-A [matched-waveform V6/custom cold carrier pair](v6-carrier-comparison.json) is
-queued to compare the single-coil layouts with the same current table, winding,
-materials and domain. Internal geometry/land/liquid volume differ. This V6-like
-0.5 mm model is not a claim of a catalogued stainless SKU, and its standard heater
-is omitted because it clashes with the coil. No new ejection claim.
+The [matched-waveform V6/custom cold carrier pair](v6-carrier-comparison.json)
+has completed 120 µs. Over 80–120 µs at 250 A peak/50 kHz, mean downward liquid
+force is 4.22 mN for V6-like versus 28.26 mN for the custom chamber. Liquid takes
+7.65% versus 35.38% of calculated metal Joule power. The custom case also contains
+3.1 times as much liquid in the observation region; this is not wall-only
+shielding isolation. Both 120 µs resonant fits need around 20 V drive with roughly
+75 V internal AC peaks, before real switching/AC losses or full-burst recovery.
+Actual exported coil/material/solver/grid settings match exactly. The 0.5 mm
+V6-like model is not a claim of a catalogued stainless SKU; the standard heater is
+omitted because it clashes with the coil. No new ejection claim.
 
 The independent [droplet-flight heat balance](droplet-flight-screening.json)
 quantifies travel after pinch-off. A 0.5 mm SnCu sphere starting at 250 °C and
