@@ -186,7 +186,7 @@ fn beta_reduce(@builtin(local_invocation_index) l:u32){
     if l==0u && scalars[1].w==0.0 {scalars[1].y=sum.x/scalars[0].x;scalars[0].x=sum.x;scalars[0].y=sum.y;scalars[1].z+=1.0;if sum.y<=scalars[0].w {scalars[1].w=1.0;}if abs(sum.x)>3e38||abs(sum.y)>3e38{scalars[1].w=2.0;}}
 }
 @compute @workgroup_size(256)
-fn update_search(@builtin(global_invocation_id) gid:vec3<u32>){let i=flat_id(gid);if i<scene.edges.w && scalars[1].w==0.0 {let v=work[i];work[i].z=v.y/v.w+scalars[1].y*v.z;}}
+fn update_search(@builtin(global_invocation_id) gid:vec3<u32>){let i=flat_id(gid);if i<scene.edges.w && scalars[1].w==0.0 {let v=work[i];var z=v.w;if scene.control.w!=1u {z=v.y/v.w;}work[i].z=z+scalars[1].y*v.z;}}
 @compute @workgroup_size(256)
 fn rollback(@builtin(global_invocation_id) gid:vec3<u32>){let i=flat_id(gid);if i<scene.edges.w {work[i].x=previous[i];source[i].x=source[i].y;}}
 fn electric_edge(axis:u32,p:vec3<i32>)->f32 {

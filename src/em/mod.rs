@@ -1,6 +1,7 @@
 //! Stationary magnetoquasistatic electromagnetics on an oriented edge/face grid.
 //! See docs/ELECTROMAGNETICS.md for the discrete formulation and limitations.
 mod grid;
+mod nodal;
 mod sources;
 use crate::gpu::read_bytes;
 use crate::{
@@ -72,6 +73,11 @@ pub struct EmState {
     config: EmConfig,
     source_elements: Vec<sources::Element>,
     source_valid: bool,
+    nodal: Option<nodal::NodalCorrection>,
+    #[cfg(test)]
+    use_nodal_preconditioner: bool,
+    #[cfg(test)]
+    nodal_switch_after: u32,
     #[cfg(test)]
     cache_source_fields: bool,
     #[cfg(test)]
@@ -301,15 +307,7 @@ impl EmState {
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
                 label: Some("Implicit edge induction and GPU PCG"),
-                source: wgpu::ShaderSource::Wgsl(
-                    format!(
-                        "{}\n{}\n{}",
-                        include_str!("common.wgsl"),
-                        include_str!("induction.wgsl"),
-                        include_str!("energy.wgsl")
-                    )
-                    .into(),
-                ),
+                source: wgpu::ShaderSource::Wgsl(shader_source().into()),
             });
         let mut entries = vec![wgpu::BindGroupLayoutEntry {
             binding: 0,
@@ -519,6 +517,11 @@ impl EmState {
             config,
             source_elements,
             source_valid: false,
+            nodal: None,
+            #[cfg(test)]
+            use_nodal_preconditioner: true,
+            #[cfg(test)]
+            nodal_switch_after: 1024,
             #[cfg(test)]
             cache_source_fields: true,
             #[cfg(test)]
@@ -596,12 +599,63 @@ impl EmState {
                 .context
                 .compute_pass(&mut encoder, Some("EM compute batch"));
             pass.set_bind_group(0, &self.bind, &[]);
+            let mut nodal_bound = false;
             for (name, g) in commands {
-                pass.set_pipeline(&self.pipelines[name]);
+                if name.starts_with("nodal_") {
+                    let node = self.nodal.as_ref().expect("Nodal workspace");
+                    if !nodal_bound {
+                        pass.set_bind_group(0, &node.bind, &[]);
+                        nodal_bound = true;
+                    }
+                    pass.set_pipeline(&node.pipelines[name]);
+                } else {
+                    if nodal_bound {
+                        pass.set_bind_group(0, &self.bind, &[]);
+                        nodal_bound = false;
+                    }
+                    pass.set_pipeline(&self.pipelines[name]);
+                }
                 pass.dispatch_workgroups(g[0], g[1], g[2]);
             }
         }
         self.context.queue.submit(Some(encoder.finish()));
+    }
+    fn ensure_nodal(&mut self) -> Result<(), String> {
+        if self.nodal.is_none() {
+            let node = nodal::NodalCorrection::new(
+                &self.context,
+                &self.grid,
+                &self.uniform,
+                &self._source,
+                &self._work,
+                &self._partials,
+                &self.scalars,
+            )?;
+            self.bytes += node.bytes;
+            self.nodal = Some(node);
+        }
+        Ok(())
+    }
+    fn append_nodal(&self, commands: &mut Vec<(&'static str, [u32; 3])>, initial: bool) {
+        if self.params.control[3] == 1 {
+            let node = self.nodal.as_ref().expect("Nodal workspace");
+            commands.push((
+                if initial {
+                    "nodal_build_initial"
+                } else {
+                    "nodal_build"
+                },
+                groups(node.nodes),
+            ));
+            commands.push((
+                if initial {
+                    "nodal_initial"
+                } else {
+                    "nodal_update"
+                },
+                self.edge_groups(),
+            ));
+        }
     }
     fn update_sources(&mut self, model: &Model, t: f64) -> Result<(), String> {
         let _stage = self
@@ -832,20 +886,38 @@ impl EmState {
         self.params.origin[3] = prediction_factor;
         self.params.physical[0] = self.config.dt_s as f32;
         self.params.physical[3] = self.config.relative_tolerance.powi(2);
+        #[cfg(not(test))]
+        let nodal_switch_after = 1024;
+        #[cfg(test)]
+        let nodal_switch_after = self.nodal_switch_after;
+        let allow_nodal = !initial && self.mode == Mode::Induction;
+        #[cfg(test)]
+        let allow_nodal = allow_nodal && self.use_nodal_preconditioner;
+        let allow_nodal = allow_nodal && self.config.max_iterations > nodal_switch_after;
+        if allow_nodal && nodal_switch_after == 0 {
+            self.ensure_nodal()?;
+        }
         self.update_sources(model, time)?;
-        let solve_stage = self.context.profiler.stage(crate::profile::Stage::EmSolve);
+        if allow_nodal && nodal_switch_after == 0 {
+            self.params.control[3] = 1;
+            self.write_params();
+        }
+        let solve_context = self.context.clone();
+        let solve_stage = solve_context.profiler.stage(crate::profile::Stage::EmSolve);
         let eg = self.edge_groups();
-        self.dispatch(&[
-            ("begin_step", eg),
-            ("prepare", eg),
-            ("initial_reduce", [1, 1, 1]),
-        ]);
+        let mut commands = vec![("begin_step", eg), ("prepare", eg)];
+        self.append_nodal(&mut commands, true);
+        commands.push(("initial_reduce", [1, 1, 1]));
+        self.dispatch(&commands);
         let mut status = self.read_f32(&self.scalars, 0, 8)?;
         if status[4] != 0. {
             // initial_reduce selected an exact power-of-two normalization.
             // Rebuild from physical b and x; original RHS-relative acceptance
             // and its existing absolute numeric floor transform together.
-            self.dispatch(&[("prepare", eg), ("initial_reduce", [1, 1, 1])]);
+            let mut commands = vec![("prepare", eg)];
+            self.append_nodal(&mut commands, true);
+            commands.push(("initial_reduce", [1, 1, 1]));
+            self.dispatch(&commands);
             status = self.read_f32(&self.scalars, 0, 8)?;
         }
         #[cfg(test)]
@@ -866,11 +938,10 @@ impl EmState {
             }
             self.params.origin[3] = 0.;
             self.write_params();
-            self.dispatch(&[
-                ("zero_guess", eg),
-                ("prepare", eg),
-                ("initial_reduce", [1, 1, 1]),
-            ]);
+            let mut commands = vec![("zero_guess", eg), ("prepare", eg)];
+            self.append_nodal(&mut commands, true);
+            commands.push(("initial_reduce", [1, 1, 1]));
+            self.dispatch(&commands);
             status = self.read_f32(&self.scalars, 0, 8)?;
         }
         loop {
@@ -885,17 +956,45 @@ impl EmState {
                         ("apply_operator", eg),
                         ("alpha_reduce", [1, 1, 1]),
                         ("update_residual", eg),
-                        ("beta_reduce", [1, 1, 1]),
-                        ("update_search", eg),
                     ]);
+                    self.append_nodal(&mut commands, false);
+                    commands
+                        .extend_from_slice(&[("beta_reduce", [1, 1, 1]), ("update_search", eg)]);
                 }
                 self.dispatch(&commands);
                 status = self.read_f32(&self.scalars, 0, 8)?;
+                if allow_nodal
+                    && self.params.control[3] == 0
+                    && status[7] == 0.
+                    && status.iter().all(|v| v.is_finite())
+                    && status[6] as u32 >= nodal_switch_after
+                    && (status[6] as u32) < self.config.max_iterations
+                {
+                    if let Err(error) = self.ensure_nodal() {
+                        self.dispatch(&[("rollback", eg)]);
+                        self.can_predict_increment = false;
+                        self.source_valid = false;
+                        return Err(error);
+                    }
+                    // Switch only at a true-residual restart. The original RHS
+                    // norm, acceptance threshold and total iteration count stay
+                    // unchanged; ordinary Jacobi solves keep their exact path.
+                    self.params.control[3] = 1;
+                    self.write_params();
+                    let mut restart = vec![("true_residual", eg)];
+                    self.append_nodal(&mut restart, true);
+                    restart.push(("restart_reduce", [1, 1, 1]));
+                    self.dispatch(&restart);
+                    status = self.read_f32(&self.scalars, 0, 8)?;
+                }
             }
             if status[7] != 1. {
                 break;
             }
-            self.dispatch(&[("true_residual", eg), ("restart_reduce", [1, 1, 1])]);
+            let mut commands = vec![("true_residual", eg)];
+            self.append_nodal(&mut commands, true);
+            commands.push(("restart_reduce", [1, 1, 1]));
+            self.dispatch(&commands);
             status = self.read_f32(&self.scalars, 0, 8)?;
             if status[7] == 1. || status[6] as u32 >= self.config.max_iterations {
                 break;
@@ -904,7 +1003,10 @@ impl EmState {
         // A cap or finite CG breakdown must still inspect the actual equation,
         // rather than reporting only the recursively accumulated residual.
         if status[7] != 1. && status.iter().all(|v| v.is_finite()) {
-            self.dispatch(&[("true_residual", eg), ("restart_reduce", [1, 1, 1])]);
+            let mut commands = vec![("true_residual", eg)];
+            self.append_nodal(&mut commands, true);
+            commands.push(("restart_reduce", [1, 1, 1]));
+            self.dispatch(&commands);
             status = self.read_f32(&self.scalars, 0, 8)?;
         }
         if status[7] != 1. || status.iter().any(|v| !v.is_finite()) {
@@ -1142,3 +1244,13 @@ fn validate_model_inputs(volume: &Volume, model: &Model) -> Result<(), String> {
 
 #[cfg(test)]
 mod prediction_tests;
+
+fn shader_source() -> String {
+    format!(
+        "{}\n{}\n{}\n{}",
+        include_str!("common.wgsl"),
+        include_str!("induction.wgsl"),
+        include_str!("energy.wgsl"),
+        include_str!("nodal.wgsl")
+    )
+}
