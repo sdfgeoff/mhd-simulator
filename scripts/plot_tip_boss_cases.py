@@ -11,16 +11,22 @@ from draw_hardware_layouts import load, section, COLORS
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--record', type=Path, default=Path('hardware/tip-boss-cold-screening.json'))
+parser.add_argument('--extra-record', type=Path, help='Intermediate boss record, replacing rectangular case')
 parser.add_argument('--output', default='tip-boss-cold-comparison.png')
 args = parser.parse_args()
 root = Path('artifacts/hardware-research')
 record = json.loads(args.record.read_text())
+if args.extra_record:
+    record['cases'] = [c for c in record['cases'] if c['label'] != 'rect08x06']
+    record['cases'].insert(2, json.loads(args.extra_record.read_text())['cases'][0])
 fig, axes = plt.subplots(2, 4, figsize=(13, 7))
 fig.subplots_adjust(top=.79, bottom=.18, left=.065, right=.98, hspace=.28, wspace=.27)
 for column, case in enumerate(record['cases']):
-    parts, _ = load('tip-boss-v4/' + case['label'])
+    project = Path(case['project'])
+    geometry = (project.parent / json.loads(project.read_text())['geometry']).resolve()
+    parts, _ = load(str(geometry.relative_to((root/'cases').resolve()).with_suffix('')))
     title = {'control':'Current two-flat tip', 'square08':'0.8 × 0.8 mm boss',
-             'rect08x06':'0.8 × 0.6 mm boss', 'square06':'0.6 × 0.6 mm boss'}[case['label']]
+             'rect08x06':'0.8 × 0.6 mm boss', 'square06':'0.6 × 0.6 mm boss', 'square07':'0.7 × 0.7 mm boss'}[case['label']]
     for row, plane, height in [(0, 'xy', .3), (1, 'xz', 0)]:
         ax = axes[row, column]
         section(ax, parts[:4], plane, height)

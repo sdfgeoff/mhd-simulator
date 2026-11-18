@@ -400,3 +400,11 @@ thermal cuts. Halving the 0.7 mm replay timestep changes its maximum by less
 than one exported temperature increment. None includes repeated heating or
 establishes a safe physical-head pulse. See
 [thermal record](tip-boss-thermal-screening.json).
+
+A [fixed hot-conductivity sensitivity](tip-boss07-hot-conductivity-screening.json)
+for the 0.7 mm boss changes steel conductivity from 1.3 to 1.1 MS/m, consistent
+with an approximate reading of the manufacturer’s elevated-temperature curve.
+Head resistance increases from 1.12 to 1.29 mΩ and its 125 A single-pulse replay
+peak increases from 262.7 to 265.0 °C. The assumed 200 Hz average head loss becomes
+0.91 W. This changes only fixed electrical conductivity; it is not a fitted
+material law or temperature feedback, and other properties remain unchanged.

@@ -1,0 +1,32 @@
+{
+  "status": "Completed fixed hot-conductivity sensitivity; no feedback or real-head qualification",
+  "baseline_project": "artifacts/hardware-research/cases/tip-boss07-v1/square07.mhd.json",
+  "sensitivity_project": "artifacts/hardware-research/cases/tip-boss07-v1/square07-hot-sigma.mhd.json",
+  "steel_sigma_S_m": [
+    1300000.0,
+    1100000.0
+  ],
+  "source": {
+    "url": "https://ucpcdn.thyssenkrupp.com/_legacy/UCPthyssenkruppBAMXtkStainless/assets.files/downloads/316_1.pdf",
+    "location": "PDF page4, physical-property spread, elevated-temperature resistivity curve",
+    "inference": "Graph suggests roughly0.9 microohm m near250C; rounded conductivity1.1e6S/m is a sensitivity value, not a fitted temperature law.",
+    "local_pdf": "artifacts/hardware-research/316-thyssenkrupp.pdf"
+  },
+  "native_material_ids_identical": true,
+  "applied_B_bit_identical": true,
+  "head_resistance_ohm": [
+    0.0011240690419479396,
+    0.0012903165493604947
+  ],
+  "outlet_land_force_N_at30A": [
+    0.0016047386839129706,
+    0.0016786367208178749
+  ],
+  "peak_125A_one_shot_C": [
+    262.7291564941406,
+    264.9898986816406
+  ],
+  "assumed_200Hz_125A_RMS_A": 26.62676050517599,
+  "head_average_power_at_assumed200Hz_W": 0.9148142723005069,
+  "scope": "Only steel electrical conductivity changed; same geometry, native grid, B, other material properties and thermal waveform. Cp/k remain baseline values. Ideal contacts, fixed path, short insulated thermal window. No repetition equilibrium or moving-fluid result."
+}

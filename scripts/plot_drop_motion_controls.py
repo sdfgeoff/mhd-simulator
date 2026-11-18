@@ -19,7 +19,9 @@ ax = axes[0]
 ax.plot([x['time_s'] * 1000 for x in translation],
         [-x['liquid_vz_m_s'] for x in translation], 'o-', label='100 µm native cells')
 ax.axhline(.2, color='black', ls='--', label='Uniform translation reference')
-ax.set(title='Periodic translation: 6 cells across drop', xlabel='Time (ms)',
+fine_translation = load('drop-flight-translation-periodic-small-h0050-3ms-motion.json')['frames']
+ax.plot([x['time_s'] * 1000 for x in fine_translation], [-x['liquid_vz_m_s'] for x in fine_translation], 'o-', label='50 µm native cells')
+ax.set(title='Periodic translation at 0.2 m/s', xlabel='Time (ms)',
        ylabel='Mean downward liquid speed (m/s)')
 ax.legend(frameon=False, fontsize=8)
 ax = axes[1]
@@ -40,10 +42,12 @@ time = np.array([x['time_s'] for x in gravity])
 ax.plot(time * 1000, [-x['COM_z_m'] * 1e6 for x in gravity], 'o-', label='100 µm native cells')
 ax.plot(time * 1000, [-x['reference_z_m'] * 1e6 for x in gravity], '--', color='black',
         label='Dragless gravity reference')
+fine_gravity = load('drop-flight-gravity-small-h0050-3ms-motion.json')['frames']
+ax.plot([x['time_s'] * 1000 for x in fine_gravity], [-x['COM_z_m'] * 1e6 for x in fine_gravity], 'o-', label='50 µm native cells')
 ax.set(title='Initially resting drop under gravity', xlabel='Time (ms)',
        ylabel='Downward centre travel (µm)')
 ax.legend(frameon=False, fontsize=8)
 for ax in axes:
     ax.grid(alpha=.2)
-fig.suptitle('0.6 mm solder drop · native fluid/interface solver · no electromagnetic or thermal forcing\nCoarse capillary motion is unreliable; refinement is diagnostic, not hardware qualification.', fontsize=11)
+fig.suptitle('0.6 mm solder drop · native fluid/interface solver · no electromagnetic or thermal forcing\nCoarse/slow capillary motion is unreliable; refinement is diagnostic, not hardware qualification.', fontsize=11)
 fig.savefig(root / 'diagrams/drop-motion-controls.png', dpi=170)
