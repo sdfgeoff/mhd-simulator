@@ -848,3 +848,13 @@ diagnostic, not ejected volume or lost mass. The native 200 µm interface respon
 is small. It remains a coarse negative for this geometry/waveform, not a general
 induction-jetting rejection. Comparison and field hashes are retained in
 [single-coil-flow-screening.json](single-coil-flow-screening.json).
+
+
+Wetting literature is recorded separately in [wetting-evidence.json](wetting-evidence.json).
+A [2025 Sn-0.7Cu/304 study](https://www.sciencedirect.com/science/article/abs/pii/S0257897225002658)
+reports a polished-steel average contact angle of 126.4° at 250 °C in its
+experiments. The full atmosphere/flux protocol was not verified here, and this
+is not a measured advancing/receding angle for the actual nozzle. It is evidence
+against treating neutral 90° as universal, not a replacement boundary value.
+Electrical wetting inside the nozzle and droplet adhesion outside its exit
+must both be checked before selecting a coating or preparation route.

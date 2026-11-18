@@ -1,0 +1,32 @@
+{
+  "status": "Wetting and electrical-interface behavior remain measured inputs, not calibrated simulator properties",
+  "evidence": [
+    {
+      "title": "Wettability of Sn alloys at metal interfaces: Metal surface treatment, interfacial temperature control and elemental modification",
+      "doi": "10.1016/j.surfcoat.2025.131991",
+      "url": "https://www.sciencedirect.com/science/article/abs/pii/S0257897225002658",
+      "access": "Publisher-indexed methods/results excerpts read; full publisher open returned403. Full atmosphere/flux protocol not verified.",
+      "scoped_observation": "Publisher excerpt reports average126.4degree contact angle for Sn-0.7Cu on polished304stainless at250C, compared with102.4degree onCu under those experiments.",
+      "use": "Illustrates that neutral90degree is not a material-independent solder/stainless boundary. Not assigned to the nozzle or treated as advancing/receding angles. Unknown nozzlegrade/finish/protocol prevents direct transfer."
+    },
+    {
+      "title": "Interplay of Wettability, Interfacial Reaction and Interfacial Thermal Conductance in Sn-0.7Cu Solder Alloy/Substrate Couples",
+      "doi": "10.1007/s11664-019-07454-6",
+      "url": "https://repositorio.ufrn.br/bitstream/123456789/31678/1/InterplayWettability_SILVA_2020.pdf",
+      "access": "Indexed experimental excerpt read; PDF open returned403.",
+      "scope": "The steel substrate is low-carbon SAE1020, not stainless. Do not transfer its reported steel contact angle to the V6."
+    },
+    {
+      "title": "Soldering to Stainless Steel",
+      "url": "https://www.indium.com/blog/soldering-to-stainless-steel/",
+      "scope": "Manufacturer describes removing stainless surface oxide with an active flux or nickel plating to allow a weaker flux; residue corrosion and removal matter.",
+      "use": "Candidate preparation routes to test, not proof of long-lived low electrical contact resistivity, continuous molten-solder compatibility or free droplet release."
+    }
+  ],
+  "design_implications": [
+    "The conducting internal interface and external exit wetting both matter. A coating that improves electrical wetting can also change droplet adhesion and current paths.",
+    "Measure actual hot filled/empty resistance, meniscus recovery and external spreading. Neither a generic contact angle nor a fitted scalar interface resistivity uniquely describes all three.",
+    "Inert operation does not itself establish that an initially oxidized stainless surface has been activated.",
+    "No new contact-angle or coating model was added, and no unmeasured wetting value substituted into the GPU runs."
+  ]
+}

@@ -17,7 +17,9 @@ manufacturing-ready designs.
    temperature, surface preparation and atmosphere. Observe the unpowered
    nozzle for dripping, recession and wetting changes. The simulations start
    at rest with a neutral wall treatment; they do not reproduce a measured
-   settled contact line or oxide skin. Coupon wetting measurements can bound
+   settled contact line or oxide skin. Observe the internal conducting path and
+   external exit separately: a coating can improve electrical contact while
+   changing external spreading and drop adhesion. Coupon wetting measurements can bound
    the missing behavior, but should not be treated as exact nozzle conditions.
 
 3. **Measure the assembled magnetic field.** Compare accessible points with
