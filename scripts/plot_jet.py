@@ -58,6 +58,7 @@ def main():
     forcing = "Unforced" if grid["force_peak_n_m3"] == 0 else "Prescribed force pulse"
     fig.suptitle(
         f"{forcing} · {spacing_mm * 1000:.0f} µm cells — central liquid fraction\n"
+        f"Δt {grid['dt_s'] * 1e6:.6f} µs · x minimum {origin_mm[0]:.4f} mm\n"
         "Grey: ideal CAD wall (simulation uses voxel walls)"
     )
     fig.savefig(directory / "sections.png", dpi=160, bbox_inches="tight", pad_inches=.15)

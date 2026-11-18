@@ -289,8 +289,7 @@ the conservative CFL limit at the original 0.5899705 µs timestep. It is an
 incomplete control, not a completed 2 ms release result. The last saved frame
 at 1.35693 ms has a separated 37.68 nL core at `alpha>0.01`; the 0.5 cutoff
 also has several unresolved small components. Volume drift remains below
-1.95e-7 and no liquid reaches an outer boundary. A smaller-timestep rerun is
-needed before drawing late-time alignment conclusions.
+1.95e-7 and no liquid reaches an outer boundary. That original-step control remains incomplete; the matched smaller-step runs below complete the late-time comparison.
 
 ```sh
 MHD_JET_CELL_MM=0.025 MHD_JET_GRID_SHIFT_X_MM=0.0125 \
@@ -299,3 +298,38 @@ MHD_JET_CELL_MM=0.025 MHD_JET_GRID_SHIFT_X_MM=0.0125 \
   MHD_JET_OUTPUT=artifacts/jet-force70-fine-shifted \
   cargo test --offline --lib pulsed_nozzle_experiment -- --ignored --nocapture
 ```
+
+
+### Matched half-timestep controls
+
+Both origins now complete **6780 steps to 2 ms** at exactly **0.2949852507 µs**,
+half the original timestep. Saved frames are 58.997 µs apart. These historical
+controls use the original point-reference pressure solver and pulse kernel from
+commit `aea6201`, with multigrid forced on; the frozen test executable is retained
+in the local artifacts. They isolate placement at the same timestep, rather than
+mixing a timestep change into the origin comparison.
+
+| VOF core | Unshifted volume at 2 ms | X shifted 12.5 µm | Change | Unshifted late speed | Shifted late speed |
+|---|---:|---:|---:|---:|---:|
+| α>0.01 | 39.274 nL | 37.609 nL | −4.24% | 0.36541 m/s | 0.35818 m/s |
+| α>0.5 | 37.491 nL | 35.714 nL | −4.74% | 0.36435 m/s | 0.35630 m/s |
+
+First saved large release occurs at **1.47493 / 1.41593 ms** for the unshifted
+0.01 / 0.5 cores, and **1.35693 ms** at both thresholds for the shifted case.
+Maximum sampled volume drift is **3.90×10⁻⁷ / 4.54×10⁻⁷** respectively, with zero
+occupied outer-boundary cells in every saved frame. Tiny fragments remain
+unresolved. Halving the unshifted timestep changes core volume by at most 0.20%
+and late speed by about 0.9–1.3%, but delays the first saved release by one sample.
+
+The 4–5% placement dependence remains a quantitative accuracy limit. It is
+consistent with the changed voxel aperture and warrants further spatial/contact
+checks before using droplet size or jetting thresholds as hardware predictions.
+The completed trajectories are numerical regression controls, distinct from the
+computed-force coil example. Their overlapping runtimes are not performance data.
+
+The exact half-step control uses `MHD_JET_DT_FACTOR=0.04999136166618539` and
+`MHD_JET_RECORD_EVERY=200`, with X shifts 0 and 0.0125 mm. Pin the stated commit
+when reproducing the original solver/pulse implementation. In the application,
+`nozzle-pulse.mhd.json` exposes the same geometry/material/pulse setup: set 25 µm
+cells, 0.2949852507 µs common steps and 6780 steps; the current production solver
+and glTF round trip can produce small differences from these historical fields.
