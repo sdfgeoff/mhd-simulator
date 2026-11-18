@@ -673,5 +673,54 @@
     },
     "initial_phase_volume_L1_difference_nl": 3.814697809190218e-06,
     "interpretation": "Aligned native cells and identical static masks in shared region; initial alpha agrees within3.82e-6nL L1 roundoff, not bitwise equality. Changed lateral/vertical extent and periodic-to-nonperiodic air return together. Not an extent-only sensitivity. One detached component remains; speed changes about8%. No gravity result yet."
+  },
+  "shorter_stronger_pulse": {
+    "status": "Queued/running exploratory gravity-on short-pulse control; no result yet",
+    "project": "artifacts/hardware-research/cases/v6-tip-wide-fullheight-gravity-fit-sncu-h010.mhd.json",
+    "output": "artifacts/hardware-research/v6-tip-wide-fullheight-gravity-250A-150us-r15-h010",
+    "peak_A": 250,
+    "positive_us": 150,
+    "retract_fraction": 0.15,
+    "steps": 1200,
+    "dt_us": 3,
+    "uniform_acceleration_m_s2": [
+      0,
+      0,
+      -9.81
+    ],
+    "driver": {
+      "inputs": {
+        "peak_a": 250.0,
+        "positive_us": 150.0,
+        "head_mohm": 1.064506,
+        "parasitic_mohm": 5.5,
+        "series_uh": 1.025,
+        "frequency_hz": 200.0,
+        "bus_v": 24.0,
+        "bulk_uf": 1000.0,
+        "retract_fraction": 0.15,
+        "rise_us": 20.0
+      },
+      "method": "Exact integrals of piecewise-linear prescribed current; V=IR+L dI/dt. Head modeled as constant cold resistance. Four-quadrant current regulation assumed.",
+      "rms_current_a": 39.34754333712165,
+      "head_heat_w": 1.6480992372916665,
+      "parasitic_heat_w": 8.515260416666665,
+      "required_voltage_min_v": -12.8125,
+      "required_voltage_max_v": 14.4536265,
+      "ideal_bus_compliance": true,
+      "peak_inductor_energy_j": 0.03203125,
+      "bulk_rise_if_all_peak_inductor_energy_returns_v": 1.2994565159016815,
+      "limitations": [
+        "No PWM ripple, switching/gate losses, current-loop dynamics, bus/lead ringing or protection design.",
+        "No capacitor ESR/ripple rating or switch SOA/temperature qualification.",
+        "Input R and L assumptions must be replaced with measured assembled values; motional voltage is omitted from this lumped check.",
+        "Electrical compliance is not a droplet or repetition-rate prediction."
+      ]
+    },
+    "rationale": "Higher initial force and shorter impulse may reduce drop volume. ExactI\u00b2dt7.741A\u00b2s is15%below200A250us/r.25; this is electrical scaling, not a jet prediction.",
+    "limits": [
+      "Current self-field correction grows with peak current; not fed back.",
+      "No assumption that shorter pulses will detach or meet size target."
+    ]
   }
 }

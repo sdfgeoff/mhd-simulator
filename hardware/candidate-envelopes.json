@@ -1,0 +1,59 @@
+{
+  "scope": "Bounds of packaged triangle geometry plus winding-centreline core-radius envelope, inmm. No mounts, insulation, driver, heaterblock, externalleadroute or tolerance allowance. Generated geometry approximation, not a manufactured assembly.",
+  "cases": [
+    {
+      "bundle": "hardware/designs/single-coil-250A",
+      "min_mm": [
+        -6.84399995803833,
+        -6.84399995803833,
+        0.0
+      ],
+      "max_mm": [
+        10.492000198364257,
+        6.84399995803833,
+        11.0
+      ],
+      "nominal_envelope_mm": [
+        17.336000156402587,
+        13.68799991607666,
+        11.0
+      ]
+    },
+    {
+      "bundle": "hardware/designs/v6-compact-250A",
+      "min_mm": [
+        -5.0,
+        -7.099999904632568,
+        -8.199999809265137
+      ],
+      "max_mm": [
+        5.0,
+        7.099999904632568,
+        12.5
+      ],
+      "nominal_envelope_mm": [
+        10.0,
+        14.199999809265137,
+        20.700000762939453
+      ]
+    },
+    {
+      "bundle": "hardware/designs/v6-wide-200A",
+      "min_mm": [
+        -10.0,
+        -12.100000381469727,
+        -18.200000762939453
+      ],
+      "max_mm": [
+        10.0,
+        12.100000381469727,
+        12.5
+      ],
+      "nominal_envelope_mm": [
+        20.0,
+        24.200000762939453,
+        30.700000762939453
+      ]
+    }
+  ]
+}
