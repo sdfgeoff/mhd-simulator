@@ -371,3 +371,52 @@ The first complete 80–100 µs cycle at 0.25 µs changes mean axial force by ab
 29% relative to 0.5 µs. Smaller timesteps are required before accepting its
 force estimate. The circuit postprocessor also passes an independent analytic
 unloaded R/L/C fit check; that does not validate the loaded field discretization.
+
+
+### Common timestep changes and screening limits
+
+`RunState::set_timestep(volume, dt)` changes the accepted run's common clock,
+EM configuration and fluid GPU parameters together. It retains fields and warm
+starts, rejects invalid changes, and preserves each subsystem's ordinary advance
+stability checks. Headless checks cover analytic uniform acceleration, invalid
+change rollback, coupled EM/fluid clocks and the existing EM timestep predictor.
+
+The research `conduction_flow` client accepts an optional final `TAIL_DT_US`
+after `FIELD_EVERY`. It applies only after both parts of a single electrical
+pulse have ended. Repeated pulses currently require the original fixed timestep.
+CSV rows record their actual timestep and run metadata records the transition.
+
+A 3 → 6 µs tail reduces the coarse 3.6 ms V6 trial from 1200 to 660 accepted
+steps. Its leading drop diameter and mean speed change by less than 1%, and
+leading-region velocity L2 by 2.7%, but the returning tail differs substantially:
+whole-liquid velocity L2 differs by 34.5% and alpha L2 by 1.4%. This supports
+only provisional leading-drop screening, not equivalent resolved dynamics or
+satellite prediction. Fixed-step runs remain the numerical reference. No default
+simulation timestep or ongoing run was changed.
+
+The 0.25 µs carrier trial completes its drive and reaches 367.75 µs, then fails
+the relative-only field check: 1.040e-4 versus requested 1e-4 after 4000 iterations.
+Accepted reaction energy has already fallen below 9e-22 J. Its fitted voltages
+cover the accepted prefix, not the requested 500 µs. The energy defect is below
+1e-7 and backward-Euler numerical loss falls from 7.1% to 3.6% of metal heat.
+That failure remains recorded; no convergence tolerance or field cutoff was
+introduced to label the whole trial successful.
+
+### Larger tip contacts and current-lead heat leakage
+
+[Larger contact records](larger-tip-contact-screening.json) use 0.8 × 0.8 mm
+copper pad boxes centred at z=0.5 mm. At 30 A the cold model gives about
+0.70 mΩ head resistance and 3.11 mN downward liquid force, versus 1.64 mΩ
+and 2.65 mN for the smaller pads. The 200 A pulse's maximum initial-field
+adiabatic steel rise falls from roughly 45 K to 8 K. Its moving-fluid trial is
+running; these improvements do not establish a droplet result.
+
+[Current-lead thermal records](current-lead-thermal-screening.json) illustrate
+why short thick copper arms must not be connected straight to a cold driver
+without considering heater load. Under explicit constant-property assumptions,
+two 4 mm lengths of 0.64 mm² copper connecting 250 to 25 °C conduct about
+28 W away from the head after distributed Joule heating is included. Extending
+the path to 20 mm reduces head heat loss to about 3.4 W, while increasing pair
+electrical loss to about 4.5 W for the trial waveform at 200 Hz. This is a
+steady 1D scale estimate, not a mount or cooling qualification. The final driver
+budget must use the longer assembled leads' resistance and inductance.

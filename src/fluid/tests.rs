@@ -56,6 +56,37 @@ fn channel(n: u32, config: FluidConfig) -> (GpuDomain, Volume, FluidState) {
     (gpu, volume, state)
 }
 #[test]
+fn variable_timestep_preserves_uniform_acceleration_and_rejects_invalid_changes() {
+    let _lock = crate::gpu_test_lock();
+    let (_, volume, mut state) = channel(
+        4,
+        FluidConfig {
+            acceleration_m_s2: [2., 0., 0.],
+            periodic: [true; 3],
+            dt_s: 1e-4,
+            ..Default::default()
+        },
+    );
+    let mut elapsed = 0.;
+    for dt in [1e-4, 2e-4, 5e-5, 1.5e-4] {
+        state.set_timestep(dt).unwrap();
+        state.step(&volume).unwrap();
+        elapsed += dt;
+        let cell = state.probe([2., 4., 2.]).unwrap().unwrap();
+        assert!((f64::from(cell.velocity[0]) - 2. * elapsed).abs() < 1e-7);
+        assert!((state.time_s - elapsed).abs() < 1e-12);
+    }
+    let before = state.config.clone();
+    assert!(state.set_timestep(f64::NAN).is_err());
+    assert!(state.set_timestep(1.).is_err());
+    assert_eq!(state.config, before);
+    state.step(&volume).unwrap();
+    elapsed += before.dt_s;
+    let cell = state.probe([2., 4., 2.]).unwrap().unwrap();
+    assert!((f64::from(cell.velocity[0]) - 2. * elapsed).abs() < 1e-7);
+}
+
+#[test]
 fn periodic_uniform_flow_and_closed_hydrostatic_balance() {
     let _lock = crate::gpu_test_lock();
     let (_, volume, mut state) = channel(

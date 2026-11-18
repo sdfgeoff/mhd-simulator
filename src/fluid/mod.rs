@@ -939,6 +939,25 @@ impl FluidState {
     pub fn config(&self) -> &FluidConfig {
         &self.config
     }
+    pub(crate) fn set_timestep(&mut self, dt_s: f64) -> Result<(), String> {
+        if self.momentum_projection_pending {
+            return Err("Finish the interface momentum projection before changing timestep".into());
+        }
+        let mut config = self.config.clone();
+        config.dt_s = dt_s;
+        config.validate()?;
+        if !config.surface.enabled
+            && dt_s as f32 > self.grid.cell_m.powi(2) / (6. * self.params.physical[2]) * 0.95
+        {
+            return Err("Fluid timestep exceeds the explicit viscosity limit".into());
+        }
+        self.config = config;
+        self.params.physical[1] = dt_s as f32;
+        self.context
+            .queue
+            .write_buffer(&self._uniform, 0, bytemuck::bytes_of(&self.params));
+        Ok(())
+    }
     pub fn is_current(&self, volume: &Volume) -> bool {
         self.input_versions == volume.inputs.versions()
     }

@@ -1,0 +1,33 @@
+{
+  "method": "Uniform steady 1D rod with fixed hot and cold ends, constant properties and distributed mean Joule heating: Q_hot=G*(Th-Tc)-I_rms^2*R/2; Q_cold=G*(Th-Tc)+I_rms^2*R/2. Positive Q_hot leaves the molten head.",
+  "assumptions": {
+    "hot_end_c": 250,
+    "cold_end_c": 25,
+    "copper_resistivity_ohm_m": 4e-08,
+    "thermal_conductivity_w_m_k": 394,
+    "rms_current_a": 42.60281680828158
+  },
+  "leads": [
+    {
+      "copper_length_mm": 4.0,
+      "cross_section_mm2": 0.64,
+      "single_lead_resistance_mohm": 0.25,
+      "pair_average_joule_w": 0.9074999999999999,
+      "pair_hot_end_heat_loss_w": 27.91425,
+      "pair_cold_end_heat_load_w": 28.821749999999998
+    },
+    {
+      "copper_length_mm": 20.0,
+      "cross_section_mm2": 0.64,
+      "single_lead_resistance_mohm": 1.25,
+      "pair_average_joule_w": 4.5375,
+      "pair_hot_end_heat_loss_w": 3.4048500000000006,
+      "pair_cold_end_heat_load_w": 7.94235
+    }
+  ],
+  "limits": [
+    "Screening thermal/electrical properties, not a sourced temperature fit.",
+    "Fixed endpoint temperatures require actual heater and cooling; no transient, radiation, gas cooling or contact resistance.",
+    "A longer thermal path increases lead voltage loss. The driver budget must include the assembled resistance and inductance."
+  ]
+}

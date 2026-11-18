@@ -600,6 +600,9 @@ impl EmState {
     pub fn is_current(&self, volume: &Volume) -> bool {
         self.input_versions == volume.inputs.versions()
     }
+    pub(crate) fn set_timestep(&mut self, dt_s: f64) {
+        self.config.dt_s = dt_s;
+    }
     fn edge_groups(&self) -> [u32; 3] {
         groups(self.params.edges[3])
     }

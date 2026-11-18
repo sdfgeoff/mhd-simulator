@@ -1,0 +1,145 @@
+{
+  "status": "Larger external tip pads: cold field/heat screen, moving-interface validation running",
+  "cold": {
+    "contact_resistivity_ohm_m2": 0.0,
+    "current_A": 29.999998092651367,
+    "iterations": 160,
+    "joule_power_W": 0.6313475370407104,
+    "limitations": [
+      "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+      "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+      "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+      "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+    ],
+    "liquid_force_N": [
+      -1.6636739754336006e-06,
+      -1.9301048434769423e-09,
+      -0.0031135968376512445
+    ],
+    "liquid_joule_power_W": 0.04043547065455929,
+    "liquid_mean_By_T": -0.12040774694136398,
+    "mean_liquid_current_over_x_plus_minus_2mm_A": 3.526375400419954,
+    "mean_wall_current_over_x_plus_minus_2mm_A": 8.826907634899577,
+    "midplane_adjacent_cell_liquid_current_A": 16.570958582281467,
+    "midplane_adjacent_cell_wall_current_A": 13.435671272101434,
+    "power_relative_defect": 0.00026166439056396484,
+    "project": "artifacts/hardware-research/cases/v6-tip-pads08-pool35-medium-fit-sncu-h010.mhd.json",
+    "released_static_workspace_bytes": 55093784,
+    "return_current_A": -30.015703201293945,
+    "source_power_W": 0.6311823725700378,
+    "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+    "terminal_voltage_V": 0.021039413288235664,
+    "true_relative_residual": 9.937497452483512e-06
+  },
+  "driver": {
+    "inputs": {
+      "peak_a": 200.0,
+      "positive_us": 250.0,
+      "head_mohm": 0.70131378,
+      "parasitic_mohm": 1.25,
+      "series_uh": 1.025,
+      "frequency_hz": 200.0,
+      "bus_v": 24.0,
+      "bulk_uf": 1000.0,
+      "retract_fraction": 0.25,
+      "rise_us": 20.0
+    },
+    "method": "Exact integrals of piecewise-linear prescribed current; V=IR+L dI/dt. Head modeled as constant cold resistance. Four-quadrant current regulation assumed.",
+    "rms_current_a": 42.60281680828159,
+    "head_heat_w": 1.2728845107000002,
+    "parasitic_heat_w": 2.2687500000000003,
+    "required_voltage_min_v": -10.25,
+    "required_voltage_max_v": 10.640262756,
+    "ideal_bus_compliance": true,
+    "peak_inductor_energy_j": 0.020499999999999997,
+    "bulk_rise_if_all_peak_inductor_energy_returns_v": 0.8394846967484426,
+    "limitations": [
+      "No PWM ripple, switching/gate losses, current-loop dynamics, bus/lead ringing or protection design.",
+      "No capacitor ESR/ripple rating or switch SOA/temperature qualification.",
+      "Input R and L assumptions must be replaced with measured assembled values; motional voltage is omitted from this lumped check.",
+      "Electrical compliance is not a droplet or repetition-rate prediction."
+    ]
+  },
+  "initial_heat": {
+    "inputs": {
+      "cold": "artifacts/hardware-research/v6-tip-pads08-cold-30A-h010",
+      "project": "artifacts/hardware-research/cases/v6-tip-pads08-pool35-medium-fit-sncu-h010.mhd.json",
+      "driver": "artifacts/hardware-research/v6-tip-pads08-200A-250us-driver-budget.json"
+    },
+    "cold_current_a": 29.999998092651367,
+    "pulse_integral_i_squared_a2_s": 9.075000000000001,
+    "materials": [
+      {
+        "material": "Sn99.3Cu0.7 molten research properties",
+        "material_id": 4,
+        "pulse_energy_j": 0.0004077243809449716,
+        "average_power_w": 0.08154487618899431,
+        "maximum_initial_field_adiabatic_rise_k": 1.3481219675952423,
+        "maximum_position_mm": [
+          0.1500000071246177,
+          0.05000011879019439,
+          0.14999989070929587
+        ],
+        "thermal_diffusion_length_over_pulse_pair_mm": 0.1202999329853491,
+        "volumetric_heat_capacity_j_m3_k": 1498000.0,
+        "thermal_conductivity_w_m_k": 60.5
+      },
+      {
+        "material": "Thin-wall stainless screening",
+        "material_id": 14,
+        "pulse_energy_j": 0.005918117621371209,
+        "average_power_w": 1.183623524274242,
+        "maximum_initial_field_adiabatic_rise_k": 7.5633811964002895,
+        "maximum_position_mm": [
+          0.4500000213738531,
+          -0.34999990020878613,
+          0.14999989070929587
+        ],
+        "thermal_diffusion_length_over_pulse_pair_mm": 0.036657195746537946,
+        "volumetric_heat_capacity_j_m3_k": 4000000.0,
+        "thermal_conductivity_w_m_k": 15.0
+      },
+      {
+        "material": "Positive copper terminal",
+        "material_id": 16,
+        "pulse_energy_j": 2.0112932576888353e-05,
+        "average_power_w": 0.004022586515377671,
+        "maximum_initial_field_adiabatic_rise_k": 0.5336420820205706,
+        "maximum_position_mm": [
+          -1.0500000498723239,
+          0.3500001330394298,
+          0.8499999239575118
+        ],
+        "thermal_diffusion_length_over_pulse_pair_mm": 0.20076718249580555,
+        "volumetric_heat_capacity_j_m3_k": 3502660.0,
+        "thermal_conductivity_w_m_k": 394.0
+      },
+      {
+        "material": "Negative copper terminal",
+        "material_id": 17,
+        "pulse_energy_j": 2.0134096182126344e-05,
+        "average_power_w": 0.004026819236425269,
+        "maximum_initial_field_adiabatic_rise_k": 0.5343991280952238,
+        "maximum_position_mm": [
+          1.0500000498723239,
+          -0.34999990020878613,
+          0.8499999239575118
+        ],
+        "thermal_diffusion_length_over_pulse_pair_mm": 0.20076718249580555,
+        "volumetric_heat_capacity_j_m3_k": 3502660.0,
+        "thermal_conductivity_w_m_k": 394.0
+      }
+    ],
+    "limits": [
+      "Initial cold-field extrapolation: fixed geometry, conductivity, current paths and material properties; no thermal PDE or temperature-dependent resistance.",
+      "No phase change, external contact heating, rod/lead losses or cooling. Local maxima depend on the voxel resolution.",
+      "Diffusion length is sqrt(k*t/(rho*cp)), an order-of-magnitude scale, not a simulated temperature correction.",
+      "Repetition power assumes identical electrical pulses, not demonstrated repeatable droplet formation."
+    ]
+  },
+  "limits": [
+    "The compact 4 mm copper-arm resistance used in the driver budget does not qualify a practical thermal connection to a cold driver.",
+    "Current-lead thermal leakage and external contact resistance require separate assessment.",
+    "No current-driven thermal PDE or temperature-dependent electrical conductivity."
+  ]
+}

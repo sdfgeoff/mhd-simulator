@@ -20,7 +20,7 @@ fn trapezoid(t: f64, start: f64, duration: f64, rise: f64) -> f32 {
 fn main() -> Result<(), Box<dyn Error>> {
     let a: Vec<_> = std::env::args().collect();
     let mut p = project::load(Path::new(a.get(1).ok_or(
-        "Expected PROJECT PEAK_A POSITIVE_US STEPS OUTPUT [CONTACT] [RETRACT_FRACTION]",
+        "Expected PROJECT PEAK_A POSITIVE_US STEPS OUTPUT [CONTACT] [RETRACT_FRACTION] [DT_US] [REPEAT_HZ] [FIELD_EVERY] [TAIL_DT_US]",
     )?))?;
     let peak: f32 = a.get(2).ok_or("Missing current")?.parse()?;
     let duration: f64 = a.get(3).ok_or("Missing duration")?.parse::<f64>()? * 1e-6;
@@ -40,6 +40,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         .transpose()?
         .unwrap_or(0.);
     let field_every: u32 = a.get(10).map(|s| s.parse()).transpose()?.unwrap_or(100);
+    let tail_dt_s = a
+        .get(11)
+        .map(|s| s.parse::<f64>().map(|v| v * 1e-6))
+        .transpose()?
+        .unwrap_or(dt_s);
     if !peak.is_finite()
         || peak < 0.
         || !duration.is_finite()
@@ -52,11 +57,16 @@ fn main() -> Result<(), Box<dyn Error>> {
         || !frequency_hz.is_finite()
         || frequency_hz < 0.
         || field_every == 0
+        || !tail_dt_s.is_finite()
+        || tail_dt_s <= 0.
     {
         return Err("Invalid pulse".into());
     }
     if frequency_hz > 0. && duration + 25e-6 + duration / 3. >= 1. / frequency_hz {
         return Err("Pulses overlap the requested period".into());
+    }
+    if frequency_hz > 0. && tail_dt_s != dt_s {
+        return Err("A separate tail timestep currently requires a single pulse".into());
     }
     std::fs::create_dir_all(out.parent().ok_or("Output parent required")?)?;
     std::fs::create_dir(out)?;
@@ -140,7 +150,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     run.export_fields(&volume, &p.model, &out.join("frame-00000000"))?;
     let rise = 20e-6_f64.min(duration / 4.);
     let mut csv = String::from(
-        "step,time_s,command_A,current_A,voltage_V,joule_W,mechanical_W,field_power_defect_W,max_u_m_s,liquid_volume_m3,charge_iterations,charge_true_residual,pressure_iterations\n",
+        "step,time_s,command_A,current_A,voltage_V,joule_W,mechanical_W,field_power_defect_W,max_u_m_s,liquid_volume_m3,charge_iterations,charge_true_residual,pressure_iterations,timestep_s\n",
     );
     let mut joule = 0.;
     let mut electrical = 0.;
@@ -149,6 +159,18 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut error: Option<String> = None;
     let mut costs = String::from("step,charge_wall_ms,fluid_wall_ms\n");
     for step in 1..=steps {
+        let next_dt = if run.time_s >= duration * 4. / 3. + 25e-6 {
+            tail_dt_s
+        } else {
+            dt_s
+        };
+        if next_dt != p.run.dt_s {
+            if let Err(e) = run.set_timestep(&volume, next_dt) {
+                error = Some(e);
+                break;
+            }
+            p.run.dt_s = next_dt;
+        }
         let t = run.time_s + 0.5 * p.run.dt_s;
         let pulse_time = if frequency_hz > 0. {
             t.rem_euclid(1. / frequency_hz)
@@ -183,7 +205,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         let fluid = run.fluid.as_ref().unwrap();
         let material_volume = run.surface.as_ref().unwrap().diagnostics.volume_m3;
         csv.push_str(&format!(
-            "{step},{},{command},{},{voltage},{},{},{},{},{material_volume},{},{},{}\n",
+            "{step},{},{command},{},{voltage},{},{},{},{},{material_volume},{},{},{},{}\n",
             run.time_s,
             s[0],
             s[2],
@@ -192,7 +214,8 @@ fn main() -> Result<(), Box<dyn Error>> {
             fluid.diagnostics.max_speed_m_s,
             current.iterations,
             current.relative_residual,
-            fluid.diagnostics.iterations
+            fluid.diagnostics.iterations,
+            p.run.dt_s
         ));
         if step % 10 == 0 {
             println!(
@@ -220,7 +243,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         performance.push_str(&report.csv_rows());
     }
     std::fs::write(out.join("performance.csv"), performance)?;
-    let report = serde_json::json!({"project":a[1],"released_static_workspace_bytes":released_static_workspace_bytes,"status":if error.is_some(){"failed"}else{"complete"},"error":error,"accepted_steps":run.steps,"time_s":run.time_s,"peak_A":peak,"timestep_s":dt_s,"frequency_hz":frequency_hz,"field_every":field_every,"grid":{"dims":grid.dims,"cell_m":grid.cell_m},"positive_duration_s":duration,"rise_s":rise,"retract_fraction":retract,"contact_resistivity_ohm_m2":contact,"max_terminal_voltage_V":max_voltage,"joule_generated_J":joule,"lagged_electrical_work_J":electrical,"lagged_mechanical_work_J":lagged_mechanical,"fluid_mechanical_work_J":run.energy.external_work_j,"method":"GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.","limitations":["Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.","Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.","Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.","New research client; not a GUI electrode feature or frozen-baseline claim."]});
+    let report = serde_json::json!({"project":a[1],"released_static_workspace_bytes":released_static_workspace_bytes,"status":if error.is_some(){"failed"}else{"complete"},"error":error,"accepted_steps":run.steps,"time_s":run.time_s,"peak_A":peak,"timestep_s":dt_s,"tail_timestep_s":tail_dt_s,"tail_transition_not_before_s":duration*4./3.+25e-6,"frequency_hz":frequency_hz,"field_every":field_every,"grid":{"dims":grid.dims,"cell_m":grid.cell_m},"positive_duration_s":duration,"rise_s":rise,"retract_fraction":retract,"contact_resistivity_ohm_m2":contact,"max_terminal_voltage_V":max_voltage,"joule_generated_J":joule,"lagged_electrical_work_J":electrical,"lagged_mechanical_work_J":lagged_mechanical,"fluid_mechanical_work_J":run.energy.external_work_j,"method":"GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.","limitations":["Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.","Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.","Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.","New research client; not a GUI electrode feature or frozen-baseline claim."]});
     std::fs::write(
         out.join("run-status.json"),
         serde_json::to_vec_pretty(&report)?,

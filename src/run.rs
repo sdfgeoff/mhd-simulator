@@ -458,6 +458,26 @@ impl RunState {
             && self.em.as_ref().is_none_or(|s| s.is_current(volume))
             && self.fluid.as_ref().is_none_or(|s| s.is_current(volume))
     }
+    /// Change the common timestep between accepted steps without resetting fields.
+    /// Each subsystem retains its normal stability/convergence checks on advance.
+    pub fn set_timestep(&mut self, volume: &Volume, dt_s: f64) -> Result<(), String> {
+        if !self.is_current(volume) {
+            return Err("Cannot change timestep on a stale or failed run".into());
+        }
+        let mut config = self.config.clone();
+        config.dt_s = dt_s;
+        config.validate()?;
+        if let Some(fluid) = &mut self.fluid {
+            fluid.set_timestep(dt_s)?;
+        }
+        self.config = config;
+        self.em_config.dt_s = dt_s;
+        self.fluid_config.dt_s = dt_s;
+        if let Some(em) = &mut self.em {
+            em.set_timestep(dt_s);
+        }
+        Ok(())
+    }
     pub fn step(&mut self, model: &Model, volume: &Volume) -> Result<(), String> {
         if !self.is_current(volume) {
             return Err("Run inputs changed or a coupled step failed; restart the run".into());
@@ -914,6 +934,41 @@ mod tests {
 #[cfg(test)]
 mod refinement_tests {
     use super::*;
+    #[test]
+    fn changing_common_timestep_keeps_coupled_clocks_and_configuration_together() {
+        let _lock = crate::gpu_test_lock();
+        let p = crate::project::load(std::path::Path::new("assets/hotend-cad.mhd.json")).unwrap();
+        let gpu = crate::domain::GpuDomain::new().unwrap();
+        let volume = gpu.build(&p.model, &p.settings, &p.materials).unwrap();
+        let mut state = RunState::new(
+            gpu.context.clone(),
+            &volume,
+            &p.model,
+            RunConfig {
+                dt_s: 1e-6,
+                ..Default::default()
+            },
+            p.electromagnetics,
+            p.fluid,
+        )
+        .unwrap();
+        let mut elapsed = 0.;
+        for dt in [1e-6, 4e-6, 2e-6] {
+            state.set_timestep(&volume, dt).unwrap();
+            state.step(&p.model, &volume).unwrap();
+            elapsed += dt;
+            assert!((state.time_s - elapsed).abs() < 1e-12);
+            assert!((state.em.as_ref().unwrap().time_s - elapsed).abs() < 1e-12);
+            assert!((state.fluid.as_ref().unwrap().time_s - elapsed).abs() < 1e-12);
+            assert_eq!(state.em_config.dt_s, dt);
+            assert_eq!(state.fluid_config.dt_s, dt);
+            assert_eq!(state.fluid.as_ref().unwrap().config().dt_s, dt);
+        }
+        let before = state.config.clone();
+        assert!(state.set_timestep(&volume, f64::NAN).is_err());
+        assert_eq!(state.config, before);
+        assert_eq!(state.fluid.as_ref().unwrap().config().dt_s, before.dt_s);
+    }
     #[test]
     fn coupled_em_and_velocity_time_refine_together() {
         let _lock = crate::gpu_test_lock();

@@ -1,0 +1,11 @@
+{
+  "baseline": "artifacts/hardware-research/v6-tip-pool35-medium-flow-200A-250us-h010",
+  "trial": "artifacts/hardware-research/v6-tip-pool35-medium-flow-200A-250us-tail6-h010",
+  "time_s": 0.0036,
+  "liquid_weighted_velocity_relative_l2": 0.34522664826962096,
+  "alpha_relative_l2": 0.0140612626226447,
+  "meaning": "Same 3 microsecond pulse steps; trial switches to 6 microseconds after both electrical pulses have ended. 660 versus 1200 accepted steps.",
+  "leading_region_velocity_relative_l2": 0.027205514803285598,
+  "returning_tail_region_velocity_relative_l2": 0.6427710245154801,
+  "nozzle_region_velocity_relative_l2": 0.05551194947673136
+}

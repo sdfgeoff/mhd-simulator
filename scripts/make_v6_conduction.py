@@ -36,6 +36,9 @@ def main():
     p.add_argument("--pin-tip-mm", type=float, default=2.0)
     p.add_argument("--heater", action="store_true")
     p.add_argument("--heater-sigma", type=float, default=13e6)
+    p.add_argument("--tip-contact-height-mm", type=float, default=.4)
+    p.add_argument("--tip-contact-width-mm", type=float, default=.4)
+    p.add_argument("--tip-contact-z-mm", type=float, default=.3)
     p.add_argument("--magnet", choices=["cube10", "disc20-stack10", "disc"], default="cube10")
     p.add_argument("--magnet-disc-diameter-mm", type=float, default=20.)
     p.add_argument("--magnet-stack-mm", type=float, default=10.)
@@ -105,6 +108,9 @@ def main():
                 16 + i,
             )
     if args.contact_band == "tip":
+        height, width, centre_z = args.tip_contact_height_mm, args.tip_contact_width_mm, args.tip_contact_z_mm
+        if not all(math.isfinite(v) and v > 0 for v in [height, width, centre_z]) or centre_z - height / 2 < 0 or centre_z + height / 2 >= 2:
+            raise ValueError("Tip contacts must be positive and stay below the shoulder and above the outlet")
         # Small external contacts localize current across the liquid orifice land.
         outer = cad.Manifold.cylinder(
             2.0,
@@ -113,7 +119,7 @@ def main():
             circular_segments=96,
         )
         for i, sign in enumerate([-1, 1]):
-            pad = box([4.5, 0.4, 0.4], [sign * 2.75, 0.0, 0.3]) - outer
+            pad = box([4.5, width, height], [sign * 2.75, 0.0, centre_z]) - outer
             parts[i + 2] = (
                 f"{'Positive' if sign < 0 else 'Negative'} tip copper contact",
                 pad,
