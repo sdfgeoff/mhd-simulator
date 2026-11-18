@@ -1,0 +1,126 @@
+{
+  "status": "Evidence for a later waveform control, not a validated design or a queued fluid result",
+  "source": {
+    "url": "https://patents.google.com/patent/EP3020257A1/en",
+    "type": "Primary patent disclosure",
+    "read_sections": "Description: retracting meniscus and surface-tension rebound; detailed comparison of Figs3/4; internal wetting discussion"
+  },
+  "source_summary": "The disclosed Lorentz actuation initially retracts the meniscus into the chamber. After force removal, surface tension can reverse motion and eject a drop. The description proposes smaller/faster drops than direct outward forcing, and emphasizes internal wetting. No numerical transfer to our nozzle is established.",
+  "implication": "After the active500us delayed-retract control, a single inward pulse followed by release is a distinct hypothesis to examine. Do not equate the patent description with successful solder jetting through conductive steel.",
+  "limits": [
+    "Our neutral/mirror wall treatment lacks advancing/receding angles, pinning and oxide skins; rebound/reattachment could be sensitive to these omissions.",
+    "No published current, field, nozzle or repetition result is being adopted from this patent.",
+    "The proposed test would need a matched zero-current control and enough recovery time; it is not just an electrical polarity check."
+  ],
+  "nearflush_175A_electrical_sensitivity": {
+    "status": "Budget only; no175A fluid case launched",
+    "driver": {
+      "inputs": {
+        "peak_a": 175.0,
+        "positive_us": 250.0,
+        "head_mohm": 0.99253145,
+        "parasitic_mohm": 5.65,
+        "series_uh": 1.025,
+        "frequency_hz": 200.0,
+        "bus_v": 24.0,
+        "bulk_uf": 1000.0,
+        "retract_fraction": 0.25,
+        "retract_delay_us": 25.0,
+        "rise_us": 20.0
+      },
+      "method": "Exact integrals of piecewise-linear prescribed current; V=IR+L dI/dt. Head modeled as constant cold resistance. Four-quadrant current regulation assumed.",
+      "rms_current_a": 37.27746470724639,
+      "head_heat_w": 1.3792310079023435,
+      "parasitic_heat_w": 7.851292968749999,
+      "required_voltage_min_v": -8.96875,
+      "required_voltage_max_v": 10.13119300375,
+      "ideal_bus_compliance": true,
+      "peak_inductor_energy_j": 0.0156953125,
+      "bulk_rise_if_all_peak_inductor_energy_returns_v": 0.6452962043469874,
+      "limitations": [
+        "No PWM ripple, switching/gate losses, current-loop dynamics, bus/lead ringing or protection design.",
+        "No capacitor ESR/ripple rating or switch SOA/temperature qualification.",
+        "Input R and L assumptions must be replaced with measured assembled values; motional voltage is omitted from this lumped check.",
+        "Electrical compliance is not a droplet or repetition-rate prediction."
+      ]
+    },
+    "cold_adiabatic_heat": {
+      "inputs": {
+        "cold": "artifacts/hardware-research/v6-tip-flat08-shortbar-full-cold-30A-h010",
+        "project": "artifacts/hardware-research/cases/v6-tip-flat08-shortbar-full-fit-sncu-h010.mhd.json",
+        "driver": "artifacts/hardware-research/nearflush-175A-driver-budget.json"
+      },
+      "cold_current_a": 29.999998092651367,
+      "pulse_integral_i_squared_a2_s": 6.948046875,
+      "materials": [
+        {
+          "material": "Sn99.3Cu0.7 molten research properties",
+          "material_id": 4,
+          "pulse_energy_j": 0.0006001860418689867,
+          "average_power_w": 0.12003720837379735,
+          "maximum_initial_field_adiabatic_rise_k": 7.480268917676253,
+          "maximum_position_mm": [
+            -0.14999989070929587,
+            -0.04999988595955074,
+            0.249999895459041
+          ],
+          "thermal_diffusion_length_over_pulse_pair_mm": 0.12029993298534909,
+          "volumetric_heat_capacity_j_m3_k": 1498000.0,
+          "thermal_conductivity_w_m_k": 60.5
+        },
+        {
+          "material": "Thin-wall stainless screening",
+          "material_id": 14,
+          "pulse_energy_j": 0.006205898881911668,
+          "average_power_w": 1.2411797763823336,
+          "maximum_initial_field_adiabatic_rise_k": 21.087872638461587,
+          "maximum_position_mm": [
+            -0.34999990020878613,
+            -0.34999990020878613,
+            0.44999990495853126
+          ],
+          "thermal_diffusion_length_over_pulse_pair_mm": 0.036657195746537946,
+          "volumetric_heat_capacity_j_m3_k": 4000000.0,
+          "thermal_conductivity_w_m_k": 15.0
+        },
+        {
+          "material": "Positive copper terminal",
+          "material_id": 16,
+          "pulse_energy_j": 4.503530233463612e-05,
+          "average_power_w": 0.009007060466927223,
+          "maximum_initial_field_adiabatic_rise_k": 0.8329096763031067,
+          "maximum_position_mm": [
+            -0.44999990495853126,
+            -0.34999990020878613,
+            0.44999990495853126
+          ],
+          "thermal_diffusion_length_over_pulse_pair_mm": 0.20076718249580552,
+          "volumetric_heat_capacity_j_m3_k": 3502660.0,
+          "thermal_conductivity_w_m_k": 394.0
+        },
+        {
+          "material": "Negative copper terminal",
+          "material_id": 17,
+          "pulse_energy_j": 4.503529634387409e-05,
+          "average_power_w": 0.009007059268774818,
+          "maximum_initial_field_adiabatic_rise_k": 0.8329100289518052,
+          "maximum_position_mm": [
+            0.4500001377891749,
+            0.3500001330394298,
+            0.44999990495853126
+          ],
+          "thermal_diffusion_length_over_pulse_pair_mm": 0.20076718249580552,
+          "volumetric_heat_capacity_j_m3_k": 3502660.0,
+          "thermal_conductivity_w_m_k": 394.0
+        }
+      ],
+      "limits": [
+        "Initial cold-field extrapolation: fixed geometry, conductivity, current paths and material properties; no thermal PDE or temperature-dependent resistance.",
+        "No phase change, external contact heating, rod/lead losses or cooling. Local maxima depend on the voxel resolution.",
+        "Diffusion length is sqrt(k*t/(rho*cp)), an order-of-magnitude scale, not a simulated temperature correction.",
+        "Repetition power assumes identical electrical pulses, not demonstrated repeatable droplet formation."
+      ]
+    },
+    "interpretation": "175A250us would require about10.13V peak under the stated1.025uH/hot-series allowance and about9.23W resistive heat at assumed200Hz.100um cold steel peak extrapolation21.1K is not a converged or thermally evolved temperature. Await150A nearflush result before selecting another amplitude."
+  }
+}
