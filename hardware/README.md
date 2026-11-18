@@ -268,3 +268,22 @@ L2 by 0.25% and alpha L2 by 0.033% relative to the full-height domain, with
 matched 0.1 mm spacing and pulse. This supports provisional pulse screening
 in the smaller domain; it does not certify later breakup or periodic flight.
 The colder electrical crop comparison changes total liquid force by 1.69%.
+
+
+### Carrier winding observations
+
+`make_carrier_trial.py` generates a separate prescribed-current sinusoidal-burst
+project from an existing winding CAD project. `fit_carrier_circuit.py` combines
+its accepted GPU reaction linkage with independently supplied air inductance and
+series resistance/inductance. The fitted series capacitor and drive voltage are
+circuit screening estimates, not a switching implementation or droplet result.
+Use explicit `--through-us` only when intentionally evaluating a partial record;
+the output reports both the input duration and evaluated duration.
+
+The optional winding observer now captures unit-current vector potential during
+the first observed nonzero interval. This preserves reaction linkage through
+successive zero-current tail intervals, with four bytes per edge rounded to a
+64-byte block. Normal runs do not allocate this buffer. Calling the observer
+only after a pulse cannot recover an uncaptured winding basis. Its GPU check
+compares subsequent accepted fields byte for byte against an unobserved run,
+and checks reciprocal work against Joule heat and reaction energy.

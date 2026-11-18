@@ -57,6 +57,10 @@ fn reciprocal_coil_work_matches_heat_and_reaction_energy_without_changing_fields
         let new_current = f64::from(wave.value(observed.time_s));
         source_work -= response.reaction_linkage_wb.unwrap_or(0.) * (new_current - current);
         current = new_current;
+        assert!(
+            response.reaction_linkage_wb.is_some(),
+            "Linkage unavailable after zero-current interval at step {step}"
+        );
         heat += observed.energy_step().unwrap().joule_j;
         numerical_loss += response.reaction_backward_euler_j;
         reaction = response.reaction_magnetic_j;

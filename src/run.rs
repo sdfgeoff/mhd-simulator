@@ -644,7 +644,10 @@ impl RunState {
     pub fn working_memory(&self, volume: &Volume) -> WorkingMemory {
         WorkingMemory {
             domain: volume.persistent_bytes,
-            em: self.em.as_ref().map_or(0, |s| s.bytes),
+            em: self
+                .em
+                .as_ref()
+                .map_or(0, |s| s.bytes + s.observation_bytes()),
             fluid: self.fluid.as_ref().map_or(0, |s| s.bytes)
                 + self
                     .prescribed_force

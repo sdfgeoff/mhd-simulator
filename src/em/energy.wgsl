@@ -58,8 +58,22 @@ fn energy_reduce(@builtin(local_invocation_index) l:u32){
 }
 
 // Reciprocity: reaction linkage of one prescribed winding is
-// integral(J_metal dot A_unit dV). Keep both current/previous source products
-// so a transition to zero current remains measurable without dividing by zero.
+// integral(J_metal dot A_unit dV). The private observation binding repurposes
+// results as packed unit-winding A; accepted display fields are never written.
+@compute @workgroup_size(256)
+fn initialize_coil_basis(@builtin(global_invocation_id) gid:vec3<u32>){
+ let slot=flat_id(gid);if slot>= (scene.edges.w+15u)/16u{return;}
+ var value:array<vec4<f32>,4>;
+ for(var k=0u;k<16u;k++){let i=slot*16u+k;if i<scene.edges.w{
+  value[k/4u][k%4u]=select(source[i].x,source[i].y,scalars[7].y>0.5)/scalars[7].x;
+ }}
+ results[slot]=Result(value[0],value[1],value[2],value[3]);
+}
+fn winding_unit_a(i:u32)->f32 {
+ let v=results[i/16u];let lane=i%16u;
+ if lane<4u{return v.b[lane];}if lane<8u{return v.j[lane-4u];}
+ if lane<12u{return v.fq[lane-8u];}return v.applied[lane-12u];
+}
 @compute @workgroup_size(256)
 fn coil_response_collect(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>){
     let i=flat_id(gid);var v=vec4<f32>(0.);
@@ -67,7 +81,7 @@ fn coil_response_collect(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(l
     if i<scene.edges.w {
         let delta=(work[i].x-previous[i])+(source[i].x-source[i].y);
         let j=source[i].z*(-delta/scene.physical.x+source[i+scene.edges.w].x);
-        v.x=volume*j*source[i].x;v.y=volume*j*source[i].y;
+        v.x=volume*j*winding_unit_a(i);
     }
     let fx=(scene.dims.x+1u)*scene.dims.y*scene.dims.z;
     let fy=scene.dims.x*(scene.dims.y+1u)*scene.dims.z;

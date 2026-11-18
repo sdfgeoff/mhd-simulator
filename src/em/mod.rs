@@ -71,7 +71,12 @@ pub struct CoilResponse {
     pub reaction_magnetic_j: f64,
     pub reaction_backward_euler_j: f64,
 }
+struct CoilObserver {
+    bind: wgpu::BindGroup,
+    bytes: u64,
+}
 pub struct EmState {
+    coil_observer: std::sync::Mutex<Option<CoilObserver>>,
     pub bodies: Vec<BodyDiagnostic>,
     body_collect: wgpu::ComputePipeline,
     body_reduce: wgpu::ComputePipeline,
@@ -368,6 +373,7 @@ impl EmState {
             "commit_step",
             "energy_collect",
             "energy_reduce",
+            "initialize_coil_basis",
             "coil_response_collect",
             "coil_response_reduce",
         ] {
@@ -519,6 +525,7 @@ impl EmState {
             .collect();
         let mut state = Self {
             context,
+            coil_observer: std::sync::Mutex::new(None),
             bodies,
             body_collect,
             body_reduce,
@@ -1145,6 +1152,9 @@ impl EmState {
     }
     /// Reaction flux linkage by reciprocity, for a single winding and mu_r=1.
     /// This observes accepted fields; it does not impose or solve a coil voltage.
+    /// The first observed nonzero interval captures an optional unit-winding basis,
+    /// allowing linkage measurement after the applied current has returned to zero.
+    /// Without that capture, linkage is unavailable during zero-current intervals.
     pub fn coil_response(&self, volume: &Volume) -> Result<CoilResponse, String> {
         if !self.is_current(volume)
             || self.mode != Mode::Induction
@@ -1170,29 +1180,112 @@ impl EmState {
         if self.last_step_dt_s == 0. {
             return Ok(CoilResponse::default());
         }
-        self.dispatch(&[
-            ("coil_response_collect", self.edge_groups()),
-            ("coil_response_reduce", [1, 1, 1]),
-        ]);
+        let wave = &self.config.wires[0].current;
+        let now = wave.value(self.time_s);
+        let old = wave.value(self.time_s - self.last_step_dt_s);
+        let mut observer = self.coil_observer.lock().unwrap();
+        let mut initialize = false;
+        if observer.is_none() {
+            if now == 0. && old == 0. {
+                // Without a previously captured winding basis linkage is unavailable.
+                // Applied A is zero here, so total/reaction energy coincide.
+                let energy = self.energy_step()?;
+                return Ok(CoilResponse {
+                    reaction_linkage_wb: None,
+                    reaction_magnetic_j: energy.magnetic_j,
+                    reaction_backward_euler_j: energy.backward_euler_j,
+                });
+            }
+            let bytes = u64::from(self.params.edges[3].div_ceil(16)) * 64;
+            self.context
+                .ensure_memory(bytes, "Optional winding observation basis")?;
+            let basis = self.context.device.create_buffer(&wgpu::BufferDescriptor {
+                label: Some("Unit winding A, packed independently of accepted fields"),
+                size: bytes,
+                usage: wgpu::BufferUsages::STORAGE,
+                mapped_at_creation: false,
+            });
+            let properties = volume.inputs.solver_tables(&[], false)?.0;
+            let buffers = [
+                &self.uniform,
+                volume.material_ids(),
+                properties,
+                &self._source,
+                &self._work,
+                &self._previous,
+                &self._partials,
+                &self.scalars,
+                &basis,
+            ];
+            let layout = self.pipelines["coil_response_collect"].get_bind_group_layout(0);
+            let bind = self
+                .context
+                .device
+                .create_bind_group(&wgpu::BindGroupDescriptor {
+                    label: Some("Read-only winding observation with private basis output"),
+                    layout: &layout,
+                    entries: &buffers
+                        .iter()
+                        .enumerate()
+                        .map(|(i, b)| wgpu::BindGroupEntry {
+                            binding: i as u32,
+                            resource: b.as_entire_binding(),
+                        })
+                        .collect::<Vec<_>>(),
+                });
+            let (amplitude, use_old) = if now.abs() >= old.abs() && now != 0. {
+                (now, 0.)
+            } else {
+                (old, 1.)
+            };
+            self.context.queue.write_buffer(
+                &self.scalars,
+                112,
+                bytemuck::cast_slice(&[amplitude, use_old, 0_f32, 0.]),
+            );
+            *observer = Some(CoilObserver { bind, bytes });
+            initialize = true;
+        }
+        let observer = observer.as_ref().unwrap();
+        let mut encoder = self
+            .context
+            .device
+            .create_command_encoder(&Default::default());
+        {
+            let mut pass = self
+                .context
+                .compute_pass(&mut encoder, Some("Winding reaction observation"));
+            pass.set_bind_group(0, &observer.bind, &[]);
+            if initialize {
+                let g = groups(self.params.edges[3].div_ceil(16));
+                pass.set_pipeline(&self.pipelines["initialize_coil_basis"]);
+                pass.dispatch_workgroups(g[0], g[1], g[2]);
+            }
+            pass.set_pipeline(&self.pipelines["coil_response_collect"]);
+            let g = self.edge_groups();
+            pass.dispatch_workgroups(g[0], g[1], g[2]);
+            pass.set_pipeline(&self.pipelines["coil_response_reduce"]);
+            pass.dispatch_workgroups(1, 1, 1);
+        }
+        self.context.queue.submit(Some(encoder.finish()));
         let sums = self.read_f32(&self.scalars, 112, 4)?;
         if sums.iter().any(|v| !v.is_finite()) {
             return Err("Nonfinite winding response integral".into());
         }
-        let wave = &self.config.wires[0].current;
-        let now = f64::from(wave.value(self.time_s));
-        let old = f64::from(wave.value(self.time_s - self.last_step_dt_s));
-        let linkage = if now.abs() >= old.abs() && now != 0. {
-            Some(f64::from(sums[0]) / now)
-        } else if old != 0. {
-            Some(f64::from(sums[1]) / old)
-        } else {
-            None
-        };
+        let linkage = Some(f64::from(sums[0]));
         Ok(CoilResponse {
             reaction_linkage_wb: linkage,
             reaction_magnetic_j: f64::from(sums[2]),
             reaction_backward_euler_j: f64::from(sums[3]),
         })
+    }
+    /// Optional observer storage, allocated only after a nonzero winding interval.
+    pub fn observation_bytes(&self) -> u64 {
+        self.coil_observer
+            .lock()
+            .unwrap()
+            .as_ref()
+            .map_or(0, |o| o.bytes)
     }
     pub fn snapshot(&self) -> EmFrame {
         let result = self.context.device.create_buffer(&wgpu::BufferDescriptor {
