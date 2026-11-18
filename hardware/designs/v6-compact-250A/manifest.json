@@ -1,0 +1,19 @@
+{
+  "source_project": "artifacts/hardware-research/cases/v6-tip-wide-disc10x5-s2-medium-fit-sncu-h010.mhd.json",
+  "source_project_sha256": "8d7a7363984c2559b5f58f50c358af619f5d1c9e83ddac056566904504589b69",
+  "source_geometry": "artifacts/hardware-research/cases/v6-tip-wide-disc10x5-medium-h010.gltf",
+  "source_geometry_sha256": "137e448b75fa6ba7c274cfb2937ff01bfd7b43555cec15e0ca029d3a4df38977",
+  "source_binary_sha256": "4a545a43c81c02e9597b895f43451b907824ed7a85ee742d01f840cca8761f28",
+  "packaging_change": "Only geometry and buffer URI strings renamed. All simulation settings and float32 geometry payload retained.",
+  "scope": "Direct current research client; coarse detached result, zero gravity, fine/repetition open.",
+  "uniform_acceleration_m_s2": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "packaged_sha256": {
+    "case.mhd.json": "ec8df3db38ed11997b4efa3abb65861ec0bc8176e18d3141ae286e3731ef9983",
+    "geometry.gltf": "0260eaaa8c87df1a3af5d474a60a4587e2824c3955d85bf99975045c3971b149",
+    "geometry.bin": "4a545a43c81c02e9597b895f43451b907824ed7a85ee742d01f840cca8761f28"
+  }
+}

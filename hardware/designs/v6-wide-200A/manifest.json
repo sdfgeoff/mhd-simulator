@@ -1,0 +1,19 @@
+{
+  "source_project": "artifacts/hardware-research/cases/v6-tip-wide-pool35-medium-fit-sncu-h010.mhd.json",
+  "source_project_sha256": "7e9fb63e68a431a6adc887f71c69b521ccadb39671b9d15ce624294b0f3001d7",
+  "source_geometry": "artifacts/hardware-research/cases/v6-tip-wide-pool35-medium-h010.gltf",
+  "source_geometry_sha256": "86b09e51ae8b8f1ba164bb42d9473d4909ae7a4e3af228de4fb0cc402e1c1822",
+  "source_binary_sha256": "173301cf5f14fb06afbe6e593b0a6ec39d5398d511ef81ba84e68ddffce65d6a",
+  "packaging_change": "Only geometry and buffer URI strings renamed. All simulation settings and float32 geometry payload retained.",
+  "scope": "Direct current research client; coarse detached result, zero gravity, repetition not qualified.",
+  "uniform_acceleration_m_s2": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "packaged_sha256": {
+    "case.mhd.json": "ec8df3db38ed11997b4efa3abb65861ec0bc8176e18d3141ae286e3731ef9983",
+    "geometry.gltf": "96085e7ec51699acb6b47191948dfab9068a5e0fe6b7fa15ecbb6670b0631cd7",
+    "geometry.bin": "173301cf5f14fb06afbe6e593b0a6ec39d5398d511ef81ba84e68ddffce65d6a"
+  }
+}

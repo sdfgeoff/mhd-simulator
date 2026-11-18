@@ -1,0 +1,19 @@
+{
+  "source_project": "artifacts/hardware-research/cases/foil-carrier-z6-50k250A-flow-fit-sncu-dt0125-h020.mhd.json",
+  "source_project_sha256": "7bc8f49f9cf1dfb715a00911ff3f6ad2fc19978720d0f2519dee2f03b86e9339",
+  "source_geometry": "artifacts/hardware-research/cases/foil-carrier-z6-base-h020.gltf",
+  "source_geometry_sha256": "6219b2d70ae91cad9c4cd8a4977727a5d074f918d02ed790827d889c51d83004",
+  "source_binary_sha256": "62ea452a393051a6291cda8a7c1a3b08c1348572f64144dd0421cd6fc6e58f9b",
+  "packaging_change": "Only geometry and buffer URI strings renamed. All simulation settings and float32 geometry payload retained.",
+  "scope": "Normal unified RunState; coarse completed negative ejection screen, zero gravity.",
+  "uniform_acceleration_m_s2": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "packaged_sha256": {
+    "case.mhd.json": "86c6c0dd3c85ad808c82fcc346d93674c27b0c1aa89fea63f679f24bd5eba12a",
+    "geometry.gltf": "fd74a6f19f6ed8aca883735716b5b886dab351aa14ceba318236da2a5ea694c5",
+    "geometry.bin": "62ea452a393051a6291cda8a7c1a3b08c1348572f64144dd0421cd6fc6e58f9b"
+  }
+}

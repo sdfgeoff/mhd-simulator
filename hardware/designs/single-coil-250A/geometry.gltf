@@ -1,0 +1,175 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "MHD hardware study; E3D dimension-based simplified CAD"
+  },
+  "buffers": [
+    {
+      "uri": "geometry.bin",
+      "byteLength": 127368
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 55296
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 55296,
+      "byteLength": 55296
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 110592,
+      "byteLength": 13824
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 124416,
+      "byteLength": 2952
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 4608,
+      "type": "VEC3",
+      "min": [
+        -0.0035,
+        -0.0035,
+        0.0
+      ],
+      "max": [
+        0.0035,
+        0.0035,
+        0.01
+      ]
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 4608,
+      "type": "VEC3",
+      "min": [
+        -0.003,
+        -0.003,
+        0.0
+      ],
+      "max": [
+        0.003,
+        0.003,
+        0.009000000000000001
+      ]
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 1152,
+      "type": "VEC3",
+      "min": [
+        -0.0004,
+        -0.0004,
+        0.0055
+      ],
+      "max": [
+        0.0004,
+        0.0004,
+        0.011
+      ]
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 246,
+      "type": "VEC3",
+      "min": [
+        -0.0062439999999999996,
+        -0.0062439999999999996,
+        0.0007599999999999998
+      ],
+      "max": [
+        0.009892,
+        0.0062439999999999996,
+        0.00924
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Stainless nozzle",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Liquid solder",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Fixed feed wire",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 2
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Series coil with return lead",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 3
+          },
+          "mode": 3
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "Stainless nozzle"
+    },
+    {
+      "mesh": 1,
+      "name": "Liquid solder"
+    },
+    {
+      "mesh": 2,
+      "name": "Fixed feed wire"
+    },
+    {
+      "mesh": 3,
+      "name": "Series coil with return lead"
+    }
+  ],
+  "scenes": [
+    {
+      "nodes": [
+        0,
+        1,
+        2,
+        3
+      ]
+    }
+  ],
+  "scene": 0
+}
