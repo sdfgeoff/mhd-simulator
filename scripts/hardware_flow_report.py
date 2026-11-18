@@ -114,6 +114,10 @@ def main():
         }
         detached = thresholds["0.5"]
         occupied_z = z[np.any(alpha >= 0.5, axis=(1, 2))]
+        boundary_maxima = {}
+        for axis, label in enumerate(["z", "y", "x"]):
+            for index, side in [(0, "min"), (-1, "max")]:
+                boundary_maxima[f"{label}_{side}"] = float(np.take(alpha, index, axis=axis).max())
         row = {
             "step": m["step"],
             "time_us": m["time_s"] * 1e6,
@@ -127,6 +131,8 @@ def main():
                 -exit_uz * exit_weight * h**2 * 1e12 if exit_uz is not None else None
             ),
             "liquid_volume_nl": float(alpha.sum(dtype=np.float64) * h**3 * 1e12),
+            "boundary_maximum_liquid_fraction": boundary_maxima,
+            "liquid_touches_domain_boundary_alpha01": any(v >= .01 for v in boundary_maxima.values()),
             "below_tip_nl": float(
                 np.einsum("zyx,z->", alpha, below, dtype=np.float64) * h**3 * 1e12
             ),
@@ -142,6 +148,9 @@ def main():
         row["below_tip_change_nl"] = row["below_tip_nl"] - (
             rows[0]["below_tip_nl"] if rows else row["below_tip_nl"]
         )
+        row["relative_liquid_volume_change"] = row["liquid_volume_nl"] / (
+            rows[0]["liquid_volume_nl"] if rows else row["liquid_volume_nl"]
+        ) - 1
         rows.append(row)
         section = np.mean(alpha[:, (ny - 1) // 2 : ny // 2 + 1, :], axis=1)
         solid = 1 - np.mean(f[:, (ny - 1) // 2 : ny // 2 + 1, :, 12], axis=1)
@@ -163,7 +172,7 @@ def main():
             fieldnames=[
                 k
                 for k in rows[0]
-                if k not in ["detached_below_tip", "connectivity_thresholds"]
+                if k not in ["detached_below_tip", "connectivity_thresholds", "boundary_maximum_liquid_fraction"]
             ],
         )
         writer.writeheader()

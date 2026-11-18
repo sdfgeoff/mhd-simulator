@@ -64,6 +64,11 @@ they are not a GUI electrode feature.
    components and apparent breakup require grid/time refinement. It never
    substitutes a synthetic droplet for the combined run.
 
+   Reports also record the maximum liquid fraction on each of the six domain
+   faces, any boundary contact at alpha 0.01, and relative total liquid-volume
+   change. Check these for every cropped/periodic flight-domain trial; a
+   detached component's own boundary flag does not cover the main pool.
+
 3. For EM-only screening, generate without `--fluid`, then:
 
    ```sh
