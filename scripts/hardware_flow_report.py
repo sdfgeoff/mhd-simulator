@@ -188,11 +188,15 @@ def main():
             squeeze=False,
             constrained_layout=True,
         )
+        lower_z = min(
+            -1.8,
+            min(r["front_z_mm_alpha_half"] for r in rows if r["front_z_mm_alpha_half"] is not None) - 0.4,
+        )
         for ax, index in zip(axes[0], indices):
             m, section = sections[index]
             h = m["cell_m"] * 1000
             x, _, z = np.array(m["origin_m"]) * 1000
-            ax.imshow(
+            picture = ax.imshow(
                 section,
                 origin="lower",
                 interpolation="nearest",
@@ -204,7 +208,7 @@ def main():
             ax.axhline(0, color="darkorange", lw=0.8, ls=":")
             ax.set(
                 xlim=(-0.8, 0.8),
-                ylim=(-1.8, 1.8),
+                ylim=(lower_z, 1.8),
                 xlabel="x (mm)",
                 ylabel="z (mm)",
                 title=f"{m['time_s']*1e6:.1f} µs",
@@ -217,8 +221,10 @@ def main():
         )
         fig.suptitle(
             title
-            + " · central liquid fraction\nOrange: nominal nozzle exit; no CAD wall overlay"
+            + f" · central liquid fraction · {sections[0][0]['cell_m']*1e6:.0f} µm grid"
+            + "\nOrange: nominal nozzle exit; no CAD wall overlay; breakup requires refinement"
         )
+        fig.colorbar(picture, ax=axes[0].tolist(), label="Liquid fraction", shrink=0.6)
         fig.savefig(args.directory / "tip-sections.png", dpi=160)
 
 

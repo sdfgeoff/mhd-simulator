@@ -26,7 +26,8 @@ def coil(inner_mm, length_mm, wire_mm, layers, temperature_c):
         return None
     n = per_layer * layers
     radii = [(inner_mm + (j + 0.5) * pitch) * 1e-3 for j in range(layers)]
-    axial = [(j + 0.5) * pitch * 1e-3 - length_mm * 0.5e-3 for j in range(per_layer)]
+    span = per_layer * pitch
+    axial = [(j + 0.5) * pitch * 1e-3 - span * 0.5e-3 for j in range(per_layer)]
     wire_length = sum(2 * math.pi * r * per_layer for r in radii) + 0.10
     area = math.pi * (wire_mm * 0.5e-3) ** 2
     resistance = CU_RHO20 * (1 + CU_ALPHA * (temperature_c - 20)) * wire_length / area

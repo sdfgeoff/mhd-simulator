@@ -425,6 +425,37 @@ def v6_detail():
     fig.savefig(OUT / "v6-disc-stack-setup.png", dpi=180)
 
 
+def v6_tip_detail():
+    parts, _ = load("v6-tip-disc20-compact-h010")
+    fig, axes = plt.subplots(1, 3, figsize=(15, 8))
+    fig.subplots_adjust(left=.055, right=.985, bottom=.19, top=.85, wspace=.28)
+    ax = axes[0]
+    section(ax, parts, "yz")
+    ax.set(xlim=(-13,13), ylim=(-19,14), title="Magnet stacks below the shoulder")
+    ax.vlines([-7.1,7.1],-18.2,1.8,colors="#6c8596",linestyles=":",linewidths=1)
+    ax.text(0,-14,"4.2 mm\nflight gap",ha="center",fontsize=10)
+    ax.annotate("Jet",xy=(0,-7),xytext=(0,-3),ha="center",color="#27735b",arrowprops={"arrowstyle":"->","color":"#27735b","lw":2})
+    ax = axes[1]
+    section(ax,parts)
+    ax.set(xlim=(-1.6,1.6),ylim=(-.3,1.4),title="Tip section enlarged")
+    label(ax,"Copper contacts",(1.2,.3),(.15,.85))
+    label(ax,"0.4 mm bore",(.18,.05),(-1.5,-.2))
+    ax.annotate("Force",xy=(0,-.25),xytext=(0,.2),ha="center",color="#27735b",arrowprops={"arrowstyle":"->","color":"#27735b","lw":2})
+    ax = axes[2]
+    section(ax,parts,"xy",.3)
+    ax.set(xlim=(-5.5,5.5),ylim=(-3,3),title="Plan through the contact band")
+    ax.annotate("I",xy=(1.2,0),xytext=(-1.2,0),color="#9b541f",fontsize=12,arrowprops={"arrowstyle":"->","color":"#9b541f","lw":2})
+    ax.annotate("B",xy=(0,-1.9),xytext=(0,1.9),color="#32678b",fontsize=12,arrowprops={"arrowstyle":"->","color":"#32678b","lw":2})
+    ax.text(3,2.5,"Pole face",ha="center",fontsize=9)
+    ax.text(3,-2.7,"Pole face",ha="center",fontsize=9)
+    handles=[Patch(facecolor=COLORS[k],edgecolor="#596673",label=v) for k,v in [("steel","Stainless steel"),("liquid","Solder"),("copper","Copper"),("magnet","SmCo")]]
+    fig.legend(handles=handles,loc="lower center",ncol=4,bbox_to_anchor=(.5,.045))
+    fig.suptitle("V6 tip-contact variant — concentrate current near the orifice\nActual generated CAD sections; the metal nozzle remains intact",fontsize=16,weight="bold")
+    fig.text(.5,.015,"Geometry under test • ideal electrical wetting assumed • heater, contact mounting and driver omitted",ha="center",fontsize=10)
+    OUT.mkdir(parents=True,exist_ok=True)
+    fig.savefig(OUT/"v6-tip-contact-setup.png",dpi=180)
+
+
 if __name__ == "__main__":
     OUT.mkdir(parents=True, exist_ok=True)
     comparison()

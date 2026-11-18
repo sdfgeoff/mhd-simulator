@@ -1,0 +1,558 @@
+{
+  "status": "Preliminary hardware screening; coarse detachment is not grid-independent or repeatable jetting",
+  "limits": [
+    "Neutral voxel CAD wall geometry; no prescribed wetting, oxide or contact-line hysteresis.",
+    "Static applied PM field and inductionless conduction; current self-field omitted.",
+    "No current-driven thermal evolution or completed mechanical/PCB design.",
+    "Carrier voltage fits evaluate only the explicitly stated drive prefix until finer complete-tail observations finish."
+  ],
+  "coarse_tip_trials": [
+    {
+      "artifacts": "artifacts/hardware-research/v6-tip-pool35-medium-flow-200A-250us-h010",
+      "run": {
+        "accepted_steps": 1200,
+        "contact_resistivity_ohm_m2": 0.0,
+        "error": null,
+        "field_every": 100,
+        "fluid_mechanical_work_J": 1.4374385805998634e-06,
+        "frequency_hz": 0.0,
+        "grid": {
+          "cell_m": 0.00010000000474974513,
+          "dims": [
+            49,
+            52,
+            95
+          ]
+        },
+        "joule_generated_J": 0.014836971960958258,
+        "lagged_electrical_work_J": 0.014836930735163388,
+        "lagged_mechanical_work_J": 1.4160281170374275e-06,
+        "limitations": [
+          "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+          "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+          "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+          "New research client; not a GUI electrode feature or frozen-baseline claim."
+        ],
+        "max_terminal_voltage_V": 0.3272264301776886,
+        "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+        "peak_A": 200.0,
+        "positive_duration_s": 0.00025,
+        "project": "artifacts/hardware-research/cases/v6-tip-pool35-medium-fit-sncu-h010.mhd.json",
+        "released_static_workspace_bytes": 55093784,
+        "retract_fraction": 0.25,
+        "rise_s": 2e-05,
+        "status": "complete",
+        "time_s": 0.0035999999999999648,
+        "timestep_s": 3e-06
+      },
+      "initial_aperture_proxy": {
+        "plane_z_mm": 0.04999988595955074,
+        "alpha_area_mm2": 0.12000000663101655,
+        "meaning": "Initial liquid-fraction area at the first cell-centre plane at or above the nominal exit; a voxel-aperture proxy, not the CAD area."
+      },
+      "final": {
+        "step": 1200,
+        "time_us": 3599.999999999965,
+        "first_nonnegative_cell_plane_z_mm": 0.04999988595955074,
+        "exit_plane_alpha_area_mm2": 0.07126474223006814,
+        "exit_plane_mean_uz_m_s": 0.26839935157366296,
+        "exit_plane_mean_pressure_pa": 16.88826102884899,
+        "exit_plane_downward_flux_proxy_nl_s": -19127.41060461452,
+        "liquid_volume_nl": 11348.000877892267,
+        "below_tip_nl": 150.47237638760205,
+        "below_one_cell_guard_nl": 150.47235841144047,
+        "front_z_mm_alpha_half": -2.050000213785097,
+        "detached_below_tip": [
+          {
+            "volume_nl": 84.84377824244726,
+            "equivalent_diameter_mm": 0.5451806828739854,
+            "cells": 98,
+            "centre_mm": [
+              3.1566091641954386e-06,
+              -3.972648011379071e-05,
+              -1.8038582135653516
+            ],
+            "velocity_m_s": [
+              1.4533345165546052e-05,
+              -2.1348076188587584e-05,
+              -0.2906869351863861
+            ],
+            "touches_domain_boundary": false
+          },
+          {
+            "volume_nl": 24.540085951455676,
+            "equivalent_diameter_mm": 0.36054473036416707,
+            "cells": 32,
+            "centre_mm": [
+              2.90699213329936e-05,
+              4.39067414935189e-05,
+              -0.43760042277694144
+            ],
+            "velocity_m_s": [
+              9.203288936987519e-05,
+              0.00024580140598118305,
+              0.112070232629776
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "connectivity_thresholds": {
+          "0.01": [
+            {
+              "volume_nl": 108.34349985844818,
+              "equivalent_diameter_mm": 0.5914727571613285,
+              "cells": 220,
+              "centre_mm": [
+                8.140196872232406e-06,
+                -4.225363910118555e-05,
+                -1.8039967909812926
+              ],
+              "velocity_m_s": [
+                3.351922714500688e-06,
+                5.778389549959684e-06,
+                -0.2893289625644684
+              ],
+              "touches_domain_boundary": false
+            },
+            {
+              "volume_nl": 42.00817624223451,
+              "equivalent_diameter_mm": 0.43129895081411634,
+              "cells": 134,
+              "centre_mm": [
+                -0.00016111858033998272,
+                8.94763702079521e-05,
+                -0.43960193458436747
+              ],
+              "velocity_m_s": [
+                0.00026043897378258407,
+                -0.00020867292187176645,
+                0.0978037416934967
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.25": [
+            {
+              "volume_nl": 102.09967756760228,
+              "equivalent_diameter_mm": 0.5798850549818556,
+              "cells": 144,
+              "centre_mm": [
+                -5.977706219038965e-07,
+                -4.171544378139379e-05,
+                -1.8043453304180739
+              ],
+              "velocity_m_s": [
+                9.744512681209017e-06,
+                -6.038013907527784e-06,
+                -0.2923969328403473
+              ],
+              "touches_domain_boundary": false
+            },
+            {
+              "volume_nl": 35.486166675931756,
+              "equivalent_diameter_mm": 0.4077119948880205,
+              "cells": 63,
+              "centre_mm": [
+                -0.001173130264948167,
+                -0.00030732138395254635,
+                -0.42482205246141796
+              ],
+              "velocity_m_s": [
+                -9.8898854048457e-05,
+                6.513906555483118e-05,
+                0.11477109044790268
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.5": [
+            {
+              "volume_nl": 84.84377824244726,
+              "equivalent_diameter_mm": 0.5451806828739854,
+              "cells": 98,
+              "centre_mm": [
+                3.1566091641954386e-06,
+                -3.972648011379071e-05,
+                -1.8038582135653516
+              ],
+              "velocity_m_s": [
+                1.4533345165546052e-05,
+                -2.1348076188587584e-05,
+                -0.2906869351863861
+              ],
+              "touches_domain_boundary": false
+            },
+            {
+              "volume_nl": 24.540085951455676,
+              "equivalent_diameter_mm": 0.36054473036416707,
+              "cells": 32,
+              "centre_mm": [
+                2.90699213329936e-05,
+                4.39067414935189e-05,
+                -0.43760042277694144
+              ],
+              "velocity_m_s": [
+                9.203288936987519e-05,
+                0.00024580140598118305,
+                0.112070232629776
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.75": [
+            {
+              "volume_nl": 70.20705931417555,
+              "equivalent_diameter_mm": 0.5118319434878987,
+              "cells": 74,
+              "centre_mm": [
+                -1.193246910110975e-07,
+                -2.6171395644612105e-05,
+                -1.8039956813682996
+              ],
+              "velocity_m_s": [
+                3.564533108146861e-05,
+                -4.384152634884231e-05,
+                -0.28535231947898865
+              ],
+              "touches_domain_boundary": false
+            },
+            {
+              "volume_nl": 11.719569624489155,
+              "equivalent_diameter_mm": 0.28181948291307096,
+              "cells": 12,
+              "centre_mm": [
+                -3.5798944531336e-05,
+                2.6703763021863295e-05,
+                -0.45153234924603275
+              ],
+              "velocity_m_s": [
+                -0.00020453741308301687,
+                0.0007078201160766184,
+                0.11710435152053833
+              ],
+              "touches_domain_boundary": false
+            }
+          ]
+        },
+        "below_tip_change_nl": 150.47235039252206
+      }
+    },
+    {
+      "artifacts": "artifacts/hardware-research/v6-tip-pool35-medium-flow-150A-300us-h010",
+      "run": {
+        "accepted_steps": 1200,
+        "contact_resistivity_ohm_m2": 0.0,
+        "error": null,
+        "field_every": 100,
+        "fluid_mechanical_work_J": 1.0347095760622049e-06,
+        "frequency_hz": 0.0,
+        "grid": {
+          "cell_m": 0.00010000000474974513,
+          "dims": [
+            49,
+            52,
+            95
+          ]
+        },
+        "joule_generated_J": 0.010726897742595942,
+        "lagged_electrical_work_J": 0.010726868385388983,
+        "lagged_mechanical_work_J": 1.0194062385742762e-06,
+        "limitations": [
+          "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+          "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+          "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+          "New research client; not a GUI electrode feature or frozen-baseline claim."
+        ],
+        "max_terminal_voltage_V": 0.2454204559326172,
+        "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+        "peak_A": 150.0,
+        "positive_duration_s": 0.0003,
+        "project": "artifacts/hardware-research/cases/v6-tip-pool35-medium-fit-sncu-h010.mhd.json",
+        "released_static_workspace_bytes": 55093784,
+        "retract_fraction": 0.5,
+        "rise_s": 2e-05,
+        "status": "complete",
+        "time_s": 0.0035999999999999648,
+        "timestep_s": 3e-06
+      },
+      "initial_aperture_proxy": {
+        "plane_z_mm": 0.04999988595955074,
+        "alpha_area_mm2": 0.12000000663101655,
+        "meaning": "Initial liquid-fraction area at the first cell-centre plane at or above the nominal exit; a voxel-aperture proxy, not the CAD area."
+      },
+      "final": {
+        "step": 1200,
+        "time_us": 3599.999999999965,
+        "first_nonnegative_cell_plane_z_mm": 0.04999988595955074,
+        "exit_plane_alpha_area_mm2": 0.05574360810764844,
+        "exit_plane_mean_uz_m_s": 0.4239951640810938,
+        "exit_plane_mean_pressure_pa": 7.09338470071931,
+        "exit_plane_downward_flux_proxy_nl_s": -23635.020266074593,
+        "liquid_volume_nl": 11348.000956515354,
+        "below_tip_nl": 116.5595162437437,
+        "below_one_cell_guard_nl": 116.55774897801379,
+        "front_z_mm_alpha_half": -1.1500001710373908,
+        "detached_below_tip": [
+          {
+            "volume_nl": 88.67170321826758,
+            "equivalent_diameter_mm": 0.553259410173426,
+            "cells": 102,
+            "centre_mm": [
+              -1.9948052017245635e-06,
+              -7.855814661176936e-06,
+              -0.8689058553302653
+            ],
+            "velocity_m_s": [
+              3.936991197406314e-05,
+              2.467458898536279e-06,
+              -0.006406620144844055
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "connectivity_thresholds": {
+          "0.01": [
+            {
+              "volume_nl": 115.48324764793291,
+              "equivalent_diameter_mm": 0.6041898922048773,
+              "cells": 235,
+              "centre_mm": [
+                1.762102457410038e-05,
+                -4.239923557691123e-06,
+                -0.8793659992863517
+              ],
+              "velocity_m_s": [
+                -9.654026143834926e-06,
+                -5.324404355633305e-06,
+                -0.008715546689927578
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.25": [
+            {
+              "volume_nl": 105.6860819551805,
+              "equivalent_diameter_mm": 0.586596848195819,
+              "cells": 148,
+              "centre_mm": [
+                1.3814225464124365e-06,
+                -2.976060986290354e-06,
+                -0.8791916163439524
+              ],
+              "velocity_m_s": [
+                1.8958869986818172e-05,
+                3.961876700486755e-06,
+                -0.0026570954360067844
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.5": [
+            {
+              "volume_nl": 88.67170321826758,
+              "equivalent_diameter_mm": 0.553259410173426,
+              "cells": 102,
+              "centre_mm": [
+                -1.9948052017245635e-06,
+                -7.855814661176936e-06,
+                -0.8689058553302653
+              ],
+              "velocity_m_s": [
+                3.936991197406314e-05,
+                2.467458898536279e-06,
+                -0.006406620144844055
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.75": [
+            {
+              "volume_nl": 71.12142110017723,
+              "equivalent_diameter_mm": 0.5140443631481689,
+              "cells": 76,
+              "centre_mm": [
+                -1.506345097832608e-06,
+                -3.901454755784403e-06,
+                -0.881057717867301
+              ],
+              "velocity_m_s": [
+                5.197305290494114e-05,
+                -5.15417605129187e-06,
+                0.0012219533091410995
+              ],
+              "touches_domain_boundary": false
+            }
+          ]
+        },
+        "below_tip_change_nl": 116.55949024866369
+      }
+    }
+  ],
+  "immersed_pin_cold": {
+    "contact_resistivity_ohm_m2": 0.0,
+    "current_A": 50.0,
+    "iterations": 320,
+    "joule_power_W": 0.31522536277770996,
+    "limitations": [
+      "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+      "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+      "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+      "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+    ],
+    "liquid_force_N": [
+      -6.919102700939997e-10,
+      -3.651622272280452e-10,
+      -0.004937525887459658
+    ],
+    "liquid_joule_power_W": 0.2790238614325392,
+    "liquid_mean_By_T": -0.1851694770472691,
+    "mean_liquid_current_over_x_plus_minus_2mm_A": 6.455854045292569,
+    "mean_wall_current_over_x_plus_minus_2mm_A": 4.870726283492834,
+    "midplane_adjacent_cell_liquid_current_A": 41.167163306607875,
+    "midplane_adjacent_cell_wall_current_A": 8.83254663263084,
+    "power_relative_defect": -1.7881393432617188e-07,
+    "project": "artifacts/hardware-research/cases/v6-immersed-pins-pool35-fit-sncu-h010.mhd.json",
+    "released_static_workspace_bytes": 272367128,
+    "return_current_A": -50.0,
+    "source_power_W": 0.31522542238235474,
+    "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+    "terminal_voltage_V": 0.006304508540779352,
+    "true_relative_residual": 6.7199971454101615e-06
+  },
+  "tip_driver": {
+    "inputs": {
+      "peak_a": 200.0,
+      "positive_us": 250.0,
+      "head_mohm": 1.635778,
+      "parasitic_mohm": 2.75,
+      "series_uh": 1.025,
+      "frequency_hz": 200.0,
+      "bus_v": 24.0,
+      "bulk_uf": 1000.0,
+      "retract_fraction": 0.25,
+      "rise_us": 20.0
+    },
+    "method": "Exact integrals of piecewise-linear prescribed current; V=IR+L dI/dt. Head modeled as constant cold resistance. Four-quadrant current regulation assumed.",
+    "rms_current_a": 42.60281680828159,
+    "head_heat_w": 2.9689370700000004,
+    "parasitic_heat_w": 4.991250000000001,
+    "required_voltage_min_v": -10.25,
+    "required_voltage_max_v": 11.1271556,
+    "ideal_bus_compliance": true,
+    "peak_inductor_energy_j": 0.020499999999999997,
+    "bulk_rise_if_all_peak_inductor_energy_returns_v": 0.8394846967484426,
+    "limitations": [
+      "No PWM ripple, switching/gate losses, current-loop dynamics, bus/lead ringing or protection design.",
+      "No capacitor ESR/ripple rating or switch SOA/temperature qualification.",
+      "Input R and L assumptions must be replaced with measured assembled values; motional voltage is omitted from this lumped check.",
+      "Electrical compliance is not a droplet or repetition-rate prediction."
+    ]
+  },
+  "tip_initial_heat": {
+    "inputs": {
+      "cold": "artifacts/hardware-research/v6-tip-disc20-cold-30A-h010",
+      "project": "artifacts/hardware-research/cases/v6-tip-disc20-compact-fit-sncu-h010.mhd.json",
+      "driver": "artifacts/hardware-research/v6-tip-200A-250us-driver-budget.json"
+    },
+    "cold_current_a": 30.0,
+    "pulse_integral_i_squared_a2_s": 9.075000000000001,
+    "materials": [
+      {
+        "material": "Sn99.3Cu0.7 molten research properties",
+        "material_id": 4,
+        "pulse_energy_j": 0.0004871041900004698,
+        "average_power_w": 0.09742083800009396,
+        "maximum_initial_field_adiabatic_rise_k": 3.348258796617713,
+        "maximum_position_mm": [
+          -0.14999989070929587,
+          -0.049999653128907084,
+          0.14999989070929587
+        ],
+        "thermal_diffusion_length_over_pulse_pair_mm": 0.1202999329853491,
+        "volumetric_heat_capacity_j_m3_k": 1498000.0,
+        "thermal_conductivity_w_m_k": 60.5
+      },
+      {
+        "material": "Thin-wall stainless screening",
+        "material_id": 14,
+        "pulse_energy_j": 0.014210837366510833,
+        "average_power_w": 2.8421674733021667,
+        "maximum_initial_field_adiabatic_rise_k": 44.682466986666675,
+        "maximum_position_mm": [
+          -0.5499999097082764,
+          -0.14999965787865222,
+          0.14999989070929587
+        ],
+        "thermal_diffusion_length_over_pulse_pair_mm": 0.036657195746537946,
+        "volumetric_heat_capacity_j_m3_k": 4000000.0,
+        "thermal_conductivity_w_m_k": 15.0
+      },
+      {
+        "material": "Positive copper terminal",
+        "material_id": 16,
+        "pulse_energy_j": 7.337123678617258e-05,
+        "average_power_w": 0.014674247357234516,
+        "maximum_initial_field_adiabatic_rise_k": 2.0623614571021265,
+        "maximum_position_mm": [
+          -0.6499999144580215,
+          -0.14999965787865222,
+          0.14999989070929587
+        ],
+        "thermal_diffusion_length_over_pulse_pair_mm": 0.20076718249580555,
+        "volumetric_heat_capacity_j_m3_k": 3502660.0,
+        "thermal_conductivity_w_m_k": 394.0
+      },
+      {
+        "material": "Negative copper terminal",
+        "material_id": 17,
+        "pulse_energy_j": 7.337123678617258e-05,
+        "average_power_w": 0.014674247357234516,
+        "maximum_initial_field_adiabatic_rise_k": 2.0623614571021265,
+        "maximum_position_mm": [
+          0.6500001472886652,
+          -0.14999965787865222,
+          0.14999989070929587
+        ],
+        "thermal_diffusion_length_over_pulse_pair_mm": 0.20076718249580555,
+        "volumetric_heat_capacity_j_m3_k": 3502660.0,
+        "thermal_conductivity_w_m_k": 394.0
+      }
+    ],
+    "limits": [
+      "Initial cold-field extrapolation: fixed geometry, conductivity, current paths and material properties; no thermal PDE or temperature-dependent resistance.",
+      "No phase change, external contact heating, rod/lead losses or cooling. Local maxima depend on the voxel resolution.",
+      "Diffusion length is sqrt(k*t/(rho*cp)), an order-of-magnitude scale, not a simulated temperature correction.",
+      "Repetition power assumes identical electrical pulses, not demonstrated repeatable droplet formation."
+    ]
+  },
+  "carrier_z6_prefix_fit": {
+    "method": "Interval V=R*I_mid + L_air*dI/dt + d(lambda_reaction)/dt. Fit V=R_eff*I_mid+L_eff*dI/dt over the stated steady carrier window. Series C cancels fitted L at the stated frequency; capacitor voltage integrates the actual current from zero initial charge.",
+    "inputs": {
+      "run": "artifacts/hardware-research/foil-carrier-z6-50k200A-cold-h020",
+      "air_l_uh": 0.8262725,
+      "coil_r_ohm": 0.00904843,
+      "frequency_hz": 50000.0,
+      "fit_start_us": 80.0,
+      "fit_end_us": 240.0,
+      "series_r_ohm": 0.002,
+      "series_l_uh": 0.2,
+      "through_us": 300.0
+    },
+    "input_observed_through_us": 500.0000000000076,
+    "voltage_evaluated_through_us": 300.00000000000404,
+    "fitted_total_resistance_ohm": 0.03933582322816453,
+    "fitted_loaded_inductance_uh": 0.9380135790141775,
+    "series_capacitance_uf": 10.801675573697251,
+    "fit_residual_rms_v": 7.433935941428082e-05,
+    "observed_coil_and_series_voltage_peak_v": 59.32878874235465,
+    "observed_capacitor_voltage_peak_v": 58.57754039821517,
+    "observed_drive_voltage_peak_v": 15.866638313223529,
+    "fit_average_input_w": 781.873583219976,
+    "limits": [
+      "Cold prescribed-current screen, not a circuit solution or switching implementation. Reported maxima are interval-mean voltages, not switch-node peaks.",
+      "Check waveform completion, time/grid refinement and energy/numerical losses before using component ratings.",
+      "Air L retains round-wire low-frequency/internal-inductance assumptions; AC resistance, proximity, real leads, capacitor ESR/ripple and control dynamics are unresolved.",
+      "No droplet or repetition-rate claim follows from electrical compliance."
+    ]
+  }
+}

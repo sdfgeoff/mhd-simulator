@@ -287,3 +287,40 @@ successive zero-current tail intervals, with four bytes per edge rounded to a
 only after a pulse cannot recover an uncaptured winding basis. Its GPU check
 compares subsequent accepted fields byte for byte against an unobserved run,
 and checks reciprocal work against Joule heat and reaction energy.
+
+
+### Preliminary tip-contact and immersed-pin trials
+
+[Stage-three records](stage3-preliminary-screening.json) retain coarse tip-contact
+detachment, the driver assumptions and initial-field heat extrapolation. At
+100 µm spacing, 200 A for 250 µs with a −50 A pullback separates a leading
+component of approximately 0.59 mm equivalent diameter at the 0.01 liquid-fraction
+connectivity threshold by 3.6 ms. A second returning component remains. The
+150 A / 300 µs trial with −75 A pullback separates but has little departing
+speed. These are preliminary numerical observations, pending finer-grid results;
+they do not establish repeatable jetting or a measured material contact angle.
+
+`cold_pulse_heat_budget.py` uses the accepted cold Joule field and the driver's
+exact squared-current integral. The 200 A pulse gives approximately 45 K maximum
+initial-field adiabatic steel rise. Heat diffusion, conductivity changes and
+external contact losses are absent. Average head power alone therefore does not
+qualify the small tip contacts. The liquid heat-capacity and conductivity values
+are inherited screening properties, not new sourced temperature fits.
+
+`make_v6_conduction.py --contact-band immersed` instead places two 0.5 mm
+tungsten pins at x=±0.5 mm, extending from z=2 to 14 mm. With a 3.5 mm free
+surface they dip 1.5 mm into the pool. The liquid CAD subtracts their volumes.
+The cold ideal-contact calculation at 50 A puts about 41 A through liquid at
+the central x plane. A moving-interface trial is running. The entire pin bodies
+are ideal terminals: their full bulk voltage drop, external mount, thermal
+expansion and practical feedstock routing require separate design. Tungsten
+properties are explicit screening assumptions. This variant uses an 8.5 mm pole
+gap and magnet centres at z=-7 mm; the conductive heater block is still omitted.
+
+For the 10-turn, 50 kHz single-coil carrier, moving the winding centre from
+z=4 to 6 mm changes the cold time-mean axial liquid force from slightly upward
+to about 0.028 N downward over 80–240 µs at 200 A peak. This remains a cold
+screen. The prefix circuit fit gives approximately 10.8 µF series capacitance,
+16 V drive and 60 V internal AC under the stated low-frequency inductance,
+resistance and lead assumptions. AC wire losses, source-core sensitivity,
+complete-tail voltage and fluid response remain open checks.

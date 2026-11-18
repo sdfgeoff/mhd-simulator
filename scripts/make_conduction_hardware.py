@@ -85,6 +85,9 @@ def write_project(parts, args):
     ]:
         m = copy.deepcopy(copper)
         m.update(id=mid, name=name, conductivity_s_m=25e6, relative_permeability=1.0)
+        if getattr(args, "terminal_material", "copper") == "tungsten":
+            m.update(name=name.replace("copper", "tungsten"), conductivity_s_m=8e6, density_kg_m3=19300., notes="Tungsten screening assumptions; hot electrical/thermal properties and rod losses need qualification.")
+            m["thermal"].update(solidus_c=3422., liquidus_c=3422., heat_capacity_j_kg_k=140., conductivity_w_m_k=150., latent_heat_j_kg=None)
         extras.append(m)
     magnet = copy.deepcopy(steel)
     magnet.update(

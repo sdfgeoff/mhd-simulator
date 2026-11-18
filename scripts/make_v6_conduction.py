@@ -9,6 +9,7 @@ import math
 import json
 
 import manifold3d as cad
+import numpy as np
 from pathlib import Path
 
 from make_conduction_hardware import box, write_project
@@ -27,7 +28,7 @@ def main():
     p.add_argument("--air-return-periodic-z", action="store_true")
     p.add_argument("--wall-sigma", type=float, default=1.3e6)
     p.add_argument("--remanence", type=float, default=0.95)
-    p.add_argument("--contact-band", choices=["hex", "upper", "tip"], default="hex")
+    p.add_argument("--contact-band", choices=["hex", "upper", "tip", "immersed"], default="hex")
     p.add_argument("--magnet-z", type=float)
     p.add_argument("--pole-gap", type=float)
     p.add_argument("--magnet", choices=["cube10", "disc20-stack10"], default="cube10")
@@ -104,15 +105,24 @@ def main():
                 pad,
                 16 + i,
             )
+    if args.contact_band == "immersed":
+        pins = [cad.Manifold.cylinder(12., .25, circular_segments=48).translate([sign*.5,0,2.]) for sign in [-1,1]]
+        raw = np.asarray(parts[1][1],dtype=np.float32).reshape(-1,3)
+        vertices, indices = np.unique(raw,axis=0,return_inverse=True)
+        pool = cad.Manifold(cad.Mesh(vertices,indices.reshape(-1,3).astype(np.uint32)))
+        parts[1] = ("Liquid solder around immersed pins",pool-pins[0]-pins[1],4)
+        for i,pin in enumerate(pins):
+            parts[i+2] = (f"{'Positive' if i==0 else 'Negative'} immersed tungsten electrode",pin,16+i)
+        args.terminal_material = "tungsten"
     magnet_z = (
         args.magnet_z
         if args.magnet_z is not None
-        else ({"upper": 8.5, "tip": -8.2}.get(args.contact_band, 4.5))
+        else ({"upper": 8.5, "tip": -8.2, "immersed": -7.}.get(args.contact_band, 4.5))
     )
     pole_gap = (
         args.pole_gap
         if args.pole_gap is not None
-        else (4.2 if args.contact_band == "tip" else 9.5)
+        else ({"tip":4.2,"immersed":8.5}.get(args.contact_band,9.5))
     )
     magnet_y = pole_gap / 2 + 5.0
     if args.magnet == "cube10":
