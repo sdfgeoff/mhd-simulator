@@ -19,7 +19,7 @@ settled hydrostatic/wetting equilibrium.
 | Candidate | Accepted evidence | Unresolved before a hardware recommendation |
 | --- | --- | --- |
 | Stock stainless V6, opposing tip contacts, permanent magnets | Wider 0.8 × 0.4 mm contacts: one approximately 0.595 mm component at 3.6 ms on the 100 µm grid, 200 A / 250 µs. Lumped drive requirement about 11 V. | Wider-contact grid refinement and full-domain gravity/repetition controls; the completed cropped zero-G two-pulse screen does not qualify repetition. Contact fabrication, wetting and cooling remain open. |
-| V6 with two milled collar flats and immersed tungsten pins | Cold 200 A model puts approximately 171 A through liquid, with 0.46 T mean liquid field. | Full-domain moving-fluid trial is running. Mounts, rod heat, feedstock clearance and electrode compatibility remain unqualified. |
+| V6 with two milled collar flats and immersed tungsten pins | Cold 200 A model puts approximately 171 A through liquid, with 0.46 T mean liquid field. | Half-timestep full-domain trial completes4.2ms with no saved detached component; mounts, rod heat, feedstock clearance and compatibility remain unqualified. |
 | Same V6, smaller single-disc poles | 250 A / 250 µs coarse trial: one approximately 0.596 mm component, downward 0.212 m/s. Nominal magnet span 14.2 mm. | Mesh/repetition, stronger omitted local self-field, attachment and wetting remain unresolved. |
 | Custom chamber with one resonant coil | Native 250 A / 50 kHz EM/fluid trial completes 3.597 ms without resolved ejection on the 200 µm grid. | Coarse negative screen; zero-current control, geometry/source refinement and actual driver remain open. Approximately 62 W electrical heat at 200 Hz in the scaled cold estimate. |
 
@@ -753,7 +753,7 @@ and +0.096376 N. Their phase-odd half-difference is −0.077675 N, with a
 +0.018701 N phase-even bias. Total liquid-plus-solid Joule power is about
 485.52 W in both directions during that cycle. This is an early-cycle cold
 comparison, without moving liquid, per-coil loaded voltage or jetting proof.
-A half-timestep check is queued/running. It is not a time-converged pump claim.
+The positive-phase half-timestep check now completes: 0.125 → 0.0625 µs changes mean axial force by 0.93%, liquid heat by 1.17% and solid heat by 0.59% over that cycle. This is one temporal halving, not spatial convergence or a fully converged phase-odd difference.
 
 ```sh
 python scripts/compare_phase_screens.py \
@@ -807,3 +807,13 @@ OPENBLAS_NUM_THREADS=1 python scripts/winding_matrix.py \
   artifacts/hardware-research/cases/foil-two-phase-plus90-200A-h020.mhd.json \
   --output artifacts/hardware-research/NEW_TWO_COIL_AIR_MATRIX.json
 ```
+
+
+The milled-collar immersed-pin trial now completes **4.2 ms** at fixed **1.5 µs**,
+beyond the earlier 3 µs trial's CFL stop at 2.154 ms. It has **no detached
+component** at any reported threshold in saved frames. About 177 nL lies below
+the tip at the final frame but remains connected; the exit-plane mean liquid
+velocity points upward. No saved liquid reaches the domain boundary, and
+relative volume drift stays below 2×10⁻⁷. This is a completed zero-gravity
+negative for that waveform, not a rejection of all immersed-electrode designs.
+See [milled-pin-flow-screening.json](milled-pin-flow-screening.json).

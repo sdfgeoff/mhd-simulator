@@ -1,0 +1,93 @@
+{
+  "status": "Completed4.2ms at fixed1.5us after earlier3us CFL failure; no detached components at saved thresholds",
+  "uniform_acceleration_m_s2": [
+    0,
+    0,
+    0
+  ],
+  "artifacts": "artifacts/hardware-research/v6-flat4-pins1mm-flow-150A-800us-dt15-h010",
+  "run": {
+    "accepted_steps": 2800,
+    "contact_resistivity_ohm_m2": 0.0,
+    "error": null,
+    "field_every": 200,
+    "fluid_mechanical_work_J": 1.3930564092201339e-05,
+    "frequency_hz": 0.0,
+    "grid": {
+      "cell_m": 0.00010000000474974513,
+      "dims": [
+        76,
+        84,
+        190
+      ]
+    },
+    "joule_generated_J": 0.0018207748538423831,
+    "lagged_electrical_work_J": 0.0018347485045416795,
+    "lagged_mechanical_work_J": 1.389482470734598e-05,
+    "limitations": [
+      "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+      "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+      "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+      "New research client; not a GUI electrode feature or frozen-baseline claim."
+    ],
+    "max_terminal_voltage_V": 0.019698450341820717,
+    "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+    "peak_A": 150.0,
+    "positive_duration_s": 0.0007999999999999999,
+    "project": "artifacts/hardware-research/cases/v6-flat4-pins1mm-cube-gap44-fit-sncu-h010.mhd.json",
+    "released_static_workspace_bytes": 272373272,
+    "retract_fraction": 0.25,
+    "rise_s": 2e-05,
+    "status": "complete",
+    "tail_timestep_s": 1.5e-06,
+    "tail_transition_not_before_s": 0.0010916666666666666,
+    "time_s": 0.004200000000000194,
+    "timestep_s": 1.5e-06
+  },
+  "final": {
+    "step": 2800,
+    "time_us": 4200.000000000194,
+    "first_nonnegative_cell_plane_z_mm": 0.04999988595955074,
+    "exit_plane_alpha_area_mm2": 0.12000003223390973,
+    "exit_plane_mean_uz_m_s": 0.14237423922389872,
+    "exit_plane_mean_pressure_pa": 2295.3166589061966,
+    "exit_plane_downward_flux_proxy_nl_s": -17084.913296146224,
+    "liquid_volume_nl": 9631.999023392116,
+    "minimum_liquid_fraction": 0.0,
+    "maximum_liquid_fraction": 1.0,
+    "below_tip_maximum_liquid_fraction_at_cell_centres": 1.0,
+    "boundary_maximum_liquid_fraction": {
+      "z_min": 0.0,
+      "z_max": 0.0,
+      "y_min": 0.0,
+      "y_max": 0.0,
+      "x_min": 0.0,
+      "x_max": 0.0
+    },
+    "liquid_touches_domain_boundary_alpha01": false,
+    "below_tip_nl": 176.68209194757742,
+    "below_one_cell_guard_nl": 110.34308575796224,
+    "front_z_mm_alpha_half": -0.3500001330394298,
+    "detached_below_tip": [],
+    "connectivity_thresholds": {
+      "0.01": [],
+      "0.25": [],
+      "0.5": [],
+      "0.75": []
+    },
+    "below_tip_change_nl": 176.68206595249742,
+    "relative_liquid_volume_change": -1.7636346572036388e-07
+  },
+  "any_saved_detached": false,
+  "any_saved_boundary_contact": false,
+  "max_saved_relative_volume_drift": 1.7636346572036388e-07,
+  "earlier_failure": {
+    "artifacts": "artifacts/hardware-research/v6-flat4-pins1mm-flow-150A-800us-h010",
+    "status": "CFL guard at accepted2.154ms; retained, not completed"
+  },
+  "limits": [
+    "Single waveform and coarse100um grid, not rejection of all immersed-electrode variants.",
+    "No gravity, thermal evolution, measured wetting or wire feeding.",
+    "Cold total force was not a successful ejection criterion."
+  ]
+}
