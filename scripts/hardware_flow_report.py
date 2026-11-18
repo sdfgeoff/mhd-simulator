@@ -76,7 +76,36 @@ def main():
             first = np.flatnonzero(z >= 0)
             if len(first):
                 k = int(first[0])
-                initial_aperture = {"plane_z_mm": float(z[k] * 1000), "alpha_area_mm2": float(alpha[k].sum(dtype=np.float64) * h**2 * 1e6), "meaning": "Initial liquid-fraction area at the first cell-centre plane at or above the nominal exit; a voxel-aperture proxy, not the CAD area."}
+                initial_aperture = {
+                    "plane_z_mm": float(z[k] * 1000),
+                    "alpha_area_mm2": float(
+                        alpha[k].sum(dtype=np.float64) * h**2 * 1e6
+                    ),
+                    "meaning": "Initial liquid-fraction area at the first cell-centre plane at or above the nominal exit; a voxel-aperture proxy, not the CAD area.",
+                }
+        exit_planes = np.flatnonzero(z >= 0)
+        exit_plane = int(exit_planes[0]) if len(exit_planes) else None
+        exit_weight = (
+            float(alpha[exit_plane].sum(dtype=np.float64))
+            if exit_plane is not None
+            else 0.0
+        )
+        exit_uz = (
+            float(
+                np.sum(alpha[exit_plane] * f[exit_plane, :, :, 2], dtype=np.float64)
+                / exit_weight
+            )
+            if exit_weight > 0
+            else None
+        )
+        exit_pressure = (
+            float(
+                np.sum(alpha[exit_plane] * f[exit_plane, :, :, 4], dtype=np.float64)
+                / exit_weight
+            )
+            if exit_weight > 0
+            else None
+        )
         below = np.clip((0 - (z - h / 2)) / h, 0, 1)
         below_guard = np.clip((-h - (z - h / 2)) / h, 0, 1)
         thresholds = {
@@ -87,6 +116,15 @@ def main():
         row = {
             "step": m["step"],
             "time_us": m["time_s"] * 1e6,
+            "first_nonnegative_cell_plane_z_mm": (
+                float(z[exit_plane] * 1000) if exit_plane is not None else None
+            ),
+            "exit_plane_alpha_area_mm2": exit_weight * h**2 * 1e6,
+            "exit_plane_mean_uz_m_s": exit_uz,
+            "exit_plane_mean_pressure_pa": exit_pressure,
+            "exit_plane_downward_flux_proxy_nl_s": (
+                -exit_uz * exit_weight * h**2 * 1e12 if exit_uz is not None else None
+            ),
             "liquid_volume_nl": float(alpha.sum(dtype=np.float64) * h**3 * 1e12),
             "below_tip_nl": float(
                 np.einsum("zyx,z->", alpha, below, dtype=np.float64) * h**3 * 1e12
@@ -110,7 +148,7 @@ def main():
     (args.directory / "flow-analysis.json").write_text(
         json.dumps(
             {
-                "method": "Accepted native exports; six-neighbour components at several alpha thresholds. Component volumes include alpha only above that threshold. Below-tip volume includes all alpha. No convergence or wetting claim.",
+                "method": "Accepted native exports; six-neighbour components at several alpha thresholds. Component volumes include alpha only above that threshold. Below-tip volume includes all alpha. Exit flux is a cell-centred proxy, not a native MAC-face flux. No convergence or wetting claim.",
                 "initial_aperture_proxy": initial_aperture,
                 "frames": rows,
             },

@@ -229,3 +229,96 @@ fn contact_resistance_and_motional_emf_preserve_power_balance() {
     assert!((voltage / (100. * changed_resistance + 0.5 * length) - 1.).abs() < 1e-4);
     assert!((s[0] / 100. - 1.).abs() < 5e-5);
 }
+
+#[test]
+fn detached_translating_conductor_does_not_keep_current_from_its_old_bridge() {
+    let context = GpuContext::headless().unwrap();
+    let dims = [32u32, 12, 8];
+    let n = dims.iter().product::<u32>() as usize;
+    let h = 1e-4_f32;
+    let mut cells = vec![[0., 3.]; n];
+    let mut phase = vec![CellField::default(); n];
+    let mut island = Vec::new();
+    let mut bridge = Vec::new();
+    for i in 0..n {
+        let x = i as u32 % dims[0];
+        let y = (i as u32 / dims[0]) % dims[1];
+        let z = i as u32 / (dims[0] * dims[1]);
+        if y < 3 {
+            cells[i] = [
+                1.,
+                if x == 0 {
+                    0.5
+                } else if x == 31 {
+                    -0.5
+                } else {
+                    2.
+                },
+            ];
+        } else if (2..6).contains(&z) {
+            if (8..24).contains(&x) && (6..10).contains(&y) {
+                cells[i][0] = 1.;
+                phase[i].applied[2] = 1.;
+                island.push(i);
+            } else if ((8..10).contains(&x) || (22..24).contains(&x)) && y < 6 {
+                cells[i][0] = 1.;
+                phase[i].applied[2] = 1.;
+                bridge.push(i);
+            }
+        }
+    }
+    let make = |label, data: &[CellField]| {
+        context
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some(label),
+                contents: bytemuck::cast_slice(data),
+                usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
+            })
+    };
+    let bias = make(
+        "Uniform field for detached conductor",
+        &vec![
+            CellField {
+                b: [0., -0.5, 0., 0.],
+                ..Default::default()
+            };
+            n
+        ],
+    );
+    let flow = make("Bridge removal and rigid translation", &phase);
+    let mut solver = Conduction::new(context.clone(), dims, h, &cells, &bias).unwrap();
+    solver.attach_flow(&flow).unwrap();
+    solver.solve_current(40.).unwrap();
+    for i in bridge {
+        phase[i].applied[2] = 0.;
+    }
+    for &i in &island {
+        phase[i].b[2] = -1.;
+    }
+    context
+        .queue
+        .write_buffer(&flow, 0, bytemuck::cast_slice(&phase));
+    solver.solve_current(40.).unwrap();
+    let fields = solver.read_fields().unwrap();
+    let mut j2 = 0_f64;
+    let mut force = [0_f64; 3];
+    for &i in &island {
+        for k in 0..3 {
+            j2 += f64::from(fields[i].j[k]).powi(2);
+            force[k] += f64::from(fields[i].force_heat[k]) * f64::from(h).powi(3);
+        }
+    }
+    let j_rms = (j2 / island.len() as f64).sqrt();
+    let main_j = 40. / (3. * 8. * f64::from(h).powi(2));
+    let net_force = force.iter().map(|v| v * v).sum::<f64>().sqrt();
+    eprintln!("Disconnected translating island: J_rms={j_rms:.6e} A/m2, force={net_force:.6e} N");
+    assert!(
+        j_rms < main_j * 1e-4,
+        "Spurious current survived bridge removal: {j_rms}"
+    );
+    assert!(
+        net_force < 1e-6,
+        "Spurious magnetic acceleration of detached conductor: {force:?}"
+    );
+}

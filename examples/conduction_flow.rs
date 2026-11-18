@@ -101,16 +101,18 @@ fn main() -> Result<(), Box<dyn Error>> {
         p.electromagnetics.clone(),
         Mode::Applied,
     )?;
+    // Keep only B before allocating the conduction workspace, reducing startup peak.
+    let static_field = bias.result_buffer().clone();
+    let released_static_workspace_bytes = bias.bytes - static_field.size();
+    drop(bias);
     let mut current = conduction::Conduction::new(
         gpu.context.clone(),
         grid.dims,
         grid.cell_m,
         &cells,
-        bias.result_buffer(),
+        &static_field,
     )?;
-    // Conduction owns a clone of the static B buffer; release unused EM workspaces.
-    let released_static_workspace_bytes = bias.bytes - bias.result_buffer().size();
-    drop(bias);
+    drop(static_field);
     current.set_contact_resistivity(contact)?;
     p.run.fluid_enabled = true;
     p.run.thermal_enabled = false;

@@ -1,0 +1,518 @@
+{
+  "status": "Cold screening of V6 contact positions; no successful jetting or heat-transfer claim",
+  "assumptions": [
+    "Static imposed CAD magnet field, Br=0.95 T, unit permeability",
+    "Ideal metal/solder contact unless contact resistivity specified",
+    "Upper patches avoid the air-filled upper bore; detailed heater and clamping design pending",
+    "Tip contacts are small custom external copper pads; lower magnet stacks clear the nozzle shoulder and leave an open jet gap. Standard aluminium heater block remains omitted."
+  ],
+  "cases": [
+    {
+      "artifacts": "artifacts/hardware-research/v6-upper-disc20-cold-180A-h010",
+      "report": {
+        "contact_resistivity_ohm_m2": 0.0,
+        "current_A": 180.0,
+        "iterations": 224,
+        "joule_power_W": 5.951362609863281,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          -1.7768541853785303e-09,
+          -3.5816137100498105e-10,
+          -0.11539154198328543
+        ],
+        "liquid_joule_power_W": 1.016109880714388,
+        "liquid_mean_By_T": -0.35953345554889266,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 77.25978093807197,
+        "mean_wall_current_over_x_plus_minus_2mm_A": 102.74146359219675,
+        "midplane_adjacent_cell_liquid_current_A": 115.45868086027049,
+        "midplane_adjacent_cell_wall_current_A": 64.54596955831494,
+        "power_relative_defect": -2.384185791015625e-07,
+        "project": "artifacts/hardware-research/cases/v6-upper-disc20-compact-fit-sncu-h010.mhd.json",
+        "return_current_A": -179.99996948242188,
+        "source_power_W": 5.951364040374756,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_voltage_V": 0.0330631323158741,
+        "true_relative_residual": 9.634969501348678e-06
+      }
+    },
+    {
+      "artifacts": "artifacts/hardware-research/v6-upper-disc20-cold-180A-contact-1e-9-h010",
+      "report": {
+        "contact_resistivity_ohm_m2": 9.999999717180685e-10,
+        "current_A": 179.99998474121094,
+        "iterations": 256,
+        "joule_power_W": 6.8625874519348145,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          -2.622508591247934e-09,
+          -2.2951801103372045e-10,
+          -0.08855171093199647
+        ],
+        "liquid_joule_power_W": 0.8915039227342646,
+        "liquid_mean_By_T": -0.35953345554889266,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 59.401675587511406,
+        "mean_wall_current_over_x_plus_minus_2mm_A": 120.59961336087044,
+        "midplane_adjacent_cell_liquid_current_A": 91.59880574619449,
+        "midplane_adjacent_cell_wall_current_A": 88.42050153500408,
+        "power_relative_defect": -1.7881393432617188e-07,
+        "project": "artifacts/hardware-research/cases/v6-upper-disc20-compact-fit-sncu-h010.mhd.json",
+        "return_current_A": -180.00003051757812,
+        "source_power_W": 6.862588882446289,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_voltage_V": 0.03812549635767937,
+        "true_relative_residual": 6.923873570485739e-06
+      }
+    },
+    {
+      "artifacts": "artifacts/hardware-research/v6-upper-disc20-cold-180A-contact-1e-8-h010",
+      "report": {
+        "contact_resistivity_ohm_m2": 9.99999993922529e-09,
+        "current_A": 179.99998474121094,
+        "iterations": 288,
+        "joule_power_W": 8.623954772949219,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          -2.6454946378634766e-10,
+          -5.136404753892526e-11,
+          -0.02880516535791097
+        ],
+        "liquid_joule_power_W": 0.357969692922256,
+        "liquid_mean_By_T": -0.35953345554889266,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 19.401027750717127,
+        "mean_wall_current_over_x_plus_minus_2mm_A": 160.6248437696183,
+        "midplane_adjacent_cell_liquid_current_A": 30.63442811161322,
+        "midplane_adjacent_cell_wall_current_A": 149.4436657365417,
+        "power_relative_defect": -2.384185791015625e-07,
+        "project": "artifacts/hardware-research/cases/v6-upper-disc20-compact-fit-sncu-h010.mhd.json",
+        "return_current_A": -180.00003051757812,
+        "source_power_W": 8.623956680297852,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_voltage_V": 0.04791087284684181,
+        "true_relative_residual": 6.914804089319659e-06
+      }
+    },
+    {
+      "artifacts": "artifacts/hardware-research/v6-upper-o06-disc20-cold-200A-h010",
+      "report": {
+        "contact_resistivity_ohm_m2": 0.0,
+        "current_A": 200.00001525878906,
+        "iterations": 256,
+        "joule_power_W": 7.34737491607666,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          -2.0885479573696866e-09,
+          -4.3928210149618486e-10,
+          -0.1278550795009745
+        ],
+        "liquid_joule_power_W": 1.2542059947153248,
+        "liquid_mean_By_T": -0.36186020421017256,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 85.55917845239321,
+        "mean_wall_current_over_x_plus_minus_2mm_A": 114.44348958709435,
+        "midplane_adjacent_cell_liquid_current_A": 127.94425407428534,
+        "midplane_adjacent_cell_wall_current_A": 72.06375036198742,
+        "power_relative_defect": -2.980232238769531e-07,
+        "project": "artifacts/hardware-research/cases/v6-upper-o06-disc20-compact-fit-sncu-h010.mhd.json",
+        "return_current_A": -200.0,
+        "source_power_W": 7.347377300262451,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_voltage_V": 0.03673688322305679,
+        "true_relative_residual": 6.694627700198907e-06
+      }
+    },
+    {
+      "artifacts": "artifacts/hardware-research/v6-tip-disc20-cold-30A-h010",
+      "report": {
+        "contact_resistivity_ohm_m2": 0.0,
+        "current_A": 30.0,
+        "iterations": 192,
+        "joule_power_W": 1.4721999168395996,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          -1.8885625196194423e-10,
+          5.1519646981584785e-11,
+          -0.0026510470994376566
+        ],
+        "liquid_joule_power_W": 0.04830785355376551,
+        "liquid_mean_By_T": 0.0011998246925963823,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 2.844529454903792,
+        "mean_wall_current_over_x_plus_minus_2mm_A": 7.983617996837097,
+        "midplane_adjacent_cell_liquid_current_A": 16.42153006562218,
+        "midplane_adjacent_cell_wall_current_A": 13.57064015323299,
+        "power_relative_defect": -4.172325134277344e-07,
+        "project": "artifacts/hardware-research/cases/v6-tip-disc20-compact-fit-sncu-h010.mhd.json",
+        "return_current_A": -29.999998092651367,
+        "source_power_W": 1.4722005128860474,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_voltage_V": 0.04907334968447685,
+        "true_relative_residual": 9.821711500990205e-06
+      }
+    },
+    {
+      "artifacts": "artifacts/hardware-research/v6-tip-disc20-empty-30A-h010",
+      "report": {
+        "contact_resistivity_ohm_m2": 0.0,
+        "current_A": 30.0,
+        "iterations": 288,
+        "joule_power_W": 1.6561306715011597,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "liquid_joule_power_W": 0.0,
+        "liquid_mean_By_T": null,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 0.0,
+        "mean_wall_current_over_x_plus_minus_2mm_A": 10.852677756186216,
+        "midplane_adjacent_cell_liquid_current_A": 0.0,
+        "midplane_adjacent_cell_wall_current_A": 29.9973311390611,
+        "power_relative_defect": -7.152557373046875e-07,
+        "project": "artifacts/hardware-research/cases/v6-tip-disc20-compact-empty-h010.mhd.json",
+        "return_current_A": -30.0,
+        "source_power_W": 1.6561318635940552,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_voltage_V": 0.055204395204782486,
+        "true_relative_residual": 9.850572496361565e-06
+      }
+    },
+    {
+      "artifacts": "artifacts/hardware-research/v6-tip-disc20-cold-30A-contact-1e-10-h010",
+      "report": {
+        "contact_resistivity_ohm_m2": 1.000000013351432e-10,
+        "current_A": 29.999998092651367,
+        "iterations": 224,
+        "joule_power_W": 1.505326271057129,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          -1.7403057028973547e-10,
+          -1.877863965587198e-11,
+          -0.002417838864104572
+        ],
+        "liquid_joule_power_W": 0.048034263970871856,
+        "liquid_mean_By_T": 0.0011998246925963823,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 2.729586728935161,
+        "mean_wall_current_over_x_plus_minus_2mm_A": 8.106316665790883,
+        "midplane_adjacent_cell_liquid_current_A": 14.60013498687909,
+        "midplane_adjacent_cell_wall_current_A": 15.392047886642517,
+        "power_relative_defect": 1.1920928955078125e-07,
+        "project": "artifacts/hardware-research/cases/v6-tip-disc20-compact-fit-sncu-h010.mhd.json",
+        "return_current_A": -29.9999942779541,
+        "source_power_W": 1.5053260326385498,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_voltage_V": 0.05017753690481186,
+        "true_relative_residual": 9.738316293805838e-06
+      }
+    },
+    {
+      "artifacts": "artifacts/hardware-research/v6-tip-disc20-cold-30A-contact-1e-9-h010",
+      "report": {
+        "contact_resistivity_ohm_m2": 9.999999717180685e-10,
+        "current_A": 30.0,
+        "iterations": 224,
+        "joule_power_W": 1.5881304740905762,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          -2.012409800198245e-11,
+          -1.405309348595235e-10,
+          -0.001444390873056326
+        ],
+        "liquid_joule_power_W": 0.028047357073424026,
+        "liquid_mean_By_T": 0.0011998246925963823,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 2.037018383291153,
+        "mean_wall_current_over_x_plus_minus_2mm_A": 8.809413786271296,
+        "midplane_adjacent_cell_liquid_current_A": 8.300350474449186,
+        "midplane_adjacent_cell_wall_current_A": 21.691151534833864,
+        "power_relative_defect": 1.1920928955078125e-07,
+        "project": "artifacts/hardware-research/cases/v6-tip-disc20-compact-fit-sncu-h010.mhd.json",
+        "return_current_A": -30.0,
+        "source_power_W": 1.5881303548812866,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_voltage_V": 0.05293767899274826,
+        "true_relative_residual": 9.984616553992964e-06
+      }
+    },
+    {
+      "artifacts": "artifacts/hardware-research/v6-tip-disc20-cold-30A-contact-1e-8-h010",
+      "report": {
+        "contact_resistivity_ohm_m2": 9.99999993922529e-09,
+        "current_A": 30.000003814697266,
+        "iterations": 288,
+        "joule_power_W": 1.6443476676940918,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          -2.0797552214781298e-11,
+          -5.692047430253508e-11,
+          -0.00032205850931608964
+        ],
+        "liquid_joule_power_W": 0.005666948845496764,
+        "liquid_mean_By_T": 0.0011998246925963823,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 0.6341722848547332,
+        "mean_wall_current_over_x_plus_minus_2mm_A": 10.219022988854913,
+        "midplane_adjacent_cell_liquid_current_A": 1.9388466880135409,
+        "midplane_adjacent_cell_wall_current_A": 28.058648563260395,
+        "power_relative_defect": -4.172325134277344e-07,
+        "project": "artifacts/hardware-research/cases/v6-tip-disc20-compact-fit-sncu-h010.mhd.json",
+        "return_current_A": -30.0,
+        "source_power_W": 1.644348382949829,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_voltage_V": 0.05481160432100296,
+        "true_relative_residual": 9.687290912552271e-06
+      }
+    },
+    {
+      "artifacts": "artifacts/hardware-research/v6-tip-pool35-full-cold-h010",
+      "report": {
+        "contact_resistivity_ohm_m2": 0.0,
+        "current_A": 30.000001907348633,
+        "iterations": 256,
+        "joule_power_W": 1.4722797870635986,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          -1.9328986824733818e-10,
+          5.541038103506429e-11,
+          -0.0026882472139434684
+        ],
+        "liquid_joule_power_W": 0.048362945296082115,
+        "liquid_mean_By_T": -0.12040773315700201,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 2.6590652061166375,
+        "mean_wall_current_over_x_plus_minus_2mm_A": 8.174104943741021,
+        "midplane_adjacent_cell_liquid_current_A": 16.135085041188216,
+        "midplane_adjacent_cell_wall_current_A": 13.861101660363081,
+        "power_relative_defect": 2.384185791015625e-07,
+        "project": "artifacts/hardware-research/cases/v6-tip-pool35-full-fit-sncu-h010.mhd.json",
+        "return_current_A": -29.999998092651367,
+        "source_power_W": 1.47227942943573,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_voltage_V": 0.049075979739427567,
+        "true_relative_residual": 9.796683116292115e-06
+      }
+    },
+    {
+      "artifacts": "artifacts/hardware-research/v6-tip-pool35-top-cold-h010",
+      "report": {
+        "contact_resistivity_ohm_m2": 0.0,
+        "current_A": 30.0,
+        "iterations": 160,
+        "joule_power_W": 1.4723258018493652,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          -2.0166573918174574e-10,
+          4.787856594759884e-11,
+          -0.002707320826618158
+        ],
+        "liquid_joule_power_W": 0.04842868618449466,
+        "liquid_mean_By_T": -0.12040773315700201,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 2.70693020507131,
+        "mean_wall_current_over_x_plus_minus_2mm_A": 8.127740507750682,
+        "midplane_adjacent_cell_liquid_current_A": 16.220405741949502,
+        "midplane_adjacent_cell_wall_current_A": 13.777191434407408,
+        "power_relative_defect": 2.384185791015625e-07,
+        "project": "artifacts/hardware-research/cases/v6-tip-pool35-top-fit-sncu-h010.mhd.json",
+        "return_current_A": -30.0,
+        "source_power_W": 1.4723254442214966,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_voltage_V": 0.04907751455903053,
+        "true_relative_residual": 9.140399924945086e-06
+      }
+    },
+    {
+      "artifacts": "artifacts/hardware-research/v6-tip-pool35-medium-cold-h010",
+      "report": {
+        "contact_resistivity_ohm_m2": 0.0,
+        "current_A": 30.000001907348633,
+        "iterations": 160,
+        "joule_power_W": 1.472609043121338,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          -6.457959065732775e-07,
+          -3.3009189732823126e-10,
+          -0.002733594743720268
+        ],
+        "liquid_joule_power_W": 0.04854477779209212,
+        "liquid_mean_By_T": -0.12040774694136398,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 2.7677335886132703,
+        "mean_wall_current_over_x_plus_minus_2mm_A": 8.067400048944824,
+        "midplane_adjacent_cell_liquid_current_A": 16.340869653392957,
+        "midplane_adjacent_cell_wall_current_A": 13.66049559744298,
+        "power_relative_defect": 7.081031799316406e-05,
+        "project": "artifacts/hardware-research/cases/v6-tip-pool35-medium-fit-sncu-h010.mhd.json",
+        "return_current_A": -30.004243850708008,
+        "source_power_W": 1.472504734992981,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_voltage_V": 0.04908348619937897,
+        "true_relative_residual": 9.702037459646817e-06
+      }
+    },
+    {
+      "artifacts": "artifacts/hardware-research/v6-tip-pool35-narrow-cold-h010",
+      "report": {
+        "contact_resistivity_ohm_m2": 0.0,
+        "current_A": 30.000001907348633,
+        "iterations": 128,
+        "joule_power_W": 1.4725385904312134,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          -2.482481966996115e-10,
+          1.9179264130794004e-10,
+          -0.0027696527034855993
+        ],
+        "liquid_joule_power_W": 0.04872674952619419,
+        "liquid_mean_By_T": -0.12040774568783728,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 2.8417625740060797,
+        "mean_wall_current_over_x_plus_minus_2mm_A": 7.993120874442909,
+        "midplane_adjacent_cell_liquid_current_A": 16.50126133878559,
+        "midplane_adjacent_cell_wall_current_A": 13.497423452108194,
+        "power_relative_defect": -1.7881393432617188e-07,
+        "project": "artifacts/hardware-research/cases/v6-tip-pool35-narrow-fit-sncu-h010.mhd.json",
+        "return_current_A": -30.0,
+        "source_power_W": 1.4725388288497925,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_voltage_V": 0.0490846261382103,
+        "true_relative_residual": 9.170891644316725e-06
+      }
+    }
+  ],
+  "domain_comparison_note": "At h=.1 mm and fill height 3.5 mm: top-only crop changes liquid force +0.71%; x/y=+/-2.4/2.6 mm plus zmax4.5 changes +1.69%; smaller +/-1.9/2.1 changes +3.03%. Terminal resistance changes much less and alone does not verify the force field. Through 0.6 ms, the medium fluid case differs by 0.25% in liquid-weighted velocity L2 and 0.033% in alpha L2 from the full-height case. Later breakup/flight are not verified by that short comparison.",
+  "original_V6_completed_trial": {
+    "artifacts": "artifacts/hardware-research/v6-direct-matched-flow-250A-800us-h010",
+    "status": {
+      "accepted_steps": 1400,
+      "contact_resistivity_ohm_m2": 0.0,
+      "error": null,
+      "field_every": 100,
+      "fluid_mechanical_work_J": 6.116826324849299e-07,
+      "frequency_hz": 0.0,
+      "grid": {
+        "cell_m": 0.00010000000474974513,
+        "dims": [
+          110,
+          90,
+          190
+        ]
+      },
+      "joule_generated_J": 0.015106495850634187,
+      "lagged_electrical_work_J": 0.01510710356104792,
+      "lagged_mechanical_work_J": 6.088813421008007e-07,
+      "limitations": [
+        "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+        "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+        "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+        "New research client; not a GUI electrode feature or frozen-baseline claim."
+      ],
+      "max_terminal_voltage_V": 0.07665904611349106,
+      "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+      "peak_A": 250.0,
+      "positive_duration_s": 0.0007999999999999999,
+      "project": "artifacts/hardware-research/cases/v6-direct-matched-fit-sncu-h010.mhd.json",
+      "retract_fraction": 0.25,
+      "rise_s": 2e-05,
+      "status": "complete",
+      "time_s": 0.0042,
+      "timestep_s": 3e-06
+    },
+    "final_interface": {
+      "step": 1400,
+      "time_us": 4200.0,
+      "liquid_volume_nl": 68188.00832129939,
+      "below_tip_nl": 79.18740380319554,
+      "below_one_cell_guard_nl": 44.607087100610116,
+      "front_z_mm_alpha_half": -0.25000012828968465,
+      "detached_below_tip": [],
+      "connectivity_thresholds": {
+        "0.01": [],
+        "0.25": [],
+        "0.5": [],
+        "0.75": []
+      },
+      "below_tip_change_nl": 79.18737780811553
+    }
+  },
+  "cropped_fluid_comparison": {
+    "limits": "Same 0.1 mm grid, liquid fill height 3.5 mm, 80 A/400 us pulse, comparison through 0.6 ms. Full domain has closed outer walls; cropped domain has periodic z air return and truncated steel. Does not validate later pinch-off or flight-boundary interactions.",
+    "frames": [
+      {
+        "step": 0,
+        "liquid_weighted_velocity_relative_L2": null,
+        "alpha_relative_L2": 4.034800937802174e-09,
+        "liquid_volume_relative_difference": 0.0
+      },
+      {
+        "step": 100,
+        "liquid_weighted_velocity_relative_L2": 0.0021424058359116316,
+        "alpha_relative_L2": 0.00010752501111710444,
+        "liquid_volume_relative_difference": 1.4586318819453936e-09
+      },
+      {
+        "step": 200,
+        "liquid_weighted_velocity_relative_L2": 0.0024957777932286263,
+        "alpha_relative_L2": 0.0003305863938294351,
+        "liquid_volume_relative_difference": 1.2663714521465863e-09
+      }
+    ]
+  }
+}

@@ -65,16 +65,18 @@ fn main() -> Result<(), Box<dyn Error>> {
         Mode::Applied,
     )?;
     let contact: f32 = a.get(4).map(|s| s.parse()).transpose()?.unwrap_or(0.);
+    // Keep only B before allocating the conduction workspace, reducing startup peak.
+    let static_field = em.result_buffer().clone();
+    let released_static_workspace_bytes = em.bytes - static_field.size();
+    drop(em);
     let mut solver = conduction::Conduction::new(
         gpu.context.clone(),
         grid.dims,
         grid.cell_m,
         &cells,
-        em.result_buffer(),
+        &static_field,
     )?;
-    // Conduction owns a clone of the static B buffer; release unused EM workspaces.
-    let released_static_workspace_bytes = em.bytes - em.result_buffer().size();
-    drop(em);
+    drop(static_field);
     solver.set_contact_resistivity(contact)?;
     gpu.context.profiler.set_enabled(true);
     gpu.context.profiler.begin_step(0, 0.);

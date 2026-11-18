@@ -143,11 +143,13 @@ duration. A zero peak current runs the passive control. Supply switching,
 lead/inductor impedance and current-controller implementation are separate
 from the computed head-terminal voltage.
 
-The three numerical GPU checks in `examples/conduction/tests.rs` cover
+The four numerical GPU checks in `examples/conduction/tests.rs` cover
 uniform/parallel conduction, contact resistance and motional-voltage power
 balance, and accepted-potential reuse under changing phase/velocity. There is
 no duplicate CPU field solver. The potential predictors must pass the same
-true residual criterion as a fresh solve.
+true residual criterion as a fresh solve. A disconnected, rigidly translating
+conductor also checks that a cached bridge potential does not spuriously drive
+a detached droplet: the fixture measured 2.2e-9 N net force after separation.
 
 Pressure acceleration now also attempts the existing symmetric multigrid
 preconditioner after a preceding difficult solve, rather than relying only on
@@ -225,3 +227,44 @@ parallel 3.3 µH AGP4233-332ME parts are one catalogue bank option, assuming
 equal sharing and room-temperature maximum DCR. This is neither a PCB
 design nor a demonstrated fluid repetition rate. PWM, protection, hot
 component limits and measured assembled impedance remain unresolved.
+
+[Contact-position screens](v6-contact-position-screening.json) compare the
+hex-flat contacts with concave upper-barrel patches (`--contact-band upper`)
+and small tip contacts (`--contact-band tip`). Upper contacts give 0.115 N
+liquid force at 180 A with 5.95 W head heat, but remain sensitive to oxide
+contact resistance. A 30 A tip-contact screen gives 16.4 A estimated liquid
+current at the centre plane and 1.47 W head heat. This smaller total force is
+localized near the orifice; comparing total force alone is misleading. Its
+moving-interface trial is running, not an established jetting result.
+
+For the tip variant, the same 20 mm magnet stacks move below the shoulder
+(centre z=-8.2 mm) and closer together (4.2 mm pole gap). The upper pool
+sees return field, so its nearly zero mean field is not an outlet-field
+metric. Heater-block current shunts, microcontact fabrication and the wetting
+of both internal steel and external tip surfaces still need qualification.
+
+The original 250 A, 800 µs V6/cube-magnet case completed 4.2 ms without
+a detached component at any reported alpha threshold. It spread liquid
+across the tip instead. The tip-contact pulse trials use stronger pullback
+variations as well as the first 30 A hypothesis.
+
+Generator options `--fill-height`, `--domain-top-mm` and
+`--air-return-periodic-z` support a partially filled, cropped-domain research
+case. Periodic z reconnects the air headspace to the surrounding air; it
+is not a physical repeating nozzle. Validate against a full-height case
+and stop before liquid touches either periodic boundary. Cropping steel
+changes current sharing, so electrical force and fluid comparisons are
+required. Every new V6 project has an adjacent assumptions JSON.
+
+A low-current Kelvin resistance comparison of an empty versus filled hot
+nozzle would be useful before jetting tests. The ideal tip-contact model
+predicts 1.84 versus 1.64 mΩ. Oxide contact resistance makes the filled
+value approach the empty value. These are model values, not specifications;
+external contact resistance, actual steel grade and temperature must be
+separated from the effect of filling.
+
+The cropped low-fill V6 check through 0.6 ms changed liquid-weighted velocity
+L2 by 0.25% and alpha L2 by 0.033% relative to the full-height domain, with
+matched 0.1 mm spacing and pulse. This supports provisional pulse screening
+in the smaller domain; it does not certify later breakup or periodic flight.
+The colder electrical crop comparison changes total liquid force by 1.69%.
