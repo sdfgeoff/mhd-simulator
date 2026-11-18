@@ -61,6 +61,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .unwrap_or(10);
         let mut output = std::path::PathBuf::from("artifacts");
         let mut field_every = None;
+        let mut tail_after = None;
+        let mut tail_dt = None;
         let options = args.get(4..).unwrap_or_default();
         if options.len() % 2 != 0 {
             return Err("Run options require values: --output DIR --field-every N".into());
@@ -75,9 +77,28 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                     field_every = Some(n);
                 }
+                "--tail-after-us" => tail_after = Some(pair[1].parse::<f64>()? * 1e-6),
+                "--tail-dt-us" => tail_dt = Some(pair[1].parse::<f64>()? * 1e-6),
                 _ => return Err(format!("Unknown run option {}", pair[0]).into()),
             }
         }
+        let tail_schedule = match (tail_after, tail_dt) {
+            (None, None) => None,
+            (Some(after), Some(dt))
+                if after.is_finite()
+                    && after >= 0.
+                    && dt.is_finite()
+                    && dt > 0.
+                    && (dt as f32).is_normal() =>
+            {
+                Some((after, dt))
+            }
+            _ => {
+                return Err(
+                    "Supply both --tail-after-us and --tail-dt-us with finite valid times".into(),
+                );
+            }
+        };
         if field_every.is_some() && output.exists() {
             for entry in std::fs::read_dir(&output)? {
                 if entry?.file_name().to_string_lossy().starts_with("frame-") {
@@ -141,8 +162,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut performance = String::from(
             "step,time_s,accepted,stage,cpu_wall_ms,gpu_pass_ms,recorded_passes,total_passes\n",
         );
+        let initial_timestep_s = state.config.dt_s;
         let mut failure = None;
         for i in 0..=steps {
+            if i > 0
+                && let Some((after, dt)) = tail_schedule
+                && state.time_s >= after
+                && state.config.dt_s != dt
+                && let Err(error) = state.set_timestep(&volume, dt)
+            {
+                failure = Some(error);
+                break;
+            }
             if i > 0
                 && let Err(error) = state.step(&p.model, &volume)
             {
@@ -244,6 +275,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         std::fs::create_dir_all(&output)?;
         std::fs::write(output.join("run-performance.csv"), performance)?;
         std::fs::write(output.join("run-diagnostics.csv"), csv)?;
+        std::fs::write(
+            output.join("run-status.json"),
+            serde_json::to_vec_pretty(&serde_json::json!({
+                "status": if failure.is_some() { "failed" } else { "complete" },
+                "error": failure,
+                "project": path,
+                "requested_steps": steps,
+                "accepted_steps": state.steps,
+                "time_s": state.time_s,
+                "initial_timestep_s": initial_timestep_s,
+                "final_timestep_s": state.config.dt_s,
+                "tail_schedule_s": tail_schedule,
+                "field_every": field_every,
+                "electromagnetics": state.em.is_some(),
+                "fluids": state.fluid.is_some(),
+                "thermal": state.thermal.is_some(),
+                "meaning": "Normal unified RunState; an explicit timestep schedule does not replace or freeze any physics subsystem."
+            }))?,
+        )?;
         if let Some(error) = failure {
             return Err(error.into());
         }

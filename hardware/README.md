@@ -420,3 +420,14 @@ the path to 20 mm reduces head heat loss to about 3.4 W, while increasing pair
 electrical loss to about 4.5 W for the trial waveform at 200 Hz. This is a
 steady 1D scale estimate, not a mount or cooling qualification. The final driver
 budget must use the longer assembled leads' resistance and inductance.
+
+
+The normal headless application also accepts an explicit common-timestep schedule:
+`--run-check PROJECT STEPS --output NEW_DIR --field-every N
+--tail-after-us TIME --tail-dt-us DT`. Both scheduling flags are required together.
+It advances every enabled subsystem through the same `RunState`, writes native
+fields and a durable `run-status.json` including the requested schedule and actual
+accepted time, and retains ordinary solver failures. The schedule is a numerical
+choice that must be checked; it does not freeze an EM frame. A short headless
+moving-interface smoke run verifies scheduled time and native output. No GUI
+setting or default project timestep changed.
