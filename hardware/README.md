@@ -30,6 +30,10 @@ Recorded free surfaces use the existing mirror/neutral wall treatment, without
 measured solder/stainless advancing/receding angles or contact-line hysteresis.
 Oxide skins are absent. Numerical breakup alone does not qualify a nozzle finish.
 
+A proposed measurement sequence is in [bench-test-plan.md](bench-test-plan.md).
+It distinguishes numerical evidence from the wetting, electrical and repetition
+measurements still needed for a prototype decision.
+
 ## Requirements and evidence
 
 1. [requirements.json](requirements.json) records the requested materials,
