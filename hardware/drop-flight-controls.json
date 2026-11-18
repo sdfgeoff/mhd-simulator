@@ -51,10 +51,47 @@
   },
   "interpretation": "Nearzero-sigma control retainsuniformtranslation whilephysical-sigma case loses~9%liquidspeedby600us. Investigate capillary/momentum coupling under interface advection; do not attribute allvelocitybehavior to hardwaregeometry.",
   "pressure_tolerance_control": {
-    "status": "Running600usprefix",
+    "status": "Complete600us; alpha-weightedvelocity unchanged at-.182385236m/s",
     "output": "artifacts/hardware-research/drop-flight-translation-pressure-tight-h010-prefix",
     "relative_tolerance": 1e-06,
     "absolute_divergence_tolerance": 1e-06,
-    "purpose": "Check whether pressure convergence tolerance explains capillary translation drift."
+    "purpose": "Check whether pressure convergence tolerance explains capillary translation drift.",
+    "exported_actual_tolerances": {
+      "relative_tolerance": [
+        9.999999747378752e-06,
+        9.999999974752427e-07
+      ],
+      "absolute_divergence_tolerance": [
+        9.999999747378752e-06,
+        9.999999974752427e-07
+      ]
+    }
+  },
+  "refinement_controls": {
+    "status": "Runningsequential600usprefixes",
+    "cases_root": "artifacts/hardware-research/cases/drop-flight-small-h010/h0050/h0025",
+    "domain_mm": [
+      [
+        -1,
+        -1,
+        -1.5
+      ],
+      [
+        1,
+        1,
+        1.5
+      ]
+    ],
+    "cell_um": [
+      100,
+      50,
+      25
+    ],
+    "dt_us": [
+      2,
+      1,
+      0.5
+    ],
+    "scope": "Periodicuniformtranslation. Combinedspace/timerefinement; smallerdomainthaninitial4x4x6mmcontrol, butuniformtranslation remains anexact continuum symmetry inany periodicbox. ActualinitialnativeVOFmass/COMmustbemeasured."
   }
 }
