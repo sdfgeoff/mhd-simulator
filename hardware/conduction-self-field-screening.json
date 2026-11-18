@@ -1,0 +1,108 @@
+{
+  "status": "Postprocessing estimate of omitted self-field; not integrated in the recorded fluid trials",
+  "source": "https://farside.ph.utexas.edu/teaching/em/lectures/node39.html",
+  "checks": {
+    "finite_straight_wire_relative_error": 5.743635623334242e-06,
+    "fft_vs_direct_max_absolute_error_T": 3.2311742677852644e-26,
+    "wide_contact_4_to_8_subdivisions_B_rms_relative_change": -1.6668137092779034e-08,
+    "limits": "Quadrature agreement is not grid refinement or a completed external circuit."
+  },
+  "cases": [
+    {
+      "source_directory": "artifacts/hardware-research/v6-tip-wide-cold-30A-h010",
+      "current_A": 200.0,
+      "method": "Free-space Biot-Savart convolution of exported cold J; zero-padded linear FFT, self-cell integral zero by symmetry. Source cubes within four cells use subcell quadrature when enabled; farther sources use cell centres.",
+      "near_subdivisions": 4,
+      "regions": {
+        "all_liquid": {
+          "cells": 11348,
+          "self_B_rms_T": 0.004750844542027545,
+          "self_B_max_T": 0.05416836165096811,
+          "applied_B_rms_T": 0.15216149389743805,
+          "self_force_integral_N": [
+            -9.263447346439108e-08,
+            -1.766623067798121e-12,
+            0.0003763338009498152
+          ],
+          "applied_force_integral_N": [
+            -5.392777349596092e-06,
+            -3.778927337202563e-09,
+            -0.017075239519844604
+          ],
+          "self_over_applied_force_L2": 0.08228224451488272
+        },
+        "liquid_outlet_land": {
+          "cells": 72,
+          "self_B_rms_T": 0.035912703492584616,
+          "self_B_max_T": 0.05416836165096811,
+          "applied_B_rms_T": 0.3743281960487366,
+          "self_force_integral_N": [
+            1.5450785462027834e-08,
+            2.761772973510646e-13,
+            0.00042194662991414653
+          ],
+          "applied_force_integral_N": [
+            -2.3272439514060696e-07,
+            4.403438127452711e-09,
+            -0.004663725957878558
+          ],
+          "self_over_applied_force_L2": 0.1007736286842949
+        }
+      },
+      "limits": [
+        "Diagnostic only: no feedback on current, moving interface or force in the recorded fluid run.",
+        "External return leads beyond exported CAD are absent; this is not a complete closed-circuit field or an error bound.",
+        "Near-neighbour cell-centre quadrature requires grid refinement. Permeability is unity; magnetic diffusion and terminal transients are absent.",
+        "Net force cancellation does not establish negligible local pinching or unchanged breakup."
+      ]
+    },
+    {
+      "source_directory": "artifacts/hardware-research/v6-flat4-pins1mm-cold-200A-h010",
+      "current_A": 150.0,
+      "method": "Free-space Biot-Savart convolution of exported cold J; zero-padded linear FFT, self-cell integral zero by symmetry. Source cubes within four cells use subcell quadrature when enabled; farther sources use cell centres.",
+      "near_subdivisions": 4,
+      "regions": {
+        "all_liquid": {
+          "cells": 9632,
+          "self_B_rms_T": 0.002837492109122764,
+          "self_B_max_T": 0.013547805441805831,
+          "applied_B_rms_T": 0.4632565677165985,
+          "self_force_integral_N": [
+            -2.5222569188281325e-12,
+            -7.330803394884714e-12,
+            -0.00021350560258417457
+          ],
+          "applied_force_integral_N": [
+            9.962956891349525e-11,
+            -1.0934484463410651e-09,
+            -0.038565352980490665
+          ],
+          "self_over_applied_force_L2": 0.011147506401486776
+        },
+        "liquid_outlet_land": {
+          "cells": 72,
+          "self_B_rms_T": 0.0020550912591173714,
+          "self_B_max_T": 0.002260361100430919,
+          "applied_B_rms_T": 0.5117190480232239,
+          "self_force_integral_N": [
+            -3.1386320629150902e-15,
+            -6.109161367598461e-16,
+            1.6813525628314918e-07
+          ],
+          "applied_force_integral_N": [
+            -2.8564461517135796e-14,
+            -2.4484756065296858e-12,
+            -4.14387018214908e-05
+          ],
+          "self_over_applied_force_L2": 0.004131995668979487
+        }
+      },
+      "limits": [
+        "Diagnostic only: no feedback on current, moving interface or force in the recorded fluid run.",
+        "External return leads beyond exported CAD are absent; this is not a complete closed-circuit field or an error bound.",
+        "Near-neighbour cell-centre quadrature requires grid refinement. Permeability is unity; magnetic diffusion and terminal transients are absent.",
+        "Net force cancellation does not establish negligible local pinching or unchanged breakup."
+      ]
+    }
+  ]
+}

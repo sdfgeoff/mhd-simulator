@@ -4,6 +4,21 @@ Research branch: `research/hardware-design-20261118`. The frozen application
 baseline is `simulator-baseline-2026-11-18`. This study has **not demonstrated a
 manufacturable solder jetter or qualified repetitive droplet production**.
 
+## Current design selection
+
+| Candidate | Accepted evidence | Unresolved before a hardware recommendation |
+| --- | --- | --- |
+| Stock stainless V6, opposing tip contacts, permanent magnets | Wider 0.8 × 0.4 mm contacts: one approximately 0.595 mm component at 3.6 ms on the 100 µm grid, 200 A / 250 µs. Lumped drive requirement about 11 V. | Wider-contact grid refinement and repeated pulses; contact fabrication, wetting, heater shunts and cooling. |
+| V6 with two milled collar flats and immersed tungsten pins | Cold 200 A model puts approximately 171 A through liquid, with 0.46 T mean liquid field. | Full-domain moving-fluid trial is running. Mounts, rod heat, feedstock clearance and electrode compatibility remain unqualified. |
+| Custom thin-wall chamber with one resonant coil | Refined cold 50 kHz force and circuit estimates; normal unified EM/fluid trial is running at 250 A. | No demonstrated droplet. Approximately 62 W electrical heat at 200 Hz in the scaled cold estimate; source/spatial refinement and actual driver remain open. |
+
+These are research candidates. The contact-driven trials use the normal fluid
+and interface engine with a research GPU charge solver; they are not a new GUI
+electrode feature. The single-coil trial uses the normal combined `RunState`.
+Recorded free surfaces use the existing mirror/neutral wall treatment, without
+measured solder/stainless advancing/receding angles or contact-line hysteresis.
+Oxide skins are absent. Numerical breakup alone does not qualify a nozzle finish.
+
 ## Requirements and evidence
 
 1. [requirements.json](requirements.json) records the requested materials,
@@ -408,8 +423,8 @@ introduced to label the whole trial successful.
 copper pad boxes centred at z=0.5 mm. At 30 A the cold model gives about
 0.70 mΩ head resistance and 3.11 mN downward liquid force, versus 1.64 mΩ
 and 2.65 mN for the smaller pads. The 200 A pulse's maximum initial-field
-adiabatic steel rise falls from roughly 45 K to 8 K. Its moving-fluid trial is
-running; these improvements do not establish a droplet result.
+adiabatic steel rise falls from roughly 45 K to 8 K. Its completed 3.6 ms moving-fluid trial does not detach a drop; these cold
+improvements do not establish useful outlet forcing.
 
 [Current-lead thermal records](current-lead-thermal-screening.json) illustrate
 why short thick copper arms must not be connected straight to a cold driver
@@ -459,7 +474,7 @@ liquid field and 0.051 N downward liquid force. This is not a jetting result.
 The nozzle/poles/pins/pool were checked as disjoint, closed positive-volume CAD.
 Nominal pole/flat clearance is 0.2 mm; actual fabrication and mounting tolerance
 remain unqualified. The small-domain force differs by 7.5%, so a full-domain
-150 A / 800 µs fluid trial is queued instead of assuming the earlier domain
+150 A / 800 µs fluid trial is running instead of assuming the earlier domain
 validation carries over. Pin clamps, feedstock routing, real electrode contact
 and bulk rod losses remain separate engineering work.
 
@@ -496,3 +511,25 @@ tail; alpha L2 differs by 0.77%. The 50 µm reference has detached a leading
 approximately 0.618 mm alpha 0.01 component at 2.4 ms, moving about 0.51 m/s.
 This is slightly above the target size and not a completed grid-convergence
 study. Shorter-pulse tuning and the wider-contact refinement are queued.
+
+### Omitted applied-current self-field
+
+[Self-field diagnostics](conduction-self-field-screening.json) postprocess the
+accepted cold GPU current density using the free-space Biot–Savart integral.
+`scripts/conduction_self_field.py` uses zero-padded linear FFT convolution and
+uniform source-cube subquadrature within four cells. A finite straight-wire
+check agrees within 6e-6 relative error, and a direct discrete sum checks FFT
+indexing. Four-to-eight subcell refinement barely changes the wider-contact
+result; that is quadrature agreement, not a mesh or external-circuit check.
+The continuous-current integral is given in
+[Fitzpatrick's electromagnetism notes](https://farside.ph.utexas.edu/teaching/em/lectures/node39.html).
+
+For wider tip contacts at 200 A, the outlet-land self-field RMS is approximately
+0.036 T versus 0.374 T applied. The self-force L2 is about 10% of the applied
+force L2 there, with a net upward correction about 9% of the applied downward
+land force. These are potentially relevant corrections near breakup, not proof
+that the imposed-field droplet result survives unchanged. For the milled-pin
+candidate at 150 A the same land diagnostic is approximately 0.4%, and the
+whole-liquid force L2 ratio approximately 1.1%. External return leads are absent
+from both estimates; their routing needs checking. Neither correction has been
+fed back into the recorded fluid trajectories.
