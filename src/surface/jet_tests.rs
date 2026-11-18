@@ -274,6 +274,12 @@ fn pulsed_nozzle_experiment() {
         .parse()
         .unwrap();
     assert!((1.5..=6.0).contains(&z_max_mm));
+    // Move the grid relative to the fixed CAD/force, preserving its extent.
+    let shift_x_mm: f32 = std::env::var("MHD_JET_GRID_SHIFT_X_MM")
+        .unwrap_or_else(|_| "0".into())
+        .parse()
+        .unwrap();
+    assert!(shift_x_mm.is_finite() && shift_x_mm.abs() <= h_mm);
     let mut materials = crate::simulation::default_materials();
     materials[3].density_kg_m3 = Some(7000.);
     materials[3].dynamic_viscosity_pa_s = Some(0.002);
@@ -286,8 +292,8 @@ fn pulsed_nozzle_experiment() {
         .build(
             &model,
             &crate::simulation::DomainSettings {
-                min_mm: [-0.9, -0.9, z_min_mm],
-                max_mm: [0.9, 0.9, z_max_mm],
+                min_mm: [-0.9 + shift_x_mm, -0.9, z_min_mm],
+                max_mm: [0.9 + shift_x_mm, 0.9, z_max_mm],
                 cell_mm: h_mm,
             },
             &materials,

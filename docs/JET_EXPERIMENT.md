@@ -218,3 +218,27 @@ MHD_JET_CELL_MM=0.025 MHD_JET_FORCE_N_M3=70000000 MHD_JET_END_S=0.002 \
 This supports qualitative release in the idealized model. Quantitative nozzle
 thresholds and real-alloy droplet/satellite predictions still require further
 spatial checks, material data and contact physics.
+
+## Grid-origin control
+
+`MHD_JET_GRID_SHIFT_X_MM` shifts both X domain bounds relative to the fixed CAD
+and prescribed force. It defaults to zero and is limited to one cell in either
+direction. Domain extent and nominal cell size are preserved; the output's
+`origin_m` records the actual grid. This probes voxel alignment sensitivity,
+including the wall mask and initial liquid projection. The outer boundary moves
+with the box, so the boundary-contact guard remains necessary.
+
+At 25 µm spacing, an X shift of 12.5 µm changes the initialized opening area
+from **0.07000 to 0.06750 mm²**, versus the polygonal CAD's 0.0706354 mm².
+Thus the unshifted grid's small area error is placement-dependent. Initial
+liquid volume changes from 0.856125 to 0.857625 mm³. The full shifted trajectory
+is still running; these initialization measurements do not establish release
+or a diameter/speed error bound.
+
+```sh
+MHD_JET_CELL_MM=0.025 MHD_JET_GRID_SHIFT_X_MM=0.0125 \
+  MHD_JET_FORCE_N_M3=70000000 MHD_JET_END_S=0.002 \
+  MHD_JET_DT_FACTOR=0.1 MHD_JET_PRESSURE_MG=1 MHD_JET_RECORD_EVERY=100 \
+  MHD_JET_OUTPUT=artifacts/jet-force70-fine-shifted \
+  cargo test --offline --lib pulsed_nozzle_experiment -- --ignored --nocapture
+```
