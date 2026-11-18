@@ -1,0 +1,451 @@
+{
+  "status": "Completed global-clearance and native GPU applied-field screens; no new force/jetting result",
+  "sources": [
+    {
+      "method": "Screen global CAD clearance and native GPU bias fields near the outlet.\n\nNo charge/fluid solve or jet prediction. Uses the native GPU applied-field mode;\nthe small observation domain must never be interpreted as a conduction domain.\n",
+      "cases": [
+        {
+          "label": "original-disc",
+          "project": "artifacts/hardware-research/cases/pole-clearance-v3-original-disc.mhd.json",
+          "kind": "disc",
+          "dimensions_xyz_mm": [
+            10,
+            5,
+            10
+          ],
+          "centre_z_mm": -3.2,
+          "gap_mm": 4.2,
+          "collar_clearance_flats_mm": null,
+          "projection_below_exit_mm": 8.199999809265137,
+          "collisions": [],
+          "reference_heater_overlap_mm3": 0.0,
+          "status": "complete bias-field screen",
+          "liquid_cells": 624,
+          "mean_B_T": [
+            5.169792395976495e-06,
+            -0.3115153548140556,
+            -7.742365153554158e-08
+          ],
+          "rms_B_T": 0.3118534426519404,
+          "min_By_T": -0.3312361538410187,
+          "max_By_T": -0.2902168035507202,
+          "grid": [
+            16,
+            16,
+            12
+          ],
+          "maximum_B_minus_applied_T": 5.960464477539063e-08
+        },
+        {
+          "label": "raised-disc-collision",
+          "project": "artifacts/hardware-research/cases/pole-clearance-v3-raised-disc-collision.mhd.json",
+          "kind": "disc",
+          "dimensions_xyz_mm": [
+            10,
+            5,
+            10
+          ],
+          "centre_z_mm": -0.2,
+          "gap_mm": 4.2,
+          "collar_clearance_flats_mm": null,
+          "projection_below_exit_mm": 5.199999809265137,
+          "collisions": [
+            {
+              "magnet": "Bias magnet 1",
+              "body": "Custom V6-like nozzle with opposed tip flats",
+              "volume_mm3": 16.936935131504875
+            },
+            {
+              "magnet": "Bias magnet 2",
+              "body": "Custom V6-like nozzle with opposed tip flats",
+              "volume_mm3": 16.936935131504875
+            }
+          ],
+          "reference_heater_overlap_mm3": 0.0,
+          "status": "CAD collision; field run skipped"
+        },
+        {
+          "label": "raised-disc-wide",
+          "project": "artifacts/hardware-research/cases/pole-clearance-v3-raised-disc-wide.mhd.json",
+          "kind": "disc",
+          "dimensions_xyz_mm": [
+            10,
+            5,
+            10
+          ],
+          "centre_z_mm": -0.2,
+          "gap_mm": 8.4,
+          "collar_clearance_flats_mm": null,
+          "projection_below_exit_mm": 5.199999809265137,
+          "collisions": [],
+          "reference_heater_overlap_mm3": 0.0,
+          "status": "complete bias-field screen",
+          "liquid_cells": 624,
+          "mean_B_T": [
+            3.750790868322768e-07,
+            -0.2220059845548792,
+            -6.969877666471383e-08
+          ],
+          "rms_B_T": 0.22200841690851406,
+          "min_By_T": -0.22341178357601166,
+          "max_By_T": -0.22018736600875854,
+          "grid": [
+            16,
+            16,
+            12
+          ],
+          "maximum_B_minus_applied_T": 1.4901161193847656e-08
+        },
+        {
+          "label": "raised-disc-machined",
+          "project": "artifacts/hardware-research/cases/pole-clearance-v3-raised-disc-machined.mhd.json",
+          "kind": "disc",
+          "dimensions_xyz_mm": [
+            10,
+            5,
+            10
+          ],
+          "centre_z_mm": -0.2,
+          "gap_mm": 4.2,
+          "collar_clearance_flats_mm": 4,
+          "projection_below_exit_mm": 5.199999809265137,
+          "collisions": [],
+          "reference_heater_overlap_mm3": 0.0,
+          "status": "complete bias-field screen",
+          "liquid_cells": 624,
+          "mean_B_T": [
+            4.6402449417935435e-07,
+            -0.40719859020259136,
+            1.463353654775673e-08
+          ],
+          "rms_B_T": 0.4072002205267089,
+          "min_By_T": -0.40875744819641113,
+          "max_By_T": -0.4051724374294281,
+          "grid": [
+            16,
+            16,
+            12
+          ],
+          "maximum_B_minus_applied_T": 5.960464477539063e-08
+        },
+        {
+          "label": "high-disc-wide",
+          "project": "artifacts/hardware-research/cases/pole-clearance-v3-high-disc-wide.mhd.json",
+          "kind": "disc",
+          "dimensions_xyz_mm": [
+            10,
+            5,
+            10
+          ],
+          "centre_z_mm": 2.3,
+          "gap_mm": 8.4,
+          "collar_clearance_flats_mm": null,
+          "projection_below_exit_mm": 2.700000047683716,
+          "collisions": [],
+          "reference_heater_overlap_mm3": 22.064920547437055,
+          "status": "complete bias-field screen",
+          "liquid_cells": 624,
+          "mean_B_T": [
+            -1.7168205466497545e-06,
+            -0.20308077827287027,
+            -3.4980565452804933e-09
+          ],
+          "rms_B_T": 0.20312132259036936,
+          "min_By_T": -0.2086743414402008,
+          "max_By_T": -0.1970817893743515,
+          "grid": [
+            16,
+            16,
+            12
+          ],
+          "maximum_B_minus_applied_T": 2.9802322387695312e-08
+        },
+        {
+          "label": "flush-disc-wide",
+          "project": "artifacts/hardware-research/cases/pole-clearance-v3-flush-disc-wide.mhd.json",
+          "kind": "disc",
+          "dimensions_xyz_mm": [
+            10,
+            5,
+            10
+          ],
+          "centre_z_mm": 4.8,
+          "gap_mm": 8.4,
+          "collar_clearance_flats_mm": null,
+          "projection_below_exit_mm": 0.20000000298023224,
+          "collisions": [],
+          "reference_heater_overlap_mm3": 171.12720531821418,
+          "status": "complete bias-field screen",
+          "liquid_cells": 624,
+          "mean_B_T": [
+            -2.6991186318926525e-06,
+            -0.12594847006197923,
+            -2.028872796262686e-07
+          ],
+          "rms_B_T": 0.12617477325129905,
+          "min_By_T": -0.136470228433609,
+          "max_By_T": -0.11542686820030212,
+          "grid": [
+            16,
+            16,
+            12
+          ],
+          "maximum_B_minus_applied_T": 1.4901161193847656e-08
+        },
+        {
+          "label": "short-block",
+          "project": "artifacts/hardware-research/cases/pole-clearance-v3-short-block.mhd.json",
+          "kind": "block",
+          "dimensions_xyz_mm": [
+            10,
+            5,
+            5
+          ],
+          "centre_z_mm": 2.3,
+          "gap_mm": 4.2,
+          "collar_clearance_flats_mm": 4,
+          "projection_below_exit_mm": 0.20000000298023224,
+          "collisions": [],
+          "reference_heater_overlap_mm3": 0.0,
+          "status": "complete bias-field screen",
+          "liquid_cells": 624,
+          "mean_B_T": [
+            3.1066531683348167e-06,
+            -0.25676324292539787,
+            6.996560841798782e-08
+          ],
+          "rms_B_T": 0.2575058002912632,
+          "min_By_T": -0.2833399772644043,
+          "max_By_T": -0.2290211170911789,
+          "grid": [
+            16,
+            16,
+            12
+          ],
+          "maximum_B_minus_applied_T": 2.9802322387695312e-08
+        },
+        {
+          "label": "short-block-stack",
+          "project": "artifacts/hardware-research/cases/pole-clearance-v3-short-block-stack.mhd.json",
+          "kind": "block",
+          "dimensions_xyz_mm": [
+            10,
+            10,
+            5
+          ],
+          "centre_z_mm": 2.3,
+          "gap_mm": 4.2,
+          "collar_clearance_flats_mm": 4,
+          "projection_below_exit_mm": 0.20000000298023224,
+          "collisions": [],
+          "reference_heater_overlap_mm3": 0.0,
+          "status": "complete bias-field screen",
+          "liquid_cells": 624,
+          "mean_B_T": [
+            1.0180073308546502e-05,
+            -0.31823494495489657,
+            7.465207137358495e-08
+          ],
+          "rms_B_T": 0.31892094858506237,
+          "min_By_T": -0.3466958999633789,
+          "max_By_T": -0.28852778673171997,
+          "grid": [
+            16,
+            16,
+            12
+          ],
+          "maximum_B_minus_applied_T": 5.960464477539063e-08
+        },
+        {
+          "label": "short-cube",
+          "project": "artifacts/hardware-research/cases/pole-clearance-v3-short-cube.mhd.json",
+          "kind": "block",
+          "dimensions_xyz_mm": [
+            5,
+            5,
+            5
+          ],
+          "centre_z_mm": 2.3,
+          "gap_mm": 4.2,
+          "collar_clearance_flats_mm": 4,
+          "projection_below_exit_mm": 0.20000000298023224,
+          "collisions": [],
+          "reference_heater_overlap_mm3": 0.0,
+          "status": "complete bias-field screen",
+          "liquid_cells": 624,
+          "mean_B_T": [
+            3.278681745145243e-05,
+            -0.22424584727447766,
+            1.4897056807501194e-08
+          ],
+          "rms_B_T": 0.22490321963746113,
+          "min_By_T": -0.24803148210048676,
+          "max_By_T": -0.19948884844779968,
+          "grid": [
+            16,
+            16,
+            12
+          ],
+          "maximum_B_minus_applied_T": 2.9802322387695312e-08
+        },
+        {
+          "label": "short-cube-stack",
+          "project": "artifacts/hardware-research/cases/pole-clearance-v3-short-cube-stack.mhd.json",
+          "kind": "block",
+          "dimensions_xyz_mm": [
+            5,
+            10,
+            5
+          ],
+          "centre_z_mm": 2.3,
+          "gap_mm": 4.2,
+          "collar_clearance_flats_mm": 4,
+          "projection_below_exit_mm": 0.20000000298023224,
+          "collisions": [],
+          "reference_heater_overlap_mm3": 0.0,
+          "status": "complete bias-field screen",
+          "liquid_cells": 624,
+          "mean_B_T": [
+            7.390469414904379e-05,
+            -0.260941607471651,
+            -5.143169218148941e-09
+          ],
+          "rms_B_T": 0.261561388763514,
+          "min_By_T": -0.2858651876449585,
+          "max_By_T": -0.23500628769397736,
+          "grid": [
+            16,
+            16,
+            12
+          ],
+          "maximum_B_minus_applied_T": 2.9802322387695312e-08
+        }
+      ],
+      "limits": [
+        "Fixed uniform magnetization, unit permeability, assumed hot Br0.95T; no demagnetization or back iron.",
+        "Small-domain fields only, not electrical/flow performance. Full CAD collision tests are separate.",
+        "Reference heater is a23x16mm block fromz6.5to18mm; actual mount and heater clearances still need confirmation.",
+        "Block dimensions do not establish stock availability or magnetization direction. Stacked cubes require aligned magnetization and a seam/tolerance check."
+      ]
+    },
+    {
+      "method": "Screen global CAD clearance and native GPU bias fields near the outlet.\n\nNo charge/fluid solve or jet prediction. Uses the native GPU applied-field mode;\nthe small observation domain must never be interpreted as a conduction domain.\n",
+      "cases": [
+        {
+          "label": "stock-bar",
+          "project": "artifacts/hardware-research/cases/pole-clearance-v4-stock-bar.mhd.json",
+          "kind": "block",
+          "dimensions_xyz_mm": [
+            25,
+            5,
+            5
+          ],
+          "centre_z_mm": 2.3,
+          "gap_mm": 4.2,
+          "collar_clearance_flats_mm": 4,
+          "projection_below_exit_mm": 0.20000000298023224,
+          "collisions": [],
+          "reference_heater_overlap_mm3": 0.0,
+          "status": "complete bias-field screen",
+          "liquid_cells": 624,
+          "mean_B_T": [
+            -1.1843836452895536e-07,
+            -0.2386608537620841,
+            2.8029227486023536e-09
+          ],
+          "rms_B_T": 0.2394706610004684,
+          "min_By_T": -0.2653549909591675,
+          "max_By_T": -0.2107847034931183,
+          "grid": [
+            16,
+            16,
+            12
+          ],
+          "maximum_B_minus_applied_T": 2.9802322387695312e-08
+        },
+        {
+          "label": "stock-bar-stack",
+          "project": "artifacts/hardware-research/cases/pole-clearance-v4-stock-bar-stack.mhd.json",
+          "kind": "block",
+          "dimensions_xyz_mm": [
+            25,
+            10,
+            5
+          ],
+          "centre_z_mm": 2.3,
+          "gap_mm": 4.2,
+          "collar_clearance_flats_mm": 4,
+          "projection_below_exit_mm": 0.20000000298023224,
+          "collisions": [],
+          "reference_heater_overlap_mm3": 0.0,
+          "status": "complete bias-field screen",
+          "liquid_cells": 624,
+          "mean_B_T": [
+            -9.035188551747407e-08,
+            -0.3177170125910869,
+            -9.328150787414648e-09
+          ],
+          "rms_B_T": 0.31843625961352356,
+          "min_By_T": -0.34673041105270386,
+          "max_By_T": -0.2874048948287964,
+          "grid": [
+            16,
+            16,
+            12
+          ],
+          "maximum_B_minus_applied_T": 5.960464477539063e-08
+        }
+      ],
+      "limits": [
+        "Fixed uniform magnetization, unit permeability, assumed hot Br0.95T; no demagnetization or back iron.",
+        "Small-domain fields only, not electrical/flow performance. Full CAD collision tests are separate.",
+        "Reference heater is a23x16mm block fromz6.5to18mm; actual mount and heater clearances still need confirmation.",
+        "Block dimensions do not establish stock availability or magnetization direction. Stacked cubes require aligned magnetization and a seam/tolerance check."
+      ]
+    }
+  ],
+  "quadrature_check": [
+    {
+      "subdivisions": 2,
+      "mean_By_T": -0.30844991114468145
+    },
+    {
+      "subdivisions": 3,
+      "mean_By_T": -0.3164105933541671
+    },
+    {
+      "subdivisions": 4,
+      "mean_By_T": -0.3177170125910869
+    }
+  ],
+  "q3_to_q4_relative_mean_By_change": 0.004128873256330934,
+  "observation_scope": "Mean usefulBy over liquid cells in the0..0.6mm outletland on50umcells; identical assumedBr0.95T and unitpermeability.",
+  "reference_stock_bar": {
+    "url": "https://www.first4magnets.com/product/25-x-5-x-5mm-thick-samarium-cobalt-magnet-32kg-pull-19663",
+    "product_code": "F319-SC",
+    "dimensions_mm": [
+      25,
+      5,
+      5
+    ],
+    "magnetic_face_mm": [
+      25,
+      5
+    ],
+    "listed_max_operating_temperature_C": 300,
+    "scope": "Four bars, two5mm-thickbarsabutting per pole, model a25x10x5mm pole magnetized through its10mmstackdepth. Actual hotBr, recoil, seam spacing, coating and fixtures remain unqualified."
+  },
+  "geometry_correction": "Raised configurations use Boolean shoulder cuts, not outer-vertex projection. The earlier projection could fold the transition to a round neck when narrowed below that neck diameter. Existing completed pin trials retain their earlier input geometry and are not silently replaced.",
+  "validation": [
+    "Applied field observer uses existing GPU Mode::Applied, no CPU PDE or cropped conduction solve.",
+    "Initial attempt using the normal induction probe correctly rejected conductors touching the tiny observation-domain boundary; no physics result retained from that rejected attempt.",
+    "Full global CAD intersections, including liquid/contact bodies, checked before accepting a field-only layout.",
+    "A23x16mm reference heater fromz6.5..18 is separately checked; high stock-disc layouts clash with it.",
+    "Collider-containing candidates are explicitly skipped, not ranked as buildable."
+  ],
+  "limits": [
+    "A matching scalarBy does not prove the same force distribution or jetting; full cold and moving-fluid checks required.",
+    "Clearance is nominal: clamps, thermal growth, actual tolerance and hot magnet loadline unqualified.",
+    "Fixed magnetization ignores material demagnetization and backiron."
+  ]
+}

@@ -16,6 +16,14 @@ from make_conduction_hardware import box, write_project
 from make_hardware import heater, lathe
 
 
+def as_solid(value):
+    if hasattr(value, "to_mesh"):
+        return value
+    points = np.asarray(value, dtype=np.float32).reshape(-1, 3)
+    vertices, indices = np.unique(points, axis=0, return_inverse=True)
+    return cad.Manifold(cad.Mesh(vertices, indices.reshape(-1, 3).astype(np.uint32)))
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--name", default="v6-direct-dc-h010")
@@ -42,7 +50,9 @@ def main():
     p.add_argument("--tip-flat-width-mm", type=float, help="Distance between opposed x contact planes on a custom V6-like tip")
     p.add_argument("--tip-flat-height-mm", type=float, default=.6, help="Machining reach above the exit for the optional tip flats")
     p.add_argument("--nozzle-flat-width-mm", type=float)
-    p.add_argument("--magnet", choices=["cube10", "disc20-stack10", "disc"], default="cube10")
+    p.add_argument("--magnet", choices=["cube10", "disc20-stack10", "disc", "block"], default="cube10")
+    p.add_argument("--magnet-block-width-mm", type=float, default=10.)
+    p.add_argument("--magnet-block-height-mm", type=float, default=5.)
     p.add_argument("--magnet-disc-diameter-mm", type=float, default=20.)
     p.add_argument("--magnet-stack-mm", type=float, default=10.)
     p.add_argument("--magnet-subdivisions", type=int)
@@ -53,6 +63,8 @@ def main():
     args = p.parse_args()
     if not all(math.isfinite(v) and v > 0 for v in [args.magnet_disc_diameter_mm, args.magnet_stack_mm]):
         raise ValueError("Magnet dimensions must be finite and positive")
+    if not all(math.isfinite(v) and v > 0 for v in [args.magnet_block_width_mm, args.magnet_block_height_mm]):
+        raise ValueError("Block magnet dimensions must be finite and positive")
     if args.magnet_subdivisions is None:
         args.magnet_subdivisions = 4 if args.magnet == "cube10" else 2
     if not 0 <= args.magnet_subdivisions <= 4:
@@ -101,14 +113,13 @@ def main():
         width = args.nozzle_flat_width_mm
         if not math.isfinite(width) or not 2 * rin < width <= 7.:
             raise ValueError("Nozzle flats must clear the 3.2 mm bore and not exceed 7 mm")
-        # Mill only the outer hex collar, retaining the exact original bore
-        # triangles and the untouched M6 barrel above z=5 mm.
-        def flat_vertex(v):
-            x, y, z = v
-            if 2. <= z <= 5. and math.hypot(x, y) > 3.4:
-                y = max(-width / 2, min(width / 2, y))
-            return x, y, z
-        parts[0] = ("V6 with two milled collar flats", [tuple(flat_vertex(v) for v in t) for t in parts[0][1]], 14)
+        # Boolean machining keeps a valid transition where the round upper
+        # neck can extend outside the narrowed collar. Vertex projection can
+        # fold the horizontal transition ring when width < neck diameter.
+        collar = as_solid(parts[0][1])
+        for sign in [-1, 1]:
+            collar -= box([20., 20., 3.01], [0., sign * (10. + width / 2), 3.495])
+        parts[0] = ("V6 with two milled collar flats", collar, 14)
     tip_solid = None
     if args.tip_flat_width_mm is not None:
         width, reach = args.tip_flat_width_mm, args.tip_flat_height_mm
@@ -122,9 +133,7 @@ def main():
             raise ValueError("Tip flats must clear the bore, contain the contact height, and provide the full contact width")
         # CAD boolean cuts only the external lands; the liquid/bore input stays
         # unchanged. Small overreach below z=0 avoids a coincident cutter bottom.
-        points = np.asarray(parts[0][1], dtype=np.float32).reshape(-1, 3)
-        vertices, indices = np.unique(points, axis=0, return_inverse=True)
-        tip_solid = cad.Manifold(cad.Mesh(vertices, indices.reshape(-1, 3).astype(np.uint32)))
+        tip_solid = as_solid(parts[0][1])
         for sign in [-1, 1]:
             tip_solid -= box([20., 20., reach + .02], [sign * (10. + width / 2), 0., reach / 2 - .01])
         if tip_solid.is_empty() or not tip_solid.volume() > 0:
@@ -182,8 +191,9 @@ def main():
             parts[i+2] = (f"{'Positive' if i==0 else 'Negative'} immersed tungsten electrode",pin,16+i)
         args.terminal_material = "tungsten"
     disc_radius = args.magnet_disc_diameter_mm / 2
-    tip_magnet_z = 1.8 - disc_radius if args.magnet != "cube10" else -8.2
-    pin_magnet_z = 3.0 - disc_radius if args.magnet != "cube10" else -7.
+    half_height = args.magnet_block_height_mm / 2 if args.magnet == "block" else disc_radius
+    tip_magnet_z = 1.8 - half_height if args.magnet != "cube10" else -8.2
+    pin_magnet_z = 3.0 - half_height if args.magnet != "cube10" else -7.
     magnet_z = (
         args.magnet_z
         if args.magnet_z is not None
@@ -201,6 +211,9 @@ def main():
             box([10.0, 10.0, 10.0], [0.0, sign * magnet_y, magnet_z])
             for sign in [-1, 1]
         ]
+    elif args.magnet == "block":
+        magnets = [box([args.magnet_block_width_mm, stack, args.magnet_block_height_mm],
+                       [0., sign * magnet_y, magnet_z]) for sign in [-1, 1]]
     else:
         # A homogeneous stack represents abutting discs with matched axial
         # magnetization. Stock-disc thickness must divide the requested stack.

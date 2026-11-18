@@ -89,5 +89,6 @@
     "Single waveform and coarse100um grid, not rejection of all immersed-electrode variants.",
     "No gravity, thermal evolution, measured wetting or wire feeding.",
     "Cold total force was not a successful ejection criterion."
-  ]
+  ],
+  "geometry_provenance_note": "This completed test used the earlier outer-vertex shoulder-flat approximation. Raised-pole clearance work later replaced that construction with explicit Boolean machining to preserve the round-neck transition. The historical input and outcome are retained; do not treat them as a rerun of the corrected CAD."
 }

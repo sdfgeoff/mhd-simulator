@@ -188,6 +188,33 @@ fields, validation and electrical budgets.
 [Bias-field alternatives](bias-field-options.json) records the SmCo lifetime
 assumptions and an illustrative DC electromagnet estimate.
 
+## Magnet projection and a shorter flight path
+
+Global CAD checks and native GPU applied-field observations give the following
+mean useful field in the 0–0.6 mm outlet land. All share assumed hot remanence
+0.95 T and unit permeability; these are not flow-performance comparisons.
+
+| Layout | Magnet projection below exit | Mean transverse field |
+| --- | --- | --- |
+| Current 10 × 5 mm discs, 4.2 mm pole gap | 8.2 mm | 0.312 T |
+| Raised discs, 8.4 mm gap clearing the unmodified shoulder | 5.2 mm | 0.222 T |
+| Raised discs, 4.2 mm gap and 4 mm shoulder clearance flats | 5.2 mm | 0.407 T |
+| Short 10 × 5 mm pole face, 5 mm magnetic depth | 0.2 mm | 0.257 T |
+| Short 25 × 5 mm pole face, 10 mm stacked magnetic depth | 0.2 mm | 0.318 T |
+
+The short stacked option uses two catalogue 25 × 5 × 5 mm bars per pole, with
+magnetization aligned through their 5 mm thicknesses. It is wider: the magnet
+assembly spans roughly 25 × 24.2 mm horizontally. Clamps add clearance beyond
+the nominal 0.2 mm projection. Shoulder clearance flats are required; the
+reference heater remains clear. Lifting stock discs much farther instead
+clashes with that heater in this layout.
+
+Source quadrature, full collision results and sourcing scope:
+[pole-clearance-screening.json](pole-clearance-screening.json). The corrected
+Boolean shoulder construction does not silently update the old completed
+immersed-pin inputs. Field matching still requires cold-current and fluid tests
+before claiming comparable jetting.
+
 ## Work still in progress
 
 1. Wider-contact 50 µm, fixed-step flow refinement.
