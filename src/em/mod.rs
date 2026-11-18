@@ -71,6 +71,11 @@ pub struct EmState {
     pub input_versions: InputVersions,
     config: EmConfig,
     source_elements: Vec<sources::Element>,
+    source_valid: bool,
+    #[cfg(test)]
+    cache_source_fields: bool,
+    #[cfg(test)]
+    source_reused: bool,
     cad_curves: Vec<crate::model::CurvePath>,
     pub mode: Mode,
     pub time_s: f64,
@@ -350,6 +355,7 @@ impl EmState {
             "true_residual",
             "restart_reduce",
             "set_boundary",
+            "hold_source",
             "begin_step",
             "commit_step",
             "energy_collect",
@@ -512,6 +518,11 @@ impl EmState {
             input_versions: volume.inputs.versions(),
             config,
             source_elements,
+            source_valid: false,
+            #[cfg(test)]
+            cache_source_fields: true,
+            #[cfg(test)]
+            source_reused: false,
             cad_curves: model.curves.clone(),
             mode,
             time_s: 0.,
@@ -600,6 +611,15 @@ impl EmState {
         if self.cad_curves != model.curves {
             return Err("CAD centrelines changed; initialize electromagnetics again".into());
         }
+        // Metadata is trustworthy only while source.x still holds that field.
+        // Invalidate before fallible waveform evaluation; rollback also clears it.
+        let mut changed = !self.source_valid;
+        self.source_valid = false;
+        #[cfg(test)]
+        {
+            changed |= !self.cache_source_fields;
+            self.source_reused = false;
+        }
         let mut offset = 0;
         for wire in &self.config.wires {
             let count = wire.points(model)?.len() - 1;
@@ -608,6 +628,7 @@ impl EmState {
                 return Err("Nonfinite source current at this time".into());
             }
             for e in &mut self.source_elements[offset..offset + count] {
+                changed |= e.c[2].to_bits() != value.to_bits();
                 e.c[2] = value;
             }
             offset += count;
@@ -618,7 +639,19 @@ impl EmState {
             if !value.is_finite() {
                 return Err("Nonfinite uniform source scale".into());
             }
+            changed |= self.source_elements[uniform_start + i].c[2].to_bits() != value.to_bits();
             self.source_elements[uniform_start + i].c[2] = value;
+        }
+        if !changed {
+            self.params.control[3] = 0;
+            self.write_params();
+            self.dispatch(&[("hold_source", self.edge_groups())]);
+            self.source_valid = true;
+            #[cfg(test)]
+            {
+                self.source_reused = true;
+            }
+            return Ok(());
         }
         self.context.queue.write_buffer(
             &self.elements,
@@ -643,6 +676,7 @@ impl EmState {
         }
         self.params.control[3] = 0;
         self.write_params();
+        self.source_valid = true;
         Ok(())
     }
     /// Prepare lagged motional EMF from the current fluid velocity and total B.
@@ -876,6 +910,7 @@ impl EmState {
         if status[7] != 1. || status.iter().any(|v| !v.is_finite()) {
             self.dispatch(&[("rollback", eg)]);
             self.can_predict_increment = false;
+            self.source_valid = false;
             return Err(format!(
                 "EM solve did not converge: {} iterations, true relative residual {:.3e} (requested {:.3e}); conducting-edge σ range {:.3e}…{:.3e} S/m; state restored",
                 status[6],
@@ -917,6 +952,7 @@ impl EmState {
         if stats.iter().chain(&totals).any(|v| !v.is_finite()) {
             self.dispatch(&[("rollback", eg)]);
             self.can_predict_increment = false;
+            self.source_valid = false;
             let mut encoder = self
                 .context
                 .device

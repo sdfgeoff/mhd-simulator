@@ -258,3 +258,10 @@ fn begin_step(@builtin(global_invocation_id) gid:vec3<u32>){let i=flat_id(gid);i
 fn zero_guess(@builtin(global_invocation_id) gid:vec3<u32>){let i=flat_id(gid);if i<scene.edges.w {work[i].x=0.;}}
 @compute @workgroup_size(256)
 fn commit_step(@builtin(global_invocation_id) gid:vec3<u32>){let i=flat_id(gid);if i<scene.edges.w {work[i].x+=previous[i];}}
+
+// An unchanged applied field still needs a new source-history frame so that
+// delta As is zero; coefficient, gauge and motional entries remain untouched.
+@compute @workgroup_size(256)
+fn hold_source(@builtin(global_invocation_id) gid:vec3<u32>) {
+ let i=flat_id(gid);if i<scene.edges.w {source[i].y=source[i].x;}
+}

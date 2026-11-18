@@ -309,3 +309,110 @@ fn em_weak_drive_preserves_linear_fields_and_quadratic_force_heat() {
         assert!(relative < 2e-4, "{name}: relative error {relative}");
     }
 }
+
+#[test]
+fn held_sources_match_recomputation_across_plateaus_changes_and_failed_retry() {
+    let _lock = crate::gpu_test_lock();
+    let (gpu, volume, mut model) = super::tests::setup(16);
+    for z in [-2., 2.] {
+        model.curves.push(crate::model::CurvePath {
+            name: format!("Loop {z}"),
+            points_mm: vec![
+                [-5., -5., z],
+                [5., -5., z],
+                [5., 5., z],
+                [-5., 5., z],
+                [-5., -5., z],
+            ],
+        });
+    }
+    let mut config = EmConfig {
+        max_iterations: 4000,
+        ..Default::default()
+    };
+    config.wires = cad_wires(&model);
+    config.wires[0].current = Waveform::Table {
+        samples: vec![[0., 0.], [1e-5, 10.], [3e-5, 10.], [4e-5, 0.]],
+    };
+    config.wires[1].current = Waveform::Constant { value: -4. };
+    config.uniform.push(UniformField {
+        tesla: [0., 0., 0.001],
+        scale: Waveform::Constant { value: 1. },
+    });
+    let mut reference = EmState::new(
+        gpu.context.clone(),
+        &volume,
+        &model,
+        config.clone(),
+        Mode::Induction,
+    )
+    .unwrap();
+    let mut cached = EmState::new(
+        gpu.context.clone(),
+        &volume,
+        &model,
+        config,
+        Mode::Induction,
+    )
+    .unwrap();
+    reference.cache_source_fields = false;
+    reference.predict_increments = false;
+    cached.predict_increments = false;
+    for tick in 1..=5 {
+        reference.step(&model, &volume).unwrap();
+        if tick == 4 {
+            let before = fields(&gpu, &cached);
+            let time = cached.time_s;
+            cached.config.max_iterations = 1;
+            assert!(cached.step(&model, &volume).is_err());
+            assert_eq!(cached.time_s, time);
+            assert!(!cached.source_valid);
+            assert_eq!(fields(&gpu, &cached), before);
+            cached.config.max_iterations = 4000;
+        }
+        cached.step(&model, &volume).unwrap();
+        assert_eq!(
+            cached.source_reused,
+            matches!(tick, 2 | 3 | 5),
+            "tick {tick}"
+        );
+        assert_eq!(cached.time_s, reference.time_s);
+        assert_eq!(
+            fields(&gpu, &cached),
+            fields(&gpu, &reference),
+            "fields at tick {tick}"
+        );
+        let a = read_bytes(&gpu.context, &cached._source, 0, cached._source.size()).unwrap();
+        let b = read_bytes(
+            &gpu.context,
+            &reference._source,
+            0,
+            reference._source.size(),
+        )
+        .unwrap();
+        assert_eq!(
+            a, b,
+            "source/history/coefficient/motion packet at tick {tick}"
+        );
+        let a = cached.energy_step().unwrap();
+        let b = reference.energy_step().unwrap();
+        assert_eq!(
+            [
+                a.magnetic_j,
+                a.delta_magnetic_j,
+                a.joule_j,
+                a.external_j,
+                a.backward_euler_j,
+                a.balance_error_j
+            ],
+            [
+                b.magnetic_j,
+                b.delta_magnetic_j,
+                b.joule_j,
+                b.external_j,
+                b.backward_euler_j,
+                b.balance_error_j
+            ]
+        );
+    }
+}
