@@ -565,14 +565,21 @@ repeated operation works with both alloys.
 The matching wider-contact Sn60Pb40 control also completes 3.6 ms, but its
 approximately 0.618 mm alpha 0.01 component moves downward only about
 0.012 m/s. Separation with almost no departing speed is not a robust jetting
-result. Two material-specific coarse waveform checks are queued: 200 A /
-230 µs and 240 A / 200 µs, each with 15% reverse current. Neither is a result
-yet, and the smaller-contact Sn60Pb40 control currently departs more clearly.
+result. Two material-specific coarse checks, 200 A / 230 µs and 240 A /
+200 µs with 15% reverse current, now both complete 3.6 ms without detachment
+at the reported thresholds. These endpoints do not establish later-time
+behaviour. The smaller-contact Sn60Pb40 control currently departs more clearly.
 
 [Both unmodified immersed-pin controls](immersed-pin-flow-screening.json),
 using 0.5 and 1 mm electrodes with the wider pole spacing, complete 4.2 ms
 and retract without detached components. This does not establish the outcome
 of the closer-pole, milled-collar variant.
+
+[The custom cross-channel 50 µm control](cross-fine-screening.json), at
+110 A / 300 µs, completes 3.5 ms without detachment. Its roughly 175 nL below
+the tip is still connected. The earlier coarse detached result uses 130 A /
+350 µs, so this is not a matched-waveform grid refutation or a general
+rejection of that design family.
 
 ### Contact and heater controls
 

@@ -380,5 +380,129 @@
       "relative_liquid_volume_change": 1.0420023954793578e-08
     },
     "interpretation": "No detachment by3.6ms at any reported threshold; incomplete as a longer-time outcome, not a hardware failure certificate."
+  },
+  "higher_peak_control": {
+    "artifacts": "artifacts/hardware-research/v6-tip-wide-snpb-flow-240A-200us-retract15-h010",
+    "run": {
+      "accepted_steps": 1200,
+      "contact_resistivity_ohm_m2": 0.0,
+      "error": null,
+      "field_every": 150,
+      "fluid_mechanical_work_J": 8.932272976896962e-07,
+      "frequency_hz": 0.0,
+      "grid": {
+        "cell_m": 0.00010000000474974513,
+        "dims": [
+          49,
+          52,
+          95
+        ]
+      },
+      "joule_generated_J": 0.01081239699478434,
+      "lagged_electrical_work_J": 0.010811611056680331,
+      "lagged_mechanical_work_J": 8.775490048971749e-07,
+      "limitations": [
+        "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+        "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+        "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+        "New research client; not a GUI electrode feature or frozen-baseline claim."
+      ],
+      "max_terminal_voltage_V": 0.25878456234931946,
+      "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+      "peak_A": 240.0,
+      "positive_duration_s": 0.00019999999999999998,
+      "project": "artifacts/hardware-research/cases/v6-tip-wide-pool35-medium-fit-snpb-h010.mhd.json",
+      "released_static_workspace_bytes": 55093784,
+      "retract_fraction": 0.15000000596046448,
+      "rise_s": 2e-05,
+      "status": "complete",
+      "tail_timestep_s": 3e-06,
+      "tail_transition_not_before_s": 0.00029166666666666664,
+      "time_s": 0.0035999999999999648,
+      "timestep_s": 3e-06
+    },
+    "final": {
+      "step": 1200,
+      "time_us": 3599.999999999965,
+      "first_nonnegative_cell_plane_z_mm": 0.04999988595955074,
+      "exit_plane_alpha_area_mm2": 0.11857862943319543,
+      "exit_plane_mean_uz_m_s": 0.27165784862353964,
+      "exit_plane_mean_pressure_pa": 2050.801957067779,
+      "exit_plane_downward_flux_proxy_nl_s": -32212.815364549806,
+      "liquid_volume_nl": 11348.001027936898,
+      "boundary_maximum_liquid_fraction": {
+        "z_min": 0.0,
+        "z_max": 0.0,
+        "y_min": 0.0,
+        "y_max": 0.0,
+        "x_min": 0.0,
+        "x_max": 0.0
+      },
+      "liquid_touches_domain_boundary_alpha01": false,
+      "below_tip_nl": 127.68518334348315,
+      "below_one_cell_guard_nl": 120.42949206989515,
+      "front_z_mm_alpha_half": -0.9500001615379006,
+      "detached_below_tip": [
+        {
+          "volume_nl": 90.56549480605813,
+          "equivalent_diameter_mm": 0.5571704142273848,
+          "cells": 106,
+          "centre_mm": [
+            1.2912022786726907e-06,
+            3.4240887043372026e-06,
+            -0.7190885943562815
+          ],
+          "velocity_m_s": [
+            -1.3017159972150694e-06,
+            3.927936177205993e-06,
+            0.08826208114624023
+          ],
+          "touches_domain_boundary": false
+        }
+      ],
+      "connectivity_thresholds": {
+        "0.01": [],
+        "0.25": [],
+        "0.5": [
+          {
+            "volume_nl": 90.56549480605813,
+            "equivalent_diameter_mm": 0.5571704142273848,
+            "cells": 106,
+            "centre_mm": [
+              1.2912022786726907e-06,
+              3.4240887043372026e-06,
+              -0.7190885943562815
+            ],
+            "velocity_m_s": [
+              -1.3017159972150694e-06,
+              3.927936177205993e-06,
+              0.08826208114624023
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "0.75": [
+          {
+            "volume_nl": 70.78673316386448,
+            "equivalent_diameter_mm": 0.5132367535469623,
+            "cells": 74,
+            "centre_mm": [
+              1.0861785216252213e-06,
+              1.854494628277377e-06,
+              -0.7114342264242336
+            ],
+            "velocity_m_s": [
+              -9.161407433566637e-06,
+              -1.3799053704133257e-06,
+              0.08932989835739136
+            ],
+            "touches_domain_boundary": false
+          }
+        ]
+      },
+      "below_tip_change_nl": 127.68515734840314,
+      "relative_liquid_volume_change": 1.7082798509093777e-08
+    },
+    "interpretation": "No detachment by3.6ms at any reported threshold. This does not establish a longer-time outcome."
   }
 }
