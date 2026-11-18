@@ -628,3 +628,17 @@ the lumped peak requirement is approximately 14.1 V from 24 V, with about
 15 W head/series electrical heat at 200 Hz. Initial-field tip heating scales
 up by 56%. Actual hot magnet grade, mounting temperature, wetting and contacts
 remain unqualified; smaller packaging trades against current and heating.
+
+### Feed and melting demand
+
+[Feedstock budgets](feedstock-screening.json) conserve mass between spherical
+liquid drops and solid 0.8 mm wire, using separate liquid/solid densities.
+At 200 Hz, 0.5 mm drops require approximately 25 mm/s wire feed, 5.5 g/min
+and 10 W feed enthalpy from 25 to 250 °C. At 0.6 mm these become 43 mm/s,
+9.5 g/min and 17 W; 400 Hz doubles all three rates. The nominal solid density
+and melting point follow [Feinhütte's alloy listing](https://www.feinhuette.de/en/metals/sn993cu07).
+Constant cp=214 J/kg/K and fusion heat=59 kJ/kg remain screening inputs,
+without a measured alloy enthalpy curve. Actual heater demand also includes
+losses and any retained electrical dissipation. These figures qualify neither
+a heater nor a wire-feed/replenishment mechanism; ordinary flux-cored wire is
+not the solid-wire assumption used here.

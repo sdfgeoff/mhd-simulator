@@ -257,5 +257,16 @@
       "catalogue_code": "F200-SC"
     },
     "limitations": "Geometry sourcing example only; confirm magnetization direction, grade, hot remanence, coating and delivery before treating two blocks as the modeled uniform 10 mm pole."
+  },
+  {
+    "id": "sncu-solid-feed-density",
+    "url": "https://www.feinhuette.de/en/metals/sn993cu07",
+    "author": "Feinhuette Halsbruecke",
+    "facts": {
+      "Sn99_3Cu0_7_nominal_density_kg_m3": 7300,
+      "melting_c": 227,
+      "formats": "solid and flux-cored wire listed"
+    },
+    "limitations": "Supplier nominal solid value, not a hot liquid density or verified0.8mm solid-wire SKU. The feed budget assumes solid wire without flux core; cp and fusion enthalpy remain separate screening assumptions."
   }
 ]

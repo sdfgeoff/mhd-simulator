@@ -1,0 +1,89 @@
+{
+  "status": "Steady throughput and feed-enthalpy scale, not demonstrated jetting or a qualified heater",
+  "inputs": {
+    "wire_mm": 0.8,
+    "liquid_density": 7000.0,
+    "solid_density": 7300.0,
+    "heat_capacity": 214.0,
+    "latent_heat": 59000.0,
+    "feed_c": 25.0,
+    "pool_c": 250.0,
+    "melting_c": 227.0
+  },
+  "method": "Spherical liquid volume=pi*D^3/6; mass conservation with separate liquid/solid densities; constant cp*(Tpool-Tfeed)+latent heat per unit mass.",
+  "solid_density_reference": "https://www.feinhuette.de/en/metals/sn993cu07",
+  "limits": [
+    "Sn99.3Cu0.7 only. Default solid density7300kg/m3 is a supplier nominal value, liquid density7000kg/m3 is the existing hot screening value.",
+    "Default cp214J/kg/K and latent59000J/kg are inherited screening inputs, not measured temperature-dependent alloy enthalpy. The constant cp is used for the whole feed temperature interval.",
+    "Solid wire is assumed, without a flux core, voids or entrained gas; no feed-force/traction, melting-length, replenishment-control or pool-level simulation.",
+    "Feed heat is one thermal-balance term. Actual heater demand also includes losses and any retained electrical dissipation; this report neither adds all pulse heat to demand nor assumes all pulse heat usefully melts feed."
+  ],
+  "cases": [
+    {
+      "drop_diameter_mm": 0.4,
+      "frequency_hz": 200,
+      "drop_volume_nl": 33.51032163829113,
+      "liquid_flow_mm3_s": 6.702064327658226,
+      "mass_flow_g_min": 2.814867017616455,
+      "solid_wire_speed_mm_s": 12.785388127853883,
+      "feed_sensible_heat_w": 2.258930781637205,
+      "feed_latent_heat_w": 2.7679525673228476,
+      "total_feed_enthalpy_w": 5.026883348960053
+    },
+    {
+      "drop_diameter_mm": 0.4,
+      "frequency_hz": 400,
+      "drop_volume_nl": 33.51032163829113,
+      "liquid_flow_mm3_s": 13.404128655316452,
+      "mass_flow_g_min": 5.62973403523291,
+      "solid_wire_speed_mm_s": 25.570776255707766,
+      "feed_sensible_heat_w": 4.51786156327441,
+      "feed_latent_heat_w": 5.535905134645695,
+      "total_feed_enthalpy_w": 10.053766697920105
+    },
+    {
+      "drop_diameter_mm": 0.5,
+      "frequency_hz": 200,
+      "drop_volume_nl": 65.44984694978736,
+      "liquid_flow_mm3_s": 13.089969389957473,
+      "mass_flow_g_min": 5.497787143782138,
+      "solid_wire_speed_mm_s": 24.97146118721461,
+      "feed_sensible_heat_w": 4.411974182885166,
+      "feed_latent_heat_w": 5.406157358052436,
+      "total_feed_enthalpy_w": 9.818131540937602
+    },
+    {
+      "drop_diameter_mm": 0.5,
+      "frequency_hz": 400,
+      "drop_volume_nl": 65.44984694978736,
+      "liquid_flow_mm3_s": 26.179938779914945,
+      "mass_flow_g_min": 10.995574287564276,
+      "solid_wire_speed_mm_s": 49.94292237442922,
+      "feed_sensible_heat_w": 8.823948365770333,
+      "feed_latent_heat_w": 10.812314716104872,
+      "total_feed_enthalpy_w": 19.636263081875203
+    },
+    {
+      "drop_diameter_mm": 0.6,
+      "frequency_hz": 200,
+      "drop_volume_nl": 113.09733552923251,
+      "liquid_flow_mm3_s": 22.619467105846503,
+      "mass_flow_g_min": 9.500176184455531,
+      "solid_wire_speed_mm_s": 43.15068493150684,
+      "feed_sensible_heat_w": 7.623891388025564,
+      "feed_latent_heat_w": 9.341839914714607,
+      "total_feed_enthalpy_w": 16.96573130274017
+    },
+    {
+      "drop_diameter_mm": 0.6,
+      "frequency_hz": 400,
+      "drop_volume_nl": 113.09733552923251,
+      "liquid_flow_mm3_s": 45.23893421169301,
+      "mass_flow_g_min": 19.000352368911063,
+      "solid_wire_speed_mm_s": 86.30136986301368,
+      "feed_sensible_heat_w": 15.247782776051128,
+      "feed_latent_heat_w": 18.683679829429213,
+      "total_feed_enthalpy_w": 33.93146260548034
+    }
+  ]
+}
