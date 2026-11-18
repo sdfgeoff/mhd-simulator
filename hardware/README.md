@@ -858,3 +858,19 @@ is not a measured advancing/receding angle for the actual nozzle. It is evidence
 against treating neutral 90° as universal, not a replacement boundary value.
 Electrical wetting inside the nozzle and droplet adhesion outside its exit
 must both be checked before selecting a coating or preparation route.
+
+
+## Full-height zero-gravity domain/boundary control
+
+The wider-contact full-height zero-gravity case completes 3.6 ms with one
+alpha-0.01 component, **0.59484 mm / 0.1477 m/s downward**, versus
+0.59467 mm / 0.1608 m/s in the cropped case. Size changes 0.029% and speed
+8.1%. Native cell centres align and static masks match exactly in the shared
+region; initial alpha differs by only 3.82×10⁻⁶ nL in L1, rather than being
+bitwise equal. Final common-region alpha L1 difference is 12.2 nL.
+No saved liquid reaches a boundary and volume drift is below 1.1×10⁻⁸.
+
+This changes lateral/vertical extent and the periodic air-return boundary
+together. It is not an extent-only control or spatial convergence. The
+matched −9.81 m/s² case is still running. Detailed records and comparison:
+[gravity-controls.json](gravity-controls.json).
