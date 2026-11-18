@@ -862,6 +862,77 @@
         "summed_step_energy_error_J": 2.1897691299122e-09,
         "time_s": 0.00036000000000000225,
         "tip_roi": true
+      },
+      "nearflush-thermal-tipROI175-h0050": {
+        "I2dt_A2s": 6.948046875000001,
+        "adiabatic_control": false,
+        "cold": "artifacts/hardware-research/nearflush-thermal-current-only-cold30-h0050",
+        "dt_us": 2.0,
+        "expected_joule_J": 0.006352833367538444,
+        "grid": {
+          "cell_m": 5.0000002374872565e-05,
+          "dims": [
+            60,
+            40,
+            24
+          ],
+          "origin_m": [
+            -0.001500000013038516,
+            -0.0010000000474974513,
+            0.0
+          ]
+        },
+        "initial_temperature_C": 250.0,
+        "joule_J": 0.006352833123681012,
+        "limits": [
+          "Fixed current path/material properties; no temperature-dependent conductivity, moving interface, electrical contact heating or heater/clamp cooling.",
+          "Closed insulated retained conductors initially250C; magnet/air heat transfer omitted, no repetition equilibrium or qualified melting margin.",
+          "TIP_ROI when enabled uses insulated cuts and exact native-cell source mapping from the full-head electrical solution; validate thermal cut sensitivity before use, and do not extrapolate it to steady heating.",
+          "Sharp contact geometry and finite grid do not resolve real microscopic contact areas or establish peak convergence."
+        ],
+        "method": "Native ThermalState diffusion/enthalpy with exact per-interval I\u00b2dt scaling of accepted cold Joule field. Isolated zero-Joule magnet bodies omitted from thermal domain; all retained material IDs/grid match.",
+        "peak_A": 175.0,
+        "peak_temperature_C": 274.5652160644531,
+        "peak_time_s": 0.00023399999999999953,
+        "per_material_at_global_peak": [
+          {
+            "id": 4,
+            "index": 10832,
+            "maximum_C_at_global_peak_frame": 255.29196166992188,
+            "name": "Sn99.3Cu0.7 molten research properties"
+          },
+          {
+            "id": 14,
+            "index": 23257,
+            "maximum_C_at_global_peak_frame": 274.5652160644531,
+            "name": "Thin-wall stainless screening"
+          },
+          {
+            "id": 16,
+            "index": 23241,
+            "maximum_C_at_global_peak_frame": 252.43783569335938,
+            "name": "Positive copper terminal"
+          },
+          {
+            "id": 17,
+            "index": 23258,
+            "maximum_C_at_global_peak_frame": 252.43783569335938,
+            "name": "Negative copper terminal"
+          }
+        ],
+        "positive_us": 250.0,
+        "project": "artifacts/hardware-research/cases/nearflush-thermal-current-only-h0050.mhd.json",
+        "source_energy_relative_error": -3.8385617493065314e-08,
+        "source_offset_cells": [
+          46,
+          56,
+          100
+        ],
+        "status": "complete",
+        "steps": 180,
+        "summed_step_energy_error_J": -8.280653940317961e-12,
+        "time_s": 0.0003599999999999992,
+        "tip_roi": true
       }
     },
     "checks": {

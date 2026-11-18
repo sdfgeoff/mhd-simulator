@@ -25,7 +25,9 @@ simulation properties.
 5. `v6-flat-shortbar`: machined tip and 4 mm shoulder clearance flats, with two
    25 × 5 × 5 mm SmCo bars stacked per pole. Nominal projection 0.2 mm below exit,
    excluding mounts/tolerances. The first 150 A case separates a component moving
-   upward at 3.6 ms; this is not a usable jet. A 175 A amplitude control is running.
+   upward at 3.6 ms; this is not a usable jet. The 175 A control gives a coarse
+   leading component around 0.595 mm moving down at 0.355 m/s. Higher-threshold
+   returning-tail fragments, refinement and repetition remain open.
 
 ## Inspect and reproduce
 

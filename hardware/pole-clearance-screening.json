@@ -660,10 +660,263 @@
     "interpretation": "Atalpha.01D.613595mm,vz+.055707m/s;alpha.5D.558272mm,vz+.044263. Threshold-dependent size, weak/stalled/upward motion. Not successful departingjet. No finegrid,repetition or laterflight conclusion."
   },
   "nearflush_175A_control": {
-    "status": "Queued/running next",
+    "status": "Complete3.6ms; coarse departingcomponent, finegrid/repetition/flightvalidation open",
     "change": "Only positive peak increases150\u2192175A; reverse remains25% ofpositive, so scales correspondingly. Same250uspositive/83.333usreverse,25usgap,3usfixedstep,1200steps,geometry,gravity.",
     "output": "artifacts/hardware-research/v6-tip-flat08-shortbar-gravity-flow-175A-250us-h010",
     "electrical_sensitivity": "hardware/pulse-shape-evidence.json",
-    "hypothesis": "Slightly more impulse may produce downward rather than stalled/upward separation. Size/heating may worsen; no improvement assumed."
+    "hypothesis": "Slightly more impulse may produce downward rather than stalled/upward separation. Size/heating may worsen; no improvement assumed.",
+    "completed": {
+      "run_status": {
+        "accepted_steps": 1200,
+        "contact_resistivity_ohm_m2": 0.0,
+        "error": null,
+        "field_every": 150,
+        "fluid_mechanical_work_J": 1.4584032685284866e-06,
+        "frequency_hz": 0.0,
+        "grid": {
+          "cell_m": 0.00010000000474974513,
+          "dims": [
+            76,
+            76,
+            195
+          ]
+        },
+        "joule_generated_J": 0.006869700210213194,
+        "lagged_electrical_work_J": 0.006871048770155749,
+        "lagged_mechanical_work_J": 1.3844628231799796e-06,
+        "limitations": [
+          "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+          "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+          "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+          "New research client; not a GUI electrode feature or frozen-baseline claim."
+        ],
+        "max_terminal_voltage_V": 0.1736886352300644,
+        "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+        "peak_A": 175.0,
+        "periodic_fluid_axes": [
+          false,
+          false,
+          false
+        ],
+        "positive_duration_s": 0.00025,
+        "project": "artifacts/hardware-research/cases/v6-tip-flat08-shortbar-full-fit-sncu-h010.mhd.json",
+        "released_static_workspace_bytes": 253071836,
+        "retract_delay_s": 2.5e-05,
+        "retract_fraction": 0.25,
+        "rise_s": 2e-05,
+        "status": "complete",
+        "tail_timestep_s": 3e-06,
+        "tail_transition_not_before_s": 0.00035833333333333333,
+        "time_s": 0.0035999999999999648,
+        "timestep_s": 3e-06,
+        "uniform_acceleration_m_s2": [
+          0.0,
+          0.0,
+          -9.8100004196167
+        ]
+      },
+      "final_saved_frame": {
+        "step": 1200,
+        "time_us": 3599.999999999965,
+        "first_nonnegative_cell_plane_z_mm": 0.04999988595955074,
+        "exit_plane_alpha_area_mm2": 0.10529892073989766,
+        "exit_plane_mean_uz_m_s": 0.2445917791597104,
+        "exit_plane_mean_pressure_pa": -752.0480114323458,
+        "exit_plane_downward_flux_proxy_nl_s": -25755.2503673689,
+        "liquid_volume_nl": 11348.000825663305,
+        "minimum_liquid_fraction": 0.0,
+        "maximum_liquid_fraction": 1.0,
+        "below_tip_maximum_liquid_fraction_at_cell_centres": 1.0,
+        "boundary_maximum_liquid_fraction": {
+          "z_min": 0.0,
+          "z_max": 0.0,
+          "y_min": 0.0,
+          "y_max": 0.0,
+          "x_min": 0.0,
+          "x_max": 0.0
+        },
+        "liquid_touches_domain_boundary_alpha01": false,
+        "below_tip_nl": 158.4734327812295,
+        "below_one_cell_guard_nl": 157.14319940928112,
+        "front_z_mm_alpha_half": -2.150000218534842,
+        "detached_below_tip": [
+          {
+            "volume_nl": 91.4675610461603,
+            "equivalent_diameter_mm": 0.5590141814909293,
+            "cells": 106,
+            "centre_mm": [
+              7.626463042297692e-06,
+              2.015513088019885e-06,
+              -1.8607185583842025
+            ],
+            "velocity_m_s": [
+              2.900806794059463e-05,
+              8.241454452218022e-06,
+              -0.36437901854515076
+            ],
+            "touches_domain_boundary": false
+          },
+          {
+            "volume_nl": 26.277610648864922,
+            "equivalent_diameter_mm": 0.36886072629454064,
+            "cells": 33,
+            "centre_mm": [
+              -0.0010079523815763505,
+              0.002893920784767817,
+              -0.3943390577846032
+            ],
+            "velocity_m_s": [
+              -0.003226156812161207,
+              -0.0027927348855882883,
+              0.29680541157722473
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "connectivity_thresholds": {
+          "0.01": [
+            {
+              "volume_nl": 110.22876761853679,
+              "equivalent_diameter_mm": 0.5948837556013556,
+              "cells": 218,
+              "centre_mm": [
+                1.565856235737476e-05,
+                1.073912929798067e-05,
+                -1.8615334963612105
+              ],
+              "velocity_m_s": [
+                2.6076271751662716e-05,
+                5.463633897306863e-06,
+                -0.3546622097492218
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.25": [
+            {
+              "volume_nl": 102.54552374171432,
+              "equivalent_diameter_mm": 0.5807279049032531,
+              "cells": 142,
+              "centre_mm": [
+                1.2363120235296649e-05,
+                7.344107752884499e-06,
+                -1.8681266250111412
+              ],
+              "velocity_m_s": [
+                2.6969304599333555e-05,
+                5.718635748053202e-06,
+                -0.3606795072555542
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.5": [
+            {
+              "volume_nl": 91.4675610461603,
+              "equivalent_diameter_mm": 0.5590141814909293,
+              "cells": 106,
+              "centre_mm": [
+                7.626463042297692e-06,
+                2.015513088019885e-06,
+                -1.8607185583842025
+              ],
+              "velocity_m_s": [
+                2.900806794059463e-05,
+                8.241454452218022e-06,
+                -0.36437901854515076
+              ],
+              "touches_domain_boundary": false
+            },
+            {
+              "volume_nl": 26.277610648864922,
+              "equivalent_diameter_mm": 0.36886072629454064,
+              "cells": 33,
+              "centre_mm": [
+                -0.0010079523815763505,
+                0.002893920784767817,
+                -0.3943390577846032
+              ],
+              "velocity_m_s": [
+                -0.003226156812161207,
+                -0.0027927348855882883,
+                0.29680541157722473
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.75": [
+            {
+              "volume_nl": 69.68225250149482,
+              "equivalent_diameter_mm": 0.510553415885434,
+              "cells": 72,
+              "centre_mm": [
+                -5.24476592175991e-07,
+                -4.582703392161245e-07,
+                -1.865340481144942
+              ],
+              "velocity_m_s": [
+                2.5366980480612256e-05,
+                7.826549335732125e-06,
+                -0.3671693205833435
+              ],
+              "touches_domain_boundary": false
+            },
+            {
+              "volume_nl": 12.813057341051833,
+              "equivalent_diameter_mm": 0.290325187907054,
+              "cells": 14,
+              "centre_mm": [
+                3.110902427238973e-05,
+                -1.7827237184691803e-05,
+                -0.42130520440604163
+              ],
+              "velocity_m_s": [
+                -0.00039576817653141916,
+                0.0002555282844696194,
+                0.3318936228752136
+              ],
+              "touches_domain_boundary": false
+            },
+            {
+              "volume_nl": 2.728173525454951,
+              "equivalent_diameter_mm": 0.1733635491000763,
+              "cells": 3,
+              "centre_mm": [
+                0.1162316557195683,
+                -0.11595727203085707,
+                -0.3500001177459483
+              ],
+              "velocity_m_s": [
+                0.129736065864563,
+                -0.1315397471189499,
+                0.25250038504600525
+              ],
+              "touches_domain_boundary": false
+            },
+            {
+              "volume_nl": 2.73053136632895,
+              "equivalent_diameter_mm": 0.1734134782261604,
+              "cells": 3,
+              "centre_mm": [
+                -0.11623827599114701,
+                0.1159346388038641,
+                -0.3500001330394298
+              ],
+              "velocity_m_s": [
+                -0.12995943427085876,
+                0.1310446411371231,
+                0.2532333433628082
+              ],
+              "touches_domain_boundary": false
+            }
+          ]
+        },
+        "below_tip_change_nl": 158.4734067861495,
+        "relative_liquid_volume_change": -6.89278745191757e-10
+      },
+      "maximum_saved_components_alpha01": 1,
+      "first_saved_boundary_contact_us": null
+    },
+    "interpretation": "Alpha.01 leadingcomponentD.594884mm,downward.354662m/s; alpha.5D.559014/downward.364379. Returningtail fragments appear at higherthresholds; do not infer clean single-drop operation from one threshold. No saved boundary contact."
   }
 }

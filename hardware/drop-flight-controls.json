@@ -1,0 +1,14 @@
+{
+  "status": "Controlsrunning; no resultyet",
+  "generator": "scripts/make_drop_flight_control.py",
+  "cases": "artifacts/hardware-research/cases/drop-flight-h010-v1",
+  "physics": "NormalnativeRunState, fluid+surface, noEMorheat.0.6mmSnCudropin4x4x6mmdomain,100umcells,2ussteps,6msrequested.",
+  "controls": {
+    "zeroG": "Initialrest,closedboundaries. COMshouldremainstationary despitecapillaryshape relaxation.",
+    "gravity": "Initialrest,closedboundaries,g=-9.81. COMacceleration shouldbeapproximatelygravity aftersmallbuoyancy/drag.",
+    "translation-periodic": "Allphasesinitialuniformvz=-.2m/s,periodicboundaries,zeroG. ExpectedCOMshift=-.2*t without spuriousmomentumdrift."
+  },
+  "purpose": "Diagnose unexpected first-dropdeceleration in hardware repetition runs before trusting their long-timevelocity. Not a hardwarejettingresult.",
+  "measurement": "UseactualinitialnativeVOFmass/COM and accepted clocks; no assumption of exact CADspherevolume. ComparenativeCOMtransport and alpha-weightedvelocity, volume drift and boundary contact.",
+  "limits": "Coarse6-cell-diameterdrop andfiniteclosed/periodicdomains require carefulscope; passingonecontrolcannotvalidate alljettingphysics."
+}

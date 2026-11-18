@@ -20,6 +20,7 @@ gravity-on. The matched gravity-on tip-contact control is now complete.
 | Configuration | Accepted evidence | Main unresolved issue |
 | --- | --- | --- |
 | Stainless V6 approximation, 0.4 mm bore, 0.8 × 0.4 mm external tip contacts, larger SmCo poles | Gravity-on full-height 100 µm case: one 0.59993 mm component moving down at 0.1795 m/s at 3.6 ms, with 200 A / 250 µs. | 50 µm result is oversized and materially faster; refill/repetition, electrical wetting and contacts remain open. |
+| Machined tip with near-flush stacked SmCo bars | Gravity-on 100 µm case at 175 A / 250 µs: leading component 0.5949 mm / 0.3547 m/s downward at 3.6 ms. | Higher-threshold returning-tail fragments; fine-grid, isolated-flight and repetition checks open. Fixed-path 50 µm thermal replay peaks about 275 °C from 250 °C at this pulse. |
 | Same tip contacts, one 10 × 5 mm SmCo disc per pole | 100 µm case: one 0.5962 mm component moving down at 0.212 m/s at 3.6 ms, with 250 A / 250 µs. | Higher peak current, local heating and omitted self-field; no fine-grid or gravity/repetition confirmation. |
 | V6 with two milled collar flats and immersed 1 mm tungsten pins | Fixed 1.5 µs rerun completes 4.2 ms without a detached component. The earlier 3 µs run hit its CFL guard at 2.154 ms. | Gas is drawn between the electrodes; a large cold force did not establish jetting. |
 | Custom stainless chamber, one ten-turn coil | Normal unified solver completes 3.597 ms at 250 A / 50 kHz without resolved ejection on the 200 µm grid. Matched zero-current control completes too. | Coarse interface; geometry, frequency and loaded driver remain open. |
@@ -275,8 +276,8 @@ before claiming comparable jetting.
    detached component by 3.6 ms; further waveform changes are unproven.
 4. The first flat-contact/compact-disc 150 A trial completes 3.6 ms without
    detachment. The near-flush short-pole150A case separates a component by3.6ms, but it
-   moves UPWARD at0.056m/s (alpha0.01), so is not a usable jet. A175A control
-   retains all other timing/geometry settings.
+   moves UPWARD at0.056m/s (alpha0.01), so is not a usable jet. The175A control now gives a leading0.595mm component moving down0.355m/s
+   at3.6ms, but tail classification and refinement remain open.
 5. The exploratory two-phase unified fluid trial at 200 A per coil, explicitly
    zero gravity and 200 µm resolution.
 

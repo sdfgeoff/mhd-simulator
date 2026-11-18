@@ -1601,5 +1601,167 @@
     "any_saved_detached": false,
     "any_saved_boundary_contact": false,
     "scope": "Completed3.6ms gravity-on trial, no saved detached component. Does not reject later breakup or other waveforms."
+  },
+  "completed_repetition_retract25": {
+    "run_status": {
+      "accepted_steps": 3333,
+      "contact_resistivity_ohm_m2": 0.0,
+      "error": null,
+      "field_every": 300,
+      "fluid_mechanical_work_J": 1.6441229005924196e-06,
+      "frequency_hz": 200.0,
+      "grid": {
+        "cell_m": 0.00010000000474974513,
+        "dims": [
+          76,
+          76,
+          225
+        ]
+      },
+      "joule_generated_J": 0.019752471318907214,
+      "lagged_electrical_work_J": 0.01975370876246247,
+      "lagged_mechanical_work_J": 1.5887948175538302e-06,
+      "limitations": [
+        "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+        "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+        "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+        "New research client; not a GUI electrode feature or frozen-baseline claim."
+      ],
+      "max_terminal_voltage_V": 0.22360892593860626,
+      "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+      "peak_A": 200.0,
+      "positive_duration_s": 0.00025,
+      "project": "artifacts/hardware-research/cases/v6-tip-wide-fullheight-flight8-gravity-fit-sncu-h010.mhd.json",
+      "released_static_workspace_bytes": 291860308,
+      "retract_fraction": 0.25,
+      "rise_s": 2e-05,
+      "status": "complete",
+      "tail_timestep_s": 3e-06,
+      "tail_transition_not_before_s": 0.00035833333333333333,
+      "time_s": 0.009999000000000138,
+      "timestep_s": 3e-06
+    },
+    "final_saved_frame": {
+      "step": 3333,
+      "time_us": 9999.000000000138,
+      "first_nonnegative_cell_plane_z_mm": 0.050000002374872565,
+      "exit_plane_alpha_area_mm2": 0.005820769297432959,
+      "exit_plane_mean_uz_m_s": 0.05553869186112856,
+      "exit_plane_mean_pressure_pa": 599.1102638720358,
+      "exit_plane_downward_flux_proxy_nl_s": -323.27791240484686,
+      "liquid_volume_nl": 11347.99995280541,
+      "minimum_liquid_fraction": 0.0,
+      "maximum_liquid_fraction": 1.0,
+      "below_tip_maximum_liquid_fraction_at_cell_centres": 0.9999998807907104,
+      "boundary_maximum_liquid_fraction": {
+        "z_min": 0.0,
+        "z_max": 0.0,
+        "y_min": 0.0,
+        "y_max": 0.0,
+        "x_min": 0.09989944100379944,
+        "x_max": 0.10540883243083954
+      },
+      "liquid_touches_domain_boundary_alpha01": true,
+      "below_tip_nl": 114.18409143166147,
+      "below_one_cell_guard_nl": 114.15127169135563,
+      "front_z_mm_alpha_half": -2.4500001163687557,
+      "detached_below_tip": [
+        {
+          "volume_nl": 82.4763118725964,
+          "equivalent_diameter_mm": 0.5400618958202367,
+          "cells": 98,
+          "centre_mm": [
+            -0.003327223192294571,
+            -0.001654981259031007,
+            -2.183695868592396
+          ],
+          "velocity_m_s": [
+            0.002244573086500168,
+            0.0007886722451075912,
+            0.04179873690009117
+          ],
+          "touches_domain_boundary": false
+        }
+      ],
+      "connectivity_thresholds": {
+        "0.01": [
+          {
+            "volume_nl": 113.19447360909805,
+            "equivalent_diameter_mm": 0.6001717286837768,
+            "cells": 240,
+            "centre_mm": [
+              -0.00024573371431394007,
+              -0.000164670628604843,
+              -2.18338258252289
+            ],
+            "velocity_m_s": [
+              0.0019712403882294893,
+              -0.000552190700545907,
+              0.034155845642089844
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "0.25": [
+          {
+            "volume_nl": 103.19150770855991,
+            "equivalent_diameter_mm": 0.5819447821034818,
+            "cells": 155,
+            "centre_mm": [
+              -0.0013065623024360988,
+              -0.002060226916809366,
+              -2.183086784173391
+            ],
+            "velocity_m_s": [
+              0.0014831476146355271,
+              0.00018237720360048115,
+              0.03758896514773369
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "0.5": [
+          {
+            "volume_nl": 82.4763118725964,
+            "equivalent_diameter_mm": 0.5400618958202367,
+            "cells": 98,
+            "centre_mm": [
+              -0.003327223192294571,
+              -0.001654981259031007,
+              -2.183695868592396
+            ],
+            "velocity_m_s": [
+              0.002244573086500168,
+              0.0007886722451075912,
+              0.04179873690009117
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "0.75": [
+          {
+            "volume_nl": 63.28543545554457,
+            "equivalent_diameter_mm": 0.4944264738508936,
+            "cells": 67,
+            "centre_mm": [
+              -0.003126811817660944,
+              -0.004100598825042391,
+              -2.1854185558644175
+            ],
+            "velocity_m_s": [
+              0.0043429420329630375,
+              0.0028776172548532486,
+              0.05491819232702255
+            ],
+            "touches_domain_boundary": false
+          }
+        ]
+      },
+      "below_tip_change_nl": 114.18407940642085,
+      "relative_liquid_volume_change": -9.282913437935747e-09
+    },
+    "maximum_saved_components_alpha01": 1,
+    "first_saved_boundary_contact_us": 8100.000000000435,
+    "interpretation": "Completes9.999ms withoutsecondresolveddetachedcomponent atalpha.01savedframes. Firstdropdeceleratesandturnsupward; liquidreachesxsideboundaryby8.1ms atz~.05mmundercontacts. Postboundarytrajectorycontaminated. Isolateddropflightcontrolstartedbeforehardwareinterpretation. Matchedr0followup remainsqueued/running."
   }
 }
