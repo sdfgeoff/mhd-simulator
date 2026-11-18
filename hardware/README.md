@@ -73,7 +73,9 @@ a departing, repeatable jet.
    fluid/interface engine. Applied-current self-field and magnetic reaction are
    omitted. Postprocessed local force corrections are roughly 10–15% for the
    leading tip cases, and are not fed back. External return wiring is absent. The assumed 0.95 T hot magnet remanence
-   does not qualify a catalogue grade or its hot load line.
+   does not qualify a catalogue grade or its hot load line. Specify nozzle alloy
+   and condition: room-temperature stainless datasheets do not establish the
+   hot conductivity or finished-part near-unit permeability assumed here.
 
 6. **Alloy transfer is incomplete.** Sn60Pb40 separates with the smaller
    contacts in a coarse trial at about 0.600 mm / 0.14 m/s, while wider-contact

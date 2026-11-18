@@ -268,5 +268,31 @@
       "formats": "solid and flux-cored wire listed"
     },
     "limitations": "Supplier nominal solid value, not a hot liquid density or verified0.8mm solid-wire SKU. The feed budget assumes solid wire without flux core; cp and fusion enthalpy remain separate screening assumptions."
+  },
+  {
+    "id": "316L-condition-and-room-resistivity",
+    "url": "https://www.sandmeyersteel.com/wp-content/uploads/316-316l-317l-spec-sheet.pdf",
+    "author": "Sandmeyer Steel",
+    "facts": {
+      "condition_note": "316/316L is nonmagnetic when annealed and can become slightly magnetic after cold work or welding.",
+      "electrical_resistivity_ohm_m_at20C": 7.4e-07,
+      "conductivity_S_m_derived_at20C": 1351351.3513513512
+    },
+    "limitations": "Does not identify the alloy in a stock nozzle or supply a250C conductivity fit. Finished-part permeability and hot resistance remain inputs to verify; no replacement material value was assigned to completed runs."
+  },
+  {
+    "id": "machinable-316L-permeability-bound",
+    "url": "https://www.alleima.com/en/technical-center/material-datasheets/bar-and-hollow-bar/bar/sanmac-316316l/",
+    "author": "Alleima",
+    "facts": {
+      "product": "Sanmac316/316L bar",
+      "manufacturer_relative_magnetic_permeability_bound": 2.1,
+      "bound_relation": "less than",
+      "thermal_conductivity_W_m_K_at200C": 17,
+      "thermal_conductivity_W_m_K_at300C": 18,
+      "specific_heat_J_kg_K_at200C": 515,
+      "specific_heat_J_kg_K_at300C": 525
+    },
+    "limitations": "Product-specific bound is not a measured permeability of1 or a hot magnetic model. A machining-grade name alone does not prove the unit-permeability approximation."
   }
 ]

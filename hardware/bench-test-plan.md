@@ -6,7 +6,8 @@ The leading geometry is a 3.2 mm inlet stainless V6 approximation with a
 variant uses 10 × 5 mm SmCo discs. Contact mounting and the driver are not
 manufacturing-ready designs.
 
-1. **Measure the actual nozzle and hot electrical path.** Check outlet land,
+1. **Measure the actual nozzle and hot electrical path.** Record alloy and condition; do not infer near-unit magnetic permeability
+   from the word stainless. Check outlet land,
    inlet and external contact positions against the generated CAD. Record
    four-wire resistance of the empty nozzle at operating temperature before
    fitting wall conductivity. Repeat after filling with solder. The difference
