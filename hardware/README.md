@@ -4,6 +4,16 @@ Research branch: `research/hardware-design-20261118`. The frozen application
 baseline is `simulator-baseline-2026-11-18`. This study has **not demonstrated a
 manufacturable solder jetter or qualified repetitive droplet production**.
 
+**Gravity scope correction (19 November):** all earlier generated pulse and
+carrier flow screens used `acceleration_m_s2: [0, 0, 0]`. Their trajectories
+isolate EM and capillary dynamics; they are not gravity-complete flight or
+repetition predictions. This includes the fine-grid reference, alloy controls,
+compact poles and the two-pulse screen. A matched full-height, nonperiodic pair
+with zero acceleration and −9.81 m/s² is running separately. Do not combine a
+new gravity result with a different cropped zero-gravity domain as a matched
+comparison. Initial free surfaces also start at rest, rather than from a
+settled hydrostatic/wetting equilibrium.
+
 ## Current design selection
 
 | Candidate | Accepted evidence | Unresolved before a hardware recommendation |
@@ -724,3 +734,29 @@ poles at 250 A / 230 µs, the roughly 0.599 mm component moves downward only
 0.0076 m/s. These observations are not claims of inevitable recontact or
 failed free flight; they are weaker departing trajectories than the 250 µs
 controls and need repetition checks.
+
+
+## Two-phase induction direction control
+
+The first two-coil geometry retains the single-coil chamber, with six-turn
+windings centred at z=2.5 and 8 mm. The upper winding is mostly over the narrow
+feed neck; this is an unoptimized placement. Both carry prescribed 200 A peak,
+50 kHz currents with a 90° phase difference, a 300 µs burst and 40 µs ramps.
+
+Both cold phase directions complete 100 µs at dt=0.125 µs. Trapezoidal averages
+of the same 80–100 µs carrier cycle give axial liquid forces of −0.058974 N
+and +0.096376 N. Their phase-odd half-difference is −0.077675 N, with a
++0.018701 N phase-even bias. Total liquid-plus-solid Joule power is about
+485.52 W in both directions during that cycle. This is an early-cycle cold
+comparison, without moving liquid, per-coil loaded voltage or jetting proof.
+A half-timestep check is queued/running. It is not a time-converged pump claim.
+
+```sh
+python scripts/compare_phase_screens.py \
+  artifacts/hardware-research/foil-two-phase-plus90-200A-cold100-h020 \
+  artifacts/hardware-research/foil-two-phase-minus90-200A-cold100-h020 \
+  --output artifacts/hardware-research/two-phase-cold-direction-comparison.json
+```
+
+Full comparison and source hashes: [two-phase-coil-screening.json](two-phase-coil-screening.json).
+Gravity correction and matched cases: [gravity-controls.json](gravity-controls.json).

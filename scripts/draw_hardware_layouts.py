@@ -461,6 +461,46 @@ def v6_tip_detail(case="v6-tip-disc20-compact-h010", filename="v6-tip-contact-se
     fig.savefig(OUT/filename,dpi=180)
 
 
+def two_phase_detail(case="foil-two-phase-plus90-200A-h020.mhd"):
+    """Draw the imported CAD and actual current tables, without invented fields."""
+    parts, curves = load(case)
+    project = json.loads((ROOT / "artifacts/hardware-research/cases" / (case + ".json")).read_text())
+    fig, axes = plt.subplots(1, 2, figsize=(12, 8))
+    fig.subplots_adjust(left=.07, right=.97, bottom=.16, top=.82, wspace=.3)
+    ax = axes[0]
+    section(ax, parts)
+    colours = ["#bc6627", "#7449a2"]
+    for index, curve in enumerate(curves):
+        before = len(ax.patches)
+        coils(ax, [curve], radius=.5)
+        for patch in list(ax.patches)[before:]:
+            patch.set_facecolor(colours[index])
+    ax.set(xlim=(-7.5, 7.5), ylim=(-1., 12), title="Actual generated CAD section")
+    label(ax, "Phase A: 6 turns", (-5.2, 2.5), (-7.1, .65), colours[0])
+    label(ax, "Phase B: 6 turns", (5.2, 8), (1.6, 10.8), colours[1])
+    label(ax, "6 mm liquid chamber", (-2.8, 4.8), (-7.1, 6.5))
+    label(ax, "1.2 mm feed neck\n0.8 mm wire", (.6, 7.7), (-7.1, 9.8))
+    ax = axes[1]
+    for index, wire in enumerate(project["electromagnetics"]["wires"]):
+        samples = np.array(wire["current"]["samples"])
+        ax.plot(samples[:, 0] * 1e6, samples[:, 1], color=colours[index],
+                label=f"Phase {'AB'[index]}", linewidth=1.5)
+    ax.set(xlim=(60, 120), ylim=(-230, 230), xlabel="time (µs)",
+           ylabel="prescribed current (A)", title="50 kHz carrier; 90° phase offset")
+    ax.axvspan(80, 100, color="#afcbd8", alpha=.25)
+    ax.axhline(0, color="#9da9af", linewidth=.6)
+    ax.text(90, -215, "comparison cycle", ha="center", fontsize=9)
+    ax.legend(loc="upper right")
+    ax.spines[["top", "right"]].set_visible(False)
+    fig.suptitle("Two-phase induction hypothesis\nOpposite phase sequences reverse the computed cold axial force",
+                 fontsize=16, weight="bold")
+    fig.text(.5, .07, "Upper coil is mostly over the narrow feed neck; placement is not optimized.", ha="center", fontsize=10)
+    fig.text(.5, .035, "Prescribed currents only: loaded voltage, driver, cooling, insulation and jetting remain unqualified.", ha="center", fontsize=10)
+    OUT.mkdir(parents=True, exist_ok=True)
+    fig.savefig(OUT / "two-phase-coil-setup.png", dpi=180)
+    plt.close(fig)
+
+
 def v6_pin_detail(case="v6-immersed-pins-pool35-v2-h010", filename="v6-immersed-pin-setup.png"):
     parts, _ = load(case)
     config = json.loads((ROOT / "artifacts/hardware-research/cases" / (case + ".mhd-assumptions.json")).read_text())["configuration"]

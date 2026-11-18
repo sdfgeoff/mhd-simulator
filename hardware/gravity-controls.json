@@ -1,0 +1,50 @@
+{
+  "status": "Full-height matched pair queued/running; no completed gravity comparison yet",
+  "correction": "Earlier generated hardware flow screens used zero uniform acceleration, including original/wide fine, compact poles, alloys, pins and carrier. Prior velocities are not gravity-complete flight predictions.",
+  "domain_mm": {
+    "min": [
+      -3.8,
+      -3.8,
+      -5.0
+    ],
+    "max": [
+      3.8,
+      3.8,
+      14.5
+    ],
+    "cell": 0.1
+  },
+  "periodic": [
+    false,
+    false,
+    false
+  ],
+  "waveform": "200 A, 250 us, retract ratio .25; fixed dt3 us, 1200 steps",
+  "cases": [
+    {
+      "project": "artifacts/hardware-research/cases/v6-tip-wide-fullheight-zeroG-fit-sncu-h010.mhd.json",
+      "sha256": "e01700a7f4c71148a29b3f9b9e230548e415c5ec6ad2ff2b47591843abf06730",
+      "acceleration_m_s2": [
+        0,
+        0,
+        0.0
+      ],
+      "output": "artifacts/hardware-research/v6-tip-wide-fullheight-zeroG-flow-200A-250us-h010"
+    },
+    {
+      "project": "artifacts/hardware-research/cases/v6-tip-wide-fullheight-gravity-fit-sncu-h010.mhd.json",
+      "sha256": "52d601fc7a75a5b2601c60912c2e0f7d893e4c9c615c1966a865ccbff2b0c8b9",
+      "acceleration_m_s2": [
+        0,
+        0,
+        -9.81
+      ],
+      "output": "artifacts/hardware-research/v6-tip-wide-fullheight-gravity-flow-200A-250us-h010"
+    }
+  ],
+  "limits": [
+    "Starts at rest, not settled hydrostatic/wetting equilibrium.",
+    "Full-height zero-G control is needed to separate domain changes from gravity.",
+    "No added gravity solver or reduced-pressure approximation."
+  ]
+}

@@ -1,5 +1,5 @@
 {
-  "status": "Paired cold phase-direction screens queued; no jetting or per-coil voltage result",
+  "status": "Both 100 us cold phase-direction screens complete; no moving-fluid or loaded circuit result",
   "cases": [
     "artifacts/hardware-research/cases/foil-two-phase-plus90-200A-h020.mhd.json",
     "artifacts/hardware-research/cases/foil-two-phase-minus90-200A-h020.mhd.json"
@@ -69,10 +69,100 @@
     "Corrected generator reproduces the smoke-tested two-source project settings.",
     "Initial EM-only smoke correctly rejected an inherited enabled free-surface flag; corrected before queued longer screens, rejected input retained with the failed smoke."
   ],
-  "scope": "Existing native3D EM solver with two actual CAD centreline sources. No new field solver or CPU PDE reference. \u00b190degree cold runs will separate phase-dependent axial force from common geometric bias. No moving-fluid result yet.",
+  "scope": "Existing native 3D EM solver, two actual CAD centreline sources. Opposite phases reverse axial force in the 80-100 us cycle. Not yet time/grid converged; no moving-fluid result.",
   "limits": [
     "The retained chamber is6mm ID only up toz6mm, followed by a1.2mm feed neck containing0.8mm wire; the upper coil atz8mm is mostly over this neck. This first placement is not optimized.",
     "Per-coil loaded voltage/mutual circuit is unresolved; the optional single-coil reaction observer is not used for multiple wires.",
     "Published multi-phase liquid-metal pumps motivate the hypothesis but do not validate a miniature coreless solder jetter."
-  ]
+  ],
+  "cold_comparison": {
+    "interval_us": [
+      80.0,
+      100.0
+    ],
+    "method": "Compare completed native cold screens over a common full carrier cycle.\n\nUses trapezoidal time averages of accepted diagnostics, not a field solver.\nThe half-difference isolates phase-odd response; the half-sum records bias.\n",
+    "plus": {
+      "directory": "artifacts/hardware-research/foil-two-phase-plus90-200A-cold100-h020",
+      "diagnostics_sha256": "efa683052431f35bbe718a2d42ee29aa6b343820a628e7c391accf748e34bf07",
+      "accepted_status": {
+        "ROI_z_m": [
+          0.0,
+          0.009000000000000001
+        ],
+        "accepted_steps": 800,
+        "cell_m": 0.00020000000949949026,
+        "diagnostic": "radial force moment per ROI volume, not a pressure solution or ejection criterion",
+        "dims": [
+          90,
+          90,
+          70
+        ],
+        "origin_m": [
+          -0.009000000543892384,
+          -0.009000000543892384,
+          -0.0020000000949949026
+        ],
+        "status": "complete",
+        "time_s": 0.00010000000000000162,
+        "warnings": []
+      },
+      "samples": 161,
+      "mean": {
+        "roi_force_z_N": -0.05897409998292052,
+        "liquid_joule_power_W": 195.00625569711084,
+        "solid_joule_power_W": 290.51057141124915,
+        "radial_pressure_proxy_Pa": 3967.8676592932147
+      }
+    },
+    "minus": {
+      "directory": "artifacts/hardware-research/foil-two-phase-minus90-200A-cold100-h020",
+      "diagnostics_sha256": "39aa90efebb38f3cfe0a771a03aa2d891fe37df6fc5db3cf54dbffc0e89c770a",
+      "accepted_status": {
+        "ROI_z_m": [
+          0.0,
+          0.009000000000000001
+        ],
+        "accepted_steps": 800,
+        "cell_m": 0.00020000000949949026,
+        "diagnostic": "radial force moment per ROI volume, not a pressure solution or ejection criterion",
+        "dims": [
+          90,
+          90,
+          70
+        ],
+        "origin_m": [
+          -0.009000000543892384,
+          -0.009000000543892384,
+          -0.0020000000949949026
+        ],
+        "status": "complete",
+        "time_s": 0.00010000000000000162,
+        "warnings": []
+      },
+      "samples": 161,
+      "mean": {
+        "roi_force_z_N": 0.09637635627523888,
+        "liquid_joule_power_W": 167.55541708092713,
+        "solid_joule_power_W": 317.9613196055166,
+        "radial_pressure_proxy_Pa": 3727.325567765153
+      }
+    },
+    "phase_odd_half_difference": {
+      "roi_force_z_N": -0.0776752281290797,
+      "liquid_joule_power_W": 13.725419308091858,
+      "solid_joule_power_W": -13.725374097133738,
+      "radial_pressure_proxy_Pa": 120.27104576403076
+    },
+    "phase_even_half_sum": {
+      "roi_force_z_N": 0.018701128146159183,
+      "liquid_joule_power_W": 181.280836389019,
+      "solid_joule_power_W": 304.2359455083829,
+      "radial_pressure_proxy_Pa": 3847.5966135291837
+    },
+    "limits": [
+      "Cold prescribed currents, not moving liquid or a driver circuit.",
+      "Radial force moment is not solved pressure.",
+      "Single early full-cycle average does not establish periodic steady state or convergence."
+    ]
+  }
 }
