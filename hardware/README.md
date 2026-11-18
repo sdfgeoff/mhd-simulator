@@ -675,3 +675,27 @@ axis-to-wall radial pressure diagnostics, not solved outlet pressures or jetting
 thresholds. They neither reject every stock-nozzle coil nor validate a MHz
 microcoil; they explain why liquid radius, wall shielding and frequency need
 consideration together. Radial wall thickness here is not foil exit-land length.
+
+### Two-coil phase-direction hypothesis
+
+[Two phased sources](two-phase-coil-screening.json) are queued for cold screens
+at ±90° relative phase, 200 A per phase and 50 kHz. Both six-turn coils are
+stored as centreline curves in the main glTF; the chamber bodies and material
+properties are unchanged. This uses the existing 3D EM engine. A headless smoke
+run passes after disabling an inherited free-surface flag for the EM-only case.
+Original body vertex payloads and the generator's default single-coil winding
+coordinates are checked unchanged.
+
+The experiment is motivated by
+[two-phase liquid-metal induction studies](https://arxiv.org/abs/1212.2105), not
+a claim that their pumping performance transfers here. The first coil centres
+are z=2.5 and 8 mm. The main 6 mm chamber ends at z=6 mm, then narrows to a
+1.2 mm feed neck around 0.8 mm wire; this upper-coil placement is not optimized.
+Cold force direction and heat come first. Loaded per-coil voltage, mutual
+circuit, driver, cooling and actual droplet production remain open. The
+single-coil reaction observer does not provide per-coil voltages for this case.
+
+`animate_hardware_flow.py` can render accepted tip slices as a GIF. Each image
+is a saved native frame, with its actual simulation timestamp; no synthetic
+intermediate droplet motion is added. The original 50 µm reference gives 25
+frames from 0 to 3.6 ms, with a visible playback-time disclaimer.

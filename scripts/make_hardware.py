@@ -102,7 +102,7 @@ def heater(zlo, zhi, hole=3.0, hx=11.5, hy=8.0):
     return orient(triangles)
 
 
-def winding(c, centre_z, segments=24):
+def winding(c, centre_z, segments=24, return_drop_mm=2.0):
     p = c["wire_diameter_mm"] * 1.08
     n = c["turns_per_layer"]
     span = n * p
@@ -116,7 +116,7 @@ def winding(c, centre_z, segments=24):
     # A return lead outside the winding closes the actual source path.
     start, end = points[0], points[-1]
     outside = c["outer_diameter_mm"] / 2 + 3.0
-    below = centre_z - span / 2 - 2.0
+    below = centre_z - span / 2 - return_drop_mm
     points.extend(
         [
             (outside, end[1], end[2]),
@@ -128,12 +128,12 @@ def winding(c, centre_z, segments=24):
     return points
 
 
-def emit(path, bodies, curve):
+def emit(path, bodies, curve, extra_curves=()):
     binary = bytearray()
     views, accessors, meshes, nodes = [], [], [], []
     for name, points, mode in [
         (name, [p for t in ts for p in t], 4) for name, ts in bodies
-    ] + ([("Series coil with return lead", curve, 3)] if curve else []):
+    ] + ([("Series coil with return lead", curve, 3)] if curve else []) + [(name, points, 3) for name, points in extra_curves]:
         offset = len(binary)
         for p in points:
             binary.extend(struct.pack("<fff", *(v * 0.001 for v in p)))

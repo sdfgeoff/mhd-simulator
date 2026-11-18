@@ -1,0 +1,78 @@
+{
+  "status": "Paired cold phase-direction screens queued; no jetting or per-coil voltage result",
+  "cases": [
+    "artifacts/hardware-research/cases/foil-two-phase-plus90-200A-h020.mhd.json",
+    "artifacts/hardware-research/cases/foil-two-phase-minus90-200A-h020.mhd.json"
+  ],
+  "configuration": {
+    "source_project": "artifacts/hardware-research/cases/foil-carrier-z6-50k250A-flow-fit-sncu-dt0125-h020.mhd.json",
+    "source_sha256": "7bc8f49f9cf1dfb715a00911ff3f6ad2fc19978720d0f2519dee2f03b86e9339",
+    "coil": {
+      "turns": 6,
+      "layers": 2,
+      "turns_per_layer": 3,
+      "inner_radius_mm": 4.3,
+      "length_mm": 4.5,
+      "wire_diameter_mm": 1.0,
+      "outer_diameter_mm": 12.92,
+      "wire_length_m": 0.30282122171575704,
+      "copper_temperature_c": 100.0,
+      "coil_r_ohm": 0.008736977912742225,
+      "air_l_h": 3.4773095193997127e-07,
+      "air_b_per_amp_t": 0.0006794346227930102
+    },
+    "coil_centres_z_mm": [
+      2.5,
+      8.0
+    ],
+    "relative_phase_deg": 90.0,
+    "peak_current_A_per_phase": 200.0,
+    "carrier_hz": 50000.0,
+    "burst_us": 300,
+    "ramp_us": 40,
+    "geometry_check": "Original generated triangle bodies survive float32 roundtrip unchanged. Both centreline coils are stored in the main glTF.",
+    "return_drop_mm": 1.0,
+    "nominal_clearance_between_upper_return_and_lower_winding_mm": 0.26,
+    "primary_background": "https://arxiv.org/abs/1212.2105",
+    "limits": [
+      "Two phased coil sources are a hypothesis, not a demonstrated miniature induction pump or solder jet.",
+      "Prescribed phase currents, without mutual-load voltage/circuit, driver or cooling qualification. The one-coil reaction observer is not applicable here.",
+      "Nominal wire diameter/packing and return clearances need manufactured-CAD and insulation tolerance checks; no solid winding mesh is included.",
+      "Chamber geometry and properties retained from the source; cold screening first, not a moving-fluid result."
+    ]
+  },
+  "smoke": {
+    "ROI_z_m": [
+      0.0,
+      0.009000000000000001
+    ],
+    "accepted_steps": 1,
+    "cell_m": 0.00020000000949949026,
+    "diagnostic": "radial force moment per ROI volume, not a pressure solution or ejection criterion",
+    "dims": [
+      90,
+      90,
+      70
+    ],
+    "origin_m": [
+      -0.009000000543892384,
+      -0.009000000543892384,
+      -0.0020000000949949026
+    ],
+    "status": "complete",
+    "time_s": 1.25e-07,
+    "warnings": []
+  },
+  "validation": [
+    "Source triangle bodies remain exactly unchanged through float32 repackaging.",
+    "Default single-coil winding retains identical imported float32 coordinates after adding optional return routing.",
+    "Corrected generator reproduces the smoke-tested two-source project settings.",
+    "Initial EM-only smoke correctly rejected an inherited enabled free-surface flag; corrected before queued longer screens, rejected input retained with the failed smoke."
+  ],
+  "scope": "Existing native3D EM solver with two actual CAD centreline sources. No new field solver or CPU PDE reference. \u00b190degree cold runs will separate phase-dependent axial force from common geometric bias. No moving-fluid result yet.",
+  "limits": [
+    "The retained chamber is6mm ID only up toz6mm, followed by a1.2mm feed neck containing0.8mm wire; the upper coil atz8mm is mostly over this neck. This first placement is not optimized.",
+    "Per-coil loaded voltage/mutual circuit is unresolved; the optional single-coil reaction observer is not used for multiple wires.",
+    "Published multi-phase liquid-metal pumps motivate the hypothesis but do not validate a miniature coreless solder jetter."
+  ]
+}
