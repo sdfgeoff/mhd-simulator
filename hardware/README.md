@@ -7,7 +7,14 @@ manufacture.** The target remains 0.4–0.6 mm solder drops, 24/48 V supply and
 actuator currents below a few hundred amps, using accessible parts.
 
 The [near-flush CAD/project bundle](designs/v6-flat-shortbar) is available for
-inspection and research reproduction; its first 150 A separation moves upward.
+inspection and research reproduction. Its 175 A run is the most promising
+packaging case, but remains a numerical candidate.
+
+**Motion qualification:** isolated-drop controls expose severe capillary motion
+error at 100 µm spacing. Every coarse velocity/trajectory below is provisional;
+a separated component is insufficient evidence of usable jetting. The 50 µm
+600 µs control improves strongly, but longer and finer checks are still running.
+See [drop-flight-controls.json](drop-flight-controls.json).
 
 The circuit-design handoff is [pulse-generator-handoff.md](pulse-generator-handoff.md):
 a proposed ±300 A peak / 100 A RMS bipolar current driver on 24/48 V.
@@ -47,10 +54,9 @@ excluding the main pool and components smaller than one alpha-weighted cell.
 Other thresholds are retained in the records. A component is not automatically
 a departing, repeatable jet.
 
-The next bounded waveform control is [delayed retraction](retract-delay-screening.json):
-the completed flat-tip 150 A case repeats with a 500 µs zero-current gap instead
-of 25 µs. Geometry, pulse amplitudes/durations and gravity remain fixed. It is
-queued behind the first near-flush trial; no result is assumed.
+The matched [delayed-retraction control](retract-delay-screening.json) completes
+with a 500 µs zero-current gap instead of 25 µs. Its separated component moves
+upward at 3.6 ms, so the delay does not establish an improved departing jet.
 
 The [matched-waveform V6/custom cold carrier pair](v6-carrier-comparison.json)
 has completed 120 µs. Over 80–120 µs at 250 A peak/50 kHz, mean downward liquid
