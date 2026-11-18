@@ -125,7 +125,7 @@ def write_project(parts, args):
             {
                 "body": i,
                 "magnetization_a_m": [0, -args.remanence / (4e-7 * math.pi), 0],
-                "subdivisions": 4,
+                "subdivisions": getattr(args, "magnet_subdivisions", 4),
                 "smoothing_mm": 0.05,
             }
             for i, (_, _, mid) in enumerate(parts)

@@ -88,9 +88,19 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut liquid_current_integral = 0.;
     let mut wall_current_integral = 0.;
     let mut mean_by = 0.;
+    let mut midplane_liquid = 0.;
+    let mut midplane_wall = 0.;
     let mut count = 0usize;
     for (i, (&id, f)) in ids.iter().zip(&fields).enumerate() {
         let x = f64::from(grid.origin_m[0]) + (i as u32 % grid.dims[0]) as f64 * h + h / 2.;
+        if i as u32 % grid.dims[0] == grid.dims[0] / 2 {
+            if id == 4 {
+                midplane_liquid += f64::from(f.j[0]) * h * h;
+            }
+            if id == 14 {
+                midplane_wall += f64::from(f.j[0]) * h * h;
+            }
+        }
         if id == 4 {
             for (k, v) in force.iter_mut().enumerate() {
                 *v += f64::from(f.force_heat[k]) * cell;
@@ -108,7 +118,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
         }
     }
-    let report = serde_json::json!({"project":a[1],"contact_resistivity_ohm_m2":contact,"status":"cold DC conduction and applied permanent-magnet field only; no ejection simulation","iterations":solver.iterations,"true_relative_residual":solver.relative_residual,"current_A":stats[0],"return_current_A":stats[1],"terminal_voltage_V":voltage,"joule_power_W":stats[2],"source_power_W":voltage*stats[0],"power_relative_defect":stats[2]/(voltage*stats[0])-1.,"liquid_force_N":force,"liquid_joule_power_W":liquid_power,"liquid_mean_By_T":mean_by/count as f64,"central_mean_liquid_current_A":liquid_current_integral/0.004,"central_mean_wall_current_A":wall_current_integral/0.004,"limitations":["Ideal electrical contact; material and oxide/contact resistance require bracketing.","Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.","Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."]});
+    let report = serde_json::json!({"project":a[1],"contact_resistivity_ohm_m2":contact,"status":"cold DC conduction and applied permanent-magnet field only; no ejection simulation","iterations":solver.iterations,"true_relative_residual":solver.relative_residual,"current_A":stats[0],"return_current_A":stats[1],"terminal_voltage_V":voltage,"joule_power_W":stats[2],"source_power_W":voltage*stats[0],"power_relative_defect":stats[2]/(voltage*stats[0])-1.,"liquid_force_N":force,"liquid_joule_power_W":liquid_power,"liquid_mean_By_T":mean_by/count as f64,"midplane_adjacent_cell_liquid_current_A":midplane_liquid,"midplane_adjacent_cell_wall_current_A":midplane_wall,"mean_liquid_current_over_x_plus_minus_2mm_A":liquid_current_integral/0.004,"mean_wall_current_over_x_plus_minus_2mm_A":wall_current_integral/0.004,"limitations":["Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.","Ideal electrical contact; material and oxide/contact resistance require bracketing.","Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.","Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."]});
     std::fs::write(
         output.join("report.json"),
         serde_json::to_vec_pretty(&report)?,

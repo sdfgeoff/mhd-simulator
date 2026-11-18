@@ -173,5 +173,30 @@
       "Sn60Pb40_surface_density": "PDF page 145, reprinted Kaban et al. paper Table 1; absolute temperature"
     },
     "limitations": "See solder-properties.json for units, temperature domains and uncertainty; Sn99Cu1 resistivity table is not substituted for Sn99.3Cu0.7."
+  },
+  {
+    "id": "smco-disc20-catalogue",
+    "urls": [
+      "https://aussiemagnets.com.au/collections/5-to-9kg/products/20mm-x-5mm-disc-samarium-cobalt",
+      "https://maurermagnetic.com/wp-content/uploads/2020/06/12_Samarium_E.pdf"
+    ],
+    "facts": {
+      "aussie_item": "3830",
+      "dimensions_mm": [
+        20,
+        5
+      ],
+      "magnetization": "axial through thickness",
+      "listed_grade": "Sm2Co17 / YXG26",
+      "seller_rated_max_C": 350,
+      "maurer_equivalent_stock": "M418.8, Sm26/16-17, 300 C"
+    },
+    "limitations": "Catalogue geometry confirms a purchasable size, not actual hot remanence or in-stock delivery. The study assumes Br=0.95 T and adjacent 5 mm discs with matched magnetization and no axial gap; actual grade, load line and temperature must be qualified."
+  },
+  {
+    "id": "indium-stainless-preparation",
+    "url": "https://www.indium.com/blog/soldering-to-stainless-steel/",
+    "facts": "Stainless oxide inhibits soldering; appropriate flux or a nickel-plated solderable surface are preparation routes.",
+    "limitations": "This establishes preparation options, not a calibrated molten-solder electrical contact resistivity or long-term nozzle compatibility."
   }
 ]

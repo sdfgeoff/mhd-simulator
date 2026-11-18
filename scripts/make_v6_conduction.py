@@ -6,6 +6,8 @@ contacts. A heater arrangement that does not bridge the contacts is required.
 
 import argparse
 import math
+
+import manifold3d as cad
 from pathlib import Path
 
 from make_conduction_hardware import box, write_project
@@ -18,6 +20,7 @@ def main():
     p.add_argument("--cell", type=float, default=0.1)
     p.add_argument("--wall-sigma", type=float, default=1.3e6)
     p.add_argument("--remanence", type=float, default=0.95)
+    p.add_argument("--magnet", choices=["cube10", "disc20-stack10"], default="cube10")
     p.add_argument("--orifice", type=float, choices=[0.4, 0.5, 0.6], default=0.4)
     p.add_argument(
         "--output", type=Path, default=Path("artifacts/hardware-research/cases")
@@ -61,10 +64,15 @@ def main():
         ("Positive copper jaw", box([1.5, 3.0, 2.6], [-4.25, 0.0, 3.5]), 16),
         ("Negative copper jaw", box([1.5, 3.0, 2.6], [4.25, 0.0, 3.5]), 17),
     ]
-    parts.extend(
-        (f"Bias magnet {i+1}", box([10.0, 10.0, 10.0], [0.0, sign * 9.75, 4.5]), 18)
-        for i, sign in enumerate([-1, 1])
-    )
+    if args.magnet == "cube10":
+        magnets = [box([10.0, 10.0, 10.0], [0.0, sign * 9.75, 4.5]) for sign in [-1, 1]]
+    else:
+        # Two axially magnetized 20 x 5 mm discs abutting per pole; no inter-disc gap.
+        # Homogeneous 10 mm stack is equivalent when magnetization is matched.
+        magnets = [cad.Manifold.cylinder(10.0, 10.0, circular_segments=48, center=True)
+                   .rotate([90, 0, 0]).translate([0.0, sign * 9.75, 4.5]) for sign in [-1, 1]]
+        args.magnet_subdivisions = 2
+    parts.extend((f"Bias magnet {i+1}", magnet, 18) for i, magnet in enumerate(magnets))
     write_project(parts, args)
 
 

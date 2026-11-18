@@ -1,0 +1,183 @@
+{
+  "geometry": "V6 .4 mm orifice, external copper hex-flat jaws, two 20 mm diameter x 10 mm axial SmCo stacks; each stack represents two abutting catalogue 20 x 5 mm discs",
+  "assumed_hot_Br_T": 0.95,
+  "grid_mm": 0.1,
+  "status": "Cold current/force screening only; no qualified jetting or repetitive-operation claim",
+  "axis_field_check": {
+    "GPU_near_axis_T": 0.37758547,
+    "finite_cylinder_axis_T": 0.37871909945,
+    "relative_difference": -0.0029933,
+    "sample_mm": [
+      0.05,
+      0.05,
+      4.45
+    ],
+    "analytic_point_mm": [
+      0,
+      0,
+      4.5
+    ],
+    "assumptions": "Uniform magnetization, mu_r=1, no return yoke, 9.5 mm gap, 10 mm stack thickness each side"
+  },
+  "trials": [
+    {
+      "local_artifacts": "artifacts/hardware-research/v6-direct-disc20-cold-180A-h010",
+      "report": {
+        "central_mean_liquid_current_A": 67.15620910874661,
+        "central_mean_wall_current_A": 112.84287933901217,
+        "contact_resistivity_ohm_m2": 0.0,
+        "current_A": 180.0,
+        "iterations": 288,
+        "joule_power_W": 9.934210777282715,
+        "limitations": [
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          2.43087856020957e-09,
+          2.2180728339096691e-10,
+          -0.1006048740175122
+        ],
+        "liquid_joule_power_W": 0.9507144328595826,
+        "liquid_mean_By_T": -0.3631764842892117,
+        "power_relative_defect": -5.960464477539062e-07,
+        "project": "artifacts/hardware-research/cases/v6-direct-disc20-fit-sncu-h010.mhd.json",
+        "return_current_A": -180.0,
+        "source_power_W": 9.934216499328613,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_voltage_V": 0.05519009009003639,
+        "true_relative_residual": 6.922849934198894e-06
+      }
+    },
+    {
+      "local_artifacts": "artifacts/hardware-research/v6-direct-disc20-cold-snpb-180A-h010",
+      "report": {
+        "central_mean_liquid_current_A": 61.49757337903326,
+        "central_mean_wall_current_A": 118.50198454407298,
+        "contact_resistivity_ohm_m2": 0.0,
+        "current_A": 180.0,
+        "iterations": 288,
+        "joule_power_W": 10.204761505126953,
+        "limitations": [
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          2.50490024679863e-09,
+          2.3137021474663378e-10,
+          -0.09209006066360714
+        ],
+        "liquid_joule_power_W": 1.0235870875445294,
+        "liquid_mean_By_T": -0.3631764842892117,
+        "power_relative_defect": -4.76837158203125e-07,
+        "project": "artifacts/hardware-research/cases/v6-direct-disc20-fit-snpb-h010.mhd.json",
+        "return_current_A": -180.0,
+        "source_power_W": 10.204766273498535,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_voltage_V": 0.056693147867918015,
+        "true_relative_residual": 6.2741410147282295e-06
+      }
+    },
+    {
+      "local_artifacts": "artifacts/hardware-research/v6-direct-disc20-cold-180A-contact-1e-9-h010",
+      "report": {
+        "contact_resistivity_ohm_m2": 9.999999717180685e-10,
+        "current_A": 180.0,
+        "iterations": 288,
+        "joule_power_W": 10.762337684631348,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          3.0007160457366023e-09,
+          1.4907620311468707e-10,
+          -0.07707927672869157
+        ],
+        "liquid_joule_power_W": 0.804971115418797,
+        "liquid_mean_By_T": -0.3631764842892117,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 51.519663476493385,
+        "mean_wall_current_over_x_plus_minus_2mm_A": 128.47449219400104,
+        "midplane_adjacent_cell_liquid_current_A": 85.23824412907315,
+        "midplane_adjacent_cell_wall_current_A": 94.74368742844807,
+        "power_relative_defect": -4.172325134277344e-07,
+        "project": "artifacts/hardware-research/cases/v6-direct-disc20-fit-sncu-h010.mhd.json",
+        "return_current_A": -180.00001525878906,
+        "source_power_W": 10.76234245300293,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_voltage_V": 0.05979079008102417,
+        "true_relative_residual": 6.8823528636130504e-06
+      }
+    },
+    {
+      "local_artifacts": "artifacts/hardware-research/v6-direct-disc20-cold-180A-contact-1e-8-h010",
+      "report": {
+        "contact_resistivity_ohm_m2": 9.99999993922529e-09,
+        "current_A": 179.99996948242188,
+        "iterations": 288,
+        "joule_power_W": 12.28610610961914,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          2.0560050970901386e-09,
+          5.6578005359758974e-11,
+          -0.0250908728437026
+        ],
+        "liquid_joule_power_W": 0.30629661497557265,
+        "liquid_mean_By_T": -0.3631764842892117,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 16.821757878782154,
+        "mean_wall_current_over_x_plus_minus_2mm_A": 163.18579440996194,
+        "midplane_adjacent_cell_liquid_current_A": 28.302461396167512,
+        "midplane_adjacent_cell_wall_current_A": 151.71539637437556,
+        "power_relative_defect": 0.0,
+        "project": "artifacts/hardware-research/cases/v6-direct-disc20-fit-sncu-h010.mhd.json",
+        "return_current_A": -180.00001525878906,
+        "source_power_W": 12.28610610961914,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_voltage_V": 0.06825615465641022,
+        "true_relative_residual": 6.631309133808827e-06
+      }
+    },
+    {
+      "local_artifacts": "artifacts/hardware-research/v6-direct-disc20-cold-180A-contact-1e-7-h010",
+      "report": {
+        "contact_resistivity_ohm_m2": 1.0000000116860974e-07,
+        "current_A": 180.00003051757812,
+        "iterations": 288,
+        "joule_power_W": 12.872312545776367,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          4.5060783655834937e-10,
+          7.242615636137547e-12,
+          -0.0032465480989043805
+        ],
+        "liquid_joule_power_W": 0.04203622329667523,
+        "liquid_mean_By_T": -0.3631764842892117,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 2.179073874081658,
+        "mean_wall_current_over_x_plus_minus_2mm_A": 177.8244848779611,
+        "midplane_adjacent_cell_liquid_current_A": 3.6758614292075964,
+        "midplane_adjacent_cell_wall_current_A": 176.32828759153725,
+        "power_relative_defect": -5.960464477539062e-07,
+        "project": "artifacts/hardware-research/cases/v6-direct-disc20-fit-sncu-h010.mhd.json",
+        "return_current_A": -180.00003051757812,
+        "source_power_W": 12.872320175170898,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_voltage_V": 0.07151287794113159,
+        "true_relative_residual": 6.6973466346098576e-06
+      }
+    }
+  ]
+}

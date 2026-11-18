@@ -190,3 +190,19 @@ Initial exit-plane liquid area explains part of the grid sensitivity: the
 0.5 mm cross-channel CAD aperture has area 0.19635 mm²; its initialized voxel
 proxy is 0.160, 0.180 and 0.200 mm² at 100, 75 and 50 µm spacing. Thus the
 coarse and finer cases do not yet present the same effective opening.
+
+The V6 generator accepts `--magnet disc20-stack10`: two abutting 20 × 5 mm
+axial SmCo discs per pole, represented as a homogeneous 10 mm stack. Catalogue
+sources are in sources.json; Br=0.95 T remains an assumed hot value. A cold
+180 A screen gave 0.363 T mean liquid field, 0.1006 N downward force and
+9.93 W total head Joule heat. The original 10 mm cubes at 250 A gave
+0.233 T, 0.0981 N and 19.16 W. This comparison is electrical only. At the
+stack midpoint, the GPU value 0.3776 T differs by 0.3% from the ideal
+finite-cylinder axial value 0.3787 T (near-axis cell sample).
+
+[The V6 contact-resistance screen](v6-dc-screening.json) is a major caveat:
+at 180 A, specific steel/liquid contact resistivities 1e-9, 1e-8 and 1e-7 Ωm²
+reduce downward liquid force from the ideal 0.101 N to 0.077, 0.025 and
+0.00325 N. Bare oxidized steel cannot be assumed electrically wetted.
+Indium recommends appropriate stainless flux or nickel plating for soldering
+stainless; any residue and hot contact resistance need physical qualification.
