@@ -24,6 +24,7 @@ def main():
     ]:
         p.add_argument("--" + name, type=float, required=True)
     p.add_argument("--retract-fraction", type=float, default=0.25)
+    p.add_argument("--retract-delay-us", type=float, default=25.0)
     p.add_argument("--rise-us", type=float, default=20.0)
     p.add_argument("--output", type=Path, required=True)
     a = p.parse_args()
@@ -51,7 +52,7 @@ def main():
         segments.extend(
             [(rise, 0.0, peak), (t - 2 * rise, peak, peak), (rise, peak, 0.0)]
         )
-    occupied = duration * 4 / 3 + 25e-6
+    occupied = duration * 4 / 3 + a.retract_delay_us * 1e-6
     if occupied * a.frequency_hz >= 1:
         raise ValueError("Pulse pair overlaps the next period")
     r_head, r_other = a.head_mohm * 0.001, a.parasitic_mohm * 0.001

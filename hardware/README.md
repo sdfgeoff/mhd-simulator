@@ -41,6 +41,11 @@ excluding the main pool and components smaller than one alpha-weighted cell.
 Other thresholds are retained in the records. A component is not automatically
 a departing, repeatable jet.
 
+The next bounded waveform control is [delayed retraction](retract-delay-screening.json):
+the completed flat-tip 150 A case repeats with a 500 µs zero-current gap instead
+of 25 µs. Geometry, pulse amplitudes/durations and gravity remain fixed. It is
+queued behind the first near-flush trial; no result is assumed.
+
 ## Physical scope and limits
 
 1. **Gravity and domain boundaries.** Earlier generated flow cases use

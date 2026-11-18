@@ -17,10 +17,15 @@ fn trapezoid(t: f64, start: f64, duration: f64, rise: f64) -> f32 {
         .min((start + duration - t) / rise)
         .clamp(0., 1.) as f32
 }
+fn pulse_current(t: f64, duration: f64, rise: f64, peak: f32, retract: f32, delay: f64) -> f32 {
+    peak * (trapezoid(t, 0., duration, rise)
+        - retract * trapezoid(t, duration + delay, duration / 3., rise))
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
     let a: Vec<_> = std::env::args().collect();
     let mut p = project::load(Path::new(a.get(1).ok_or(
-        "Expected PROJECT PEAK_A POSITIVE_US STEPS OUTPUT [CONTACT] [RETRACT_FRACTION] [DT_US] [REPEAT_HZ] [FIELD_EVERY] [TAIL_DT_US]",
+        "Expected PROJECT PEAK_A POSITIVE_US STEPS OUTPUT [CONTACT] [RETRACT_FRACTION] [DT_US] [REPEAT_HZ] [FIELD_EVERY] [TAIL_DT_US] [RETRACT_DELAY_US]",
     )?))?;
     let peak: f32 = a.get(2).ok_or("Missing current")?.parse()?;
     let duration: f64 = a.get(3).ok_or("Missing duration")?.parse::<f64>()? * 1e-6;
@@ -45,6 +50,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         .map(|s| s.parse::<f64>().map(|v| v * 1e-6))
         .transpose()?
         .unwrap_or(dt_s);
+    let retract_delay_s = a
+        .get(12)
+        .map(|s| s.parse::<f64>().map(|v| v * 1e-6))
+        .transpose()?
+        .unwrap_or(25e-6);
     if !peak.is_finite()
         || peak < 0.
         || !duration.is_finite()
@@ -59,10 +69,12 @@ fn main() -> Result<(), Box<dyn Error>> {
         || field_every == 0
         || !tail_dt_s.is_finite()
         || tail_dt_s <= 0.
+        || !retract_delay_s.is_finite()
+        || retract_delay_s < 0.
     {
         return Err("Invalid pulse".into());
     }
-    if frequency_hz > 0. && duration + 25e-6 + duration / 3. >= 1. / frequency_hz {
+    if frequency_hz > 0. && duration + retract_delay_s + duration / 3. >= 1. / frequency_hz {
         return Err("Pulses overlap the requested period".into());
     }
     if frequency_hz > 0. && tail_dt_s != dt_s {
@@ -159,7 +171,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut error: Option<String> = None;
     let mut costs = String::from("step,charge_wall_ms,fluid_wall_ms\n");
     for step in 1..=steps {
-        let next_dt = if run.time_s >= duration * 4. / 3. + 25e-6 {
+        let next_dt = if run.time_s >= duration * 4. / 3. + retract_delay_s {
             tail_dt_s
         } else {
             dt_s
@@ -177,9 +189,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         } else {
             t
         };
-        let command = peak
-            * (trapezoid(pulse_time, 0., duration, rise)
-                - retract * trapezoid(pulse_time, duration + 25e-6, duration / 3., rise));
+        let command = pulse_current(pulse_time, duration, rise, peak, retract, retract_delay_s);
         let charge_start = std::time::Instant::now();
         let (voltage, s) = match current.solve_current(command) {
             Ok(v) => v,
@@ -243,7 +253,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         performance.push_str(&report.csv_rows());
     }
     std::fs::write(out.join("performance.csv"), performance)?;
-    let report = serde_json::json!({"project":a[1],"uniform_acceleration_m_s2":p.fluid.acceleration_m_s2,"periodic_fluid_axes":p.fluid.periodic,"released_static_workspace_bytes":released_static_workspace_bytes,"status":if error.is_some(){"failed"}else{"complete"},"error":error,"accepted_steps":run.steps,"time_s":run.time_s,"peak_A":peak,"timestep_s":dt_s,"tail_timestep_s":tail_dt_s,"tail_transition_not_before_s":duration*4./3.+25e-6,"frequency_hz":frequency_hz,"field_every":field_every,"grid":{"dims":grid.dims,"cell_m":grid.cell_m},"positive_duration_s":duration,"rise_s":rise,"retract_fraction":retract,"contact_resistivity_ohm_m2":contact,"max_terminal_voltage_V":max_voltage,"joule_generated_J":joule,"lagged_electrical_work_J":electrical,"lagged_mechanical_work_J":lagged_mechanical,"fluid_mechanical_work_J":run.energy.external_work_j,"method":"GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.","limitations":["Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.","Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.","Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.","New research client; not a GUI electrode feature or frozen-baseline claim."]});
+    let report = serde_json::json!({"project":a[1],"uniform_acceleration_m_s2":p.fluid.acceleration_m_s2,"periodic_fluid_axes":p.fluid.periodic,"released_static_workspace_bytes":released_static_workspace_bytes,"status":if error.is_some(){"failed"}else{"complete"},"error":error,"accepted_steps":run.steps,"time_s":run.time_s,"peak_A":peak,"timestep_s":dt_s,"tail_timestep_s":tail_dt_s,"tail_transition_not_before_s":duration*4./3.+retract_delay_s,"frequency_hz":frequency_hz,"field_every":field_every,"grid":{"dims":grid.dims,"cell_m":grid.cell_m},"positive_duration_s":duration,"rise_s":rise,"retract_fraction":retract,"retract_delay_s":retract_delay_s,"contact_resistivity_ohm_m2":contact,"max_terminal_voltage_V":max_voltage,"joule_generated_J":joule,"lagged_electrical_work_J":electrical,"lagged_mechanical_work_J":lagged_mechanical,"fluid_mechanical_work_J":run.energy.external_work_j,"method":"GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.","limitations":["Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.","Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.","Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.","New research client; not a GUI electrode feature or frozen-baseline claim."]});
     std::fs::write(
         out.join("run-status.json"),
         serde_json::to_vec_pretty(&report)?,
@@ -252,4 +262,46 @@ fn main() -> Result<(), Box<dyn Error>> {
         return Err(e.into());
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_delay_preserves_original_commands() {
+        let duration = 250e-6;
+        let rise = 20e-6;
+        for i in 0..1200 {
+            let t = (i as f64 + 0.5) * 3e-6;
+            let original = 150.
+                * (trapezoid(t, 0., duration, rise)
+                    - 0.25 * trapezoid(t, duration + 25e-6, duration / 3., rise));
+            assert_eq!(
+                pulse_current(t, duration, rise, 150., 0.25, 25e-6),
+                original
+            );
+        }
+    }
+
+    #[test]
+    fn delayed_retract_changes_only_negative_lobe_time() {
+        let command = |t, delay| pulse_current(t, 250e-6, 20e-6, 150., 0.25, delay);
+        for i in 0..250 {
+            let t = (i as f64 + 0.5) * 1e-6;
+            assert_eq!(command(t, 25e-6), command(t, 500e-6));
+        }
+        assert_eq!(command(300e-6, 500e-6), 0.);
+        assert_eq!(command(780e-6, 500e-6), -37.5);
+        assert_eq!(command(850e-6, 500e-6), 0.);
+        let integral = |delay| {
+            (0..1000)
+                .map(|i| {
+                    let current = command((i as f64 + 0.5) * 1e-6, delay) as f64;
+                    current * current * 1e-6
+                })
+                .sum::<f64>()
+        };
+        assert!((integral(25e-6) - integral(500e-6)).abs() < 1e-6);
+    }
 }

@@ -1,0 +1,25 @@
+{
+  "status": "Queued after near-flush first flow trial",
+  "control": "v6-tip-flat08-disc10x5-gravity-flow-150A-250us-h010",
+  "project": "artifacts/hardware-research/cases/v6-tip-flat08-disc10x5-full-gravity-fit-sncu-h010.mhd.json",
+  "output": "artifacts/hardware-research/v6-tip-flat08-disc10x5-gravity-flow-150A-250us-delay500-h010",
+  "change": "Reverse pulse begins500us after positive lobe ends, instead of25us. All geometry, amplitudes, durations, steps, timestep and gravity remain fixed.",
+  "positive_A": 150,
+  "positive_us": 250,
+  "retract_A": -37.5,
+  "retract_us": 83.33333333333333,
+  "retract_delay_us": 500,
+  "dt_us": 3,
+  "steps": 1200,
+  "purpose": "Test whether delayed retraction allows a ligament to form before neck withdrawal. No improvement assumed.",
+  "checks": [
+    "Default waveform sampled commands exactly preserve prior formula",
+    "Delayed schedule preserves positive lobe and shifts negative lobe",
+    "Exact driver I2dt, voltage bounds and heat unchanged by delay",
+    "Sequence overlap rejected by electrical budget calculator"
+  ],
+  "limitations": [
+    "No switch-level model, contact chemistry, oxidation or thermal evolution",
+    "Control completed without detachment through3.6ms; future later breakup not excluded"
+  ]
+}

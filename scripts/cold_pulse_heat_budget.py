@@ -32,7 +32,7 @@ def main():
     inputs = drive["inputs"]
     i2dt = drive["rms_current_a"] ** 2 / inputs["frequency_hz"]
     equivalent_seconds = i2dt / current**2
-    duration = inputs["positive_us"] * 1e-6 * 4 / 3 + 25e-6
+    duration = (inputs["positive_us"] * 4 / 3 + inputs.get("retract_delay_us", 25.0)) * 1e-6
     cell = grid["cell_m"] ** 3
     rows = []
     for material in project["materials"]:
