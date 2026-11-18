@@ -125,3 +125,8 @@ workspace, capped-step failure and successful retry. A short-solve control check
 byte-identical results without workspace allocation. The weak-drive test forces
 the gradient correction at both original and 10⁻⁸ source amplitude, checks the
 physical residual inequality and linear/quadratic field scaling.
+
+The native 100 A application control also completes **400 ticks to 200 µs**,
+including switch-off. Maximum EM iterations are **467**, so the fallback remains
+inactive. Final exported EM/fluid packets are finite; maximum material-volume
+drift is **6.52×10⁻⁸**. This is a continuation check, not a droplet prediction.

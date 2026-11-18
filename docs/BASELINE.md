@@ -10,8 +10,9 @@ same run engine.
 
 ## Reproduce the shipped controls
 
-The baseline through commit `e57b5f6` includes the integrated nozzle examples,
-weak-field EM arithmetic fix, held-source cache and accepted-field export. These
+The frozen baseline is tagged **`simulator-baseline-2026-11-18`**. It includes the
+integrated nozzle examples, weak-field EM arithmetic fix, held-source cache,
+accepted-field export and [gradient fallback for long EM solves](EM_NODAL_CORRECTION.md). These
 commands are headless; use a fresh output directory for each exported run:
 
 ```sh
@@ -23,8 +24,8 @@ cargo build --offline -j2
 ```
 
 1. **Computed coil:** `nozzle-coil.mhd.json` uses five CAD current loops, each
-   peaking at 100 A, with no prescribed fluid force. The coupled and stationary
-   controls complete 400 ticks to 200 µs. This establishes continuation through
+   peaking at 100 A, with no prescribed fluid force. The coupled application
+   control completes 400 ticks to 200 µs. This establishes continuation through
    switch-off, not droplet release. [Inputs and numerical controls](NOZZLE_COIL.md).
 2. **Prescribed-force droplet:** `nozzle-pulse.mhd.json` reproduces a detached
    numerical droplet at 2 ms through the same application engine. Its body force
@@ -34,9 +35,11 @@ cargo build --offline -j2
    field directories with metadata and SI-unit packets. Metadata is written
    last. Failed steps do not produce accepted frames. These exports are analysis
    data, not full restart checkpoints. [Schema and plotting](RUNS.md#headless-field-output).
-4. **Verification at `e57b5f6`:** 163 regular headless tests pass; strict Clippy
-   passes. The native export/no-export controls produce identical diagnostic
-   CSVs. Owner hotend CAD/project files were not modified.
+4. **Verification:** 167 regular headless tests pass; strict Clippy passes.
+   The ten-tick V6 control retains byte-identical EM/fluid/interface fields,
+   diagnostics and working-buffer bytes. The native export/no-export controls
+   at `e57b5f6` produced identical diagnostic CSVs. Owner hotend CAD/project files
+   were not modified.
 
 ## What the results can support
 
@@ -75,9 +78,19 @@ Recomputing the applied source instead of caching it reproduces the accepted
 prefix diagnostics exactly. Disabling increment prediction still needs roughly
 3,450 iterations at 30 µs. Neither optimization explains away the conditioning
 problem. A failed step is rejected, rather than treated as a completed trajectory.
-The partial run does not establish jetting or its absence. A separate
-Rust/WGSL gradient-space preconditioner is being tested; it is not part of this
-pinned baseline. See [conductivity contrast](ELECTROMAGNETICS.md#conductivity-contrast-and-iteration-limits).
+The partial run does not establish jetting or its absence.
+
+The baseline now switches to a Rust/WGSL additive gradient correction after
+1,024 unfinished Jacobi iterations, retaining the original total cap and true
+residual criterion. The stronger case completes **150 ticks to 75 µs**, with a
+maximum of **2,820 iterations**. The former failed 61 µs step uses **2,410** and
+reaches **9.59×10⁻⁵**. Short solves retain the original path and do not allocate
+the additional node buffer. [Method, reproducer and checks](EM_NODAL_CORRECTION.md).
+
+This addresses the observed 61 µs rejection. **The full 1.5 ms current hold and
+later breakup remain unvalidated.** High iteration counts and unresolved
+interface/material physics still limit prediction; a stronger multilevel
+preconditioner remains future work if hardware comparisons require it.
 
 ## First hardware comparisons
 
