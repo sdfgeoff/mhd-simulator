@@ -57,7 +57,9 @@ impl GpuContext {
     }
 }
 
-pub(crate) fn read_bytes(
+/// Copy a GPU buffer range to host bytes for headless analysis.
+/// The caller must supply an aligned, in-bounds range of a COPY_SRC buffer.
+pub fn read_bytes(
     context: &GpuContext,
     source: &wgpu::Buffer,
     offset: u64,

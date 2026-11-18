@@ -1,5 +1,7 @@
 //! Stationary magnetoquasistatic electromagnetics on an oriented edge/face grid.
 //! See docs/ELECTROMAGNETICS.md for the discrete formulation and limitations.
+#[cfg(test)]
+mod coil_response_tests;
 mod grid;
 mod nodal;
 mod sources;
@@ -60,6 +62,14 @@ pub struct EnergyStep {
     pub external_j: f64,
     pub backward_euler_j: f64,
     pub balance_error_j: f64,
+}
+/// Passive conducting-body response to one prescribed winding, with mu_r=1.
+#[derive(Clone, Debug, Default)]
+pub struct CoilResponse {
+    /// None only when both present and preceding winding current are zero.
+    pub reaction_linkage_wb: Option<f64>,
+    pub reaction_magnetic_j: f64,
+    pub reaction_backward_euler_j: f64,
 }
 pub struct EmState {
     pub bodies: Vec<BodyDiagnostic>,
@@ -358,6 +368,8 @@ impl EmState {
             "commit_step",
             "energy_collect",
             "energy_reduce",
+            "coil_response_collect",
+            "coil_response_reduce",
         ] {
             pipelines.insert(
                 name,
@@ -1130,6 +1142,57 @@ impl EmState {
         e.balance_error_j =
             e.external_j - e.delta_magnetic_j - e.backward_euler_j - e.joule_j - e.mechanical_j;
         Ok(e)
+    }
+    /// Reaction flux linkage by reciprocity, for a single winding and mu_r=1.
+    /// This observes accepted fields; it does not impose or solve a coil voltage.
+    pub fn coil_response(&self, volume: &Volume) -> Result<CoilResponse, String> {
+        if !self.is_current(volume)
+            || self.mode != Mode::Induction
+            || self.config.wires.len() != 1
+            || !self.config.magnets.is_empty()
+            || !self.config.uniform.is_empty()
+        {
+            return Err(
+                "Coil response requires current inputs and exactly one winding source".into(),
+            );
+        }
+        let snapshot = volume.inputs.snapshot();
+        if snapshot.materials.iter().any(|m| {
+            (m.id == 0
+                || snapshot
+                    .components
+                    .iter()
+                    .any(|c| c.included && c.material_id == m.id))
+                && m.relative_permeability != Some(1.)
+        }) {
+            return Err("Coil response currently requires unit material permeability".into());
+        }
+        if self.last_step_dt_s == 0. {
+            return Ok(CoilResponse::default());
+        }
+        self.dispatch(&[
+            ("coil_response_collect", self.edge_groups()),
+            ("coil_response_reduce", [1, 1, 1]),
+        ]);
+        let sums = self.read_f32(&self.scalars, 112, 4)?;
+        if sums.iter().any(|v| !v.is_finite()) {
+            return Err("Nonfinite winding response integral".into());
+        }
+        let wave = &self.config.wires[0].current;
+        let now = f64::from(wave.value(self.time_s));
+        let old = f64::from(wave.value(self.time_s - self.last_step_dt_s));
+        let linkage = if now.abs() >= old.abs() && now != 0. {
+            Some(f64::from(sums[0]) / now)
+        } else if old != 0. {
+            Some(f64::from(sums[1]) / old)
+        } else {
+            None
+        };
+        Ok(CoilResponse {
+            reaction_linkage_wb: linkage,
+            reaction_magnetic_j: f64::from(sums[2]),
+            reaction_backward_euler_j: f64::from(sums[3]),
+        })
     }
     pub fn snapshot(&self) -> EmFrame {
         let result = self.context.device.create_buffer(&wgpu::BufferDescriptor {

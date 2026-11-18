@@ -1,0 +1,37 @@
+{
+  "topic": 19,
+  "latest_authorization_reply": 610,
+  "droplet_mm": [
+    0.4,
+    0.6
+  ],
+  "bore_mm": [
+    0.4,
+    0.6
+  ],
+  "solders": [
+    "Sn60Pb40",
+    "Sn99.3Cu0.7"
+  ],
+  "supply_v": [
+    24,
+    48
+  ],
+  "peak_current_working_limit_a": 200,
+  "peak_current_user_limit": "below a few hundred amps; 250 A explored as upper sensitivity",
+  "target_frequency_hz": [
+    200,
+    500
+  ],
+  "preferred": "single external induction coil",
+  "fabrication_order": [
+    "stock metal parts",
+    "in-house or commercial printed/machined metal",
+    "ceramics last resort"
+  ],
+  "inert_atmosphere_allowed": true,
+  "pneumatic_actuation_allowed": false,
+  "mechanically_vibrating_actuator_allowed": false,
+  "simulator_baseline_tag": "simulator-baseline-2026-11-18",
+  "stop": "credible best designs OR live weekly_remaining.py <=40%; present evidence and uncertainty"
+}

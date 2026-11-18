@@ -4,6 +4,8 @@ fn en_a(axis:u32,p:vec3<i32>,kind:u32)->f32 {
     if kind==0u{return work[i].x+source[i].x;}
     if kind==1u{return previous[i]+source[i].y;}
     if kind==3u{return (work[i].x-previous[i])+(source[i].x-source[i].y);}
+    if kind==4u{return work[i].x;}
+    if kind==6u{return work[i].x-previous[i];}
     return source[i].x;
 }
 fn en_curl(axis:u32,p:vec3<i32>,kind:u32)->f32 {
@@ -53,4 +55,37 @@ fn energy_reduce(@builtin(local_invocation_index) l:u32){
     reduction[l]=a;reduction_b[l]=b;workgroupBarrier();
     for(var s=128u;s>0u;s/=2u){if l<s{reduction[l]+=reduction[l+s];reduction_b[l]+=reduction_b[l+s];}workgroupBarrier();}
     if l==0u {scalars[0]=reduction[0];scalars[1]=reduction_b[0];}
+}
+
+// Reciprocity: reaction linkage of one prescribed winding is
+// integral(J_metal dot A_unit dV). Keep both current/previous source products
+// so a transition to zero current remains measurable without dividing by zero.
+@compute @workgroup_size(256)
+fn coil_response_collect(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>){
+    let i=flat_id(gid);var v=vec4<f32>(0.);
+    let h=scene.physical.z;let volume=h*h*h;
+    if i<scene.edges.w {
+        let delta=(work[i].x-previous[i])+(source[i].x-source[i].y);
+        let j=source[i].z*(-delta/scene.physical.x+source[i+scene.edges.w].x);
+        v.x=volume*j*source[i].x;v.y=volume*j*source[i].y;
+    }
+    let fx=(scene.dims.x+1u)*scene.dims.y*scene.dims.z;
+    let fy=scene.dims.x*(scene.dims.y+1u)*scene.dims.z;
+    let fz=scene.dims.x*scene.dims.y*(scene.dims.z+1u);
+    if i<fx+fy+fz {
+        var axis=0u;var q=i;if q>=fx {q-=fx;axis=1u;if q>=fy {q-=fy;axis=2u;}}
+        let d=face_dims(axis);let p=vec3<i32>(i32(q%d.x),i32((q/d.x)%d.y),i32(q/(d.x*d.y)));
+        let now=en_curl(axis,p,4u);let delta=en_curl(axis,p,6u);
+        let scale=h/(2.*scene.physical.y);
+        v.z=scale*now*now;v.w=scale*delta*delta;
+    }
+    reduction[l]=v;let sum=sum_group(l);
+    if l==0u && group_id(group)<(scene.edges.w+255u)/256u {partials[group_id(group)]=sum;}
+}
+@compute @workgroup_size(256)
+fn coil_response_reduce(@builtin(local_invocation_index) l:u32){
+    var v=vec4<f32>(0.);let n=(scene.edges.w+255u)/256u;
+    for(var i=l;i<n;i+=256u){v+=partials[i];}
+    reduction[l]=v;let sum=sum_group(l);
+    if l==0u {scalars[7]=sum;}
 }

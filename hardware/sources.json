@@ -1,0 +1,125 @@
+[
+  {
+    "id": "e3d-v6",
+    "url": "https://e3d-online.com/pages/e3d-classics-support-v6-nozzle",
+    "drawing_url": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2019/03/Schematic.pdf",
+    "author": "E3D",
+    "facts": {
+      "length_mm": 12.5,
+      "thread": "M6x1",
+      "inlet_bores_mm": [
+        2.0,
+        3.2
+      ],
+      "land_mm_by_orifice": {
+        "0.4": 0.6,
+        "0.5": 0.9,
+        "0.6": 1.2
+      }
+    },
+    "limitations": "Released drawing dimensions; thread helix, fillets and mark holes are simplified in generated CAD."
+  },
+  {
+    "id": "e3d-volcano",
+    "url": "https://e3d-online.com/pages/e3d-classics-support-volcano-nozzles",
+    "drawing_url": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2019/03/E3D-Brass-Volcano-Nozzle-Datasheet.pdf",
+    "author": "E3D",
+    "facts": {
+      "length_mm": 21.0,
+      "thread_length_mm": 14.5,
+      "inlet_bores_mm": [
+        2.0,
+        3.2
+      ]
+    },
+    "limitations": "Nozzle dimensions do not establish availability of a particular stainless SKU."
+  },
+  {
+    "id": "303",
+    "url": "https://www.carpentertechnology.com/hubfs/7407324/Material%20Saftey%20Data%20Sheets/303.pdf",
+    "author": "Carpenter Technology",
+    "facts": {
+      "resistivity_ohm_circular_mil_per_ft_73F": 433.0,
+      "resistivity_ohm_m_derived": 7.198305067231514e-07
+    },
+    "limitations": "Room-temperature typical value; hot nozzle conductivity is bracketed, not automatically temperature dependent."
+  },
+  {
+    "id": "solder-surface-density",
+    "doi": "10.1088/0953-8984/17/50/007",
+    "url": "https://docnum.univ-lorraine.fr/public/UPV-M/Theses/2007/Mhiaou.Souad.SMZ0755.pdf",
+    "author": "Kaban, Mhiaoui, Hoyer, Gasser (2005), reprinted in author thesis",
+    "location": "PDF pp139-145, Table1 p145; absolute-temperature definition p144",
+    "facts": {
+      "Sn60Pb40_gamma_250C_N_m": 0.47685635000000004,
+      "Sn60Pb40_rho_250C_kg_m3": 8052.406
+    },
+    "limitations": "Clean/reducing controlled-atmosphere measurements; oxide-covered jetting surface can differ. Cu3 is not Cu0.7."
+  },
+  {
+    "id": "sncu-resistivity",
+    "doi": "10.4149/km_2010_5_321",
+    "url": "https://kovmat.sav.sk/full.php?cc=5&rr=48&ss=321",
+    "author": "Zhang et al. (2010)",
+    "location": "Fig2, PDF p2",
+    "facts": {
+      "SnCu07_liquid_sigma_screen_S_m": 2200000.0,
+      "bracket_S_m": [
+        2000000.0,
+        2500000.0
+      ]
+    },
+    "limitations": "Approximate graph reading near250-300C. Curves carry vertical offsets (+8,+3,-5,-10 micro-ohm cm), which must be removed."
+  },
+  {
+    "id": "coil-L",
+    "doi": "10.1109/JRPROC.1928.221309",
+    "url": "https://physlab-wiki.com/_media/phylabs/lab_courses/phys-120_130-wiki-home/winter-experiments/simple_inductance_formulas_for_radio_coils.pdf",
+    "author": "H.A.Wheeler (1928)",
+    "facts": {
+      "multilayer_formula": "L_uH=0.8*a_in^2*N^2/(6*a_in+9*b_in+10*c_in)"
+    },
+    "limitations": "1% claim is shape restricted, not universal. Study uses as an estimate pending independent check/measurement."
+  },
+  {
+    "id": "copper",
+    "url": "https://nvlpubs.nist.gov/nistpubs/Legacy/hb/nbshandbook100.pdf",
+    "author": "US Bureau of Standards, Copper Wire Tables",
+    "facts": {
+      "rho20_ohm_m": 1.724e-08,
+      "alpha20_per_K": 0.00393
+    },
+    "limitations": "Hot-wire correction and packing are estimates; AC/proximity, bus, switch and cooling details need checks."
+  },
+  {
+    "id": "stencil-foil",
+    "url": "https://jlcpcb.com/capabilities/pcb-stencil-manufacturing",
+    "author": "JLCPCB",
+    "facts": {
+      "material": "304 HTA stainless",
+      "standard_thicknesses_mm": [
+        0.1,
+        0.12,
+        0.15,
+        0.18,
+        0.2
+      ],
+      "minimum_aperture_mm": 0.08,
+      "quoted_cutting_tolerance_mm": 0.003
+    },
+    "limitations": "Stencil manufacturing capability is not nozzle service qualification; sealing, edge finish, wetting and thermal cycling require trials."
+  },
+  {
+    "id": "mhd-precedent",
+    "url": "https://briefs.techconnect.org/wp-content/volumes/TCB2018v4/pdf/430.pdf",
+    "author": "Sukhotskiy et al./Vader (2018)",
+    "facts": {
+      "droplet_size_um_approx": 500,
+      "steady_rate_hz_reported": [
+        40,
+        1000
+      ]
+    },
+    "limitations": "Refractory nozzle and water-cooled coil; does not validate metal wall or our voltage/current budgets."
+  }
+]

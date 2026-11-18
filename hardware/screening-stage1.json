@@ -1,0 +1,169 @@
+{
+  "baseline_tag": "simulator-baseline-2026-11-18",
+  "results": [
+    {
+      "case": "v6-32-stock-block-h020",
+      "status": {
+        "ROI_z_m": [
+          0.002,
+          0.005
+        ],
+        "accepted_steps": 80,
+        "cell_m": 0.00020000000949949026,
+        "diagnostic": "radial force moment per ROI volume, not a pressure solution or ejection criterion",
+        "dims": [
+          130,
+          130,
+          110
+        ],
+        "origin_m": [
+          -0.013000000268220901,
+          -0.013000000268220901,
+          -0.0020000000949949026
+        ],
+        "status": "complete",
+        "time_s": 3.0219003910706672e-05,
+        "warnings": []
+      },
+      "accepted_last_time_s": 3.0219003910706672e-05,
+      "peak_current_sample": {
+        "roi_mean_Bz_T": 0.13336005428955058,
+        "roi_mean_applied_Bz_T": 0.2685854499411759,
+        "radial_pressure_proxy_Pa": 4768.2033488138595
+      },
+      "warning": "Static radial force moment diagnostic, not a pressure solve or droplet prediction. Original no-block case uses a different air domain; use matched-domain case for heater comparison."
+    },
+    {
+      "case": "v6-32-no-block-h020",
+      "status": {
+        "ROI_z_m": [
+          0.002,
+          0.005
+        ],
+        "accepted_steps": 80,
+        "cell_m": 0.00020000000949949026,
+        "diagnostic": "radial force moment per ROI volume, not a pressure solution or ejection criterion",
+        "dims": [
+          50,
+          50,
+          83
+        ],
+        "origin_m": [
+          -0.005000000353902578,
+          -0.005000000353902578,
+          -0.0020000000949949026
+        ],
+        "status": "complete",
+        "time_s": 3.0219003910706672e-05,
+        "warnings": []
+      },
+      "accepted_last_time_s": 3.0219003910706672e-05,
+      "peak_current_sample": {
+        "roi_mean_Bz_T": 0.17404595274124107,
+        "roi_mean_applied_Bz_T": 0.2685854516161968,
+        "radial_pressure_proxy_Pa": 7950.838855897891
+      },
+      "warning": "Static radial force moment diagnostic, not a pressure solve or droplet prediction. Original no-block case uses a different air domain; use matched-domain case for heater comparison."
+    },
+    {
+      "case": "v6-no-block-matched-h020",
+      "status": {
+        "ROI_z_m": [
+          0.002,
+          0.005
+        ],
+        "accepted_steps": 40,
+        "cell_m": 0.00020000000949949026,
+        "diagnostic": "radial force moment per ROI volume, not a pressure solution or ejection criterion",
+        "dims": [
+          130,
+          130,
+          110
+        ],
+        "origin_m": [
+          -0.013000000268220901,
+          -0.013000000268220901,
+          -0.0020000000949949026
+        ],
+        "status": "complete",
+        "time_s": 1.510950195535331e-05,
+        "warnings": []
+      },
+      "accepted_last_time_s": 1.510950195535331e-05,
+      "peak_current_sample": {
+        "roi_mean_Bz_T": 0.16577707659588561,
+        "roi_mean_applied_Bz_T": 0.2685854499411759,
+        "radial_pressure_proxy_Pa": 7437.934183037561
+      },
+      "warning": "Static radial force moment diagnostic, not a pressure solve or droplet prediction. Original no-block case uses a different air domain; use matched-domain case for heater comparison."
+    },
+    {
+      "case": "foil-60-l015-h020",
+      "status": {
+        "ROI_z_m": [
+          0.003,
+          0.008
+        ],
+        "accepted_steps": 80,
+        "cell_m": 0.00020000000949949026,
+        "diagnostic": "radial force moment per ROI volume, not a pressure solution or ejection criterion",
+        "dims": [
+          50,
+          50,
+          70
+        ],
+        "origin_m": [
+          -0.005000000353902578,
+          -0.005000000353902578,
+          -0.0020000000949949026
+        ],
+        "status": "complete",
+        "time_s": 0.00019197421493680398,
+        "warnings": []
+      },
+      "accepted_last_time_s": 0.00019197421493680398,
+      "peak_current_sample": {
+        "roi_mean_Bz_T": 0.624607308177302,
+        "roi_mean_applied_Bz_T": 0.6512371148909858,
+        "radial_pressure_proxy_Pa": 34444.41658846661
+      },
+      "warning": "Static radial force moment diagnostic, not a pressure solve or droplet prediction. Original no-block case uses a different air domain; use matched-domain case for heater comparison."
+    },
+    {
+      "case": "foil-60-l015-h010",
+      "status": {
+        "accepted_steps": 65,
+        "error": "EM solve did not converge: 4000 iterations, true relative residual 1.225e-4 (requested 1.000e-4); conducting-edge \u03c3 range 3.250e5\u20262.200e6 S/m; state restored",
+        "status": "failed",
+        "time_s": 0.00015597904963615336
+      },
+      "accepted_last_time_s": 0.00015597904963615336,
+      "peak_current_sample": {
+        "roi_mean_Bz_T": 0.6235734189438632,
+        "roi_mean_applied_Bz_T": 0.6507855606757098,
+        "radial_pressure_proxy_Pa": 34008.78480276406
+      },
+      "warning": "Static radial force moment diagnostic, not a pressure solve or droplet prediction. Original no-block case uses a different air domain; use matched-domain case for heater comparison."
+    }
+  ],
+  "validation": {
+    "reciprocity_test_relative_energy_defect": 1.2470476031813677e-07,
+    "reciprocity_observer_future_fields_byte_identical": true,
+    "uniform_field_pressure_expected_Pa": 4950.0,
+    "uniform_field_pressure_measured_Pa": 4925.286844744878,
+    "uniform_field_pressure_relative_error": 0.0049925566171963275,
+    "strict_clippy": "passed all targets",
+    "geometry_closed_manifold": "generator verifies welded edge incidence; native importer confirms closure"
+  },
+  "nominal_voltage_check": {
+    "loaded_interval_average_voltage_min_v": -48.413894616617505,
+    "loaded_interval_average_voltage_max_v": 48.301007711768065,
+    "reaction_work_j": 0.012958326455159106,
+    "joule_j": 0.012489313832588778,
+    "reaction_BE_j": 0.00046886710210714,
+    "final_reaction_magnetic_j": 1.451183919698451e-07,
+    "relative_reciprocal_energy_defect": 3.1028021419290046e-08,
+    "notes": "L is an unloaded Wheeler estimate; finite timestep interval-average voltage, not a validated MOSFET/circuit design."
+  },
+  "voltage_note": "48 V nominal unloaded trajectory exceeds the bus slightly after reciprocal loading; add explicit voltage/inductance margin before hardware recommendation."
+}
