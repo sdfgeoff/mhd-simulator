@@ -1,0 +1,292 @@
+{
+  "status": "Completed zero-gravity two-pulse screen; no second resolved detached component, and side-boundary contamination prevents repetition qualification",
+  "artifacts": "artifacts/hardware-research/v6-tip-wide-flow-200A-250us-200Hz-flight8-h010",
+  "run": {
+    "accepted_steps": 3333,
+    "contact_resistivity_ohm_m2": 0.0,
+    "error": null,
+    "field_every": 300,
+    "fluid_mechanical_work_J": 1.5291819088327288e-06,
+    "frequency_hz": 200.0,
+    "grid": {
+      "cell_m": 0.00010000000474974513,
+      "dims": [
+        49,
+        52,
+        125
+      ]
+    },
+    "joule_generated_J": 0.01989497513277878,
+    "lagged_electrical_work_J": 0.019894928119360358,
+    "lagged_mechanical_work_J": 1.4991670172577181e-06,
+    "limitations": [
+      "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+      "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+      "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+      "New research client; not a GUI electrode feature or frozen-baseline claim."
+    ],
+    "max_terminal_voltage_V": 0.22622285783290863,
+    "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+    "peak_A": 200.0,
+    "positive_duration_s": 0.00025,
+    "project": "artifacts/hardware-research/cases/v6-tip-wide-flight8-pool35-medium-fit-sncu-h010.mhd.json",
+    "released_static_workspace_bytes": 72314784,
+    "retract_fraction": 0.25,
+    "rise_s": 2e-05,
+    "status": "complete",
+    "tail_timestep_s": 3e-06,
+    "tail_transition_not_before_s": 0.00035833333333333333,
+    "time_s": 0.009999000000000138,
+    "timestep_s": 3e-06
+  },
+  "uniform_acceleration_m_s2": [
+    0,
+    0,
+    0
+  ],
+  "first_saved_boundary_contact_us": 7200.000000000398,
+  "saved_frame_max_relative_volume_drift": 2.1901146007863304e-08,
+  "trajectory": [
+    {
+      "time_us": 0.0,
+      "boundary_alpha01": false,
+      "components_alpha01": []
+    },
+    {
+      "time_us": 899.9999999999964,
+      "boundary_alpha01": false,
+      "components_alpha01": []
+    },
+    {
+      "time_us": 1799.999999999986,
+      "boundary_alpha01": false,
+      "components_alpha01": []
+    },
+    {
+      "time_us": 2699.9999999999754,
+      "boundary_alpha01": false,
+      "components_alpha01": [
+        {
+          "volume_nl": 108.96756979826519,
+          "equivalent_diameter_mm": 0.5926062320312293,
+          "cells": 188,
+          "centre_mm": [
+            -7.839694164671522e-06,
+            -5.584402449429867e-06,
+            -1.2772876697337754
+          ],
+          "velocity_m_s": [
+            -3.2031863383963355e-07,
+            9.067345672519878e-06,
+            -0.22810445725917816
+          ],
+          "touches_domain_boundary": false
+        }
+      ]
+    },
+    {
+      "time_us": 3599.999999999965,
+      "boundary_alpha01": false,
+      "components_alpha01": [
+        {
+          "volume_nl": 110.10862370265444,
+          "equivalent_diameter_mm": 0.5946675457194452,
+          "cells": 230,
+          "centre_mm": [
+            2.382931154084788e-06,
+            -4.0973562797686835e-06,
+            -1.4307741655925876
+          ],
+          "velocity_m_s": [
+            1.8363121853326447e-05,
+            -1.7583623048267327e-05,
+            -0.16080816090106964
+          ],
+          "touches_domain_boundary": false
+        }
+      ]
+    },
+    {
+      "time_us": 4500.000000000039,
+      "boundary_alpha01": false,
+      "components_alpha01": [
+        {
+          "volume_nl": 110.15040477645613,
+          "equivalent_diameter_mm": 0.5947427523830396,
+          "cells": 230,
+          "centre_mm": [
+            2.988403301676448e-05,
+            -2.2429638239535832e-05,
+            -1.5797261665116675
+          ],
+          "velocity_m_s": [
+            6.776571353839245e-06,
+            5.572832014877349e-05,
+            -0.14629729092121124
+          ],
+          "touches_domain_boundary": false
+        }
+      ]
+    },
+    {
+      "time_us": 5400.000000000159,
+      "boundary_alpha01": false,
+      "components_alpha01": [
+        {
+          "volume_nl": 110.00008567516831,
+          "equivalent_diameter_mm": 0.5944720864245931,
+          "cells": 237,
+          "centre_mm": [
+            5.232417333214669e-07,
+            8.816700915214189e-05,
+            -1.6813503627195696
+          ],
+          "velocity_m_s": [
+            -4.746860213344917e-06,
+            5.569439599639736e-05,
+            -0.09066560119390488
+          ],
+          "touches_domain_boundary": false
+        }
+      ]
+    },
+    {
+      "time_us": 6300.000000000278,
+      "boundary_alpha01": false,
+      "components_alpha01": [
+        {
+          "volume_nl": 110.04711130187513,
+          "equivalent_diameter_mm": 0.5945567876909618,
+          "cells": 245,
+          "centre_mm": [
+            4.037695535884239e-05,
+            -4.3398443165353325e-05,
+            -1.7525536120487717
+          ],
+          "velocity_m_s": [
+            -0.00015754294872749597,
+            -0.00020038271031808108,
+            -0.0742855966091156
+          ],
+          "touches_domain_boundary": false
+        }
+      ]
+    },
+    {
+      "time_us": 7200.000000000398,
+      "boundary_alpha01": true,
+      "components_alpha01": [
+        {
+          "volume_nl": 110.07353356410658,
+          "equivalent_diameter_mm": 0.5946043681561327,
+          "cells": 234,
+          "centre_mm": [
+            -0.0009120885297463114,
+            0.0008591377201954477,
+            -1.7774624419568716
+          ],
+          "velocity_m_s": [
+            -6.865371688036248e-05,
+            0.0007274780655279756,
+            -0.007679162081331015
+          ],
+          "touches_domain_boundary": false
+        }
+      ]
+    },
+    {
+      "time_us": 8100.000000000435,
+      "boundary_alpha01": true,
+      "components_alpha01": [
+        {
+          "volume_nl": 110.16863310411503,
+          "equivalent_diameter_mm": 0.5947755577332046,
+          "cells": 229,
+          "centre_mm": [
+            -0.0006233057885816984,
+            0.0010153926214893662,
+            -1.7391710907511884
+          ],
+          "velocity_m_s": [
+            -0.0008461750112473965,
+            0.001551268040202558,
+            0.07366017252206802
+          ],
+          "touches_domain_boundary": false
+        }
+      ]
+    },
+    {
+      "time_us": 9000.000000000295,
+      "boundary_alpha01": true,
+      "components_alpha01": [
+        {
+          "volume_nl": 110.15122489271293,
+          "equivalent_diameter_mm": 0.5947442284163184,
+          "cells": 230,
+          "centre_mm": [
+            -0.0016595630084419504,
+            -0.0016011344156043408,
+            -1.6601771178113915
+          ],
+          "velocity_m_s": [
+            0.0010642502456903458,
+            -0.007183787878602743,
+            0.08252526819705963
+          ],
+          "touches_domain_boundary": false
+        }
+      ]
+    },
+    {
+      "time_us": 9900.000000000153,
+      "boundary_alpha01": true,
+      "components_alpha01": [
+        {
+          "volume_nl": 110.14110312479283,
+          "equivalent_diameter_mm": 0.5947260108932267,
+          "cells": 241,
+          "centre_mm": [
+            -0.0007518839170440614,
+            -0.003696085452191559,
+            -1.5935027526428542
+          ],
+          "velocity_m_s": [
+            -0.001899066031910479,
+            0.0033490201458334923,
+            0.04779771715402603
+          ],
+          "touches_domain_boundary": false
+        }
+      ]
+    },
+    {
+      "time_us": 9999.000000000138,
+      "boundary_alpha01": true,
+      "components_alpha01": [
+        {
+          "volume_nl": 110.1538783912936,
+          "equivalent_diameter_mm": 0.5947490040941658,
+          "cells": 243,
+          "centre_mm": [
+            -0.0010484566914497069,
+            -0.0032620082558297956,
+            -1.588763452451639
+          ],
+          "velocity_m_s": [
+            -0.004318030551075935,
+            0.0046348292380571365,
+            0.04061466455459595
+          ],
+          "touches_domain_boundary": false
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "No wire replenishment, thermal evolution, measured wetting or oxide skins.",
+    "First drop later turns upward in this zero-gravity result.",
+    "Boundary liquid appears at X sides near nozzle-exit height; no measured 200Hz jetting claim.",
+    "Full-height gravity/domain controls are separate, still running."
+  ]
+}

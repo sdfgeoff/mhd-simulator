@@ -1,0 +1,104 @@
+{
+  "status": "Lumped sensitivity with a larger resistance allowance; component examples, not a PCB design",
+  "assumptions": {
+    "hot_tip_copper_pair_mohm": 3.5,
+    "other_series_mohm": 2.0,
+    "other_series_scope": "Illustrative hot switches, parallel-inductor DCR, current sensing, PCB and connections. Replaces earlier0.75mohm allowance; not a measured stack.",
+    "switch_example": "IPT007N06N:60V,0.75mohm maximum at25C/10V gate. Three parallel per bridge position yields0.5mohm total two-position path at25C; an explicitly assumed2x hot factor gives1mohm. This does not qualify SOA, sharing, switching or layout.",
+    "inductor_bank": "Four AGP4233-332ME in parallel, nominal0.825uH, plus assumed0.2uH loop;0.1875mohm max25C parallel DCR, hot/ripple/core effects unresolved.",
+    "frequency_scope": "200Hz only for electrical heat calculation; repeated jetting not established."
+  },
+  "sources": [
+    {
+      "url": "https://www.infineon.com/assets/row/public/documents/24/49/infineon-ipt007n06n-datasheet-en.pdf",
+      "facts": "60V and0.75mohm rating. Current ratings depend strongly on cooling; no standalone PCB current claim."
+    },
+    {
+      "url": "https://www.coilcraft.com/getmedia/897b8d33-d5bb-4e2e-b57e-e23c82311f9e/agp4233.pdf",
+      "facts": "3.3uH,0.75mohm maxDCR;10%Ldrop92A,Irms34/44A for20/40C rise at25C. Four large135g parts; not an actuator-size component bank."
+    },
+    {
+      "url": "https://www.vishay.com/docs/34561/ihxl-1500vz-51.pdf",
+      "facts": "0.68uH,0.13mohm maximum25C DCR, typical301A at20%Ldrop; dimensions38.1x38.1x21.9mm. End application thermal verification required."
+    }
+  ],
+  "cases": [
+    {
+      "inputs": {
+        "peak_a": 200.0,
+        "positive_us": 250.0,
+        "head_mohm": 1.064506,
+        "parasitic_mohm": 5.5,
+        "series_uh": 1.025,
+        "frequency_hz": 200.0,
+        "bus_v": 24.0,
+        "bulk_uf": 1000.0,
+        "retract_fraction": 0.25,
+        "rise_us": 20.0
+      },
+      "method": "Exact integrals of piecewise-linear prescribed current; V=IR+L dI/dt. Head modeled as constant cold resistance. Four-quadrant current regulation assumed.",
+      "rms_current_a": 42.60281680828159,
+      "head_heat_w": 1.9320783900000003,
+      "parasitic_heat_w": 9.982500000000002,
+      "required_voltage_min_v": -10.25,
+      "required_voltage_max_v": 11.5629012,
+      "ideal_bus_compliance": true,
+      "peak_inductor_energy_j": 0.020499999999999997,
+      "bulk_rise_if_all_peak_inductor_energy_returns_v": 0.8394846967484426,
+      "limitations": [
+        "No PWM ripple, switching/gate losses, current-loop dynamics, bus/lead ringing or protection design.",
+        "No capacitor ESR/ripple rating or switch SOA/temperature qualification.",
+        "Input R and L assumptions must be replaced with measured assembled values; motional voltage is omitted from this lumped check.",
+        "Electrical compliance is not a droplet or repetition-rate prediction."
+      ]
+    },
+    {
+      "inputs": {
+        "peak_a": 250.0,
+        "positive_us": 250.0,
+        "head_mohm": 1.064506,
+        "parasitic_mohm": 5.5,
+        "series_uh": 1.025,
+        "frequency_hz": 200.0,
+        "bus_v": 24.0,
+        "bulk_uf": 1000.0,
+        "retract_fraction": 0.25,
+        "rise_us": 20.0
+      },
+      "method": "Exact integrals of piecewise-linear prescribed current; V=IR+L dI/dt. Head modeled as constant cold resistance. Four-quadrant current regulation assumed.",
+      "rms_current_a": 53.25352101035198,
+      "head_heat_w": 3.018872484375,
+      "parasitic_heat_w": 15.59765625,
+      "required_voltage_min_v": -12.8125,
+      "required_voltage_max_v": 14.4536265,
+      "ideal_bus_compliance": true,
+      "peak_inductor_energy_j": 0.03203125,
+      "bulk_rise_if_all_peak_inductor_energy_returns_v": 1.2994565159016815,
+      "limitations": [
+        "No PWM ripple, switching/gate losses, current-loop dynamics, bus/lead ringing or protection design.",
+        "No capacitor ESR/ripple rating or switch SOA/temperature qualification.",
+        "Input R and L assumptions must be replaced with measured assembled values; motional voltage is omitted from this lumped check.",
+        "Electrical compliance is not a droplet or repetition-rate prediction."
+      ]
+    }
+  ],
+  "alternative_single_inductor": {
+    "part": "Vishay IHXL1500VZEBR68M51",
+    "source": "https://www.vishay.com/docs/34561/ihxl-1500vz-51.pdf",
+    "datasheet_revision": "12-Oct-2026",
+    "nominal_uH": 0.68,
+    "zero_bias_tolerance_fraction": 0.2,
+    "maximum_DCR_mohm_at25C": 0.13,
+    "typical_20percent_L_drop_current_A_at25C": 301,
+    "heat_rating_A_for40C_rise_at25C": 154,
+    "body_mm": [
+      38.1,
+      38.1,
+      21.9
+    ],
+    "assumed_loop_uH": 0.2,
+    "nominal_total_uH": 0.88,
+    "zero_bias_upper_tolerance_plus_loop_uH": 1.016,
+    "interpretation": "One through-hole part can replace the illustrative four-inductor bank at the lumped level. The existing1.025uH voltage screen covers its positive zero-bias tolerance plus assumed loop L, but does not qualify differential L at hot current, ripple/core losses, bus routing or control. It is remote from the hot nozzle."
+  }
+}

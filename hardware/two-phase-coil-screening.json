@@ -164,5 +164,20 @@
       "Radial force moment is not solved pressure.",
       "Single early full-cycle average does not establish periodic steady state or convergence."
     ]
+  },
+  "moving_fluid_trial": {
+    "status": "Queued after matched zero-current control",
+    "project": "artifacts/hardware-research/cases/foil-two-phase-plus90-200A-flow-zeroG-h020.mhd.json",
+    "uniform_acceleration_m_s2": [
+      0,
+      0,
+      0
+    ],
+    "output": "artifacts/hardware-research/foil-two-phase-plus90-200A-flow-zeroG-dt0125-tail3-h020",
+    "steps": 3500,
+    "initial_dt_us": 0.125,
+    "tail_dt_us": 3.0,
+    "tail_after_us": 300.0,
+    "scope": "Exploratory response, not time/grid-converged or gravity-complete. Two-phase cold half-timestep refinement also running."
   }
 }

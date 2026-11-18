@@ -18,7 +18,7 @@ settled hydrostatic/wetting equilibrium.
 
 | Candidate | Accepted evidence | Unresolved before a hardware recommendation |
 | --- | --- | --- |
-| Stock stainless V6, opposing tip contacts, permanent magnets | Wider 0.8 × 0.4 mm contacts: one approximately 0.595 mm component at 3.6 ms on the 100 µm grid, 200 A / 250 µs. Lumped drive requirement about 11 V. | Wider-contact grid refinement and repeated pulses; contact fabrication, wetting, heater shunts and cooling. |
+| Stock stainless V6, opposing tip contacts, permanent magnets | Wider 0.8 × 0.4 mm contacts: one approximately 0.595 mm component at 3.6 ms on the 100 µm grid, 200 A / 250 µs. Lumped drive requirement about 11 V. | Wider-contact grid refinement and full-domain gravity/repetition controls; the completed cropped zero-G two-pulse screen does not qualify repetition. Contact fabrication, wetting and cooling remain open. |
 | V6 with two milled collar flats and immersed tungsten pins | Cold 200 A model puts approximately 171 A through liquid, with 0.46 T mean liquid field. | Full-domain moving-fluid trial is running. Mounts, rod heat, feedstock clearance and electrode compatibility remain unqualified. |
 | Same V6, smaller single-disc poles | 250 A / 250 µs coarse trial: one approximately 0.596 mm component, downward 0.212 m/s. Nominal magnet span 14.2 mm. | Mesh/repetition, stronger omitted local self-field, attachment and wetting remain unresolved. |
 | Custom chamber with one resonant coil | Native 250 A / 50 kHz EM/fluid trial completes 3.597 ms without resolved ejection on the 200 µm grid. | Coarse negative screen; zero-current control, geometry/source refinement and actual driver remain open. Approximately 62 W electrical heat at 200 Hz in the scaled cold estimate. |
@@ -760,3 +760,29 @@ python scripts/compare_phase_screens.py \
 
 Full comparison and source hashes: [two-phase-coil-screening.json](two-phase-coil-screening.json).
 Gravity correction and matched cases: [gravity-controls.json](gravity-controls.json).
+
+
+## Repetition and driver sensitivity update
+
+The wider-contact two-pulse screen completes 9.999 ms at a prescribed 200 Hz,
+with zero gravity. It does **not** establish 200 Hz jetting: no second resolved
+detached component appears in saved frames, the first component later turns
+upward, and side-boundary liquid reaches alpha 0.01 by the saved 7.2 ms frame.
+[tip-repetition-screening.json](tip-repetition-screening.json) retains the full
+trajectory, boundary diagnostics and completed status. Earlier single-pulse
+frames have no boundary contact; extended domain controls are separate.
+
+A larger hot-driver allowance increases non-head resistance from 4.25 to
+5.5 mΩ, including 3.5 mΩ of narrow copper leads. At the same waveforms, required
+peak voltage becomes about **11.56 V at 200 A** and **14.45 V at 250 A**. Head
+plus series heat becomes **11.9 and 18.6 W**, respectively, at an electrically
+assumed 200 Hz. Switching/gate losses, contact chemistry and actual repetition
+remain excluded. This sensitivity preserves 24 V lumped voltage headroom.
+
+A single stock 0.68 µH [Vishay IHXL1500VZEBR68M51](https://www.vishay.com/docs/34561/ihxl-1500vz-51.pdf)
+is a more compact alternative to the earlier four-part bank. It is a roughly
+38 × 38 × 22 mm PCB component, separate from the nozzle. Its differential
+inductance, temperature and PWM losses still require checking. The switch
+example uses [Infineon IPT007N06N](https://www.infineon.com/assets/row/public/documents/24/49/infineon-ipt007n06n-datasheet-en.pdf)
+60 V MOSFETs on a 24 V bus; it is not a qualified bridge design. Assumptions,
+component facts and calculation inputs: [driver-hot-allowance.json](driver-hot-allowance.json).
