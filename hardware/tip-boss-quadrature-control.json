@@ -1,0 +1,8 @@
+{
+  "coarse_control_q4": "artifacts/hardware-research/tip-boss-v4-control-cold30-h010",
+  "coarse_control_q3": "artifacts/hardware-research/tip-boss-control-q3-cold30-h010",
+  "current_components_bit_identical": true,
+  "joule_bit_identical": true,
+  "q3_vs_q4_outlet_force_relative_change": -0.004008236327274095,
+  "scope": "The 50 um family uses q3 because q4 exceeds the native direct-source work budget. Absolute force refinement also changes source quadrature; this independent coarse control quantifies it. Within each grid, geometry ratios share bit-identical B."
+}

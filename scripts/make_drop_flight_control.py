@@ -31,10 +31,12 @@ base['domain']={'min_mm':[-a.half_width_mm,-a.half_width_mm,-a.half_height_mm],'
 base['electromagnetics'].update(wires=[],magnets=[],uniform=[])
 base['run'].update(fluid_enabled=True,thermal_enabled=False,prescribed_jet=None,dt_s=a.dt_us*1e-6)
 base['fluid'].update(surface={'enabled':True},initial_velocity_m_s=[0.,0.,0.],periodic=[False,False,False],advection=True)
-for label,g in [('zeroG',0.),('gravity',-9.81),('translation-periodic',0.),('translation-periodic-nearzero-sigma',0.),('translation-periodic-pressure-tight',0.)]:
+for label,g in [('zeroG',0.),('gravity',-9.81),('translation-periodic',0.),('translation-periodic-nearzero-sigma',0.),('translation-periodic-pressure-tight',0.),('translation-slow-periodic',0.),('gravity-nearzero-sigma',-9.81)]:
  d=copy.deepcopy(base);d['fluid']['acceleration_m_s2']=[0.,0.,g]
- if label.startswith('translation-periodic'):
+ if label.startswith('translation'):
   d['fluid']['periodic']=[True,True,True];d['fluid']['initial_velocity_m_s']=[0.,0.,-.2]
+ if label == 'translation-slow-periodic':
+  d['fluid']['initial_velocity_m_s']=[0.,0.,-.02]
  if label.endswith('pressure-tight'):
   d['fluid']['relative_tolerance']=1e-6;d['fluid']['absolute_divergence_tolerance']=1e-6
  if label.endswith('nearzero-sigma'):

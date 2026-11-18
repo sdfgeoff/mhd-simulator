@@ -1,5 +1,5 @@
 {
-  "status": "Coarse controls complete; combined space/time refinement underway",
+  "status": "Completed diagnostic matrix; slow capillary motion remains unreliable",
   "generator": "scripts/make_drop_flight_control.py",
   "cases": "artifacts/hardware-research/cases/drop-flight-h010-v1",
   "physics": "NormalnativeRunState, fluid+surface, noEMorheat.0.6mmSnCudropin4x4x6mmdomain,100umcells,2ussteps,6msrequested.",
@@ -49,7 +49,7 @@
       "COM_travel_error_um_vs_exact_uniform": -1.5497924608553482
     }
   },
-  "interpretation": "Capillary-associated translation error is severe at six cells across the drop and decreases strongly at twelve cells over the first 600 us. A 24-cell control and longer refined controls remain necessary. Tighter pressure tolerance does not cure the coarse error. Do not use coarse hardware trajectories as qualified predictions.",
+  "interpretation": "Fast translation at50um stays within1.4% liquid speed over3ms, but slow translation loses39% speed in600us and gravity pins/reverses by3ms. Nearzero-sigma gravity closely reproduces dragless fall. Capillary discretization under small interface displacements is implicated; no repair applied, no moving-hardware qualification claimed.",
   "pressure_tolerance_control": {
     "status": "Complete600us; alpha-weightedvelocity unchanged at-.182385236m/s",
     "output": "artifacts/hardware-research/drop-flight-translation-pressure-tight-h010-prefix",
@@ -68,7 +68,7 @@
     }
   },
   "refinement_controls": {
-    "status": "Runningsequential600usprefixes",
+    "status": "All three 600 us prefixes complete; longer 50 um gravity/translation running or queued",
     "cases_root": "artifacts/hardware-research/cases/drop-flight-small-h010/h0050/h0025",
     "domain_mm": [
       [
@@ -127,9 +127,49 @@
           "velocity_error_m_s": 0.0003205499346128904,
           "relative_volume_drift": -1.450829367755091e-07
         }
+      },
+      {
+        "grid": "h0025",
+        "initial_equivalent_diameter_mm": 0.5997390695856057,
+        "final": {
+          "time_s": 0.0005999999999999992,
+          "step": 1200,
+          "volume_m3": 1.129498307476078e-10,
+          "COM_z_m": -0.00011992429428838607,
+          "liquid_vz_m_s": -0.1994643678435123,
+          "boundary_max_alpha": 0.0,
+          "cell_estimated_mixture_momentum_z_kg_m_s": -1.60558722350085e-07,
+          "exported_CSF_net_z_N": 5.864299581940266e-07,
+          "reference_z_m": -0.00012000008397193668,
+          "reference_vz_m_s": -0.20000000298023224,
+          "position_error_m": 7.578968355060798e-08,
+          "velocity_error_m_s": 0.0005356351367199474,
+          "relative_volume_drift": -1.440240139372051e-07
+        }
       }
     ],
-    "followup": "Queued after 25 um prefix: 50 um gravity and periodic translation, each 3 ms at 1 us, saved every 300 steps. Manager artifacts/hardware-research/refined_flight_followup.py checks live budget before each job."
+    "followup": "Queued after 25 um prefix: 50 um gravity and periodic translation, each 3 ms at 1 us, saved every 300 steps. Manager artifacts/hardware-research/refined_flight_followup.py checks live budget before each job.",
+    "interpretation": "COM error decreases from7.58um to0.426um to0.0758um. Liquid speed errors8.81%,0.160%,0.268% are small at12/24cells but nonmonotonic; do not claim asymptotic convergence from these endpoints. Space and timestep changed together; coarse dt0.5us control now running.",
+    "coarse_fixed_space_time_control": {
+      "cell_um": 100,
+      "dt_us": 0.5,
+      "final": {
+        "time_s": 0.0005999999999999992,
+        "step": 1200,
+        "volume_m3": 1.1296407442261106e-10,
+        "COM_z_m": -0.00011245576139981232,
+        "liquid_vz_m_s": -0.18238906402129712,
+        "boundary_max_alpha": 0.0,
+        "cell_estimated_mixture_momentum_z_kg_m_s": -1.4706312083797373e-07,
+        "exported_CSF_net_z_N": 3.92550433068288e-05,
+        "reference_z_m": -0.0001200000755752226,
+        "reference_vz_m_s": -0.20000000298023224,
+        "position_error_m": 7.5443141754102775e-06,
+        "velocity_error_m_s": 0.01761093895893512,
+        "relative_volume_drift": 4.054194868707839e-08
+      },
+      "interpretation": "Fourfold timestep reduction preserves ~8.8% speed loss. Spatial/capillary error dominates this endpoint."
+    }
   },
   "static_zero_gravity": {
     "measurement": "drop-flight-zeroG-h010-motion.json",
@@ -194,5 +234,78 @@
       "url": "https://doi.org/10.1016/j.jcp.2009.04.042",
       "relevance": "Balanced force and height-function curvature; uniform translating-drop benchmark checks the moving-interface coupling."
     }
-  ]
+  ],
+  "current_operating_preference": "Human677: focus roughly30A RMS rather than300A peak. 175A250us bipolar pair at200Hz is37.28Arms; at129.53Hz is30Arms. No qualified physical head envelope.",
+  "refined_gravity_3ms": {
+    "grid_um": 50,
+    "dt_us": 1,
+    "final": {
+      "time_s": 0.003000000000000074,
+      "step": 3000,
+      "volume_m3": 1.1295014402198222e-10,
+      "COM_z_m": -5.0571973212272034e-06,
+      "liquid_vz_m_s": 0.003988279518258843,
+      "boundary_max_alpha": 0.0,
+      "cell_estimated_mixture_momentum_z_kg_m_s": 3.1527966511792207e-09,
+      "reference_z_m": -4.414508100343393e-05,
+      "reference_vz_m_s": -0.02943000125885082,
+      "position_error_m": 3.908788368220673e-05,
+      "velocity_error_m_s": 0.03341828077710966,
+      "relative_volume_drift": -8.097544768048692e-08
+    },
+    "interpretation": "COM falls5.06um vs44.15um dragless by3ms; velocity is upward. Strong unphysical numerical pinning remains even at12cells across. Short translation agreement does not qualify gravity/slow motion."
+  },
+  "refined_translation_3ms": {
+    "measurement": "drop-flight-translation-periodic-small-h0050-3ms-motion.json",
+    "final": {
+      "time_s": 0.003000000000000074,
+      "step": 3000,
+      "volume_m3": 1.1295006314752809e-10,
+      "COM_z_m": -0.0006053503472931055,
+      "liquid_vz_m_s": -0.2028129592032939,
+      "boundary_max_alpha": 0.0,
+      "cell_estimated_mixture_momentum_z_kg_m_s": -1.6319794067500767e-07,
+      "exported_CSF_net_z_N": 1.0912103073235887e-06,
+      "reference_z_m": -0.0006000000880558681,
+      "reference_vz_m_s": -0.20000000298023224,
+      "position_error_m": -5.350259237237357e-06,
+      "velocity_error_m_s": -0.002812956223061658,
+      "relative_volume_drift": -7.969944336716495e-07
+    }
+  },
+  "slow_translation_600us": {
+    "measurement": "drop-flight-translation-slow-periodic-small-h0050-motion.json",
+    "final": {
+      "time_s": 0.0006000000000000081,
+      "step": 600,
+      "volume_m3": 1.1295015196981016e-10,
+      "COM_z_m": -1.04484132105107e-05,
+      "liquid_vz_m_s": -0.012164892178374598,
+      "boundary_max_alpha": 0.0,
+      "cell_estimated_mixture_momentum_z_kg_m_s": -9.902215677250989e-09,
+      "exported_CSF_net_z_N": 2.0202098133182076e-05,
+      "reference_z_m": -1.2000078846935883e-05,
+      "reference_vz_m_s": -0.019999999552965164,
+      "position_error_m": 1.5516656364251828e-06,
+      "velocity_error_m_s": 0.007835107374590566,
+      "relative_volume_drift": -1.0609647271841993e-08
+    }
+  },
+  "gravity_nearzero_sigma_3ms": {
+    "measurement": "drop-flight-gravity-nearzero-sigma-small-h010-motion.json",
+    "final": {
+      "time_s": 0.0029999999999999463,
+      "step": 1500,
+      "volume_m3": 1.1296382666582746e-10,
+      "COM_z_m": -4.491630409235948e-05,
+      "liquid_vz_m_s": -0.029381683716430178,
+      "boundary_max_alpha": 0.0,
+      "cell_estimated_mixture_momentum_z_kg_m_s": -2.3229489105910997e-08,
+      "reference_z_m": -4.4145075675356984e-05,
+      "reference_vz_m_s": -0.02943000125884957,
+      "position_error_m": -7.712284170024992e-07,
+      "velocity_error_m_s": 4.8317542419393233e-05,
+      "relative_volume_drift": -2.15269333359025e-06
+    }
+  }
 }

@@ -4,7 +4,9 @@ Research branch: `research/hardware-design-20261118`. Frozen application baselin
 `simulator-baseline-2026-11-18`. Current evidence below is from 19 November 2026.
 **No design has demonstrated sustained 200 Hz jetting or been qualified for
 manufacture.** The target remains 0.4–0.6 mm solder drops, 24/48 V supply and
-actuator currents below a few hundred amps, using accessible parts.
+actuator currents below a few hundred amps, using accessible parts. Following
+   the latest preference, roughly 30 A RMS is the working thermal target; pulse
+   peaks are separate and no physical head operating envelope is qualified.
 
 The [near-flush CAD/project bundle](designs/v6-flat-shortbar) is available for
 inspection and research reproduction. Its 175 A run is the most promising
@@ -12,8 +14,9 @@ packaging case, but remains a numerical candidate.
 
 **Motion qualification:** isolated-drop controls expose severe capillary motion
 error at 100 µm spacing. Every coarse velocity/trajectory below is provisional;
-a separated component is insufficient evidence of usable jetting. The 50 µm
-600 µs control improves strongly, but longer and finer checks are still running.
+a separated component is insufficient evidence of usable jetting. The 50/25 µm
+600 µs translation controls improve strongly, but the 50 µm gravity case still
+shows severe numerical pinning over 3 ms. Longer translation checks are running.
 See [drop-flight-controls.json](drop-flight-controls.json).
 
 The circuit-design handoff is [pulse-generator-handoff.md](pulse-generator-handoff.md):
@@ -26,6 +29,7 @@ gravity-on. The matched gravity-on tip-contact control is now complete.
 
 | Configuration | Accepted evidence | Main unresolved issue |
 | --- | --- | --- |
+| Slim square outlet boss, same 0.4 mm bore and short magnets | Cold 50 µm comparison: 0.7 mm square boss gives 50% more outlet-region force per amp for 23% more resistance. | No qualified moving-fluid outcome; contact heating, hot properties and thin-wall manufacture remain open. |
 | Stainless V6 approximation, 0.4 mm bore, 0.8 × 0.4 mm external tip contacts, larger SmCo poles | Gravity-on full-height 100 µm case: one 0.59993 mm component moving down at 0.1795 m/s at 3.6 ms, with 200 A / 250 µs. | 50 µm result is oversized and materially faster; refill/repetition, electrical wetting and contacts remain open. |
 | Machined tip with near-flush stacked SmCo bars | Gravity-on 100 µm case at 175 A / 250 µs: leading component 0.5949 mm / 0.3547 m/s downward at 3.6 ms. | Higher-threshold returning-tail fragments; fine-grid, isolated-flight and repetition checks open. Fixed-path 50 µm thermal replay peaks about 275 °C from 250 °C at this pulse. |
 | Same tip contacts, one 10 × 5 mm SmCo disc per pole | 100 µm case: one 0.5962 mm component moving down at 0.212 m/s at 3.6 ms, with 250 A / 250 µs. | Higher peak current, local heating and omitted self-field; no fine-grid or gravity/repetition confirmation. |
@@ -284,7 +288,9 @@ before claiming comparable jetting.
 1. Isolated-drop controls reveal severe coarse-grid capillary translation error.
    At 100 µm, a uniformly translating 0.6 mm drop loses 8.8% of liquid speed
    over 0.6 ms and nearly stops by 6 ms. At 50 µm, the 0.6 ms speed loss falls
-   to 0.16%. The 25 µm prefix and longer refined controls remain outstanding.
+   to 0.16% (0.27% at 25 µm). Centre-position error improves through all three
+   grids, but the 50 µm gravity control falls only 5 µm instead of 44 µm over
+   3 ms. A fourfold coarse timestep reduction does not fix translation error.
    See [drop-flight-controls.json](drop-flight-controls.json). Hardware departure
    speeds and long-time repetition trajectories remain provisional.
 2. The wider-contact 50 µm zero-gravity trial completes 3.6 ms with a separated
@@ -344,3 +350,53 @@ sensitivity inputs. These figures are not added to a different voxel hotspot,
 not the native bipolar waveform, and not a safe operating envelope. Finite tip
 geometry, thermal contact resistance, films and constriction need resolution or
 measurement. This mechanism is absent from the ideal-contact native replay.
+
+## Slimmer all-metal outlet bosses
+
+The same near-flush head has a matched cold screen with extra outside flats on
+its lower 0.6 mm. The 0.4 mm bore, pool and magnets remain unchanged. At 50 µm,
+the square 0.8 / 0.7 / 0.6 mm bosses have nominal minimum walls of 0.2 / 0.15 /
+0.1 mm and outlet-region force gains of 25% / 50% / 82% per amp. Their head
+resistances are 1.10 / 1.12 / 1.14 mΩ versus 0.916 mΩ for the two-flat control.
+These are electrical screens, not matched droplet outcomes. See
+[refined comparison](tip-boss-cold-refinement-verified.json),
+[intermediate boss](tip-boss07-cold-screening.json) and
+[source quadrature control](tip-boss-quadrature-control.json).
+
+Native liquid masks and applied magnetic fields match bit for bit within the
+refined family. Force-per-square-root-power gains agree closely with the coarse
+screen. The finer run uses source subdivision 3 to stay within the native work
+budget; subdivision 3 vs 4 changes coarse outlet force by 0.4%, with identical
+current/heating fields. Sharp-contact hotspot and real-contact qualification
+remain open. The modified mesh simplification tolerance is 10 nm, with closed
+CAD and native overlap checks; unmodified liquid/magnet triangles are preserved.
+
+Reproduce a fresh family with e.g.:
+
+```sh
+TMPDIR="$PWD/artifacts/build-temp" uv run --offline --with manifold3d --with matplotlib \
+  python scripts/make_tip_boss_cases.py NEW_CASE_DIRECTORY \
+  --cell-mm .05 --magnet-subdivisions 3 \
+  --only control square08 rect08x06 square06 square07
+```
+
+The output directory must be new. Run `conduction_probe` at 30 A on each emitted
+project before calling the read-only comparison script; its help describes output
+prefix conventions. No frozen GUI electrode feature is implied.
+
+For separate one-shot thermal replays, selected lower amplitudes give:
+
+| Square boss | Nominal wall | Peak current | RMS at assumed 200 Hz | Cold-resistance average head power | Model peak from 250 °C |
+| --- | --- | --- | --- | --- | --- |
+| 0.8 mm | 0.2 mm | 140 A | 29.8 A | 0.98 W | 263.1 °C |
+| 0.7 mm | 0.15 mm | 125 A | 26.6 A | 0.80 W | 262.7 °C |
+| 0.6 mm | 0.1 mm | 100 A | 21.3 A | 0.52 W | 260.2 °C |
+
+Each uses 250 µs positive duration, 20 µs ramps and a quarter-amplitude reverse
+lobe after 25 µs. These amplitudes roughly match the old two-flat 175 A cold
+outlet-region force; **they are not matched droplet outcomes**. Replays use
+50 µm native cells, ideal contacts, fixed properties and insulated short-time
+thermal cuts. Halving the 0.7 mm replay timestep changes its maximum by less
+than one exported temperature increment. None includes repeated heating or
+establishes a safe physical-head pulse. See
+[thermal record](tip-boss-thermal-screening.json).
