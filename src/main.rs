@@ -59,6 +59,35 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .map(|s| s.parse::<u32>())
             .transpose()?
             .unwrap_or(10);
+        let mut output = std::path::PathBuf::from("artifacts");
+        let mut field_every = None;
+        let options = args.get(4..).unwrap_or_default();
+        if options.len() % 2 != 0 {
+            return Err("Run options require values: --output DIR --field-every N".into());
+        }
+        for pair in options.chunks_exact(2) {
+            match pair[0].as_str() {
+                "--output" if !pair[1].is_empty() => output = std::path::PathBuf::from(&pair[1]),
+                "--field-every" => {
+                    let n: u32 = pair[1].parse()?;
+                    if n == 0 {
+                        return Err("--field-every must be positive".into());
+                    }
+                    field_every = Some(n);
+                }
+                _ => return Err(format!("Unknown run option {}", pair[0]).into()),
+            }
+        }
+        if field_every.is_some() && output.exists() {
+            for entry in std::fs::read_dir(&output)? {
+                if entry?.file_name().to_string_lossy().starts_with("frame-") {
+                    return Err(
+                        "Field output already contains frames; choose a new --output directory"
+                            .into(),
+                    );
+                }
+            }
+        }
         let p = project::load(std::path::Path::new(path))?;
         let gpu = domain::GpuDomain::new()?;
         println!("GPU: {}", gpu.context.name);
@@ -195,13 +224,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .as_ref()
                     .map_or(0., |s| s.diagnostics.transport_divergence_m3)
             ));
+            if field_every.is_some_and(|n| i % n == 0 || i == steps)
+                && let Err(error) = state.export_fields(
+                    &volume,
+                    &p.model,
+                    &output.join(format!("frame-{:08}", state.steps)),
+                )
+            {
+                failure = Some(error);
+                break;
+            }
+            if field_every.is_some_and(|n| i % n == 0 || i == steps) {
+                std::fs::write(output.join("run-diagnostics.csv"), &csv)?;
+            }
         }
         for report in gpu.context.profiler.take_completed(true) {
             performance.push_str(&report.csv_rows());
         }
-        std::fs::create_dir_all("artifacts")?;
-        std::fs::write("artifacts/run-performance.csv", performance)?;
-        std::fs::write("artifacts/run-diagnostics.csv", csv)?;
+        std::fs::create_dir_all(&output)?;
+        std::fs::write(output.join("run-performance.csv"), performance)?;
+        std::fs::write(output.join("run-diagnostics.csv"), csv)?;
         if let Some(error) = failure {
             return Err(error.into());
         }

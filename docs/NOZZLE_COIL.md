@@ -17,6 +17,8 @@ cargo run --offline --example make_nozzle -- --coil # computed EM forcing
 cargo run --offline -- --run-check assets/nozzle-coil.mhd.json 150
 ```
 
+For longer headless experiments, [accepted 3D field output](RUNS.md#headless-field-output) uses this same run path and can produce nozzle-section plots directly.
+
 ## Inputs and interpretation
 
 The wall and pool match the [nozzle regression geometry](JET_EXPERIMENT.md). Five ideal circular current paths have radius **0.95 mm**, at z=−0.9, −0.7, −0.5, −0.3 and −0.1 mm. Each curve has 64 straight segments and explicitly coincident endpoints. The source regularization radius is **0.05 mm**. Every loop rises linearly from 0 to **100 A over 25 µs**, holds for **25 µs**, and falls to zero over **25 µs**. These independent ideal loops approximate a winding field; they do not include a circuit, wire resistance, coil heating or a physical helical return lead.

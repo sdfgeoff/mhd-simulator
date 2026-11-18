@@ -72,3 +72,20 @@ Moving-interface runs initialize fractional CAD occupancy and matching thermal e
 [The loadable nozzle pulse project](JET_EXPERIMENT.md#run-this-case-in-the-application) runs the droplet regression through the normal combined timeline and section views. It explicitly prescribes a force pulse; it is not a computed coil-driven jet.
 
 [The coupled coil/nozzle project](NOZZLE_COIL.md) uses five imported CAD current loops and computed EM forces, with the prescribed pulse disabled. Both examples use the same combined run engine and timeline.
+
+## Headless field output
+
+The normal combined run command can save accepted 3D fields while it advances:
+
+```sh
+cargo run --offline -- --run-check assets/nozzle-coil.mhd.json 400 \
+  --output artifacts/coil-run --field-every 50
+python scripts/plot_jet.py artifacts/coil-run
+```
+
+1. `--output` selects the diagnostic/performance CSV directory. Without options, the existing `artifacts` output is retained. `--field-every N` additionally records the initial frame, every N accepted steps and the final requested step. Use a new frame-output directory for each run; existing frames are rejected before simulation starts.
+2. Each `frame-XXXXXXXX` directory contains `em.bin`, `fluid.bin` and/or `thermal.bin` for the active physics. The files contain the exact display packets: **16 f32 values per cell**, ordered X fastest, then Y, then Z. `metadata.json` records the byte order, grid in SI units, actual accepted time/step, inputs/material references, source curves, geometry path and file sizes. Metadata is published after successful field writes; incomplete exports have no completed metadata. Diagnostics are updated alongside exported frames during a long run.
+3. EM components are B xyz/magnitude (0–3), induced J xyz/magnitude (4–7), Lorentz force xyz/Joule power density (8–11), and applied B xyz/magnitude (12–15). Fluid components include velocity xyz/speed (0–3), pressure/divergence (4–5), force xyz (8–10), and material occupancy (14). Thermal packets retain the `ThermalCell` layout. Values use the same units as the application displays.
+4. `plot_jet.py` accepts these native exports and the older nozzle-regression snapshots. It draws the synthetic nozzle geometry and central material-occupancy sections; other CAD shapes need their own geometry overlay. Field exports contain accepted analysis fields and provenance; they do not contain all internal solver state required for restart. The original project remains loadable in the normal GUI for running and viewing the same setup.
+
+Export is optional and performs synchronous GPU readback plus disk I/O. Leave it disabled for solver timing comparisons. An export round-trip test checks metadata/data, rejects failed states and protects prior output. A native paired check gives byte-identical diagnostic CSVs with export enabled/disabled; both fluid-only and computed-EM packets are checked.
