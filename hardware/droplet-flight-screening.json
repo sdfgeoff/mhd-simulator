@@ -1,0 +1,1699 @@
+{
+  "status": "Lumped spherical flight sensitivity, not a native MHD thermal result",
+  "inputs": {
+    "initial_temperature_c": 250,
+    "ambient_and_radiative_surroundings_c": 25,
+    "pressure_Pa": 101325,
+    "metal_density_kg_m3": 7000,
+    "metal_cp_J_kg_K": 214,
+    "metal_latent_J_kg": 59000,
+    "melting_c": 227,
+    "metal_conductivity_W_m_K": 60.5,
+    "gas_constants": {
+      "air": [
+        287.05,
+        1007.0,
+        1.716e-05,
+        111.0,
+        0.0241,
+        194.0
+      ],
+      "nitrogen": [
+        296.8,
+        1040.0,
+        1.663e-05,
+        107.0,
+        0.0242,
+        150.0
+      ],
+      "argon": [
+        208.13,
+        520.3,
+        2.125e-05,
+        114.0,
+        0.0163,
+        170.0
+      ]
+    }
+  },
+  "method": "Gravity+buoyancy+Schiller-Naumann drag; film-property Ranz-Marshall convection and greybody radiation; constant-density enthalpy with isothermal227C phase plateau.",
+  "sources": {
+    "transport": "https://doc.comsol.com/6.3/doc/com.comsol.help.cfd/cfd_ug_fluidflow_high_mach.08.43.html",
+    "correlations": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6888193/",
+    "metal_inputs": "hardware/designs/v6-wide-200A/case.mhd.json; inherited screening values, not measured temperature-dependent enthalpy."
+  },
+  "checks": {
+    "20_to10us_max_step_absolute_changes": {
+      "flight_ms": 4.618527782440651e-14,
+      "temperature_c": 5.115907697472721e-13,
+      "liquid_fraction": 0.0
+    },
+    "transport_reference_and_ballistic_identity": "pass"
+  },
+  "limits": [
+    "Not a droplet-generation or oxide-growth model; clean spherical isolated drops and still gas assumed.",
+    "Ambient gas cp and specific gas constants are constant screening inputs. Transport constants are from COMSOL tables.",
+    "Emissivity0.1/0.8 are sensitivity assumptions, not measurements of clean/oxidized solder.",
+    "No hot-nozzle/substrate view factors, gas purge velocities, evaporation, contact-line or impact/wetting physics.",
+    "Metal properties inherited SnCu screening; do not transfer these temperatures to Sn60Pb40.",
+    "Distances are droplet-centre travel after release, not guaranteed mechanical nozzle-to-substrate gaps. Mounting, breakup location and drop radius matter."
+  ],
+  "low_superheat_sensitivity": [
+    {
+      "diameter_mm": 0.4,
+      "initial_temperature_c": 235.0,
+      "initial_speed_m_s": 0.15,
+      "gas": "air",
+      "emissivity": 0.8,
+      "maximum_Re": 7.18457611748006,
+      "maximum_Biot": 0.00031586407582411273,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 3.034576048558748,
+          "impact_speed_m_s": 0.17952721471516037,
+          "temperature_c": 233.39530285148481,
+          "cooling_k": 1.6046971485151857,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 10.056507910263605,
+          "impact_speed_m_s": 0.24765970689642502,
+          "temperature_c": 229.5969968429368,
+          "cooling_k": 5.40300315706321,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 20.173239972636562,
+          "impact_speed_m_s": 0.3453134663057878,
+          "temperature_c": 227.0,
+          "cooling_k": 8.0,
+          "liquid_fraction": 0.9889398122517509
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 32.53117238490847,
+          "impact_speed_m_s": 0.4637140121966043,
+          "temperature_c": 227.0,
+          "cooling_k": 8.0,
+          "liquid_fraction": 0.9625585127466347
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.5,
+      "initial_temperature_c": 235.0,
+      "initial_speed_m_s": 0.15,
+      "gas": "air",
+      "emissivity": 0.8,
+      "maximum_Re": 9.006968899275863,
+      "maximum_Biot": 0.00033154548115606176,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 3.0339249187495283,
+          "impact_speed_m_s": 0.1796005574072529,
+          "temperature_c": 233.92470456216228,
+          "cooling_k": 1.075295437837724,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 10.05050282263849,
+          "impact_speed_m_s": 0.2479269785293101,
+          "temperature_c": 231.36130411082496,
+          "cooling_k": 3.6386958891750396,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 20.152384642239344,
+          "impact_speed_m_s": 0.3459506290481168,
+          "temperature_c": 227.5244106538065,
+          "cooling_k": 7.4755893461934875,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 32.482090493240655,
+          "impact_speed_m_s": 0.46498142711262797,
+          "temperature_c": 227.0,
+          "cooling_k": 8.0,
+          "liquid_fraction": 0.9841095944457067
+        }
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "diameter_mm": 0.4,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.15,
+      "gas": "air",
+      "emissivity": 0.1,
+      "maximum_Re": 7.119274746674716,
+      "maximum_Biot": 0.00031662206411620065,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 3.0345925405956464,
+          "impact_speed_m_s": 0.17952537459144727,
+          "temperature_c": 248.33822702176838,
+          "cooling_k": 1.6617729782316246,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 10.056653906619893,
+          "impact_speed_m_s": 0.24765343199150489,
+          "temperature_c": 244.39680657679992,
+          "cooling_k": 5.603193423200082,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 20.173713466445168,
+          "impact_speed_m_s": 0.34530054926658194,
+          "temperature_c": 238.54789522327366,
+          "cooling_k": 11.452104776726344,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 32.53211474342694,
+          "impact_speed_m_s": 0.4636972781247441,
+          "temperature_c": 231.23495427887252,
+          "cooling_k": 18.76504572112748,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.4,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.15,
+      "gas": "air",
+      "emissivity": 0.8,
+      "maximum_Re": 7.130841926349803,
+      "maximum_Biot": 0.00031648597373114414,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 3.0345925104316103,
+          "impact_speed_m_s": 0.17952537977587585,
+          "temperature_c": 248.25835823498699,
+          "cooling_k": 1.7416417650130143,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 10.056652990117492,
+          "impact_speed_m_s": 0.247653494824392,
+          "temperature_c": 244.13941003229206,
+          "cooling_k": 5.860589967707938,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 20.17370729725562,
+          "impact_speed_m_s": 0.34530083344045953,
+          "temperature_c": 238.0526803109148,
+          "cooling_k": 11.947319689085191,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 32.53209283282218,
+          "impact_speed_m_s": 0.46369809293385106,
+          "temperature_c": 230.4776064665599,
+          "cooling_k": 19.522393533440095,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.4,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.15,
+      "gas": "nitrogen",
+      "emissivity": 0.1,
+      "maximum_Re": 7.121922196764308,
+      "maximum_Biot": 0.0003117755215542615,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 3.0345259237135496,
+          "impact_speed_m_s": 0.17953287844029608,
+          "temperature_c": 248.36662711342478,
+          "cooling_k": 1.6333728865752164,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 10.056038223371031,
+          "impact_speed_m_s": 0.24768085855971725,
+          "temperature_c": 244.49054668707822,
+          "cooling_k": 5.509453312921778,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 20.17156739034761,
+          "impact_speed_m_s": 0.34536625087742456,
+          "temperature_c": 238.73367222939305,
+          "cooling_k": 11.26632777060695,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 32.52704579976575,
+          "impact_speed_m_s": 0.4638284849332458,
+          "temperature_c": 231.52808676833843,
+          "cooling_k": 18.471913231661574,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.4,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.15,
+      "gas": "nitrogen",
+      "emissivity": 0.8,
+      "maximum_Re": 7.133477456456151,
+      "maximum_Biot": 0.0003116551270532408,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 3.0345258948937963,
+          "impact_speed_m_s": 0.17953288339379844,
+          "temperature_c": 248.28674061819163,
+          "cooling_k": 1.7132593818083706,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 10.056037348039316,
+          "impact_speed_m_s": 0.24768091857228422,
+          "temperature_c": 244.23295606246234,
+          "cooling_k": 5.7670439375376645,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 20.171561501302957,
+          "impact_speed_m_s": 0.34536652214642727,
+          "temperature_c": 238.23769273838923,
+          "cooling_k": 11.762307261610772,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 32.52702489774798,
+          "impact_speed_m_s": 0.46382926214237097,
+          "temperature_c": 230.76882862194554,
+          "cooling_k": 19.231171378054455,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.4,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.15,
+      "gas": "argon",
+      "emissivity": 0.1,
+      "maximum_Re": 7.797812827386056,
+      "maximum_Biot": 0.00021569848655775576,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 3.035117436148066,
+          "impact_speed_m_s": 0.17946617965820164,
+          "temperature_c": 248.87137448559736,
+          "cooling_k": 1.1286255144026427,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 10.061538859414986,
+          "impact_speed_m_s": 0.24743483441761574,
+          "temperature_c": 246.17836409597646,
+          "cooling_k": 3.8216359040235375,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 20.190912815839567,
+          "impact_speed_m_s": 0.34476908965826286,
+          "temperature_c": 242.14221673211807,
+          "cooling_k": 7.857783267881928,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 32.573219725215836,
+          "impact_speed_m_s": 0.4626185961779161,
+          "temperature_c": 237.030492044695,
+          "cooling_k": 12.969507955305005,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.4,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.15,
+      "gas": "argon",
+      "emissivity": 0.8,
+      "maximum_Re": 7.810971402671963,
+      "maximum_Biot": 0.00021560933483386627,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 3.035117398934461,
+          "impact_speed_m_s": 0.1794661860526318,
+          "temperature_c": 248.79119736849782,
+          "cooling_k": 1.2088026315021807,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 10.06153772579059,
+          "impact_speed_m_s": 0.24743491209932073,
+          "temperature_c": 245.91763240167893,
+          "cooling_k": 4.0823675983210705,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 20.190905157453205,
+          "impact_speed_m_s": 0.3447694422919187,
+          "temperature_c": 241.63387250042854,
+          "cooling_k": 8.366127499571462,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 32.57319240372642,
+          "impact_speed_m_s": 0.4626196120636126,
+          "temperature_c": 236.24000503753354,
+          "cooling_k": 13.759994962466465,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.4,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.4,
+      "gas": "air",
+      "emissivity": 0.1,
+      "maximum_Re": 8.973357038747908,
+      "maximum_Biot": 0.000334626537671849,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 1.2318296071119281,
+          "impact_speed_m_s": 0.4117989104520596,
+          "temperature_c": 249.21222451096526,
+          "cooling_k": 0.7877754890347433,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 4.732075047535397,
+          "impact_speed_m_s": 0.44527008480011177,
+          "temperature_c": 246.96705234164313,
+          "cooling_k": 3.032947658356875,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 11.043060843121197,
+          "impact_speed_m_s": 0.505406930690514,
+          "temperature_c": 242.8995072156887,
+          "cooling_k": 7.100492784311314,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 20.156689919740767,
+          "impact_speed_m_s": 0.5917504756066498,
+          "temperature_c": 237.0003692220925,
+          "cooling_k": 12.999630777907498,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.4,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.4,
+      "gas": "air",
+      "emissivity": 0.8,
+      "maximum_Re": 8.982698240257717,
+      "maximum_Biot": 0.0003345395832043455,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 1.2318296053465319,
+          "impact_speed_m_s": 0.4117989122095478,
+          "temperature_c": 249.17960030229688,
+          "cooling_k": 0.8203996977031238,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 4.73207495333085,
+          "impact_speed_m_s": 0.4452701106925989,
+          "temperature_c": 246.84368080894023,
+          "cooling_k": 3.156319191059765,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 11.043059759546418,
+          "impact_speed_m_s": 0.5054070712458154,
+          "temperature_c": 242.61974050375625,
+          "cooling_k": 7.380259496243752,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 20.156684125627407,
+          "impact_speed_m_s": 0.5917509401871578,
+          "temperature_c": 236.51078119948943,
+          "cooling_k": 13.48921880051057,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.4,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.4,
+      "gas": "nitrogen",
+      "emissivity": 0.1,
+      "maximum_Re": 8.978333080214576,
+      "maximum_Biot": 0.0003294315541938843,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 1.2318154427882297,
+          "impact_speed_m_s": 0.41180829935325486,
+          "temperature_c": 249.2252659942119,
+          "cooling_k": 0.7747340057881047,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 4.73187543283419,
+          "impact_speed_m_s": 0.44530655274501946,
+          "temperature_c": 247.01678400928154,
+          "cooling_k": 2.983215990718463,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 11.042047879388312,
+          "impact_speed_m_s": 0.5054944930116996,
+          "temperature_c": 243.0139007017906,
+          "cooling_k": 6.98609929820941,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 20.153576361810913,
+          "impact_speed_m_s": 0.591919105930085,
+          "temperature_c": 237.20440393184737,
+          "cooling_k": 12.795596068152634,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.4,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.4,
+      "gas": "nitrogen",
+      "emissivity": 0.8,
+      "maximum_Re": 8.987659838768675,
+      "maximum_Biot": 0.0003293551264774204,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 1.23181544110789,
+          "impact_speed_m_s": 0.41180830102609245,
+          "temperature_c": 249.19263854444534,
+          "cooling_k": 0.8073614555546555,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 4.731875343191198,
+          "impact_speed_m_s": 0.4453065773849165,
+          "temperature_c": 246.89336511221234,
+          "cooling_k": 3.1066348877876635,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 11.04204684874498,
+          "impact_speed_m_s": 0.505494626710384,
+          "temperature_c": 242.7338813305272,
+          "cooling_k": 7.266118669472803,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 20.1535708543424,
+          "impact_speed_m_s": 0.5919195475395195,
+          "temperature_c": 236.71400314943895,
+          "cooling_k": 13.285996850561048,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.4,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.4,
+      "gas": "argon",
+      "emissivity": 0.1,
+      "maximum_Re": 9.867874568615042,
+      "maximum_Biot": 0.00022793457162944888,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 1.2319455400965706,
+          "impact_speed_m_s": 0.41172204589874273,
+          "temperature_c": 249.4635498978862,
+          "cooling_k": 0.536450102113804,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 4.73371287656951,
+          "impact_speed_m_s": 0.4449705878391242,
+          "temperature_c": 247.9301114594772,
+          "cooling_k": 2.069888540522811,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 11.05140794671177,
+          "impact_speed_m_s": 0.5046837303004977,
+          "temperature_c": 245.13503407532062,
+          "cooling_k": 4.864965924679382,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 20.182499953611106,
+          "impact_speed_m_s": 0.590346570614148,
+          "temperature_c": 241.04279903360145,
+          "cooling_k": 8.957200966398545,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.4,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.4,
+      "gas": "argon",
+      "emissivity": 0.8,
+      "maximum_Re": 9.87843635196964,
+      "maximum_Biot": 0.00022787843641741513,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 1.2319455379617268,
+          "impact_speed_m_s": 0.4117220480237043,
+          "temperature_c": 249.43086649748795,
+          "cooling_k": 0.5691335025120452,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 4.733712762441576,
+          "impact_speed_m_s": 0.4449706191913014,
+          "temperature_c": 247.80587748131097,
+          "cooling_k": 2.194122518689028,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 11.05140662991466,
+          "impact_speed_m_s": 0.5046839009320436,
+          "temperature_c": 244.85067661080438,
+          "cooling_k": 5.149323389195615,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 20.18249288343498,
+          "impact_speed_m_s": 0.5903471366257503,
+          "temperature_c": 240.53841494732205,
+          "cooling_k": 9.461585052677947,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.5,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.15,
+      "gas": "air",
+      "emissivity": 0.1,
+      "maximum_Re": 8.811127748975087,
+      "maximum_Biot": 0.0003333742216526751,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 3.0339350963682215,
+          "impact_speed_m_s": 0.17959942201999857,
+          "temperature_c": 248.89685578165574,
+          "cooling_k": 1.103144218344255,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 10.05059254230359,
+          "impact_speed_m_s": 0.24792312717674236,
+          "temperature_c": 246.26078110360788,
+          "cooling_k": 3.739218896392117,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 20.152675819299667,
+          "impact_speed_m_s": 0.3459424079157068,
+          "temperature_c": 242.3017079694182,
+          "cooling_k": 7.698292030581797,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 32.48270951065688,
+          "impact_speed_m_s": 0.4649683810963383,
+          "temperature_c": 237.2774726332513,
+          "cooling_k": 12.722527366748693,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.5,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.15,
+      "gas": "air",
+      "emissivity": 0.8,
+      "maximum_Re": 8.822973616769717,
+      "maximum_Biot": 0.0003332618413916449,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 3.0339350814692803,
+          "impact_speed_m_s": 0.17959942458137057,
+          "temperature_c": 248.83272369495785,
+          "cooling_k": 1.1672763050421509,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 10.050592091265479,
+          "impact_speed_m_s": 0.24792315811026103,
+          "temperature_c": 246.05225864702084,
+          "cooling_k": 3.9477413529791647,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 20.152672798379605,
+          "impact_speed_m_s": 0.3459425470664874,
+          "temperature_c": 241.89517141840292,
+          "cooling_k": 8.104828581597076,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 32.482698849917874,
+          "impact_speed_m_s": 0.4649687770192977,
+          "temperature_c": 236.6452840849368,
+          "cooling_k": 13.354715915063196,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.5,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.15,
+      "gas": "nitrogen",
+      "emissivity": 0.1,
+      "maximum_Re": 8.811632115294913,
+      "maximum_Biot": 0.0003281551675388763,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 3.0338905148736024,
+          "impact_speed_m_s": 0.17960444842184417,
+          "temperature_c": 248.9155635199047,
+          "cooling_k": 1.0844364800952917,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 10.050180113789432,
+          "impact_speed_m_s": 0.24794155775115576,
+          "temperature_c": 246.32314515417272,
+          "cooling_k": 3.676854845827279,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 20.151235050864905,
+          "impact_speed_m_s": 0.34598679766940516,
+          "temperature_c": 242.4271196507267,
+          "cooling_k": 7.572880349273305,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 32.47929603968513,
+          "impact_speed_m_s": 0.4650576125310901,
+          "temperature_c": 237.47896791175708,
+          "cooling_k": 12.521032088242919,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.5,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.15,
+      "gas": "nitrogen",
+      "emissivity": 0.8,
+      "maximum_Re": 8.823446929208831,
+      "maximum_Biot": 0.00032805640359955646,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 3.0338905006475883,
+          "impact_speed_m_s": 0.1796044508674555,
+          "temperature_c": 248.85142211829827,
+          "cooling_k": 1.1485778817017263,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 10.050179683369667,
+          "impact_speed_m_s": 0.247941587266251,
+          "temperature_c": 246.114519148182,
+          "cooling_k": 3.885480851817988,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 20.151232170485496,
+          "impact_speed_m_s": 0.34598693029427435,
+          "temperature_c": 242.02016673150365,
+          "cooling_k": 7.97983326849635,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 32.47928588630039,
+          "impact_speed_m_s": 0.4650579893041195,
+          "temperature_c": 236.84571264091693,
+          "cooling_k": 13.154287359083071,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.5,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.15,
+      "gas": "argon",
+      "emissivity": 0.1,
+      "maximum_Re": 9.694682373607654,
+      "maximum_Biot": 0.00022707467498510333,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 3.0342913440414447,
+          "impact_speed_m_s": 0.17955921480155776,
+          "temperature_c": 249.2499718787966,
+          "cooling_k": 0.7500281212033997,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 10.053907669755851,
+          "impact_speed_m_s": 0.24777437494171084,
+          "temperature_c": 247.44999607777822,
+          "cooling_k": 2.5500039222217765,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 20.16435866157655,
+          "impact_speed_m_s": 0.3455793967005748,
+          "temperature_c": 244.72764431694088,
+          "cooling_k": 5.272355683059118,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 32.510678185219966,
+          "impact_speed_m_s": 0.46422792293583875,
+          "temperature_c": 241.2416555283977,
+          "cooling_k": 8.7583444716023,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.5,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.15,
+      "gas": "argon",
+      "emissivity": 0.8,
+      "maximum_Re": 9.708058253386293,
+      "maximum_Biot": 0.00022700224642619975,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 3.034291325730712,
+          "impact_speed_m_s": 0.17955921794819193,
+          "temperature_c": 249.18567628994413,
+          "cooling_k": 0.8143237100558736,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 10.053907115356106,
+          "impact_speed_m_s": 0.2477744129192945,
+          "temperature_c": 247.23968601918693,
+          "cooling_k": 2.7603139808130663,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 20.164354948544293,
+          "impact_speed_m_s": 0.34557956735517553,
+          "temperature_c": 244.31395911986635,
+          "cooling_k": 5.686040880133646,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 32.51066508617062,
+          "impact_speed_m_s": 0.4642284076308398,
+          "temperature_c": 240.5910712437444,
+          "cooling_k": 9.408928756255591,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.5,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.4,
+      "gas": "air",
+      "emissivity": 0.1,
+      "maximum_Re": 11.150126409158878,
+      "maximum_Biot": 0.00035305497329389513,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 1.231693152364923,
+          "impact_speed_m_s": 0.41188935530177495,
+          "temperature_c": 249.47154102996126,
+          "cooling_k": 0.5284589700387414,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 4.730154704617849,
+          "impact_speed_m_s": 0.4456208260315938,
+          "temperature_c": 247.96097898480446,
+          "cooling_k": 2.0390210151955444,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 11.03333962757911,
+          "impact_speed_m_s": 0.506246628042874,
+          "temperature_c": 245.20749429578404,
+          "cooling_k": 4.792505704215955,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 20.126911190216624,
+          "impact_speed_m_s": 0.593360734503142,
+          "temperature_c": 241.17545260112126,
+          "cooling_k": 8.824547398878735,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.5,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.4,
+      "gas": "air",
+      "emissivity": 0.8,
+      "maximum_Re": 11.159625010183928,
+      "maximum_Biot": 0.0003529841643656565,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 1.2316931515357492,
+          "impact_speed_m_s": 0.4118893561273402,
+          "temperature_c": 249.44539754835887,
+          "cooling_k": 0.5546024516411308,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 4.7301546604870754,
+          "impact_speed_m_s": 0.4456208381656479,
+          "temperature_c": 247.8616353495746,
+          "cooling_k": 2.1383646504253875,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 11.033339122336525,
+          "impact_speed_m_s": 0.5062466936073781,
+          "temperature_c": 244.9802120576379,
+          "cooling_k": 5.019787942362086,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 20.126908507307544,
+          "impact_speed_m_s": 0.5933609495354937,
+          "temperature_c": 240.7725061111679,
+          "cooling_k": 9.2274938888321,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.5,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.4,
+      "gas": "nitrogen",
+      "emissivity": 0.1,
+      "maximum_Re": 11.156998340618813,
+      "maximum_Biot": 0.0003475294824333957,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 1.2316835532020751,
+          "impact_speed_m_s": 0.4118957209839864,
+          "temperature_c": 249.48020193001287,
+          "cooling_k": 0.5197980699871323,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 4.730019408404317,
+          "impact_speed_m_s": 0.44564558499314694,
+          "temperature_c": 247.9941630957744,
+          "cooling_k": 2.005836904225589,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 11.032652733031622,
+          "impact_speed_m_s": 0.5063062306397185,
+          "temperature_c": 245.2844955539258,
+          "cooling_k": 4.715504446074192,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 20.124797773692343,
+          "impact_speed_m_s": 0.5934759642834139,
+          "temperature_c": 241.31458523447338,
+          "cooling_k": 8.685414765526616,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.5,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.4,
+      "gas": "nitrogen",
+      "emissivity": 0.8,
+      "maximum_Re": 11.166478304678277,
+      "maximum_Biot": 0.00034746765138507756,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 1.231683552414289,
+          "impact_speed_m_s": 0.4118957217683328,
+          "temperature_c": 249.4540567329567,
+          "cooling_k": 0.5459432670432989,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 4.73001936649261,
+          "impact_speed_m_s": 0.4456455965162393,
+          "temperature_c": 247.894794214101,
+          "cooling_k": 2.1052057858989883,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 11.032652253540247,
+          "impact_speed_m_s": 0.5063062928488036,
+          "temperature_c": 245.05707690309703,
+          "cooling_k": 4.942923096902973,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 20.12479523034005,
+          "impact_speed_m_s": 0.593476168018017,
+          "temperature_c": 240.91119163844962,
+          "cooling_k": 9.088808361550377,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.5,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.4,
+      "gas": "argon",
+      "emissivity": 0.1,
+      "maximum_Re": 12.301745065801137,
+      "maximum_Biot": 0.00024056245162576743,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 1.2317727928068292,
+          "impact_speed_m_s": 0.4118365297820835,
+          "temperature_c": 249.63965115975668,
+          "cooling_k": 0.3603488402433186,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 4.731279528610016,
+          "impact_speed_m_s": 0.4454147980818698,
+          "temperature_c": 248.60750476021633,
+          "cooling_k": 1.3924952397836705,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 11.039071170723302,
+          "impact_speed_m_s": 0.505748191198023,
+          "temperature_c": 246.71816148218306,
+          "cooling_k": 3.2818385178169365,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 20.14463571885822,
+          "impact_speed_m_s": 0.5923903525602138,
+          "temperature_c": 243.9333971306204,
+          "cooling_k": 6.066602869379608,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.5,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.4,
+      "gas": "argon",
+      "emissivity": 0.8,
+      "maximum_Re": 12.31242736562447,
+      "maximum_Biot": 0.00024051733315409886,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 1.2317727918137105,
+          "impact_speed_m_s": 0.41183653077065474,
+          "temperature_c": 249.61347600219653,
+          "cooling_k": 0.38652399780346514,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 4.731279475743967,
+          "impact_speed_m_s": 0.4454148126051683,
+          "temperature_c": 248.5076971549273,
+          "cooling_k": 1.492302845072686,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 11.039070565431105,
+          "impact_speed_m_s": 0.5057482695871358,
+          "temperature_c": 246.48838560884337,
+          "cooling_k": 3.511614391156627,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 20.144632505997986,
+          "impact_speed_m_s": 0.5923906090801722,
+          "temperature_c": 243.52229910725487,
+          "cooling_k": 6.477700892745133,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.6,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.15,
+      "gas": "air",
+      "emissivity": 0.1,
+      "maximum_Re": 10.50933206845074,
+      "maximum_Biot": 0.00034808331940457696,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 3.0335693745044927,
+          "impact_speed_m_s": 0.17964065586770997,
+          "temperature_c": 249.2092252364207,
+          "cooling_k": 0.790774763579293,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 10.047214142108718,
+          "impact_speed_m_s": 0.2480739492057376,
+          "temperature_c": 247.31004838321167,
+          "cooling_k": 2.689951616788335,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 20.1409144823598,
+          "impact_speed_m_s": 0.3463035097652479,
+          "temperature_c": 244.43523471305173,
+          "cooling_k": 5.564765286948273,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 32.45498960515063,
+          "impact_speed_m_s": 0.4656882464877273,
+          "temperature_c": 240.75233815107083,
+          "cooling_k": 9.24766184892917,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.6,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.15,
+      "gas": "air",
+      "emissivity": 0.8,
+      "maximum_Re": 10.521326453698077,
+      "maximum_Biot": 0.00034798827561787344,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 3.033569366182662,
+          "impact_speed_m_s": 0.17964065729791162,
+          "temperature_c": 249.1556709551055,
+          "cooling_k": 0.8443290448944936,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 10.047213891491065,
+          "impact_speed_m_s": 0.24807396636815301,
+          "temperature_c": 247.1350493716318,
+          "cooling_k": 2.864950628368206,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 20.140912816838036,
+          "impact_speed_m_s": 0.3463035861810519,
+          "temperature_c": 244.09149003063897,
+          "cooling_k": 5.908509969361035,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 32.454983788684416,
+          "impact_speed_m_s": 0.4656884607284458,
+          "temperature_c": 240.21269187690916,
+          "cooling_k": 9.787308123090838,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.6,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.15,
+      "gas": "nitrogen",
+      "emissivity": 0.1,
+      "maximum_Re": 10.51521236685699,
+      "maximum_Biot": 0.0003426270050285618,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 3.033537044452484,
+          "impact_speed_m_s": 0.17964430266789955,
+          "temperature_c": 249.22253741883083,
+          "cooling_k": 0.7774625811691749,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 10.046914919651378,
+          "impact_speed_m_s": 0.24808734458838422,
+          "temperature_c": 247.35469759436864,
+          "cooling_k": 2.645302405631355,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 20.139867741489873,
+          "impact_speed_m_s": 0.34633588374150803,
+          "temperature_c": 244.52582173336077,
+          "cooling_k": 5.474178266639228,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 32.452504404295965,
+          "impact_speed_m_s": 0.4657536175187051,
+          "temperature_c": 240.8994733606877,
+          "cooling_k": 9.100526639312307,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.6,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.15,
+      "gas": "nitrogen",
+      "emissivity": 0.8,
+      "maximum_Re": 10.52718327996609,
+      "maximum_Biot": 0.00034254386757428276,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 3.033537036511501,
+          "impact_speed_m_s": 0.1796443040325513,
+          "temperature_c": 249.16897762797475,
+          "cooling_k": 0.8310223720252452,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 10.046914680685017,
+          "impact_speed_m_s": 0.24808736094810704,
+          "temperature_c": 247.1796367965967,
+          "cooling_k": 2.8203632034033035,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 20.13986615525277,
+          "impact_speed_m_s": 0.34633595646670573,
+          "temperature_c": 244.18182552112603,
+          "cooling_k": 5.818174478873971,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 32.45249887351381,
+          "impact_speed_m_s": 0.4657538209387633,
+          "temperature_c": 240.35917294842193,
+          "cooling_k": 9.640827051578071,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.6,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.15,
+      "gas": "argon",
+      "emissivity": 0.1,
+      "maximum_Re": 11.596259289717066,
+      "maximum_Biot": 0.00023715433123635253,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 3.033831203167423,
+          "impact_speed_m_s": 0.17961109582485588,
+          "temperature_c": 249.46174197539767,
+          "cooling_k": 0.5382580246023281,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 10.049649592994758,
+          "impact_speed_m_s": 0.24796452315889433,
+          "temperature_c": 248.16471634415575,
+          "cooling_k": 1.8352836558442505,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 20.14950043393134,
+          "impact_speed_m_s": 0.3460358868163811,
+          "temperature_c": 246.1908421326675,
+          "cooling_k": 3.8091578673324875,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 32.47556740365816,
+          "impact_speed_m_s": 0.4651405303887624,
+          "temperature_c": 243.64489179518853,
+          "cooling_k": 6.355108204811472,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.6,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.15,
+      "gas": "argon",
+      "emissivity": 0.8,
+      "maximum_Re": 11.609754834457524,
+      "maximum_Biot": 0.00023709368513985277,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 3.0338311929759194,
+          "impact_speed_m_s": 0.17961109757543056,
+          "temperature_c": 249.4080902028636,
+          "cooling_k": 0.5919097971363954,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 10.04964928656698,
+          "impact_speed_m_s": 0.247964544105581,
+          "temperature_c": 247.98864458842036,
+          "cooling_k": 2.0113554115796433,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 20.14949840317918,
+          "impact_speed_m_s": 0.34603597963490185,
+          "temperature_c": 245.84276689498654,
+          "cooling_k": 4.157233105013461,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 32.47556034060832,
+          "impact_speed_m_s": 0.46514078873160747,
+          "temperature_c": 243.09397173656362,
+          "cooling_k": 6.906028263436383,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.6,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.4,
+      "gas": "air",
+      "emissivity": 0.1,
+      "maximum_Re": 13.332644426956158,
+      "maximum_Biot": 0.0003694070395311098,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 1.231616067262083,
+          "impact_speed_m_s": 0.41194046802830536,
+          "temperature_c": 249.61777750082956,
+          "cooling_k": 0.3822224991704388,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 4.729069627132318,
+          "impact_speed_m_s": 0.44581929233489354,
+          "temperature_c": 248.52319976883518,
+          "cooling_k": 1.476800231164816,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 11.027843445144892,
+          "impact_speed_m_s": 0.5067229134123732,
+          "temperature_c": 246.52035352035034,
+          "cooling_k": 3.4796464796496593,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 20.110056412001516,
+          "impact_speed_m_s": 0.5942773371715172,
+          "temperature_c": 243.57003057788222,
+          "cooling_k": 6.429969422117779,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.6,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.4,
+      "gas": "air",
+      "emissivity": 0.8,
+      "maximum_Re": 13.342227688483625,
+      "maximum_Biot": 0.00036934763912841004,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 1.2316160668229383,
+          "impact_speed_m_s": 0.4119404684654565,
+          "temperature_c": 249.59597049932086,
+          "cooling_k": 0.4040295006791439,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 4.7290696038468365,
+          "impact_speed_m_s": 0.44581929873190096,
+          "temperature_c": 248.4401076513053,
+          "cooling_k": 1.5598923486946887,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 11.027843180410184,
+          "impact_speed_m_s": 0.5067229476779852,
+          "temperature_c": 246.32929644447188,
+          "cooling_k": 3.670703555528121,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 20.110055021490037,
+          "impact_speed_m_s": 0.5942774479159667,
+          "temperature_c": 243.22879192899757,
+          "cooling_k": 6.771208071002434,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.6,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.4,
+      "gas": "nitrogen",
+      "emissivity": 0.1,
+      "maximum_Re": 13.341352451412778,
+      "maximum_Biot": 0.00036361507491865805,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 1.2316090455712223,
+          "impact_speed_m_s": 0.41194512572239056,
+          "temperature_c": 249.623986792516,
+          "cooling_k": 0.37601320748399303,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 4.728970640742599,
+          "impact_speed_m_s": 0.44583742531245724,
+          "temperature_c": 248.5470575191457,
+          "cooling_k": 1.45294248085429,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 11.02734065483685,
+          "impact_speed_m_s": 0.5067666438207238,
+          "temperature_c": 246.5760004862982,
+          "cooling_k": 3.4239995137018013,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 20.10850808925603,
+          "impact_speed_m_s": 0.5943621086053276,
+          "temperature_c": 243.67134937795663,
+          "cooling_k": 6.328650622043369,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.6,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.4,
+      "gas": "nitrogen",
+      "emissivity": 0.8,
+      "maximum_Re": 13.350914657766332,
+      "maximum_Biot": 0.00036356350546758675,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 1.2316090451548476,
+          "impact_speed_m_s": 0.41194512613685763,
+          "temperature_c": 249.60217876997478,
+          "cooling_k": 0.3978212300252153,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 4.728970618676645,
+          "impact_speed_m_s": 0.44583743137335224,
+          "temperature_c": 248.46395031207635,
+          "cooling_k": 1.5360496879236507,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 11.0273404042291,
+          "impact_speed_m_s": 0.5067666762415725,
+          "temperature_c": 246.38486125758902,
+          "cooling_k": 3.615138742410977,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 20.108506775126198,
+          "impact_speed_m_s": 0.5943622131449796,
+          "temperature_c": 243.3298384780977,
+          "cooling_k": 6.670161521902287,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.6,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.4,
+      "gas": "argon",
+      "emissivity": 0.1,
+      "maximum_Re": 14.740186557555692,
+      "maximum_Biot": 0.00025183341419067457,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 1.2316750091769881,
+          "impact_speed_m_s": 0.4119013614140903,
+          "temperature_c": 249.73904441438867,
+          "cooling_k": 0.2609555856113275,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 4.729902075373156,
+          "impact_speed_m_s": 0.44566666348738154,
+          "temperature_c": 248.99059455222448,
+          "cooling_k": 1.0094054477755208,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 11.03208555690353,
+          "impact_speed_m_s": 0.5063531577424494,
+          "temperature_c": 247.61678724181695,
+          "cooling_k": 2.383212758183049,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 20.1231795396719,
+          "impact_speed_m_s": 0.593555971263555,
+          "temperature_c": 245.58321785080273,
+          "cooling_k": 4.4167821491972745,
+          "liquid_fraction": 1.0
+        }
+      ]
+    },
+    {
+      "diameter_mm": 0.6,
+      "initial_temperature_c": 250.0,
+      "initial_speed_m_s": 0.4,
+      "gas": "argon",
+      "emissivity": 0.8,
+      "maximum_Re": 14.750939654279275,
+      "maximum_Biot": 0.00025179587222051616,
+      "targets": [
+        {
+          "distance_mm": 0.5,
+          "flight_ms": 1.2316750086565802,
+          "impact_speed_m_s": 0.4119013619319691,
+          "temperature_c": 249.71721837012603,
+          "cooling_k": 0.28278162987396627,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 2.0,
+          "flight_ms": 4.729902047811701,
+          "impact_speed_m_s": 0.4456666710494272,
+          "temperature_c": 248.90722264855913,
+          "cooling_k": 1.0927773514408727,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 5.0,
+          "flight_ms": 11.03208524435201,
+          "impact_speed_m_s": 0.5063531980679509,
+          "temperature_c": 247.4242179326311,
+          "cooling_k": 2.575782067368891,
+          "liquid_fraction": 1.0
+        },
+        {
+          "distance_mm": 10.0,
+          "flight_ms": 20.123177905476616,
+          "impact_speed_m_s": 0.5935561005549099,
+          "temperature_c": 245.23699465918003,
+          "cooling_k": 4.763005340819973,
+          "liquid_fraction": 1.0
+        }
+      ]
+    }
+  ]
+}

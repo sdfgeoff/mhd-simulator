@@ -54,6 +54,13 @@ materials and domain. Internal geometry/land/liquid volume differ. This V6-like
 0.5 mm model is not a claim of a catalogued stainless SKU, and its standard heater
 is omitted because it clashes with the coil. No new ejection claim.
 
+The independent [droplet-flight heat balance](droplet-flight-screening.json)
+quantifies travel after pinch-off. A 0.5 mm SnCu sphere starting at 250 °C and
+0.15 m/s in still 25 °C air loses about 13 K over 10 mm (32 ms), versus about
+1 K over 0.5 mm (3 ms). This is a lumped convection/radiation sensitivity,
+not native MHD thermal integration or oxide kinetics. Centre travel after release
+is not the mechanical nozzle gap: breakup position and drop radius also matter.
+
 ## Physical scope and limits
 
 1. **Gravity and domain boundaries.** Earlier generated flow cases use
