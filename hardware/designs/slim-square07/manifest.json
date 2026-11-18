@@ -1,0 +1,15 @@
+{
+  "source_project": "artifacts/hardware-research/cases/tip-boss07-v1/square07-hot-sigma.mhd.json",
+  "source_project_sha256": "8a7addbafacc57454e6c07d0d35d5a8f815457aba8c0b8bf3dc978073066000b",
+  "source_geometry": "artifacts/hardware-research/cases/tip-boss07-v1/square07.gltf",
+  "source_geometry_sha256": "149dba5bfaeef8206b1e0f45bcbf816517c3a0cc57496b7aef8aab141369a3e2",
+  "source_binary_sha256": "76faa509e5fb5587f49e31e9b15d616c3c7ea737bda99ff34a2966b9a4f6e68e",
+  "packaging_change": "Only geometry and buffer URI strings renamed; simulation properties and f32 triangle payload retained.",
+  "scope": "Research geometry/material input; GUI inspection only for terminal-current study. No qualified jetting waveform, thermal envelope or manufacturing drawing.",
+  "packaged_sha256": {
+    "case.mhd.json": "f6124809b1f1e42f7d21c6c7a7d4718c0e8f0855f865a250a38950a7ab61f143",
+    "geometry.gltf": "04ec041d4e0578d31fdac90ca0903f7c74d302e270f0027de15a452b56c40592",
+    "geometry.bin": "76faa509e5fb5587f49e31e9b15d616c3c7ea737bda99ff34a2966b9a4f6e68e",
+    "README.md": "0f726900c13e8a60b76d38c0e1091528e80c3416c94c94a2e98efc0878ea774a"
+  }
+}

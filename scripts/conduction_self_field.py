@@ -36,6 +36,8 @@ def field_from_current(j, h, near_subdivisions=0):
         integrated = np.mean(r/np.linalg.norm(r, axis=-1)[..., None]**3, axis=1)*1e-7*h**3
         for axis in range(3):
             kernels[axis][near] = integrated[:, axis]
+    # Kernels own their arrays; release full coordinate grids before FFT scratch.
+    del x, y, z, r2, factor
     b = np.empty_like(j, dtype=float)
     for axis in range(3):
         a, c = (axis + 1) % 3, (axis + 2) % 3

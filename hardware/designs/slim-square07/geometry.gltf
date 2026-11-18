@@ -1,0 +1,249 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "MHD hardware study; E3D dimension-based simplified CAD"
+  },
+  "buffers": [
+    {
+      "uri": "geometry.bin",
+      "byteLength": 107712
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 78336
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 78336,
+      "byteLength": 27648
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 105984,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 106416,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 106848,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 107280,
+      "byteLength": 432
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 6528,
+      "type": "VEC3",
+      "min": [
+        -0.0035,
+        -0.003,
+        0.0
+      ],
+      "max": [
+        0.0035,
+        0.003,
+        0.0125
+      ]
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 2304,
+      "type": "VEC3",
+      "min": [
+        -0.0015999999595806003,
+        -0.0015999999595806003,
+        0.0
+      ],
+      "max": [
+        0.0015999999595806003,
+        0.0015999999595806003,
+        0.0035000001080334187
+      ]
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.005,
+        -0.0003499999940395355,
+        0.00010000000149011613
+      ],
+      "max": [
+        -0.0003499999940395355,
+        0.0003499999940395355,
+        0.0005
+      ]
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        0.0003499999940395355,
+        -0.0003499999940395355,
+        0.00010000000149011613
+      ],
+      "max": [
+        0.005,
+        0.0003499999940395355,
+        0.0005
+      ]
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.012500000186264515,
+        -0.01209999993443489,
+        -0.00020000000949949026
+      ],
+      "max": [
+        0.012500000186264515,
+        -0.002099999925121665,
+        0.004800000227987766
+      ]
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.012500000186264515,
+        0.002099999925121665,
+        -0.00020000000949949026
+      ],
+      "max": [
+        0.012500000186264515,
+        0.01209999993443489,
+        0.004800000227987766
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Machined outlet boss square07",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Liquid solder",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Positive tip copper contact",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 2
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Negative tip copper contact",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 3
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Bias magnet 1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 4
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Bias magnet 2",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 5
+          },
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "Machined outlet boss square07"
+    },
+    {
+      "mesh": 1,
+      "name": "Liquid solder"
+    },
+    {
+      "mesh": 2,
+      "name": "Positive tip copper contact"
+    },
+    {
+      "mesh": 3,
+      "name": "Negative tip copper contact"
+    },
+    {
+      "mesh": 4,
+      "name": "Bias magnet 1"
+    },
+    {
+      "mesh": 5,
+      "name": "Bias magnet 2"
+    }
+  ],
+  "scenes": [
+    {
+      "nodes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    }
+  ],
+  "scene": 0
+}

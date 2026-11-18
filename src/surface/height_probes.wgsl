@@ -59,3 +59,42 @@ fn height_probe_reduce(@builtin(local_invocation_index) l:u32){
  for(var stride=128u;stride>0u;stride/=2u){if l<stride{sums[l]+=sums[l+stride];bounds[l]+=bounds[l+stride];height_extra[l]=vec4<f32>(height_extra[l].xyz+height_extra[l+stride].xyz,max(height_extra[l].w,height_extra[l+stride].w));}workgroupBarrier();}
  if l==0u {stats[3u*n]=sums[0];stats[3u*n+1u]=bounds[0];stats[3u*n+2u]=height_extra[0];}
 }
+
+// Diagnostic only: try all axes in descending normal magnitude, as in the
+// standard height-function selection strategy. No production field is written.
+fn height_on_axis(q:vec3<i32>,i:u32,axis:u32)->vec2<f32>{
+ let orientation=sign(normals[i][axis]);if orientation==0.{return vec2<f32>(0.);}
+ let a=(axis+1u)%3u;let b=(axis+2u)%3u;var values:array<f32,9>;
+ for(var v=-1;v<=1;v++){for(var u=-1;u<=1;u++){
+  var at=q;at[a]+=u;at[b]+=v;let h=curvature_height(at,axis,q);
+  if h.y<0.5||h.z!=orientation{return vec2<f32>(0.);}
+  values[u32((u+1)+3*(v+1))]=h.x;
+ }}
+ let hx=.5*(values[5]-values[3]);let hy=.5*(values[7]-values[1]);let h=height_hessian(values,p.step.y);
+ let k=-(h.x*(1.+hy*hy)+h.y*(1.+hx*hx)-2.*h.z*hx*hy)/pow(1.+hx*hx+hy*hy,1.5);
+ return vec2<f32>(clamp(k,-2./p.step.y,2./p.step.y),1.);
+}
+@compute @workgroup_size(256)
+fn height_axis_probe_collect(@builtin(global_invocation_id) g:vec3<u32>,@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>){
+ let gi=group.x+group.y*65535u;if gi>=(p.dims.w+255u)/256u{return;}
+ let i=flat(g);var counts=vec4<f32>(0.);var errors=vec4<f32>(0.);var extra=vec4<f32>(0.);
+ if i<p.dims.w&&!wall(i) {
+  let q=point(i);let fraction=input_field[i].x;
+  if fraction>1e-6&&fraction<1.-1e-6 {
+   var order=array<u32,3>(0u,1u,2u);let n=abs(normals[i].xyz);
+   for(var a=0u;a<2u;a++){for(var b=a+1u;b<3u;b++){
+    if n[order[b]]>n[order[a]]{let old=order[a];order[a]=order[b];order[b]=old;}
+   }}
+   let first=height_on_axis(q,i,order[0]);var selected=first;
+   for(var a=1u;a<3u&&selected.y<.5;a++){selected=height_on_axis(q,i,order[a]);}
+   let chosen=select(input_field[i].y,selected.x,selected.y>.5);
+   let scale=max(abs(HEIGHT_TARGET),1.);let before=(input_field[i].y-HEIGHT_TARGET)/scale;let after=(chosen-HEIGHT_TARGET)/scale;
+   counts=vec4<f32>(1.,first.y,selected.y,select(0.,1.,first.y<.5&&selected.y>.5));
+   errors=vec4<f32>(before*before,after*after,0.,0.);
+   extra=vec4<f32>(chosen,input_field[i].y,0.,abs(chosen-input_field[i].y));
+  }
+ }
+ sums[l]=counts;bounds[l]=errors;height_extra[l]=extra;workgroupBarrier();
+ for(var stride=128u;stride>0u;stride/=2u){if l<stride{sums[l]+=sums[l+stride];bounds[l]+=bounds[l+stride];height_extra[l]=vec4<f32>(height_extra[l].xyz+height_extra[l+stride].xyz,max(height_extra[l].w,height_extra[l+stride].w));}workgroupBarrier();}
+ if l==0u{stats[3u*gi]=sums[0];stats[3u*gi+1u]=bounds[0];stats[3u*gi+2u]=height_extra[0];}
+}

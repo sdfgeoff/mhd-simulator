@@ -6,11 +6,18 @@ fn install(surface: &mut SurfaceState, target: f32, margin: u32) {
         "const HEIGHT_TARGET:f32={target:?};\nconst HEIGHT_MARGIN:u32={margin}u;\n{}",
         include_str!("height_probes.wgsl")
     );
-    for name in ["height_probe_collect", "height_probe_reduce"] {
+    for name in [
+        "height_probe_collect",
+        "height_axis_probe_collect",
+        "height_probe_reduce",
+    ] {
         install_test_entry(surface, name, &source);
     }
 }
 fn sample(surface: &SurfaceState, volume: &Volume) -> [f32; 12] {
+    sample_entry(surface, volume, "height_probe_collect")
+}
+fn sample_entry(surface: &SurfaceState, volume: &Volume, entry: &str) -> [f32; 12] {
     let context = &surface.context;
     let device = &context.device;
     let count = surface.params.dims[3].div_ceil(256);
@@ -48,7 +55,7 @@ fn sample(surface: &SurfaceState, volume: &Volume) -> [f32; 12] {
     {
         let mut pass = context.compute_pass(&mut encoder, None);
         pass.set_bind_group(0, &bind, &[]);
-        pass.set_pipeline(&surface.pipelines["height_probe_collect"]);
+        pass.set_pipeline(&surface.pipelines[entry]);
         let g = groups(surface.params.dims[3]);
         pass.dispatch_workgroups(g[0], g[1], g[2]);
         pass.set_pipeline(&surface.pipelines["height_probe_reduce"]);
@@ -252,4 +259,91 @@ fn column_probe(@builtin(global_invocation_id) g:vec3<u32>){
             assert_eq!(result[5], 0., "{name}: {result:?}");
         }
     }
+}
+
+#[test]
+#[ignore = "Read-only height completeness on a saved native isolated-drop frame"]
+fn native_export_height_completeness() {
+    let _lock = crate::gpu_test_lock();
+    let project_path = std::env::var("MHD_HEIGHT_PROJECT").expect("MHD_HEIGHT_PROJECT");
+    let frame_path = std::env::var("MHD_HEIGHT_FRAME").expect("MHD_HEIGHT_FRAME");
+    let output_path = std::env::var("MHD_HEIGHT_OUTPUT").expect("MHD_HEIGHT_OUTPUT");
+    let project = crate::project::load(std::path::Path::new(&project_path)).unwrap();
+    let frame = std::path::Path::new(&frame_path);
+    let metadata: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(frame.join("metadata.json")).unwrap()).unwrap();
+    assert_eq!(metadata["byte_order"], "little");
+    let gpu = crate::domain::GpuDomain::new().unwrap();
+    let volume = gpu
+        .build(&project.model, &project.settings, &project.materials)
+        .unwrap();
+    let grid = &volume.inputs.snapshot().grid;
+    assert_eq!(metadata["dims"], serde_json::json!(grid.dims));
+    for axis in 0..3 {
+        assert_eq!(
+            metadata["origin_m"][axis].as_f64().unwrap() as f32,
+            grid.origin_m[axis]
+        );
+    }
+    assert_eq!(metadata["cell_m"].as_f64().unwrap() as f32, grid.cell_m);
+    assert_eq!(
+        metadata["fluid"]["periodic"],
+        serde_json::json!(project.fluid.periodic)
+    );
+    let bytes = std::fs::read(frame.join("fluid.bin")).unwrap();
+    let fields = bytemuck::cast_slice::<u8, [f32; 16]>(&bytes);
+    assert_eq!(
+        fields.len(),
+        grid.dims.iter().map(|&n| n as usize).product::<usize>()
+    );
+    let values: Vec<[f32; 4]> = fields.iter().map(|v| [v[14], 0., 0., 0.]).collect();
+    let (mut surface, _) = SurfaceState::with_periodic_boundaries(
+        gpu.context.clone(),
+        &volume,
+        project.fluid.material_id,
+        project.fluid.periodic,
+    )
+    .unwrap();
+    gpu.context
+        .queue
+        .write_buffer(surface.field(), 0, bytemuck::cast_slice(&values));
+    surface.refresh(&volume).unwrap();
+    let before = read_bytes(&gpu.context, surface.field(), 0, surface.field().size()).unwrap();
+    let recomputed = bytemuck::cast_slice::<u8, [f32; 4]>(&before);
+    assert!(recomputed.iter().zip(fields).all(|(a, b)| a[0] == b[14]));
+    let max_curvature_difference = recomputed
+        .iter()
+        .zip(fields)
+        .map(|(a, b)| (a[1] - b[15]).abs())
+        .fold(0_f32, f32::max);
+    let target = 2. / 0.0003;
+    install(&mut surface, target, 0);
+    let v = sample(&surface, &volume);
+    let axis_probe = sample_entry(&surface, &volume, "height_axis_probe_collect");
+    let after = read_bytes(&gpu.context, surface.field(), 0, surface.field().size()).unwrap();
+    assert_eq!(before, after, "Read-only probe changed the physical field");
+    let result = serde_json::json!({
+        "project":project_path,"frame":frame_path,"step":metadata["step"],"time_s":metadata["time_s"],
+        "cell_m":grid.cell_m,"mixed_cells":v[0],"axis_probe":{"mixed":axis_probe[0],"primary_valid":axis_probe[1],"any_axis_valid":axis_probe[2],"recovered":axis_probe[3],"current_RMS":(axis_probe[4]/axis_probe[0].max(1.)).sqrt(),"all_axes_RMS":(axis_probe[5]/axis_probe[0].max(1.)).sqrt()},
+        "current_height_valid":v[1],
+        "strict_height_valid":v[2],"both_valid":v[3],
+        "curvature_relative_RMS_all":(v[4]/v[0].max(1.)).sqrt(),
+        "current_curvature_relative_RMS_common":(v[5]/v[3].max(1.)).sqrt(),
+        "strict_curvature_relative_RMS_common":(v[6]/v[3].max(1.)).sqrt(),
+        "mean_current_curvature_common_m_inv":v[9]/v[3].max(1.),
+        "mean_strict_curvature_common_m_inv":v[10]/v[3].max(1.),
+        "maximum_column_difference_cells":v[11],
+        "exported_vs_recomputed_curvature_max_abs_difference_m_inv":max_curvature_difference,
+        "physical_field_preserved_bitwise":true,
+        "reference_curvature_m_inv":target,
+        "scope":"Read-only production GPU curvature/height probe on saved alpha. Sphere target is exact only initially; evolved deformation is not a curvature-error reference. No fluid advance or correction."
+    });
+    use std::io::Write;
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(output_path)
+        .unwrap();
+    writeln!(file, "{}", serde_json::to_string_pretty(&result).unwrap()).unwrap();
+    eprintln!("{result}");
 }

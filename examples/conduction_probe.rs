@@ -14,12 +14,16 @@ use std::{error::Error, path::Path};
 
 fn main() -> Result<(), Box<dyn Error>> {
     let a: Vec<_> = std::env::args().collect();
-    let p = project::load(Path::new(
-        a.get(1).ok_or("Expected PROJECT CURRENT_A OUTPUT")?,
-    ))?;
+    let p = project::load(Path::new(a.get(1).ok_or(
+        "Expected PROJECT CURRENT_A OUTPUT [CONTACT_RESISTIVITY] [body|x-ends]",
+    )?))?;
     let current: f32 = a.get(2).ok_or("Missing current")?.parse()?;
     if !current.is_finite() || current <= 0. {
         return Err("Choose a positive current".into());
+    }
+    let terminal_boundary = a.get(5).map(String::as_str).unwrap_or("body");
+    if !matches!(terminal_boundary, "body" | "x-ends") {
+        return Err("Choose body or x-ends terminal boundary".into());
     }
     let output = Path::new(a.get(3).ok_or("Missing output")?);
     std::fs::create_dir_all(output.parent().ok_or("Output parent required")?)?;
@@ -45,12 +49,17 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
     let cells: Vec<_> = ids
         .iter()
-        .map(|&id| {
+        .enumerate()
+        .map(|(i, &id)| {
             [
                 table[id as usize],
                 match id {
-                    16 => 0.5,
-                    17 => -0.5,
+                    16 if terminal_boundary == "body" || i % grid.dims[0] as usize == 0 => 0.5,
+                    17 if terminal_boundary == "body"
+                        || i % grid.dims[0] as usize == grid.dims[0] as usize - 1 =>
+                    {
+                        -0.5
+                    }
                     0 | 4 => 3.,
                     _ => 2.,
                 },
@@ -150,7 +159,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
         }
     }
-    let report = serde_json::json!({"project":a[1],"released_static_workspace_bytes":released_static_workspace_bytes,"contact_resistivity_ohm_m2":contact,"status":"cold DC conduction and applied permanent-magnet field only; no ejection simulation","iterations":solver.iterations,"true_relative_residual":solver.relative_residual,"current_A":stats[0],"return_current_A":stats[1],"terminal_voltage_V":voltage,"joule_power_W":stats[2],"source_power_W":voltage*stats[0],"power_relative_defect":stats[2]/(voltage*stats[0])-1.,"liquid_force_N":force,"liquid_joule_power_W":liquid_power,"liquid_mean_By_T":mean_by/count as f64,"midplane_adjacent_cell_liquid_current_A":midplane_liquid,"midplane_adjacent_cell_wall_current_A":midplane_wall,"mean_liquid_current_over_x_plus_minus_2mm_A":liquid_current_integral/0.004,"mean_wall_current_over_x_plus_minus_2mm_A":wall_current_integral/0.004,"limitations":["Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.","Ideal electrical contact; material and oxide/contact resistance require bracketing.","Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.","Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."]});
+    let report = serde_json::json!({"project":a[1],"terminal_boundary":terminal_boundary,"released_static_workspace_bytes":released_static_workspace_bytes,"contact_resistivity_ohm_m2":contact,"status":"cold DC conduction and applied permanent-magnet field only; no ejection simulation","iterations":solver.iterations,"true_relative_residual":solver.relative_residual,"current_A":stats[0],"return_current_A":stats[1],"terminal_voltage_V":voltage,"joule_power_W":stats[2],"source_power_W":voltage*stats[0],"power_relative_defect":stats[2]/(voltage*stats[0])-1.,"liquid_force_N":force,"liquid_joule_power_W":liquid_power,"liquid_mean_By_T":mean_by/count as f64,"midplane_adjacent_cell_liquid_current_A":midplane_liquid,"midplane_adjacent_cell_wall_current_A":midplane_wall,"mean_liquid_current_over_x_plus_minus_2mm_A":liquid_current_integral/0.004,"mean_wall_current_over_x_plus_minus_2mm_A":wall_current_integral/0.004,"limitations":["Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.","Ideal electrical contact; material and oxide/contact resistance require bracketing.","body mode makes whole terminal bodies equipotential. x-ends resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.","Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.","Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."]});
     std::fs::write(
         output.join("report.json"),
         serde_json::to_vec_pretty(&report)?,

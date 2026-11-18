@@ -408,3 +408,23 @@ Head resistance increases from 1.12 to 1.29 mΩ and its 125 A single-pulse repla
 peak increases from 262.7 to 265.0 °C. The assumed 200 Hz average head loss becomes
 0.91 W. This changes only fixed electrical conductivity; it is not a fitted
 material law or temperature feedback, and other properties remain unchanged.
+
+The [0.7 mm CAD/material bundle](designs/slim-square07) now includes the fixed
+hot-conductivity sensitivity. It is a research input for inspection, with the
+terminal-current client and scope explained in its README. A
+[resolved-copper boundary control](tip-boss07-resolved-copper-control.json)
+supplies current at the domain ends and solves the copper potential inside the
+domain. The added copper resistance matches a straight-bar reference within
+0.12%; total liquid force changes 0.5%. At the assumed 200 Hz / 125 A waveform,
+nozzle plus modeled copper dissipates 1.60 W; estimating the remaining CAD lead
+length gives 1.85 W. The earlier 0.91 W refers to the equipotential-contact
+nozzle-path screen. These estimates must not double-count the lead allowance in
+the earlier lumped circuit model. One-shot native thermal replay still peaks
+near 265 °C; it is not a repetition or real-contact temperature limit.
+
+[Read-only curvature probes](drop-curvature-diagnosis.json) reproduce exported
+curvature exactly and preserve physical fields bit for bit. Complete
+height-function coverage is 19% / 76% / 99% at 100 / 50 / 25 µm initially. The
+fallback estimate warrants further work; simply trying other coordinate axes
+recovers no extra cells in the 50 µm initial sphere. Tiny-domain 25 µm slow-motion
+and gravity controls are progressing separately; no correction is applied.

@@ -307,5 +307,47 @@
       "velocity_error_m_s": 4.8317542419393233e-05,
       "relative_volume_drift": -2.15269333359025e-06
     }
+  },
+  "tiny_domain_followup": {
+    "status": "50/25um slow translation600us complete;25um gravity3ms running",
+    "half_domain_mm": [
+      0.7,
+      0.7,
+      0.9
+    ],
+    "scope": "Uniform periodic translation remains exact in the smaller box; closed-box gravity is a consistency test with small ambient-density effects, not a domain-convergence claim. Same CAD and phase-aligned native grids.",
+    "completed": {
+      "h0050": {
+        "time_s": 0.0006000000000000081,
+        "step": 600,
+        "volume_m3": 1.1295014473720831e-10,
+        "COM_z_m": -1.0448573111820676e-05,
+        "liquid_vz_m_s": -0.012165217278762373,
+        "boundary_max_alpha": 0.0,
+        "cell_estimated_mixture_momentum_z_kg_m_s": -9.699153711789583e-09,
+        "exported_CSF_net_z_N": 2.020223639082378e-05,
+        "reference_z_m": -1.2000124063207594e-05,
+        "reference_vz_m_s": -0.019999999552965164,
+        "position_error_m": 1.5515509513869172e-06,
+        "velocity_error_m_s": 0.007834782274202791,
+        "relative_volume_drift": 2.546383548462927e-09
+      },
+      "h0025": {
+        "time_s": 0.0005999999999999992,
+        "step": 1200,
+        "volume_m3": 1.1294980746365538e-10,
+        "COM_z_m": -1.1759640529345208e-05,
+        "liquid_vz_m_s": -0.018960883633724685,
+        "boundary_max_alpha": 0.0,
+        "cell_estimated_mixture_momentum_z_kg_m_s": -1.507310755588242e-08,
+        "exported_CSF_net_z_N": 1.4451631412908402e-06,
+        "reference_z_m": -1.2000130063485178e-05,
+        "reference_vz_m_s": -0.019999999552965164,
+        "position_error_m": 2.4048953413996966e-07,
+        "velocity_error_m_s": 0.001039115919240479,
+        "relative_volume_drift": 2.7649841971566502e-08
+      }
+    },
+    "interpretation": "At0.02m/s, speedloss fallsfrom39.17% at50um to5.20% at25um over600us. Positionerror fallsfrom1.55um to0.240um. Small-box50um reproduces earlierlarger-boxslowcontrol closely. Gravity25um is still running."
   }
 }

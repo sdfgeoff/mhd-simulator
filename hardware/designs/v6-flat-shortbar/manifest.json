@@ -5,7 +5,7 @@
   "source_geometry_sha256": "bf1b4d7a778fd89bd66ef62a4d6f71a615ffe169a0e835eec63d03c5c9639af9",
   "source_binary_sha256": "d827441deb294e260f2d7d715fcee8eb0a46a17d9f9f9b4f0c155b6fd51dca2d",
   "packaging_change": "Only geometry and buffer URI strings renamed; all simulation properties and float32 payload retained.",
-  "scope": "Research input, not manufacturing drawing. First150Agravity-on case separates a stalled/upward component;175A control running. Nominalmagnetprojection0.2mm excludesmounts/tolerances.",
+  "scope": "Research input, not manufacturing drawing. The completed175A coarse control is provisional because moving-drop capillary motion is under investigation. Nominal magnet projection0.2mm excludes mounts/tolerances.",
   "uniform_acceleration_m_s2": [
     0.0,
     0.0,

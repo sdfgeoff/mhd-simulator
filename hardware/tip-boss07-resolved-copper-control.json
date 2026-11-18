@@ -1,0 +1,33 @@
+{
+  "status": "Complete resolved-copper terminal-boundary control",
+  "project": "artifacts/hardware-research/cases/tip-boss07-v1/square07-hot-sigma.mhd.json",
+  "body_output": "artifacts/hardware-research/tip-boss07-hot-sigma-cold30-h0050",
+  "ends_output": "artifacts/hardware-research/tip-boss07-hot-ends-cold30-h0050",
+  "boundary": "Only positive copper cells on xmin and negative copper cells on xmax are Dirichlet. All other copper is a solved conductor.",
+  "electrical_domain_x_mm": [
+    -3.8,
+    3.8
+  ],
+  "current_A": 29.99999237060547,
+  "terminal_mode_R_ohm": {
+    "body": 0.0012903165493604947,
+    "x_ends": 0.0022628305646624413
+  },
+  "added_R_ohm": 0.0009725140153019466,
+  "rectangular_copper_added_R_reference_ohm": 0.0009714285252881924,
+  "added_R_relative_difference_from_1D_reference": 0.0011174162437037616,
+  "total_liquid_force_ratio_ends_to_body": 0.9949870630945228,
+  "current_return_relative_error": 7.629396471505857e-07,
+  "native_power_relative_defect": -1.5497207641601562e-06,
+  "assumed_200Hz_125A_RMS_A": 26.62676050517599,
+  "modeled_nozzle_and_copper_average_W": 1.604311513618098,
+  "extra_outer_1p2mm_per_lead_R_ohm": 0.00034285714285714285,
+  "estimated_nozzle_plus_full_CAD_leads_average_W": 1.8473918707609553,
+  "native_thermal_replay": {
+    "output": "artifacts/hardware-research/tip-boss-square07-hot-ends-thermal125-h0050",
+    "peak_C": 264.8032531738281,
+    "source_energy_error": -6.248745712305245e-08
+  },
+  "default_body_regression_fields_bit_identical": true,
+  "scope": "Finite-conductivity copper included only inside electrical domain. The outer1.2mm per lead is an independent1D series estimate, not a resolved field. No film resistance, temperature feedback, repetitive heating, or safe head settings. Do not double-count resolved lead resistance when combining with the older external lumped lead allowance."
+}

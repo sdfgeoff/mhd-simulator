@@ -1,0 +1,6 @@
+{
+  "original": "artifacts/hardware-research/tip-boss07-hot-ends-cold30-h0050",
+  "packaged": "artifacts/hardware-research/slim-square07-packaged-ends-cold30-h0050",
+  "material_ids_bit_identical": true,
+  "electrical_and_magnetic_fields_bit_identical": true
+}
