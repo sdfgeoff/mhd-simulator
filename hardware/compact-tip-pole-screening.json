@@ -1,0 +1,94 @@
+{
+  "status": "Compact stock-size pole candidate; cold result only, fluid trial queued",
+  "geometry": "One10mm diameter x5mm SmCo disc per pole,4.2mm face gap,centreZ-3.2mm; same wider tip contacts/nozzle/pool. Nominal magnet assembly Yextent14.2mm instead24.2mm. Heater/mount envelope separate.",
+  "catalogue": "https://aussiemagnets.com.au/products/10mm-x-5mm-disc-samarium-cobalt",
+  "hot_Br_assumption_T": 0.95,
+  "cold_report": {
+    "contact_resistivity_ohm_m2": 0.0,
+    "current_A": 30.0,
+    "iterations": 160,
+    "joule_power_W": 0.958136796951294,
+    "limitations": [
+      "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+      "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+      "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+      "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+    ],
+    "liquid_force_N": [
+      -6.345828230205419e-07,
+      -6.079518688252956e-10,
+      -0.0020427178525707613
+    ],
+    "liquid_joule_power_W": 0.04299118721002534,
+    "liquid_mean_By_T": -0.08548423639399716,
+    "mean_liquid_current_over_x_plus_minus_2mm_A": 2.5864616330485277,
+    "mean_wall_current_over_x_plus_minus_2mm_A": 7.641444531167265,
+    "midplane_adjacent_cell_liquid_current_A": 15.546680587636548,
+    "midplane_adjacent_cell_wall_current_A": 14.45525451895664,
+    "power_relative_defect": 8.52346420288086e-05,
+    "project": "artifacts/hardware-research/cases/v6-tip-wide-disc10x5-s2-medium-fit-sncu-h010.mhd.json",
+    "released_static_workspace_bytes": 55093784,
+    "return_current_A": -30.00511932373047,
+    "source_power_W": 0.9580551385879517,
+    "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+    "terminal_voltage_V": 0.03193517029285431,
+    "true_relative_residual": 9.714972293295432e-06
+  },
+  "cold_artifacts": "artifacts/hardware-research/v6-tip-wide-disc10x5-s2-cold-30A-h010",
+  "force_ratio_to_larger_stacks_at_equal_current": 0.7975360463501343,
+  "current_for_equal_total_cold_force_A": 250.7723643530414,
+  "source_checks": [
+    {
+      "subdivisions": 2,
+      "artifacts": "artifacts/hardware-research/v6-tip-wide-disc10x5-Bterminal-s2-h0050",
+      "liquid_samples": 416,
+      "mean_By_T": -0.3095135986804962,
+      "min_By_T": -0.32257819175720215,
+      "max_By_T": -0.29598313570022583
+    },
+    {
+      "subdivisions": 4,
+      "artifacts": "artifacts/hardware-research/v6-tip-wide-disc10x5-Bterminal-s4-h0050",
+      "liquid_samples": 416,
+      "mean_By_T": -0.31182825565338135,
+      "min_By_T": -0.3248400390148163,
+      "max_By_T": -0.29831504821777344
+    }
+  ],
+  "driver_250A": {
+    "inputs": {
+      "peak_a": 250.0,
+      "positive_us": 250.0,
+      "head_mohm": 1.06450568,
+      "parasitic_mohm": 4.25,
+      "series_uh": 1.025,
+      "frequency_hz": 200.0,
+      "bus_v": 24.0,
+      "bulk_uf": 1000.0,
+      "retract_fraction": 0.25,
+      "rise_us": 20.0
+    },
+    "method": "Exact integrals of piecewise-linear prescribed current; V=IR+L dI/dt. Head modeled as constant cold resistance. Four-quadrant current regulation assumed.",
+    "rms_current_a": 53.25352101035198,
+    "head_heat_w": 3.018871576875,
+    "parasitic_heat_w": 12.052734375000002,
+    "required_voltage_min_v": -12.8125,
+    "required_voltage_max_v": 14.14112642,
+    "ideal_bus_compliance": true,
+    "peak_inductor_energy_j": 0.03203125,
+    "bulk_rise_if_all_peak_inductor_energy_returns_v": 1.2994565159016815,
+    "limitations": [
+      "No PWM ripple, switching/gate losses, current-loop dynamics, bus/lead ringing or protection design.",
+      "No capacitor ESR/ripple rating or switch SOA/temperature qualification.",
+      "Input R and L assumptions must be replaced with measured assembled values; motional voltage is omitted from this lumped check.",
+      "Electrical compliance is not a droplet or repetition-rate prediction."
+    ]
+  },
+  "limits": [
+    "Full-domain subdivision4 evaluation exceeded the direct-source work budget and did not produce a cold solution.",
+    "Subdivision2 used for full-domain cold fields. Subdivision2/4 local-window B comparison changes meanfield about0.75%; does not bound the whole-volume force error.",
+    "The small sampling-window conduction currents/resistance/force are not device predictions; only its static B samples are used.",
+    "250A fluid trial is queued, not successful. Initial cold Joule heating scales with I squared and is1.56times the200A case; temperature-dependent heating/contact/cooling remain open.",
+    "Actual hot magnet grade/loadline/thermal mounting remain unqualified."
+  ]
+}

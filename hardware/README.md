@@ -524,8 +524,8 @@ study. Shorter-pulse tuning and the wider-contact refinement are queued.
 one detached component: 123.727 nL, approximately 0.61824 mm at alpha 0.01,
 moving downward 0.50386 m/s. Alpha 0.5 gives 0.60613 mm. No liquid reaches
 a domain boundary; maximum relative total-volume change over saved frames is
-below 4e-8. The coarse leading diameter is 4.5% smaller and its departing speed
-74% lower relative to that coarse value. Speed and pinch-off timing are not
+below 4e-8. Refinement increases leading diameter by 4.5% and departing speed
+by 74% relative to the coarse values. Speed and pinch-off timing are not
 mesh-converged. Initial aperture proxies are 0.120 versus 0.130 mm², around the
 0.12566 mm² CAD circle; this is one geometry contribution to the grid effect,
 not a complete explanation. The wider-contact 50 µm run has now started.
@@ -608,3 +608,23 @@ saved speed is approximately 4.4 m/s in a nearly gas-only cell, versus roughly
 trajectory, not a completed failed-jet result. `hardware_flow_report.py --plot
 --pool-view` includes the free pool and native impermeable solid mask, rather
 than hiding this circulation in a tip-only crop.
+
+### Smaller stock-size magnet package
+
+[The compact-pole screen](compact-tip-pole-screening.json) uses one
+[10 × 5 mm SmCo disc](https://aussiemagnets.com.au/products/10mm-x-5mm-disc-samarium-cobalt)
+per pole with the same 4.2 mm gap and wider contacts. The nominal magnet
+assembly shrinks from 24.2 to 14.2 mm across the poles; heater and mounting
+dimensions are separate. At equal current, full-domain cold liquid force is
+about 80% of the larger stacks' result. A local 50 µm sampling window gives
+approximately 0.312 T mean By magnitude, changing about 0.75% with source
+subdivision 2 → 4. The full-domain subdivision-4 evaluation exceeded the direct
+source work budget. The window's cropped electrical outputs are not hardware
+predictions or whole-volume force convergence.
+
+A 250 A / 250 µs coarse fluid trial is queued to compare with the larger poles
+at 200 A. It has not demonstrated a drop. Under the same driver assumptions,
+the lumped peak requirement is approximately 14.1 V from 24 V, with about
+15 W head/series electrical heat at 200 Hz. Initial-field tip heating scales
+up by 56%. Actual hot magnet grade, mounting temperature, wetting and contacts
+remain unqualified; smaller packaging trades against current and heating.

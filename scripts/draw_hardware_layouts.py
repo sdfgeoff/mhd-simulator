@@ -427,14 +427,19 @@ def v6_detail():
 
 def v6_tip_detail(case="v6-tip-disc20-compact-h010", filename="v6-tip-contact-setup.png"):
     parts, _ = load(case)
+    magnets = np.concatenate([faces.reshape(-1, 3) for name, faces, _ in parts if category(name) == "magnet"])
+    gap = 2 * abs(magnets[:, 1]).min()
+    yextent = abs(magnets[:, 1]).max() + .8
+    centre_y = (abs(magnets[:, 1]).max() + gap / 2) / 2
+    lower_z, upper_z = magnets[:, 2].min(), magnets[:, 2].max()
     fig, axes = plt.subplots(1, 3, figsize=(15, 8))
     fig.subplots_adjust(left=.055, right=.985, bottom=.19, top=.85, wspace=.28)
     ax = axes[0]
     section(ax, parts, "yz")
-    ax.set(xlim=(-13,13), ylim=(-19,14), title="Magnet stacks below the shoulder")
-    ax.vlines([-7.1,7.1],-18.2,1.8,colors="#6c8596",linestyles=":",linewidths=1)
-    ax.text(0,-14,"4.2 mm\nflight gap",ha="center",fontsize=10)
-    ax.annotate("Jet",xy=(0,-7),xytext=(0,-3),ha="center",color="#27735b",arrowprops={"arrowstyle":"->","color":"#27735b","lw":2})
+    ax.set(xlim=(-yextent,yextent), ylim=(lower_z-.8,14), title="Magnet poles below the shoulder")
+    ax.vlines([-centre_y,centre_y],lower_z,upper_z,colors="#6c8596",linestyles=":",linewidths=1)
+    ax.text(0,lower_z+(upper_z-lower_z)*.25,f"{gap:g} mm\nflight gap",ha="center",fontsize=10)
+    ax.annotate("Intended jet",xy=(0,-3),xytext=(0,-.7),ha="center",color="#27735b",arrowprops={"arrowstyle":"->","color":"#27735b","lw":2})
     ax = axes[1]
     section(ax,parts)
     ax.set(xlim=(-1.6,1.6),ylim=(-.3,1.4),title="Tip section enlarged")
