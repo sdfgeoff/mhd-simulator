@@ -21,6 +21,11 @@ fn predicted_em_coupled_project_probe() {
         p.fluid,
     )
     .unwrap();
+    run.em.as_mut().unwrap().use_nodal_preconditioner = std::env::var_os("MHD_EM_NODAL").is_some();
+    run.em.as_mut().unwrap().nodal_switch_after = std::env::var("MHD_EM_NODAL_AFTER")
+        .unwrap_or_else(|_| "1024".into())
+        .parse()
+        .unwrap();
     let predict = std::env::var_os("MHD_EM_PREDICT").is_some();
     run.em
         .as_mut()
@@ -31,7 +36,7 @@ fn predicted_em_coupled_project_probe() {
         .unwrap_or_else(|_| "3".into())
         .parse()
         .unwrap();
-    assert!((1..=100).contains(&ticks));
+    assert!((1..=10000).contains(&ticks));
     let output = std::env::var("MHD_RESEARCH_OUTPUT")
         .unwrap_or_else(|_| format!("artifacts/em-prediction/combined-{predict}"));
     let out = std::path::Path::new(&output);
@@ -117,6 +122,8 @@ fn pair() -> (crate::domain::GpuDomain, Volume, Model, EmState, EmState) {
     .unwrap();
     a.predict_increments = false;
     b.predict_increments = false;
+    a.use_nodal_preconditioner = false;
+    b.use_nodal_preconditioner = false;
     (gpu, volume, model, a, b)
 }
 fn fields(gpu: &crate::domain::GpuDomain, state: &EmState) -> Vec<u8> {
@@ -413,6 +420,110 @@ fn held_sources_match_recomputation_across_plateaus_changes_and_failed_retry() {
                 b.backward_euler_j,
                 b.balance_error_j
             ]
+        );
+    }
+}
+
+#[test]
+fn nodal_gradient_correction_matches_original_em_fields() {
+    let _lock = crate::gpu_test_lock();
+    let (gpu, volume, model, mut reference, mut corrected) = pair();
+    corrected.use_nodal_preconditioner = true;
+    corrected.nodal_switch_after = 0;
+    for _ in 0..4 {
+        reference.step(&model, &volume).unwrap();
+        corrected.step(&model, &volume).unwrap();
+        compare_fields(&gpu, &reference, &corrected);
+    }
+}
+
+#[test]
+fn nodal_gradient_correction_is_symmetric_positive() {
+    let _lock = crate::gpu_test_lock();
+    let (gpu, volume, model, _, mut state) = pair();
+    state.use_nodal_preconditioner = true;
+    state.nodal_switch_after = 0;
+    state.step(&model, &volume).unwrap();
+    let n = state.params.edges[3] as usize;
+    let r: Vec<f32> = (0..n).map(|i| ((i * 17 % 31) as f32 - 15.) / 16.).collect();
+    let s: Vec<f32> = (0..n).map(|i| ((i * 29 % 37) as f32 - 18.) / 19.).collect();
+    let apply = |v: &[f32]| {
+        let data: Vec<[f32; 4]> = v.iter().map(|r| [0., *r, 0., 0.]).collect();
+        gpu.context
+            .queue
+            .write_buffer(&state._work, 0, bytemuck::cast_slice(&data));
+        let mut commands = Vec::new();
+        state.append_nodal(&mut commands, true);
+        state.dispatch(&commands);
+        let result = state.read_f32(&state._work, 0, n * 4).unwrap();
+        (0..n).map(|i| result[i * 4 + 3] as f64).collect::<Vec<_>>()
+    };
+    let br = apply(&r);
+    let bs = apply(&s);
+    let dot = |a: &[f32], b: &[f64]| a.iter().zip(b).map(|(a, b)| *a as f64 * b).sum::<f64>();
+    let rbr = dot(&r, &br);
+    let sbs = dot(&s, &bs);
+    assert!(rbr > 0. && sbs > 0.);
+    let symmetry = (dot(&r, &bs) - dot(&s, &br)).abs() / (rbr * sbs).sqrt();
+    eprintln!("nodal preconditioner: rBr={rbr}, sBs={sbs}, normalized symmetry error={symmetry}");
+    assert!(symmetry < 2e-6);
+}
+
+#[test]
+fn nodal_correction_preserves_failed_state_and_timestep_changes() {
+    let _lock = crate::gpu_test_lock();
+    let (gpu, volume, model, mut reference, mut corrected) = pair();
+    corrected.use_nodal_preconditioner = true;
+    corrected.nodal_switch_after = 1;
+    corrected.predict_increments = true;
+    // Reject workspace indexing after a real Jacobi iteration without making
+    // an enormous allocation; rollback must also preserve source history.
+    let accepted = fields(&gpu, &corrected);
+    let dims = corrected.grid.dims;
+    corrected.grid.dims = [100_000; 3];
+    let error = corrected
+        .advance_to(&model, corrected.config.dt_s, false)
+        .unwrap_err();
+    corrected.grid.dims = dims;
+    assert!(error.contains("Nodal indexing"));
+    assert_eq!(corrected.time_s, 0.);
+    assert!(!corrected.source_valid);
+    assert_eq!(fields(&gpu, &corrected), accepted);
+    for dt in [1e-5, 0.5e-5, 2e-5] {
+        reference.config.dt_s = dt;
+        corrected.config.dt_s = dt;
+        reference.step(&model, &volume).unwrap();
+        corrected.step(&model, &volume).unwrap();
+        assert_eq!(corrected.params.control[3], 1);
+        assert!(corrected.diagnostics.iterations <= corrected.config.max_iterations);
+        compare_fields(&gpu, &reference, &corrected);
+    }
+    let accepted = fields(&gpu, &corrected);
+    let time = corrected.time_s;
+    corrected.config.max_iterations = 1;
+    assert!(corrected.step(&model, &volume).is_err());
+    assert_eq!(corrected.time_s, time);
+    assert_eq!(fields(&gpu, &corrected), accepted);
+    corrected.config.max_iterations = 2000;
+    reference.step(&model, &volume).unwrap();
+    corrected.step(&model, &volume).unwrap();
+    compare_fields(&gpu, &reference, &corrected);
+}
+
+#[test]
+fn nodal_fallback_keeps_short_solves_byte_identical_without_allocation() {
+    let _lock = crate::gpu_test_lock();
+    let (gpu, volume, model, mut reference, mut corrected) = pair();
+    corrected.use_nodal_preconditioner = true;
+    for _ in 0..4 {
+        reference.step(&model, &volume).unwrap();
+        corrected.step(&model, &volume).unwrap();
+        assert!(corrected.nodal.is_none());
+        assert_eq!(reference.bytes, corrected.bytes);
+        assert_eq!(fields(&gpu, &reference), fields(&gpu, &corrected));
+        assert_eq!(
+            reference.diagnostics.iterations,
+            corrected.diagnostics.iterations
         );
     }
 }
