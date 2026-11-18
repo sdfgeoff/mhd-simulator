@@ -622,12 +622,17 @@ subdivision 2 → 4. The full-domain subdivision-4 evaluation exceeded the direc
 source work budget. The window's cropped electrical outputs are not hardware
 predictions or whole-volume force convergence.
 
-A 250 A / 250 µs coarse fluid trial is queued to compare with the larger poles
-at 200 A. It has not demonstrated a drop. Under the same driver assumptions,
+A 250 A / 250 µs coarse fluid trial completes 3.6 ms with one detached
+approximately 0.596 mm alpha 0.01 component moving downward 0.212 m/s.
+It has no boundary contact; this is not a mesh or repeated-pulse qualification.
+A shorter 230 µs comparison is running. Under the same driver assumptions,
 the lumped peak requirement is approximately 14.1 V from 24 V, with about
 15 W head/series electrical heat at 200 Hz. Initial-field tip heating scales
 up by 56%. Actual hot magnet grade, mounting temperature, wetting and contacts
 remain unqualified; smaller packaging trades against current and heating.
+Its cold self-field diagnostic gives an outlet-land force L2 correction about
+15%, larger than the larger-pole 200 A case. This remains absent from the
+recorded trajectory and excludes external return leads.
 
 ### Feed and melting demand
 
@@ -642,3 +647,24 @@ without a measured alloy enthalpy curve. Actual heater demand also includes
 losses and any retained electrical dissipation. These figures qualify neither
 a heater nor a wire-feed/replenishment mechanism; ordinary flux-cored wire is
 not the solid-wire assumption used here.
+
+### Analytical limit for induction near a small bore
+
+[The cylinder screen](cylinder-induction-screening.json) is a closed-form
+magnetic-diffusion limit, not another implementation of the 3D solver. It
+matches B and tangential E across a conducting liquid core and cylindrical
+wall, using modified Bessel functions. The underlying axial diffusion problem
+is described in [MIT's field diffusion chapter](https://web.mit.edu/6.013_book/www/chapter10/10.3.html).
+Homogeneous-layer and low-frequency Faraday checks pass; integrated Joule
+heat agrees with inward Poynting flux within 2e-14 relative error.
+
+At an imposed 0.5 T peak field and a 0.4 mm liquid diameter, all tested walls
+give only about 1.9 Pa cycle-mean radial pressure scale at 50 kHz. A 0.5 mm
+stainless radial wall peaks around 0.63 kPa over the sampled 1 kHz–10 MHz range;
+an ideal 0.05 mm wall reaches about 11 kPa at 5 MHz. The larger values at high
+frequency do not include a feasible coil/driver or finite nozzle geometry.
+Most local Joule heat in the thick-wall cases goes into the wall. These are
+axis-to-wall radial pressure diagnostics, not solved outlet pressures or jetting
+thresholds. They neither reject every stock-nozzle coil nor validate a MHz
+microcoil; they explain why liquid radius, wall shielding and frequency need
+consideration together. Radial wall thickness here is not foil exit-land length.

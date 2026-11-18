@@ -1,0 +1,281 @@
+{
+  "status": "Analytical infinite-cylinder screening limit only; no nozzle, droplet or feasible driver prediction",
+  "assumptions": {
+    "liquid_radius_m": 0.0002,
+    "liquid_sigma_S_m": 2200000.0,
+    "mu_H_m": 1.2566370614359173e-06,
+    "prescribed_external_B_peak_T": 0.5,
+    "phasor": "peak, exp(+i omega t)",
+    "frequency_range_hz": [
+      1000.0,
+      10000000.0
+    ]
+  },
+  "source": "https://web.mit.edu/6.013_book/www/chapter10/10.3.html",
+  "equations": "Bcore=C I0(kl r), Bwall=D I0(ks r)+E K0(ks r), k=sqrt(i omega mu sigma); match B and Ephi=-Bprime/(mu sigma); integrate half Re[J cross Bconj]. Radial pressure scale=(|B(a)|^2-|B(0)|^2)/(4mu).",
+  "limits": [
+    "Infinite length, axisymmetry, uniform external axial field and unit relative permeability; finite coil/end/nozzle forces are absent.",
+    "Radial axis-to-wall pressure difference is a diagnostic, not solved outlet pressure or a jetting threshold.",
+    "External0.5T is prescribed at every frequency without a realizable coil, current, resonance, driver or cooling check.",
+    "Constant conductivities are exploratory hot screening values. The0.5MS/m wall is generic, not a verified supplier titanium alloy.",
+    "Heat is steady-cycle W per metre of an infinitely uniform axial region; do not multiply by an arbitrary coil length to claim a finite nozzle heat result.",
+    "The reported maximum is over the sampled1kHz..10MHz range. Thin-wall/insulating curves are still increasing at the upper limit; this is not a global frequency optimum."
+  ],
+  "cases": [
+    {
+      "name": "0.5 mm stainless wall",
+      "wall_sigma_S_m": 1300000.0,
+      "outer_radius_m": 0.0007,
+      "peak_pressure_scale_sample": {
+        "frequency_hz": 2326305.0671536284,
+        "liquid_surface_B_peak_T": 0.2042582028252809,
+        "liquid_axis_B_peak_T": 0.19637283107044246,
+        "radial_axis_to_wall_pressure_scale_Pa": 628.4878776341423,
+        "radial_force_integral_Pa": 628.4878776341486,
+        "liquid_heat_W_per_m": 5732.920298069245,
+        "wall_heat_W_per_m": 733934.8535195496,
+        "relative_poynting_heat_defect": 5.551115123125783e-15,
+        "interface_relative_error": 1.492806821761896e-16
+      },
+      "selected_frequencies": [
+        {
+          "frequency_hz": 50000.0,
+          "liquid_surface_B_peak_T": 0.49949852114195264,
+          "liquid_axis_B_peak_T": 0.49948910165068044,
+          "radial_axis_to_wall_pressure_scale_Pa": 1.872051104235952,
+          "radial_force_integral_Pa": 1.8720511042430699,
+          "liquid_heat_W_per_m": 17.018673147551837,
+          "wall_heat_W_per_m": 1499.341243779546,
+          "relative_poynting_heat_defect": 1.3322676295501878e-15,
+          "interface_relative_error": 1.1188630228279524e-16
+        },
+        {
+          "frequency_hz": 1000000.0,
+          "liquid_surface_B_peak_T": 0.3700416190098999,
+          "liquid_axis_B_peak_T": 0.3672797383709431,
+          "radial_axis_to_wall_pressure_scale_Pa": 405.1276307481718,
+          "radial_force_integral_Pa": 405.1276307481752,
+          "liquid_heat_W_per_m": 3685.29269328017,
+          "wall_heat_W_per_m": 350525.65225921676,
+          "relative_poynting_heat_defect": 3.1086244689504383e-15,
+          "interface_relative_error": 4.174775428256197e-16
+        },
+        {
+          "frequency_hz": 5000000.0,
+          "liquid_surface_B_peak_T": 0.08519796659891606,
+          "liquid_axis_B_peak_T": 0.07244369133248442,
+          "radial_axis_to_wall_pressure_scale_Pa": 399.9971750825743,
+          "radial_force_integral_Pa": 399.9971750825772,
+          "liquid_heat_W_per_m": 3692.9123648091822,
+          "wall_heat_W_per_m": 1157219.3369453712,
+          "relative_poynting_heat_defect": 1.0436096431476471e-14,
+          "interface_relative_error": 5.63310798645261e-16
+        },
+        {
+          "frequency_hz": 10000000.0,
+          "liquid_surface_B_peak_T": 0.02883474495150283,
+          "liquid_axis_B_peak_T": 0.017866845624918592,
+          "radial_axis_to_wall_pressure_scale_Pa": 101.90260170431597,
+          "radial_force_integral_Pa": 101.90260170431682,
+          "liquid_heat_W_per_m": 982.37072939034,
+          "wall_heat_W_per_m": 1721356.9711138327,
+          "relative_poynting_heat_defect": 1.7541523789077473e-14,
+          "interface_relative_error": 1.9154061822488536e-16
+        }
+      ]
+    },
+    {
+      "name": "0.5 mm lower-conductivity wall",
+      "wall_sigma_S_m": 500000.0,
+      "outer_radius_m": 0.0007,
+      "peak_pressure_scale_sample": {
+        "frequency_hz": 4641588.833612773,
+        "liquid_surface_B_peak_T": 0.2545776197013238,
+        "liquid_axis_B_peak_T": 0.22079277440708156,
+        "radial_axis_to_wall_pressure_scale_Pa": 3195.098194076787,
+        "radial_force_integral_Pa": 3195.0981940768033,
+        "liquid_heat_W_per_m": 29436.3258131638,
+        "wall_heat_W_per_m": 1555089.3784284191,
+        "relative_poynting_heat_defect": 4.6629367034256575e-15,
+        "interface_relative_error": 3.262065789189701e-16
+      },
+      "selected_frequencies": [
+        {
+          "frequency_hz": 50000.0,
+          "liquid_surface_B_peak_T": 0.4999191211652785,
+          "liquid_axis_B_peak_T": 0.4999096937423746,
+          "radial_axis_to_wall_pressure_scale_Pa": 1.8752051325888885,
+          "radial_force_integral_Pa": 1.8752051325786772,
+          "liquid_heat_W_per_m": 17.0473461774815,
+          "wall_heat_W_per_m": 577.5626550131103,
+          "relative_poynting_heat_defect": -2.1094237467877974e-15,
+          "interface_relative_error": 3.2189105401103076e-17
+        },
+        {
+          "frequency_hz": 1000000.0,
+          "liquid_surface_B_peak_T": 0.4704537240540627,
+          "liquid_axis_B_peak_T": 0.46694239731339326,
+          "radial_axis_to_wall_pressure_scale_Pa": 654.8239281985454,
+          "radial_force_integral_Pa": 654.823928198535,
+          "liquid_heat_W_per_m": 5956.68538706787,
+          "wall_heat_W_per_m": 206757.34929361095,
+          "relative_poynting_heat_defect": 2.886579864025407e-15,
+          "interface_relative_error": 2.076810046572348e-16
+        },
+        {
+          "frequency_hz": 5000000.0,
+          "liquid_surface_B_peak_T": 0.24024985856309605,
+          "liquid_axis_B_peak_T": 0.2042840608902443,
+          "radial_axis_to_wall_pressure_scale_Pa": 3180.7149208836863,
+          "radial_force_integral_Pa": 3180.714920883709,
+          "liquid_heat_W_per_m": 29365.46103816755,
+          "wall_heat_W_per_m": 1646471.6528031072,
+          "relative_poynting_heat_defect": 5.329070518200751e-15,
+          "interface_relative_error": 6.518788890279702e-17
+        },
+        {
+          "frequency_hz": 10000000.0,
+          "liquid_surface_B_peak_T": 0.1250083488927323,
+          "liquid_axis_B_peak_T": 0.07745880448219478,
+          "radial_axis_to_wall_pressure_scale_Pa": 1915.274743304861,
+          "radial_force_integral_Pa": 1915.2747433048767,
+          "liquid_heat_W_per_m": 18463.805782140327,
+          "wall_heat_W_per_m": 2588135.4036003165,
+          "relative_poynting_heat_defect": 9.769962616701378e-15,
+          "interface_relative_error": 1.0007415106216802e-16
+        }
+      ]
+    },
+    {
+      "name": "0.05 mm stainless wall",
+      "wall_sigma_S_m": 1300000.0,
+      "outer_radius_m": 0.00025,
+      "peak_pressure_scale_sample": {
+        "frequency_hz": 10000000.0,
+        "liquid_surface_B_peak_T": 0.40867807255430133,
+        "liquid_axis_B_peak_T": 0.25322880590405294,
+        "radial_axis_to_wall_pressure_scale_Pa": 20469.899783461333,
+        "radial_force_integral_Pa": 20469.899783461493,
+        "liquid_heat_W_per_m": 197335.7897100125,
+        "wall_heat_W_per_m": 214353.89882941026,
+        "relative_poynting_heat_defect": 3.3306690738754696e-15,
+        "interface_relative_error": 3.057951852943421e-16
+      },
+      "selected_frequencies": [
+        {
+          "frequency_hz": 50000.0,
+          "liquid_surface_B_peak_T": 0.49999322012723224,
+          "liquid_axis_B_peak_T": 0.49998379130697784,
+          "radial_axis_to_wall_pressure_scale_Pa": 1.8757610667168,
+          "radial_force_integral_Pa": 1.8757610667114994,
+          "liquid_heat_W_per_m": 17.05240013208573,
+          "wall_heat_W_per_m": 14.524319280755254,
+          "relative_poynting_heat_defect": 1.1324274851176597e-14,
+          "interface_relative_error": 1.1105279146216472e-16
+        },
+        {
+          "frequency_hz": 1000000.0,
+          "liquid_surface_B_peak_T": 0.497344526129675,
+          "liquid_axis_B_peak_T": 0.4936324944363645,
+          "radial_axis_to_wall_pressure_scale_Pa": 731.8219039871827,
+          "radial_force_integral_Pa": 731.8219039871972,
+          "liquid_heat_W_per_m": 6657.1068247449,
+          "wall_heat_W_per_m": 5686.824814648642,
+          "relative_poynting_heat_defect": 2.4424906541753444e-15,
+          "interface_relative_error": 5.821494817178081e-16
+        },
+        {
+          "frequency_hz": 5000000.0,
+          "liquid_surface_B_peak_T": 0.4554205429156633,
+          "liquid_axis_B_peak_T": 0.3872433410620217,
+          "radial_axis_to_wall_pressure_scale_Pa": 11429.4070013886,
+          "radial_force_integral_Pa": 11429.407001388667,
+          "liquid_heat_W_per_m": 105520.24130958247,
+          "wall_heat_W_per_m": 96380.98323019996,
+          "relative_poynting_heat_defect": 2.6645352591003757e-15,
+          "interface_relative_error": 2.8357758330037286e-16
+        },
+        {
+          "frequency_hz": 10000000.0,
+          "liquid_surface_B_peak_T": 0.40867807255430133,
+          "liquid_axis_B_peak_T": 0.25322880590405294,
+          "radial_axis_to_wall_pressure_scale_Pa": 20469.899783461333,
+          "radial_force_integral_Pa": 20469.899783461493,
+          "liquid_heat_W_per_m": 197335.7897100125,
+          "wall_heat_W_per_m": 214353.89882941026,
+          "relative_poynting_heat_defect": 3.3306690738754696e-15,
+          "interface_relative_error": 3.057951852943421e-16
+        }
+      ]
+    },
+    {
+      "name": "Ideal insulating wall",
+      "wall_sigma_S_m": 0.0,
+      "outer_radius_m": 0.0002,
+      "peak_pressure_scale_sample": {
+        "frequency_hz": 10000000.0,
+        "liquid_surface_B_peak_T": 0.5,
+        "liquid_axis_B_peak_T": 0.30981452506288587,
+        "radial_axis_to_wall_pressure_scale_Pa": 30640.302754573924,
+        "radial_force_integral_Pa": 30640.30275457418,
+        "liquid_heat_W_per_m": 295381.4334700814,
+        "wall_heat_W_per_m": 0.0,
+        "relative_poynting_heat_defect": 7.771561172376096e-15,
+        "interface_relative_error": 0.0
+      },
+      "selected_frequencies": [
+        {
+          "frequency_hz": 50000.0,
+          "liquid_surface_B_peak_T": 0.5000000000000001,
+          "liquid_axis_B_peak_T": 0.49999057105189154,
+          "radial_axis_to_wall_pressure_scale_Pa": 1.8758119374470807,
+          "radial_force_integral_Pa": 1.8758119374316307,
+          "liquid_heat_W_per_m": 17.052862593905132,
+          "wall_heat_W_per_m": 0.0,
+          "relative_poynting_heat_defect": -1.4988010832439613e-14,
+          "interface_relative_error": 0.0
+        },
+        {
+          "frequency_hz": 1000000.0,
+          "liquid_surface_B_peak_T": 0.5,
+          "liquid_axis_B_peak_T": 0.49626814863913604,
+          "radial_axis_to_wall_pressure_scale_Pa": 739.6576068741801,
+          "radial_force_integral_Pa": 739.657606874194,
+          "liquid_heat_W_per_m": 6728.385247652826,
+          "wall_heat_W_per_m": 0.0,
+          "relative_poynting_heat_defect": 5.773159728050814e-15,
+          "interface_relative_error": 0.0
+        },
+        {
+          "frequency_hz": 5000000.0,
+          "liquid_surface_B_peak_T": 0.5,
+          "liquid_axis_B_peak_T": 0.42514918034091964,
+          "radial_axis_to_wall_pressure_scale_Pa": 13776.486580842324,
+          "radial_force_integral_Pa": 13776.486580842426,
+          "liquid_heat_W_per_m": 127189.29234317174,
+          "wall_heat_W_per_m": 0.0,
+          "relative_poynting_heat_defect": 6.439293542825908e-15,
+          "interface_relative_error": 0.0
+        },
+        {
+          "frequency_hz": 10000000.0,
+          "liquid_surface_B_peak_T": 0.5,
+          "liquid_axis_B_peak_T": 0.30981452506288587,
+          "radial_axis_to_wall_pressure_scale_Pa": 30640.302754573924,
+          "radial_force_integral_Pa": 30640.30275457418,
+          "liquid_heat_W_per_m": 295381.4334700814,
+          "wall_heat_W_per_m": 0.0,
+          "relative_poynting_heat_defect": 7.771561172376096e-15,
+          "interface_relative_error": 0.0
+        }
+      ]
+    }
+  ],
+  "checks": {
+    "relative_poynting_heat_defect_max": 1.8984813721090177e-14,
+    "interface_relative_error_max": 4.174775428256197e-16,
+    "integrated_force_pressure_identity_relative_error_max": 6.174283528892488e-09,
+    "homogeneous_layer_and_low_frequency_faraday_heat_checks": "passed"
+  },
+  "full_artifact": "artifacts/hardware-research/cylinder-induction-screen-v2.json"
+}

@@ -1,5 +1,5 @@
 {
-  "status": "Compact stock-size pole candidate; cold result only, fluid trial queued",
+  "status": "Coarse compact-pole250A250us fluid trial complete3.6ms, one detached component; no mesh/repetition qualification",
   "geometry": "One10mm diameter x5mm SmCo disc per pole,4.2mm face gap,centreZ-3.2mm; same wider tip contacts/nozzle/pool. Nominal magnet assembly Yextent14.2mm instead24.2mm. Heater/mount envelope separate.",
   "catalogue": "https://aussiemagnets.com.au/products/10mm-x-5mm-disc-samarium-cobalt",
   "hot_Br_assumption_T": 0.95,
@@ -88,7 +88,214 @@
     "Full-domain subdivision4 evaluation exceeded the direct-source work budget and did not produce a cold solution.",
     "Subdivision2 used for full-domain cold fields. Subdivision2/4 local-window B comparison changes meanfield about0.75%; does not bound the whole-volume force error.",
     "The small sampling-window conduction currents/resistance/force are not device predictions; only its static B samples are used.",
-    "250A fluid trial is queued, not successful. Initial cold Joule heating scales with I squared and is1.56times the200A case; temperature-dependent heating/contact/cooling remain open.",
-    "Actual hot magnet grade/loadline/thermal mounting remain unqualified."
-  ]
+    "Actual hot magnet grade/loadline/thermal mounting remain unqualified.",
+    "Completed250A250us result is100um only. Shorter250A230us single-pulse comparison queued; repeated operation and fine grid remain unresolved."
+  ],
+  "fluid_trial": {
+    "artifacts": "artifacts/hardware-research/v6-tip-wide-disc10x5-flow-250A-250us-h010",
+    "run": {
+      "accepted_steps": 1200,
+      "contact_resistivity_ohm_m2": 0.0,
+      "error": null,
+      "field_every": 150,
+      "fluid_mechanical_work_J": 1.357311064802667e-06,
+      "frequency_hz": 0.0,
+      "grid": {
+        "cell_m": 0.00010000000474974513,
+        "dims": [
+          49,
+          52,
+          95
+        ]
+      },
+      "joule_generated_J": 0.015078647775583213,
+      "lagged_electrical_work_J": 0.015078109456948943,
+      "lagged_mechanical_work_J": 1.3371722531672965e-06,
+      "limitations": [
+        "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+        "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+        "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+        "New research client; not a GUI electrode feature or frozen-baseline claim."
+      ],
+      "max_terminal_voltage_V": 0.26612910628318787,
+      "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+      "peak_A": 250.0,
+      "positive_duration_s": 0.00025,
+      "project": "artifacts/hardware-research/cases/v6-tip-wide-disc10x5-s2-medium-fit-sncu-h010.mhd.json",
+      "released_static_workspace_bytes": 55093784,
+      "retract_fraction": 0.25,
+      "rise_s": 2e-05,
+      "status": "complete",
+      "tail_timestep_s": 3e-06,
+      "tail_transition_not_before_s": 0.00035833333333333333,
+      "time_s": 0.0035999999999999648,
+      "timestep_s": 3e-06
+    },
+    "final": {
+      "step": 1200,
+      "time_us": 3599.999999999965,
+      "first_nonnegative_cell_plane_z_mm": 0.04999988595955074,
+      "exit_plane_alpha_area_mm2": 0.10869156499071968,
+      "exit_plane_mean_uz_m_s": 0.4205434508053009,
+      "exit_plane_mean_pressure_pa": 5285.232226085868,
+      "exit_plane_downward_flux_proxy_nl_s": -45709.52581462589,
+      "liquid_volume_nl": 11348.000959509965,
+      "boundary_maximum_liquid_fraction": {
+        "z_min": 0.0,
+        "z_max": 0.0,
+        "y_min": 0.0,
+        "y_max": 0.0,
+        "x_min": 0.0,
+        "x_max": 0.0
+      },
+      "liquid_touches_domain_boundary_alpha01": false,
+      "below_tip_nl": 144.2679890556669,
+      "below_one_cell_guard_nl": 120.53980479912329,
+      "front_z_mm_alpha_half": -1.8500002042856067,
+      "detached_below_tip": [
+        {
+          "volume_nl": 87.25487164221154,
+          "equivalent_diameter_mm": 0.5502968420410468,
+          "cells": 102,
+          "centre_mm": [
+            -3.895502135419657e-06,
+            1.1565183632458527e-06,
+            -1.59459360289207
+          ],
+          "velocity_m_s": [
+            -1.0694339835026767e-05,
+            -2.360400458201184e-06,
+            -0.21873144805431366
+          ],
+          "touches_domain_boundary": false
+        }
+      ],
+      "connectivity_thresholds": {
+        "0.01": [
+          {
+            "volume_nl": 110.95807523148495,
+            "equivalent_diameter_mm": 0.5961928510005645,
+            "cells": 218,
+            "centre_mm": [
+              -6.272135605081311e-06,
+              5.611242145111618e-06,
+              -1.6013041548367706
+            ],
+            "velocity_m_s": [
+              -1.1903091944986954e-05,
+              -3.5758805552177364e-06,
+              -0.2115629017353058
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "0.25": [
+          {
+            "volume_nl": 103.80214659285444,
+            "equivalent_diameter_mm": 0.5830904172698729,
+            "cells": 142,
+            "centre_mm": [
+              -6.400003268765712e-06,
+              2.4768226855199065e-06,
+              -1.6019131674952736
+            ],
+            "velocity_m_s": [
+              -1.1255277058808133e-05,
+              -3.8264906834228896e-06,
+              -0.21384601294994354
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "0.5": [
+          {
+            "volume_nl": 87.25487164221154,
+            "equivalent_diameter_mm": 0.5502968420410468,
+            "cells": 102,
+            "centre_mm": [
+              -3.895502135419657e-06,
+              1.1565183632458527e-06,
+              -1.59459360289207
+            ],
+            "velocity_m_s": [
+              -1.0694339835026767e-05,
+              -2.360400458201184e-06,
+              -0.21873144805431366
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "0.75": [
+          {
+            "volume_nl": 67.78367501767472,
+            "equivalent_diameter_mm": 0.5058737717805736,
+            "cells": 72,
+            "centre_mm": [
+              -8.490433644612265e-07,
+              2.2672284591238753e-06,
+              -1.5995903566599272
+            ],
+            "velocity_m_s": [
+              -1.2443023479136173e-05,
+              -3.042284333787393e-06,
+              -0.227002814412117
+            ],
+            "touches_domain_boundary": false
+          }
+        ]
+      },
+      "below_tip_change_nl": 144.2679630605869,
+      "relative_liquid_volume_change": 1.1052931681021505e-08
+    },
+    "maximum_absolute_volume_change": 1.277529371179753e-08,
+    "any_boundary_contact_alpha01": false
+  },
+  "self_field_diagnostic": {
+    "source_directory": "artifacts/hardware-research/v6-tip-wide-disc10x5-s2-cold-30A-h010",
+    "current_A": 250.0,
+    "method": "Free-space Biot-Savart convolution of exported cold J; zero-padded linear FFT, self-cell integral zero by symmetry. Source cubes within four cells use subcell quadrature when enabled; farther sources use cell centres.",
+    "near_subdivisions": 4,
+    "regions": {
+      "all_liquid": {
+        "cells": 11348,
+        "self_B_rms_T": 0.005938555677534431,
+        "self_B_max_T": 0.06771045206371011,
+        "applied_B_rms_T": 0.11596514284610748,
+        "self_force_integral_N": [
+          -1.4474136478811716e-07,
+          -2.7603485468778545e-12,
+          0.0005880215639840848
+        ],
+        "applied_force_integral_N": [
+          -5.288190191837852e-06,
+          -5.066265573731547e-09,
+          -0.017022648771423034
+        ],
+        "self_over_applied_force_L2": 0.12499671698188296
+      },
+      "liquid_outlet_land": {
+        "cells": 72,
+        "self_B_rms_T": 0.04489087936573078,
+        "self_B_max_T": 0.06771045206371011,
+        "applied_B_rms_T": 0.3095717132091522,
+        "self_force_integral_N": [
+          2.4141852284418054e-08,
+          4.315270404551466e-13,
+          0.0006592916092408537
+        ],
+        "applied_force_integral_N": [
+          -2.403185441719384e-07,
+          -1.2695314309450708e-11,
+          -0.004821417287015034
+        ],
+        "self_over_applied_force_L2": 0.1522880651069942
+      }
+    },
+    "limits": [
+      "Diagnostic only: no feedback on current, moving interface or force in the recorded fluid run.",
+      "External return leads beyond exported CAD are absent; this is not a complete closed-circuit field or an error bound.",
+      "Near-neighbour cell-centre quadrature requires grid refinement. Permeability is unity; magnetic diffusion and terminal transients are absent.",
+      "Net force cancellation does not establish negligible local pinching or unchanged breakup."
+    ]
+  }
 }
