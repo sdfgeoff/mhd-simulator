@@ -82,11 +82,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             p.fluid,
         )?;
         println!(
-            "Unified run: EM={} fluid={} thermal={} dt={} s",
+            "Unified run: EM={} fluid={} thermal={} dt={} s · prescribed nozzle pulse={}",
             state.em.is_some(),
             state.fluid.is_some(),
             state.thermal.is_some(),
-            state.config.dt_s
+            state.config.dt_s,
+            state.config.prescribed_jet.is_some()
         );
         let mut csv = String::from(
             "time_s,max_B_T,max_u_m_s,rms_div_u_s_inv,magnetic_j,kinetic_j,joule_generated_j,external_work_j,induction_numerical_loss_j,fluid_loss_j,coupling_defect_j,em_balance_error_j,thermal_j,thermal_deposited_j,thermal_balance_error_j,maximum_temperature_c,liquid_volume_m3,surface_j,capillary_work_j,surface_balance_error_j,material_volume_m3,volume_transport_error_m3,interface_divergence_volume_m3\n",

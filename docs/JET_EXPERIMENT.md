@@ -1,9 +1,62 @@
 # Exploratory pulsed-nozzle experiment
 
-This **test-only experiment** runs the production CAD initialization, liquid/air
-VOF, momentum transport, viscosity and pressure solver. It prescribes a force
-rather than solving electromagnetics. It is separate from the application UI;
-no additional production physics or user controls are introduced.
+## Run this case in the application
+
+The prescribed-force nozzle case is available as **`assets/nozzle-pulse.mhd.json`**.
+It uses the normal project loader, `RunState`, combined result frames, timeline
+and section viewer. The headless regression shares its GPU pulse implementation.
+
+1. Open it with `./run.sh assets/nozzle-pulse.mhd.json`, or use **Load file**.
+   Setup contains the nozzle wall and liquid pool with assigned material references.
+2. Switch to **Simulation**. The saved common timestep is **1.6680567 µs**.
+   **Prescribed nozzle experiment** exposes peak force, duration and the cylindrical
+   window bounds. The default is 7×10⁷ N/m³, a 0.5 ms sin² pulse and zero gravity, with thermal evolution off.
+3. Set **1199 steps** to reach **2 ms**. Set **Record every** to **20** and increase
+   the retained frame window to **64** if you want the whole trajectory. The default ten-frame
+   window only retains the latest frames. Click **Simulate**; it can be stopped
+   between steps and continued using the same button.
+4. Under **View results → Section view**, select **Liquid occupancy** to see the
+   moving liquid in both viewports. Velocity, pressure and animated trails use the
+   same selected timeline frame. The imported liquid CAD mesh represents its initial
+   shape; use Liquid occupancy when examining the evolving interface.
+
+The pulse is prescribed external work, **not a computed coil force**. Its work is
+included as external input in the run energy ledger. EM sources and this benchmark
+pulse are mutually exclusive, preventing accidental interpretation as a coil-driven
+result. Disable the pulse before assigning an actual coil. The liquid properties
+are explicitly labelled uncalibrated benchmark values. This project demonstrates
+application integration; it does not establish a hardware jetting threshold.
+
+Regenerate the geometry and saved setup using pure Rust:
+
+```sh
+cargo run --offline --example make_nozzle
+# Short headless check through the same application run engine:
+cargo run --offline -- --run-check assets/nozzle-pulse.mhd.json 8
+# Full release regression, including saved interface snapshots:
+cargo test --offline --lib loadable_nozzle_release -- --ignored --nocapture
+```
+
+## Integrated release check
+
+The full loadable-project run completes **1199 accepted steps to 2 ms** through
+`RunState`, with real `RunFrame` snapshots. Maximum sampled liquid-volume drift
+is **1.31×10⁻⁷**. The recorded liquid fraction matches the live interface field.
+Compared with the earlier direct-harness production-pressure control, the first
+saved release times are unchanged: **1.334 ms** at α>0.5 and **1.401 ms** at α>0.01.
+At 2 ms the primary core measures **40.630–43.830 nL**, with late centroid speed
+**0.3590–0.3656 m/s**. Core volume differs by at most 0.0022% and centroid speed
+by at most 0.021% between the two execution paths. The glTF round trip, shared
+pulse parameter conversion and pressure-preconditioner selection prevent a claim
+of bit-identical trajectories. The small four-cell satellite remains unresolved.
+All checks are headless; this does not claim an interactive desktop test.
+
+## Numerical experiment
+
+Both the loadable project and the headless regression use production CAD
+initialization, liquid/air VOF, momentum transport, viscosity and pressure.
+The historical studies below used the headless harness. The application project
+now exposes the same prescribed pulse through the normal simulation workflow.
 
 ## Geometry and forcing
 

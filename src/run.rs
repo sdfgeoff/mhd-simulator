@@ -15,6 +15,7 @@ pub struct RunConfig {
     pub thermal: ThermalConfig,
     pub dt_s: f64,
     pub fluid_enabled: bool,
+    pub prescribed_jet: Option<crate::forcing::JetPulse>,
 }
 impl Default for RunConfig {
     fn default() -> Self {
@@ -23,6 +24,7 @@ impl Default for RunConfig {
             thermal: Default::default(),
             dt_s: 1e-5,
             fluid_enabled: true,
+            prescribed_jet: None,
         }
     }
 }
@@ -31,6 +33,9 @@ impl RunConfig {
         if !self.dt_s.is_finite() || self.dt_s <= 0. || !(self.dt_s as f32).is_normal() {
             Err("Choose a positive finite common timestep".into())
         } else {
+            if let Some(pulse) = &self.prescribed_jet {
+                pulse.validate()?;
+            }
             self.thermal.validate()
         }
     }
@@ -47,7 +52,7 @@ fn effective(
     let mut fluid = fluid.clone();
     em.dt_s = config.dt_s;
     fluid.dt_s = config.dt_s;
-    fluid.use_em_force = em.has_sources();
+    fluid.use_em_force = em.has_sources() || config.prescribed_jet.is_some();
     if config.thermal_enabled && config.fluid_enabled {
         let snapshot = volume.inputs.snapshot();
         let candidates: Vec<_> = snapshot
@@ -136,6 +141,7 @@ pub struct RunState {
     pub config: RunConfig,
     pub em_config: EmConfig,
     pub fluid_config: FluidConfig,
+    prescribed_force: Option<crate::forcing::Pulse>,
     failed: bool,
 }
 impl RunState {
@@ -150,7 +156,12 @@ impl RunState {
         let (em_config, fluid_config) = effective(volume, &config, &em_config, &fluid_config)?;
         em_config.validate(model)?;
         fluid_config.validate()?;
-        let em_enabled = fluid_config.use_em_force;
+        let em_enabled = em_config.has_sources();
+        if config.prescribed_jet.is_some()
+            && (em_enabled || !config.fluid_enabled || !fluid_config.surface.enabled)
+        {
+            return Err("Prescribed nozzle benchmark requires moving-interface fluids and no EM sources; remove the prescribed pulse before testing a coil".into());
+        }
         let fluid_present =
             config.fluid_enabled
                 && volume
@@ -208,6 +219,9 @@ impl RunState {
         }
         if fluid_config.surface.enabled {
             working += n * 68 + (n.div_ceil(256) + 1) * 32;
+        }
+        if config.prescribed_jet.is_some() {
+            working += n * 64 + 80;
         }
         context.ensure_memory(
             working.saturating_sub(volume.persistent_bytes),
@@ -293,15 +307,29 @@ impl RunState {
         } else {
             None
         };
+        let prescribed_force = config.prescribed_jet.as_ref().map(|pulse| {
+            let surface = surface.as_ref().expect("validated moving interface");
+            let source =
+                crate::forcing::Pulse::new(surface, &volume.inputs.snapshot().grid, pulse.clone());
+            source.update(surface, 0.);
+            source
+        });
         let mut fluid = if fluid_present {
             Some(FluidState::new_coupled(
                 context.clone(),
                 volume,
                 fluid_config.clone(),
-                em.as_ref().map(|s| ForceField {
-                    buffer: s.result_buffer(),
-                    grid: &s.grid,
-                }),
+                em.as_ref()
+                    .map(|s| ForceField {
+                        buffer: s.result_buffer(),
+                        grid: &s.grid,
+                    })
+                    .or_else(|| {
+                        prescribed_force.as_ref().map(|s| ForceField {
+                            buffer: &s.force,
+                            grid: &volume.inputs.snapshot().grid,
+                        })
+                    }),
             )?)
         } else {
             None
@@ -350,6 +378,7 @@ impl RunState {
             config,
             em_config,
             fluid_config,
+            prescribed_force,
             failed: false,
         })
     }
@@ -414,6 +443,20 @@ impl RunState {
                     fluid.update_force(ForceField {
                         buffer: em.result_buffer(),
                         grid: &em.grid,
+                    })?;
+                }
+                if let (Some(source), Some(surface), Some(pulse)) = (
+                    &self.prescribed_force,
+                    &self.surface,
+                    &self.config.prescribed_jet,
+                ) {
+                    source.update(
+                        surface,
+                        pulse.amplitude(self.time_s + 0.5 * self.config.dt_s),
+                    );
+                    fluid.update_force(ForceField {
+                        buffer: &source.force,
+                        grid: &fluid.grid.clone(),
                     })?;
                 }
                 fluid.step(volume)?;
@@ -520,7 +563,11 @@ impl RunState {
             ledger.induction_numerical_loss_j += e.backward_euler_j;
             ledger.fluid_loss_j +=
                 f.em_work_j + f.acceleration_work_j + f.surface_work_j - f.delta_kinetic_j;
-            ledger.coupling_defect_j += f.em_work_j - e.mechanical_j;
+            if self.prescribed_force.is_some() {
+                ledger.external_work_j += f.em_work_j;
+            } else {
+                ledger.coupling_defect_j += f.em_work_j - e.mechanical_j;
+            }
             ledger.em_balance_error_j += e.balance_error_j;
             Ok(())
         })();
@@ -537,7 +584,11 @@ impl RunState {
         WorkingMemory {
             domain: volume.persistent_bytes,
             em: self.em.as_ref().map_or(0, |s| s.bytes),
-            fluid: self.fluid.as_ref().map_or(0, |s| s.bytes),
+            fluid: self.fluid.as_ref().map_or(0, |s| s.bytes)
+                + self
+                    .prescribed_force
+                    .as_ref()
+                    .map_or(0, |s| s.force.size() + 80),
             thermal: self.thermal.as_ref().map_or(0, |s| s.working_bytes()),
             surface: self.surface.as_ref().map_or(0, |s| s.working_bytes())
                 + self

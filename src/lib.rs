@@ -24,3 +24,5 @@ pub mod surface;
 pub mod profile;
 
 pub mod recording;
+
+pub use surface::forcing;

@@ -66,3 +66,7 @@ A headless check of the local V6 hotend at 0.2 mm spacing (172×112×124 cells),
 The complete diagnostic CSV was identical before and after this change, including iteration counts, fields' extrema and energy/volume balances. Combined CPU step time was 12.334 s before and 12.347 s after; combined GPU compute time was 11.325 s before and 11.333 s after. This single short comparison shows no meaningful solve-time improvement. EM and pressure iterations dominate; caching source fields and improving preconditioners remain separate future work. The demonstrated benefit here is reduced working memory and GPU history growth.
 
 Moving-interface runs initialize fractional CAD occupancy and matching thermal enthalpy before the other solvers. The Setup voxel preview remains a cell-centre mask; [CAD initialization](CAD_INITIALIZATION.md) describes geometry requirements and accuracy.
+
+## Nozzle benchmark
+
+[The loadable nozzle pulse project](JET_EXPERIMENT.md#run-this-case-in-the-application) runs the droplet regression through the normal combined timeline and section views. It explicitly prescribes a force pulse; it is not a computed coil-driven jet.

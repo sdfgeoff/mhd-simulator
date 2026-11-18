@@ -240,6 +240,9 @@ impl App {
         if self.domain_pending || self.inputs_pending {
             return;
         }
+        if self.run_ui.config.prescribed_jet.is_some() && self.run_ui.timeline.current().is_none() {
+            self.fluid_ui.kind = 13;
+        }
         if self.run_ui.config.thermal_enabled {
             self.analysis = Analysis::Thermal;
             self.thermal_ui.show = true;
@@ -748,6 +751,24 @@ impl App {
                 self.fluid_ui
                     .controls(ui, &self.materials, self.run_ui.config.thermal_enabled);
             }
+            if self.run_ui.config.prescribed_jet.is_some() {
+                ui.label("Prescribed nozzle pulse enabled · external force, no EM solve");
+            }
+            egui::CollapsingHeader::new("Prescribed nozzle experiment").show(ui, |ui| {
+                let mut enabled = self.run_ui.config.prescribed_jet.is_some();
+                if ui.checkbox(&mut enabled, "Apply prescribed pulse").changed() {
+                    self.run_ui.config.prescribed_jet = enabled.then(Default::default);
+                }
+                if let Some(pulse) = &mut self.run_ui.config.prescribed_jet {
+                    ui.label("External +Z force in the liquid · not a computed coil force");
+                    ui.small("Disable this pulse before enabling EM sources. The cylindrical window uses world coordinates in mm.");
+                    ui.add(egui::DragValue::new(&mut pulse.peak_n_m3).speed(1e5).range(0.0..=1e12).prefix("Peak ").suffix(" N/m³"));
+                    let mut duration_ms = pulse.duration_s * 1e3;
+                    if ui.add(egui::DragValue::new(&mut duration_ms).speed(0.01).range(1e-6..=1e6).prefix("Duration ").suffix(" ms")).changed() {pulse.duration_s = duration_ms*1e-3;}
+                    for (i,v) in pulse.radial_mm.iter_mut().enumerate() {ui.add(egui::DragValue::new(v).speed(0.01).prefix(["Radial full force ","Radial zero force "][i]).suffix(" mm"));}
+                    for (i,v) in pulse.axial_mm.iter_mut().enumerate() {ui.add(egui::DragValue::new(v).speed(0.01).prefix(["Z lower zero ","Z lower full ","Z upper full ","Z upper zero "][i]).suffix(" mm"));}
+                }
+            });
             egui::CollapsingHeader::new("EM numerical settings").show(ui, |ui| {
                 self.em_ui.controls(ui);
             });
@@ -1765,6 +1786,59 @@ mod project_ui_tests {
 #[cfg(test)]
 mod ui_render_tests {
     use super::*;
+    #[test]
+    fn nozzle_project_records_on_the_application_timeline_and_opens_occupancy() {
+        let _lock = crate::gpu_test_lock();
+        let mut app = App::new("assets/nozzle-pulse.mhd.json".into(), None);
+        assert!(app.run_ui.config.prescribed_jet.is_some());
+        app.run_ui.steps = 3;
+        app.run_ui.record_every = 2;
+        app.simulate();
+        assert!(app.analysis == Analysis::Fluid && app.fluid_ui.kind == 13);
+        let ctx = egui::Context::default();
+        let started = std::time::Instant::now();
+        while app.run_ui.busy() {
+            app.run_ui.poll(&ctx, app.volume.as_ref());
+            assert!(started.elapsed().as_secs() < 30);
+            std::thread::sleep(std::time::Duration::from_millis(1));
+        }
+        assert!(app.run_ui.error.is_empty(), "{}", app.run_ui.error);
+        assert_eq!(
+            app.run_ui
+                .timeline
+                .samples
+                .iter()
+                .map(|s| s.output.step)
+                .collect::<Vec<_>>(),
+            vec![0, 2, 3]
+        );
+        assert!(
+            app.run_ui
+                .timeline
+                .samples
+                .iter()
+                .all(|s| s.output.em.is_none()
+                    && s.output.fluid.is_some()
+                    && s.output.surface.is_some())
+        );
+        // Work is signed: the early capillary recoil can oppose the small
+        // rising pulse. Require recorded work, rather than positive work.
+        let work = app
+            .run_ui
+            .timeline
+            .samples
+            .last()
+            .unwrap()
+            .output
+            .energy
+            .external_work_j;
+        assert!(work.is_finite() && work != 0.);
+        app.run_ui.timeline.selected = 0;
+        app.run_ui.poll(&ctx, app.volume.as_ref());
+        assert_eq!(app.run_ui.fluid_frame().unwrap().time_s, 0.);
+        assert_eq!(app.run_ui.gpu_frame().unwrap().step, 0);
+    }
+
     #[test]
     fn setup_and_simulation_render_headlessly_with_file_picker() {
         let _lock = crate::gpu_test_lock();

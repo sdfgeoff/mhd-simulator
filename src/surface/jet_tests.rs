@@ -65,132 +65,7 @@ fn model() -> Model {
         ..Default::default()
     }
 }
-struct Pulse {
-    force: wgpu::Buffer,
-    uniform: wgpu::Buffer,
-    binds: [wgpu::BindGroup; 2],
-    pipeline: wgpu::ComputePipeline,
-    dims: [u32; 4],
-    origin: [f32; 4],
-    h: f32,
-}
-impl Pulse {
-    fn new(surface: &SurfaceState, grid: &GridSi) -> Self {
-        let device = &surface.context.device;
-        let n = grid.dims.iter().product::<u32>();
-        let force = device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("Prescribed jet force; not an EM solve"),
-            size: n as u64 * 64,
-            usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
-            mapped_at_creation: false,
-        });
-        let uniform = device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("Jet force pulse parameters"),
-            size: 48,
-            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-            mapped_at_creation: false,
-        });
-        let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("Jet pulse"),
-            source: wgpu::ShaderSource::Wgsl(include_str!("jet_pulse.wgsl").into()),
-        });
-        let layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            label: None,
-            entries: &[
-                wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::COMPUTE,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    },
-                    count: None,
-                },
-                wgpu::BindGroupLayoutEntry {
-                    binding: 1,
-                    visibility: wgpu::ShaderStages::COMPUTE,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Storage { read_only: true },
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    },
-                    count: None,
-                },
-                wgpu::BindGroupLayoutEntry {
-                    binding: 2,
-                    visibility: wgpu::ShaderStages::COMPUTE,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Storage { read_only: false },
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    },
-                    count: None,
-                },
-            ],
-        });
-        let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            label: None,
-            bind_group_layouts: &[&layout],
-            push_constant_ranges: &[],
-        });
-        let pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-            label: Some("Jet pulse"),
-            layout: Some(&pipeline_layout),
-            module: &shader,
-            entry_point: Some("main"),
-            compilation_options: Default::default(),
-            cache: None,
-        });
-        let binds = std::array::from_fn(|current| {
-            device.create_bind_group(&wgpu::BindGroupDescriptor {
-                label: None,
-                layout: &layout,
-                entries: &[
-                    wgpu::BindGroupEntry {
-                        binding: 0,
-                        resource: uniform.as_entire_binding(),
-                    },
-                    wgpu::BindGroupEntry {
-                        binding: 1,
-                        resource: surface.fields[current].as_entire_binding(),
-                    },
-                    wgpu::BindGroupEntry {
-                        binding: 2,
-                        resource: force.as_entire_binding(),
-                    },
-                ],
-            })
-        });
-        Self {
-            force,
-            uniform,
-            binds,
-            pipeline,
-            dims: [grid.dims[0], grid.dims[1], grid.dims[2], n],
-            origin: [grid.origin_m[0], grid.origin_m[1], grid.origin_m[2], 0.],
-            h: grid.cell_m,
-        }
-    }
-    fn update(&self, surface: &SurfaceState, force: f32) {
-        let mut bytes = bytemuck::bytes_of(&self.dims).to_vec();
-        bytes.extend_from_slice(bytemuck::bytes_of(&self.origin));
-        bytes.extend_from_slice(bytemuck::bytes_of(&[self.h, force, 0., 0.]));
-        surface.context.queue.write_buffer(&self.uniform, 0, &bytes);
-        let mut encoder = surface
-            .context
-            .device
-            .create_command_encoder(&Default::default());
-        {
-            let mut pass = surface.context.compute_pass(&mut encoder, None);
-            pass.set_pipeline(&self.pipeline);
-            pass.set_bind_group(0, &self.binds[surface.current], &[]);
-            let g = groups(self.dims[3]);
-            pass.dispatch_workgroups(g[0], g[1], g[2]);
-        }
-        surface.context.queue.submit(Some(encoder.finish()));
-    }
-}
+use crate::forcing::Pulse;
 // Connectivity of a thresholded VOF core is a diagnostic, not a subcell
 // pinch-off model. Comparing thresholds exposes unresolved bridges/fragments.
 fn core_components(fields: &[[f32; 4]], dims: [u32; 3], threshold: f32) -> (usize, f64) {
@@ -325,7 +200,7 @@ fn pulsed_nozzle_experiment() {
         "voxel" => (),
         _ => panic!("MHD_JET_INITIALIZATION must be cad, raw or voxel"),
     }
-    let pulse = Pulse::new(&surface, &grid);
+    let pulse = Pulse::new(&surface, &grid, Default::default());
     pulse.update(&surface, 0.);
     let factor: f64 = std::env::var("MHD_JET_DT_FACTOR")
         .unwrap_or_else(|_| "0.05".into())
@@ -534,7 +409,7 @@ fn jet_force_gpu_matches_prescribed_window_and_current_fraction() {
         &crate::simulation::default_materials(),
     );
     let grid = volume.inputs.snapshot().grid.clone();
-    let pulse = Pulse::new(&surface, &grid);
+    let pulse = Pulse::new(&surface, &grid, Default::default());
     let peak = 12345.;
     let smooth = |a: f32, b: f32, x: f32| {
         let t = ((x - a) / (b - a)).clamp(0., 1.);
@@ -594,4 +469,113 @@ fn jet_force_gpu_matches_prescribed_window_and_current_fraction() {
             read_bytes(&gpu.context, surface.field(), 0, surface.field().size()).unwrap()
         );
     }
+}
+
+#[test]
+fn loadable_nozzle_project_runs_and_records_prescribed_work() {
+    nozzle_project_run(8, None);
+}
+
+#[test]
+#[ignore = "Full 2 ms loadable nozzle release through the production run engine"]
+fn loadable_nozzle_release() {
+    nozzle_project_run(1199, Some("artifacts/nozzle-integrated-release"));
+}
+
+fn nozzle_project_run(steps: u32, output: Option<&str>) {
+    let _guard = crate::gpu_test_lock();
+    let p = crate::project::load(std::path::Path::new("assets/nozzle-pulse.mhd.json")).unwrap();
+    assert!(p.run.prescribed_jet.is_some());
+    let gpu = crate::domain::GpuDomain::new().unwrap();
+    let volume = gpu.build(&p.model, &p.settings, &p.materials).unwrap();
+    let mut run = crate::run::RunState::new(
+        gpu.context.clone(),
+        &volume,
+        &p.model,
+        p.run.clone(),
+        p.electromagnetics.clone(),
+        p.fluid.clone(),
+    )
+    .unwrap();
+    assert!(run.em.is_none());
+    let initial = run.surface.as_ref().unwrap().diagnostics.volume_m3;
+    let grid = volume.inputs.snapshot().grid.clone();
+    let out = output.map(std::path::Path::new);
+    if let Some(out) = out {
+        std::fs::create_dir_all(out).unwrap();
+        std::fs::write(out.join("grid.json"), serde_json::to_vec_pretty(&serde_json::json!({"origin_m":grid.origin_m,"cell_m":grid.cell_m,"dims":grid.dims,"dt_s":run.config.dt_s,"force_peak_n_m3":p.run.prescribed_jet.as_ref().unwrap().peak_n_m3,"workflow":"project::load -> RunState -> RunFrame"})).unwrap()).unwrap();
+    }
+    let mut csv = String::from(
+        "step,time_s,volume_m3,relative_volume_drift,max_speed_m_s,external_work_j,core_count_alpha_0_01,core_count_alpha_0_5\n",
+    );
+    for step in 0..=steps {
+        if step > 0 {
+            run.step(&p.model, &volume).unwrap();
+        }
+        if step % 20 != 0 && step != steps {
+            continue;
+        }
+        let surface = run.surface.as_ref().unwrap();
+        let drift = (surface.diagnostics.volume_m3 - initial) / initial;
+        assert!(drift.abs() < 2e-5, "volume drift {drift}");
+        let frame = run.snapshot().unwrap();
+        assert_eq!(frame.step, step as u64);
+        assert_eq!(frame.time_s, run.time_s);
+        let fluid = frame.fluid.as_ref().unwrap();
+        let data = read_bytes(&gpu.context, surface.field(), 0, surface.field().size()).unwrap();
+        let fields = bytemuck::cast_slice::<u8, [f32; 4]>(&data);
+        let low = core_components(fields, grid.dims, 0.01);
+        let high = core_components(fields, grid.dims, 0.5);
+        let flow_bytes = read_bytes(
+            &gpu.context,
+            fluid.result_buffer(),
+            0,
+            fluid.result_buffer().size(),
+        )
+        .unwrap();
+        let cells = bytemuck::cast_slice::<u8, crate::fluid::FluidCell>(&flow_bytes);
+        for (f, c) in fields.iter().zip(cells) {
+            assert!(
+                (f[0] - c.reserved[2]).abs() < 1e-6,
+                "recorded fraction differs from interface"
+            );
+        }
+        csv.push_str(&format!(
+            "{step},{},{},{drift},{},{},{},{}\n",
+            run.time_s,
+            surface.diagnostics.volume_m3,
+            run.fluid.as_ref().unwrap().diagnostics.max_speed_m_s,
+            run.energy.external_work_j,
+            low.0,
+            high.0
+        ));
+        if let Some(out) = out {
+            std::fs::write(
+                out.join(format!("alpha-{step:05}.bin")),
+                bytemuck::cast_slice(&fields.iter().map(|v| v[0]).collect::<Vec<_>>()),
+            )
+            .unwrap();
+            std::fs::write(
+                out.join(format!("flow-{step:05}.bin")),
+                bytemuck::cast_slice(
+                    &cells
+                        .iter()
+                        .map(|v| [v.velocity[0], v.velocity[1], v.velocity[2], v.pressure[0]])
+                        .collect::<Vec<_>>(),
+                ),
+            )
+            .unwrap();
+            std::fs::write(out.join("diagnostics.csv"), &csv).unwrap();
+        }
+        eprintln!(
+            "Integrated nozzle {step}/{steps}: t={} s, drift={drift}, cores={}/{}",
+            run.time_s, low.0, high.0
+        );
+        if step == 1199 {
+            assert!(low.0 >= 2 && high.0 >= 2, "expected coarse nozzle release");
+        }
+    }
+    assert!(run.energy.external_work_j > 0.);
+    assert_eq!(run.energy.coupling_defect_j, 0.);
+    assert!(run.matches(&volume, &p.run, &p.electromagnetics, &p.fluid));
 }

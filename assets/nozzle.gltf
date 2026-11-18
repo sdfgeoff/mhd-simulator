@@ -1,0 +1,101 @@
+{
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 3456,
+      "max": [
+        0.000750000006519258,
+        0.000750000006519258,
+        0.0001500000071246177
+      ],
+      "min": [
+        -0.000750000006519258,
+        -0.000750000006519258,
+        -0.0010000000474974513
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 2304,
+      "max": [
+        0.0006000000284984708,
+        0.0006000000284984708,
+        0.0001500000071246177
+      ],
+      "min": [
+        -0.0006000000284984708,
+        -0.0006000000284984708,
+        -0.000750000006519258
+      ],
+      "type": "VEC3"
+    }
+  ],
+  "asset": {
+    "generator": "make_nozzle (mm geometry, metres in glTF)",
+    "version": "2.0"
+  },
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 41472,
+      "byteOffset": 0,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 27648,
+      "byteOffset": 41472,
+      "target": 34962
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 69120,
+      "uri": "nozzle.bin"
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Nozzle wall",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Liquid pool",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1
+          }
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "Nozzle wall"
+    },
+    {
+      "mesh": 1,
+      "name": "Liquid pool"
+    }
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0,
+        1
+      ]
+    }
+  ]
+}
