@@ -2,8 +2,8 @@
   "source": "artifacts/hardware-research/cases/foil-carrier-z6-50k250A-flow-fit-sncu-dt0125-h020.mhd.json",
   "source_sha256": "7bc8f49f9cf1dfb715a00911ff3f6ad2fc19978720d0f2519dee2f03b86e9339",
   "projects": {
-    "v6": "artifacts/hardware-research/cases/v6-carrier-matched-v1/v6-cold.mhd.json",
-    "custom": "artifacts/hardware-research/cases/v6-carrier-matched-v1/custom-cold.mhd.json"
+    "v6": "artifacts/hardware-research/cases/v6-carrier-matched-v2/v6-cold.mhd.json",
+    "custom": "artifacts/hardware-research/cases/v6-carrier-matched-v2/custom-cold.mhd.json"
   },
   "matched": [
     "Current table250A50kHz300us40us ramps",
@@ -28,11 +28,15 @@
   },
   "coil_clearance_lower_bound_mm": 0.3065481156726211,
   "geometry_source": "https://e3d-online.com/pages/e3d-classics-support-v6-nozzle",
+  "stock_scope": "V6 dimension approximation with0.5mm outlet, not a catalogued E3D stainless0.5mm SKU. Support table lists stainless0.25/0.4/0.8mm. Reaming or another supplier may be needed.",
   "limitations": [
     "Thread helix/fillets omitted; material conductivity and near-unit permeability uncalibrated at temperature.",
     "200um grid under-resolves the outlet.",
     "Same free level is not equal liquid mass; geometry is intentionally different."
   ],
-  "status": "Queued native cold pair through120us; no results yet",
-  "stock_scope": "V6 dimension approximation with0.5mm outlet, not an assertion of a catalogued E3D stainless0.5mm SKU. E3D support table lists stainless0.25/0.4/0.8mm. Reaming or another supplier may be needed."
+  "status": "v2 running; passed setup and first accepted EM steps",
+  "setup_failure": "artifacts/hardware-research/v6-carrier-matched-cold120-h020.log",
+  "reproduction_command": "python scripts/make_v6_carrier_comparison.py hardware/designs/single-coil-250A/case.mhd.json OUTPUT_DIRECTORY",
+  "reproduction_verified": "Tracked-source regeneration reproduces both effective project settings and geometry binary bytes. Custom geometry URI/source provenance differs only by location.",
+  "running_pid": 3212053
 }

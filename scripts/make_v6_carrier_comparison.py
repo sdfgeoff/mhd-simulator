@@ -58,6 +58,7 @@ def main():
         d['domain'].update(min_mm=[-9.,-9.,-2.],max_mm=[9.,9.,14.5],cell_mm=.2)
         d['run']['fluid_enabled'] = False
         d['run']['thermal_enabled'] = False
+        d['fluid']['surface']['enabled'] = False
         path = args.output/(name+'-cold.mhd.json')
         path.write_text(json.dumps(d,indent=2)+'\n')
         paths[name] = str(path)
