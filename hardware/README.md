@@ -326,3 +326,15 @@ All outputs above must be new directories. Current is in amperes, lobe duration
 and timestep in microseconds. The default reverse lobe is 25% for one third of the
 positive duration, following a 25 µs gap. These are numerical experiments, not
 qualified commands for a physical nozzle.
+
+## Unresolved electrical contact heating
+
+[contact-flash-screening.json](contact-flash-screening.json) separately evaluates
+an ideal two-half-space analytical joint model. For a rectangular 300 A / 250 µs
+pulse and 100 µΩ per joint, the added local interface rise is 11 K if power is
+spread over the nominal 0.32 mm² pad, or 112 K at 10% active area. At 175 A the
+corresponding rises are 3.8 K and 38 K. Resistance and active area are unmeasured
+sensitivity inputs. These figures are not added to a different voxel hotspot,
+not the native bipolar waveform, and not a safe operating envelope. Finite tip
+geometry, thermal contact resistance, films and constriction need resolution or
+measurement. This mechanism is absent from the ideal-contact native replay.

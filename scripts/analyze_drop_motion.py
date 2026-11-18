@@ -16,6 +16,8 @@ if status['status'] != 'complete':
 rows = []
 for path in sorted(args.run.glob('frame-*/metadata.json')):
     metadata = json.loads(path.read_text())
+    if metadata['byte_order'] != 'little':
+        raise ValueError('Expected little-endian field export')
     nx, ny, nz = metadata['dims']
     field = np.memmap(path.parent / 'fluid.bin', dtype='<f4', mode='r').reshape(nz, ny, nx, 16)
     alpha = field[..., 14].astype(float)
@@ -60,6 +62,8 @@ for path in sorted(args.run.glob('frame-*/metadata.json')):
 if not rows or rows[-1]['step'] != status['accepted_steps']:
     raise ValueError('Final accepted frame missing')
 initial = rows[0]
+if initial['step'] != 0:
+    raise ValueError('Initial accepted frame missing')
 gravity = metadata['fluid']['acceleration_m_s2'][2] if args.mode == 'gravity' else 0.
 for row in rows:
     time = row['time_s'] - initial['time_s']

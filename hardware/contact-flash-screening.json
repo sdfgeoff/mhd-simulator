@@ -1,0 +1,237 @@
+{
+  "method": "Two semi-infinite bodies, equal initial temperature, perfect thermal contact; electrical contact power generated uniformly at their shared plane. DeltaT=2*(I^2*Rc/A)*sqrt(t/pi)/(eCu+eSS), e=sqrt(k*rho*cp).",
+  "scope": "Independent analytical sensitivity for an omitted physical mechanism, not a duplicate native thermal PDE solver or qualified real contact model.",
+  "waveform": "Single rectangular 250 us positive pulse; omits ramps/reverse and repetition. This is not the native bipolar waveform. Fixed resistance and material properties.",
+  "material_source": "hardware/designs/v6-flat-shortbar/case.mhd.json",
+  "copper": {
+    "name": "Positive copper terminal",
+    "density_kg_m3": 8890.0,
+    "cp_J_kg_K": 394.0,
+    "k_W_m_K": 394.0,
+    "effusivity_J_m2_K_sqrt_s": 37148.99783305063,
+    "diffusivity_m2_s": 0.0001124859392575928
+  },
+  "steel": {
+    "name": "316 stainless steel",
+    "density_kg_m3": 8000.0,
+    "cp_J_kg_K": 500.0,
+    "k_W_m_K": 15.0,
+    "effusivity_J_m2_K_sqrt_s": 7745.966692414834,
+    "diffusivity_m2_s": 3.75e-06
+  },
+  "nominal_single_joint_area_mm2": 0.32,
+  "diffusion_length_sqrt_alpha_t_mm": {
+    "Positive copper terminal": 0.16769461772638442,
+    "316 stainless steel": 0.03061862178478973
+  },
+  "limits": [
+    "Additional local temperature rise only; not directly added to the maximum voxel temperature at a different location.",
+    "Resistance and active area are independent uncertain inputs, not measurements or an asserted achievable joint.",
+    "No constriction/film geometry, finite tip, lateral spreading, thermal contact resistance, property changes or phase change. Not an upper bound.",
+    "Copper thermal penetration is comparable to pad dimensions; semi-infinite one-dimensional assumptions require a resolved joint model."
+  ],
+  "references": [
+    {
+      "title": "Sachdev et al., Failure Mode Analysis of V-Shaped Pyrotechnically Actuated Valves: constant-flux conduction verification",
+      "url": "https://ntrs.nasa.gov/api/citations/20120013338/downloads/20120013338.pdf"
+    },
+    {
+      "title": "Miljkovic, contact between two semi-infinite solids",
+      "url": "https://etrl.mechanical.illinois.edu/pdf/ME320/Lecture%2014%20-%20Transient%20Conduction%20-%20Two%20Semi-Infinite%20Bodies.pdf"
+    }
+  ],
+  "cases": [
+    {
+      "current_A": 175,
+      "single_joint_resistance_ohm": 5e-05,
+      "active_area_fraction": 1.0,
+      "active_area_mm2": 0.32,
+      "single_joint_energy_J": 0.0003828125,
+      "additional_interface_temperature_rise_K": 1.9016192028265437
+    },
+    {
+      "current_A": 175,
+      "single_joint_resistance_ohm": 5e-05,
+      "active_area_fraction": 0.25,
+      "active_area_mm2": 0.08,
+      "single_joint_energy_J": 0.0003828125,
+      "additional_interface_temperature_rise_K": 7.606476811306175
+    },
+    {
+      "current_A": 175,
+      "single_joint_resistance_ohm": 5e-05,
+      "active_area_fraction": 0.1,
+      "active_area_mm2": 0.032,
+      "single_joint_energy_J": 0.0003828125,
+      "additional_interface_temperature_rise_K": 19.016192028265436
+    },
+    {
+      "current_A": 175,
+      "single_joint_resistance_ohm": 0.0001,
+      "active_area_fraction": 1.0,
+      "active_area_mm2": 0.32,
+      "single_joint_energy_J": 0.000765625,
+      "additional_interface_temperature_rise_K": 3.8032384056530875
+    },
+    {
+      "current_A": 175,
+      "single_joint_resistance_ohm": 0.0001,
+      "active_area_fraction": 0.25,
+      "active_area_mm2": 0.08,
+      "single_joint_energy_J": 0.000765625,
+      "additional_interface_temperature_rise_K": 15.21295362261235
+    },
+    {
+      "current_A": 175,
+      "single_joint_resistance_ohm": 0.0001,
+      "active_area_fraction": 0.1,
+      "active_area_mm2": 0.032,
+      "single_joint_energy_J": 0.000765625,
+      "additional_interface_temperature_rise_K": 38.03238405653087
+    },
+    {
+      "current_A": 175,
+      "single_joint_resistance_ohm": 0.0005,
+      "active_area_fraction": 1.0,
+      "active_area_mm2": 0.32,
+      "single_joint_energy_J": 0.003828125,
+      "additional_interface_temperature_rise_K": 19.016192028265436
+    },
+    {
+      "current_A": 175,
+      "single_joint_resistance_ohm": 0.0005,
+      "active_area_fraction": 0.25,
+      "active_area_mm2": 0.08,
+      "single_joint_energy_J": 0.003828125,
+      "additional_interface_temperature_rise_K": 76.06476811306175
+    },
+    {
+      "current_A": 175,
+      "single_joint_resistance_ohm": 0.0005,
+      "active_area_fraction": 0.1,
+      "active_area_mm2": 0.032,
+      "single_joint_energy_J": 0.003828125,
+      "additional_interface_temperature_rise_K": 190.16192028265436
+    },
+    {
+      "current_A": 175,
+      "single_joint_resistance_ohm": 0.001,
+      "active_area_fraction": 1.0,
+      "active_area_mm2": 0.32,
+      "single_joint_energy_J": 0.00765625,
+      "additional_interface_temperature_rise_K": 38.03238405653087
+    },
+    {
+      "current_A": 175,
+      "single_joint_resistance_ohm": 0.001,
+      "active_area_fraction": 0.25,
+      "active_area_mm2": 0.08,
+      "single_joint_energy_J": 0.00765625,
+      "additional_interface_temperature_rise_K": 152.1295362261235
+    },
+    {
+      "current_A": 175,
+      "single_joint_resistance_ohm": 0.001,
+      "active_area_fraction": 0.1,
+      "active_area_mm2": 0.032,
+      "single_joint_energy_J": 0.00765625,
+      "additional_interface_temperature_rise_K": 380.3238405653087
+    },
+    {
+      "current_A": 300,
+      "single_joint_resistance_ohm": 5e-05,
+      "active_area_fraction": 1.0,
+      "active_area_mm2": 0.32,
+      "single_joint_energy_J": 0.0011250000000000001,
+      "additional_interface_temperature_rise_K": 5.588431943000455
+    },
+    {
+      "current_A": 300,
+      "single_joint_resistance_ohm": 5e-05,
+      "active_area_fraction": 0.25,
+      "active_area_mm2": 0.08,
+      "single_joint_energy_J": 0.0011250000000000001,
+      "additional_interface_temperature_rise_K": 22.35372777200182
+    },
+    {
+      "current_A": 300,
+      "single_joint_resistance_ohm": 5e-05,
+      "active_area_fraction": 0.1,
+      "active_area_mm2": 0.032,
+      "single_joint_energy_J": 0.0011250000000000001,
+      "additional_interface_temperature_rise_K": 55.88431943000455
+    },
+    {
+      "current_A": 300,
+      "single_joint_resistance_ohm": 0.0001,
+      "active_area_fraction": 1.0,
+      "active_area_mm2": 0.32,
+      "single_joint_energy_J": 0.0022500000000000003,
+      "additional_interface_temperature_rise_K": 11.17686388600091
+    },
+    {
+      "current_A": 300,
+      "single_joint_resistance_ohm": 0.0001,
+      "active_area_fraction": 0.25,
+      "active_area_mm2": 0.08,
+      "single_joint_energy_J": 0.0022500000000000003,
+      "additional_interface_temperature_rise_K": 44.70745554400364
+    },
+    {
+      "current_A": 300,
+      "single_joint_resistance_ohm": 0.0001,
+      "active_area_fraction": 0.1,
+      "active_area_mm2": 0.032,
+      "single_joint_energy_J": 0.0022500000000000003,
+      "additional_interface_temperature_rise_K": 111.7686388600091
+    },
+    {
+      "current_A": 300,
+      "single_joint_resistance_ohm": 0.0005,
+      "active_area_fraction": 1.0,
+      "active_area_mm2": 0.32,
+      "single_joint_energy_J": 0.01125,
+      "additional_interface_temperature_rise_K": 55.88431943000455
+    },
+    {
+      "current_A": 300,
+      "single_joint_resistance_ohm": 0.0005,
+      "active_area_fraction": 0.25,
+      "active_area_mm2": 0.08,
+      "single_joint_energy_J": 0.01125,
+      "additional_interface_temperature_rise_K": 223.5372777200182
+    },
+    {
+      "current_A": 300,
+      "single_joint_resistance_ohm": 0.0005,
+      "active_area_fraction": 0.1,
+      "active_area_mm2": 0.032,
+      "single_joint_energy_J": 0.01125,
+      "additional_interface_temperature_rise_K": 558.8431943000455
+    },
+    {
+      "current_A": 300,
+      "single_joint_resistance_ohm": 0.001,
+      "active_area_fraction": 1.0,
+      "active_area_mm2": 0.32,
+      "single_joint_energy_J": 0.0225,
+      "additional_interface_temperature_rise_K": 111.7686388600091
+    },
+    {
+      "current_A": 300,
+      "single_joint_resistance_ohm": 0.001,
+      "active_area_fraction": 0.25,
+      "active_area_mm2": 0.08,
+      "single_joint_energy_J": 0.0225,
+      "additional_interface_temperature_rise_K": 447.0745554400364
+    },
+    {
+      "current_A": 300,
+      "single_joint_resistance_ohm": 0.001,
+      "active_area_fraction": 0.1,
+      "active_area_mm2": 0.032,
+      "single_joint_energy_J": 0.0225,
+      "additional_interface_temperature_rise_K": 1117.686388600091
+    }
+  ]
+}
