@@ -582,6 +582,14 @@ heater as a candidate for localized tip contacts, subject to finer geometry
 and actual thread contact. It does not qualify heater shunting for the other
 contact positions.
 
+[An exploratory wall-conductivity screen](tip-wall-conductivity-screening.json)
+at 0.8, 1.3 and 1.8 MS/m changes wider-contact downward force by about +12%
+and −9% around the nominal value. Those are sensitivity inputs, not a sourced
+alloy range. [E3D's support page](https://e3d-online.com/pages/e3d-classics-support-v6-nozzle)
+does not identify a supplier nozzle as the exact 316 material assumed here.
+Actual grade, hot resistance and magnetic behaviour need checking; a hardened
+ferromagnetic nozzle is not represented by this unit-permeability model.
+
 The full-domain milled-pin trial at 3 µs stops at 2.154 ms on the conservative
 interface CFL guard. Its saved 2.1 ms frame is still attached; gas is drawn
 down between the electrodes while liquid rises outside them. The maximum
