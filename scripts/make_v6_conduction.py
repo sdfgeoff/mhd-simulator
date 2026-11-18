@@ -39,6 +39,7 @@ def main():
     p.add_argument("--tip-contact-height-mm", type=float, default=.4)
     p.add_argument("--tip-contact-width-mm", type=float, default=.4)
     p.add_argument("--tip-contact-z-mm", type=float, default=.3)
+    p.add_argument("--nozzle-flat-width-mm", type=float)
     p.add_argument("--magnet", choices=["cube10", "disc20-stack10", "disc"], default="cube10")
     p.add_argument("--magnet-disc-diameter-mm", type=float, default=20.)
     p.add_argument("--magnet-stack-mm", type=float, default=10.)
@@ -94,6 +95,18 @@ def main():
         ("Positive copper jaw", box([1.5, 3.0, 2.6], [-4.25, 0.0, 3.5]), 16),
         ("Negative copper jaw", box([1.5, 3.0, 2.6], [4.25, 0.0, 3.5]), 17),
     ]
+    if args.nozzle_flat_width_mm is not None:
+        width = args.nozzle_flat_width_mm
+        if not math.isfinite(width) or not 2 * rin < width <= 7.:
+            raise ValueError("Nozzle flats must clear the 3.2 mm bore and not exceed 7 mm")
+        # Mill only the outer hex collar, retaining the exact original bore
+        # triangles and the untouched M6 barrel above z=5 mm.
+        def flat_vertex(v):
+            x, y, z = v
+            if 2. <= z <= 5. and math.hypot(x, y) > 3.4:
+                y = max(-width / 2, min(width / 2, y))
+            return x, y, z
+        parts[0] = ("V6 with two milled collar flats", [tuple(flat_vertex(v) for v in t) for t in parts[0][1]], 14)
     if args.contact_band == "upper":
         # Concave patches contact +/-x faces of the M6 barrel from z=6.5 to 10.25.
         # They stop below the initial free surface rather than energizing air-filled bore.

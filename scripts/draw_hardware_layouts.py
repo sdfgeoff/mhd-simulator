@@ -456,30 +456,45 @@ def v6_tip_detail():
     fig.savefig(OUT/"v6-tip-contact-setup.png",dpi=180)
 
 
-def v6_pin_detail():
-    parts, _ = load("v6-immersed-pins-pool35-v2-h010")
+def v6_pin_detail(case="v6-immersed-pins-pool35-v2-h010", filename="v6-immersed-pin-setup.png"):
+    parts, _ = load(case)
+    config = json.loads((ROOT / "artifacts/hardware-research/cases" / (case + ".mhd-assumptions.json")).read_text())["configuration"]
+    diameter = config.get("pin_diameter_mm", .5)
+    tip = config.get("pin_tip_mm", 2.)
+    fill = config["fill_height"]
+    spacing = config.get("pin_spacing_mm", 1.)
+    milled = config.get("nozzle_flat_width_mm") is not None
+    pole_gap = config["pole_gap"] if config["pole_gap"] is not None else 8.5
+    magnet_points = np.concatenate([faces.reshape(-1, 3) for name, faces, _ in parts if category(name) == "magnet"])
+    yextent = abs(magnet_points[:, 1]).max() + 1
+    lower_z = magnet_points[:, 2].min() - 1
     fig, axes = plt.subplots(1, 3, figsize=(15, 8))
     fig.subplots_adjust(left=.055, right=.985, bottom=.19, top=.85, wspace=.3)
     section(axes[0], parts, "yz")
-    axes[0].set(xlim=(-15, 15), ylim=(-18, 15), title="Magnet stacks below the heater region")
-    axes[0].text(0, -13, "8.5 mm\nflight gap", ha="center", fontsize=10)
-    axes[0].annotate("Jet direction", xy=(0, -7), xytext=(0, -3), ha="center", color="#27735b", arrowprops={"arrowstyle": "->", "color": "#27735b"})
+    axes[0].set(xlim=(-yextent, yextent), ylim=(lower_z, 15), title="Poles beside the milled collar" if milled else "Magnet stacks below the heater region")
+    axes[0].text(0, lower_z + .3, f"{pole_gap:g} mm\nflight gap", ha="center", fontsize=10)
+    axes[0].annotate("Intended jet", xy=(0, -3), xytext=(0, -1), ha="center", color="#27735b", arrowprops={"arrowstyle": "->", "color": "#27735b"})
     section(axes[1], parts)
     axes[1].set(xlim=(-2, 2), ylim=(-.3, 5), title="Immersed pin tips — enlarged")
-    axes[1].axhline(3.5, color="#268eb8", lw=.8, ls=":")
-    label(axes[1], "0.5 mm tungsten pins", (.5, 3.8), (-1.9, 4.7))
-    label(axes[1], "1.5 mm immersion", (.75, 2.8), (.9, 3.7))
+    axes[1].axhline(fill, color="#268eb8", lw=.8, ls=":")
+    label(axes[1], f"{diameter:g} mm tungsten pins", (spacing / 2, 3.8), (-1.9, 4.7))
+    label(axes[1], f"{fill - tip:g} mm immersion", (spacing / 2 + diameter / 2, (fill + tip) / 2), (.9, 3.7))
     label(axes[1], "0.4 mm outlet", (.2, .2), (-1.8, .7))
-    section(axes[2], parts, "xy", 2.6)
-    axes[2].set(xlim=(-2, 2), ylim=(-2, 2), title="Plan through the immersed electrodes")
+    section(axes[2], parts, "xy", (fill + tip) / 2)
+    axes[2].set(xlim=(-5.5, 5.5) if milled else (-2, 2), ylim=(-4, 4) if milled else (-2, 2), title="Plan through the immersed electrodes")
     axes[2].annotate("I", xy=(.45, 0), xytext=(-.45, 0), color="#9b541f", arrowprops={"arrowstyle": "->", "color": "#9b541f"})
     axes[2].annotate("B", xy=(0, -1.6), xytext=(0, -.6), color="#32678b", arrowprops={"arrowstyle": "->", "color": "#32678b"})
+    if milled:
+        axes[2].text(3, 0, f"Two flats\n{config['nozzle_flat_width_mm']:g} mm apart", ha="center", fontsize=10, bbox={"facecolor": "white", "edgecolor": "none", "alpha": .85})
+        axes[2].text(3, 3, "SmCo", ha="center", fontsize=10)
+        axes[2].text(3, -3, "SmCo", ha="center", fontsize=10)
     handles = [Patch(facecolor=COLORS[k], edgecolor="#596673", label=v) for k, v in [("steel", "Stainless steel"), ("liquid", "Solder"), ("wire", "Tungsten"), ("magnet", "SmCo")]]
     fig.legend(handles=handles, loc="lower center", ncol=4, bbox_to_anchor=(.5, .06))
-    fig.suptitle("V6 immersed-electrode variant — intact metal nozzle\nActual generated CAD sections; two pins enter through the open pool", fontsize=16, weight="bold")
+    title = "V6 with two milled collar flats — original bore and M6 barrel retained" if milled else "V6 immersed-electrode variant — intact metal nozzle"
+    fig.suptitle(title + "\nActual generated CAD sections; two pins enter through the open pool", fontsize=16, weight="bold")
     fig.text(.5, .015, "Screening geometry • pin clamps, heater and feedstock routing omitted • ideal electrode contact", ha="center", fontsize=10)
     OUT.mkdir(parents=True, exist_ok=True)
-    fig.savefig(OUT / "v6-immersed-pin-setup.png", dpi=180)
+    fig.savefig(OUT / filename, dpi=180)
 
 
 if __name__ == "__main__":

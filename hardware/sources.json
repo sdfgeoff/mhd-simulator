@@ -243,5 +243,19 @@
       "purity_min_percent": 99.95
     },
     "limitations": "Listed catalogue item, not confirmed stock or delivery. A doped TIG electrode is a different material and needs separate compatibility qualification."
+  },
+  {
+    "id": "smco-square-block-catalogue",
+    "url": "https://www.first4magnets.com/product/10-x-10-x-5mm-thick-samarium-cobalt-magnet-23kg-pull-19450",
+    "author": "FIRST4MAGNETS / Magnet Expert",
+    "facts": {
+      "listed_dimensions_mm": [
+        10,
+        10,
+        5
+      ],
+      "catalogue_code": "F200-SC"
+    },
+    "limitations": "Geometry sourcing example only; confirm magnetization direction, grade, hot remanence, coating and delivery before treating two blocks as the modeled uniform 10 mm pole."
   }
 ]

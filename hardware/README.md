@@ -431,3 +431,34 @@ accepted time, and retains ordinary solver failures. The schedule is a numerical
 choice that must be checked; it does not freeze an EM frame. A short headless
 moving-interface smoke run verifies scheduled time and native output. No GUI
 setting or default project timestep changed.
+
+
+### Separating contact width and height
+
+[Matched-domain records](contact-width-height-screening.json) compare the original
+0.4 × 0.4 mm contact boxes, 0.8 × 0.4 mm wider contacts, and 0.8 × 0.8 mm
+wider/taller contacts. All cold controls now use the same low-fill compact domain.
+The taller contacts reduce heating but move more of the forcing upstream. Their
+200 A / 250 µs fluid trial retracts across the tip without detachment at 3.6 ms.
+Widening alone retains approximately 95% of the original outlet-land axial
+force/area diagnostic and reduces maximum initial-field steel heating to about
+20 K. Its coarse fluid trial separates one roughly 0.595 mm component at alpha
+0.01, travelling downward about 0.16 m/s at 3.6 ms. This still needs refinement.
+`plot_tip_contact_study.py` renders the accepted fields and heat extrapolation;
+it does not infer solved outlet pressure from total liquid force.
+
+### Milled-collar electrode candidate
+
+[Milled-collar records](milled-collar-screening.json) retain a 3.2 mm bore and
+M6 barrel while milling two Y flats 4 mm apart on the z=2..5 mm outer collar.
+Ten-millimetre pole blocks can then approach to a 4.4 mm gap, ending at z=4.8 mm
+below the thread shoulder. The ideal cold calculation at 200 A puts about
+171 A through liquid at the central X plane, with approximately 0.46 T mean
+liquid field and 0.051 N downward liquid force. This is not a jetting result.
+
+The nozzle/poles/pins/pool were checked as disjoint, closed positive-volume CAD.
+Nominal pole/flat clearance is 0.2 mm; actual fabrication and mounting tolerance
+remain unqualified. The small-domain force differs by 7.5%, so a full-domain
+150 A / 800 µs fluid trial is queued instead of assuming the earlier domain
+validation carries over. Pin clamps, feedstock routing, real electrode contact
+and bulk rod losses remain separate engineering work.
