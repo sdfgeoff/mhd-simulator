@@ -1,8 +1,13 @@
 # Metal-jetter pulse-generator design brief
 
-Revision 1 — 19 November 2026. Design a circuit from this brief; identify trade-offs
+Revision 2 — 19 November 2026. Design a circuit from this brief; identify trade-offs
 before producing a PCB. These are proposed engineering requirements, not a tested
 circuit or demonstrated droplet repetition rate.
+
+**The nozzle thermal operating limit is unqualified.** The ±300 A / 100 A RMS
+ratings below apply to the electronics on a suitable dummy load. They are not
+nozzle operating defaults. Existing jetting runs omit thermal evolution, and
+local temperature-rise estimates have not converged with grid refinement.
 
 ## 1. Purpose and architecture
 
@@ -28,7 +33,7 @@ board away from the 250–300 °C head; use short, closely paired output conduct
 | --- | --- |
 | Input | 24 V or 48 V nominal DC; qualify operation over 20–55 V |
 | Output | One bidirectional current channel, command range −300 to +300 A |
-| Normal experiments | 150–250 A positive pulse; independently set reverse pulse, initially 0–100 A |
+| Simulated amplitudes, not qualified hardware settings | 150–250 A positive pulse; independently set reverse pulse |
 | Repetitive thermal rating | 100 A RMS through the complete output path at 40 °C ambient, with documented forced-air/heatsink conditions |
 | Repetition | Single shot and 1–500 pulse pairs/s; 1 kHz desirable only inside the same RMS/thermal envelope |
 | Pulse segment duration | 20–2,000 µs; short segments may be triangular rather than reaching commanded current |
@@ -43,7 +48,19 @@ Peak current, width and frequency are NOT independent simultaneous maxima.
 Enforce RMS current, per-pulse I²dt and temperature limits in firmware, backed by
 hardware protection. For example, two 300 A, 2 ms plateaux at 500 Hz are invalid.
 100 A RMS is a circuit rating, not permission to put that heat into the nozzle.
-Initially lock experimental waveforms to conservative head-specific limits.
+Start DISARMED, with no output to a real head until a separate head profile is
+configured. That profile must limit peak current, measured per-shot integral I²dt,
+rolling-window integral I²dt, repetition rate and bulk temperature. Keep dummy-load
+validation mode distinct from head operation. Do not supply a default head profile
+of 150–250 A or permit the electronics maximum to act as a nozzle limit.
+
+Make the hardware current-trip threshold adjustable to the selected experimental
+range, while retaining the independent absolute bridge limit. A nozzle/heater
+thermocouple is too slow to detect a 250 µs contact hotspot: temperature interlocks
+address bulk warming, while fast current/energy/time limits address individual
+pulses. Neither alone qualifies unknown microscopic contact spots. Record Kelvin
+head voltage/current and investigate changing hot resistance, but do not infer
+uniform heating or a proven contact-area bound from low total resistance.
 
 ## 3. Load and voltage compliance
 
@@ -126,7 +143,12 @@ Initially lock experimental waveforms to conservative head-specific limits.
    budget. A 24/48 V, roughly 150 W bench source is an initial planning allowance,
    not a substitute for proving maximum continuous input requirements.
 
-## 6. Initial commissioning waveforms
+## 6. Dummy-load validation waveforms and simulated references
+
+Use the following full-current waveforms on a qualified dummy load. They are
+simulation references, not authorization to apply them to the nozzle. Real-head
+commissioning starts with substantially lower current, isolated single shots and
+measured electrical/thermal response; a numerical safe head limit is not yet set.
 
 Times below are TOTAL lobe durations, including both ramps. Each lobe starts and
 ends at zero. Each ramp is 20 µs; remaining lobe time is the plateau. Positive
@@ -177,7 +199,24 @@ and frequency-control requirements. A two-phase version needs two synchronized
 channels with adjustable phase and a coupled-load analysis. Reserve a trigger/
 clock expansion interface if convenient; design that power stage separately.
 
-## 9. Basis and references
+## 9. Present nozzle thermal evidence
+
+1. At approximately 1 mΩ head resistance, 30 A RMS gives about 0.9 W average
+   head dissipation. A tiny tip can have appreciable temperature gradients even
+   at this average power; real heater/contact/lead thermal paths need modelling.
+2. The 300 A, 250 µs/83.333 µs, 25%-reverse reference waveform at 200 Hz is about
+   64 A RMS, approximately 4 W in a 1 mΩ head. It is not a 30 A RMS condition.
+3. Scaling existing fixed-path cold Joule fields gives roughly 62 K single-pulse
+   rise for the machined tip on its 100 µm grid at 300 A, or 78 K for the different
+   wider-contact reference on its 50 µm grid. These omit thermal diffusion,
+   temperature-dependent resistance, real electrical contact spots and repetition
+   accumulation. The reference hotspot rose from 20 K to 35 K at 200 A on grid
+   refinement, so these are not converged peaks or upper bounds.
+4. No validated nozzle melting margin follows. The next qualification must resolve
+   actual tip/contact geometry and thermal paths, followed by low-energy single-shot
+   measurements and a separately qualified repetition envelope.
+
+## 10. Basis and references
 
 1. Research calculations: [hot driver allowance](driver-hot-allowance.json),
    [current-drive calculator](../scripts/current_drive_budget.py),

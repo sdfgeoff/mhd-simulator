@@ -1,0 +1,15 @@
+{
+  "status": "Queued/running30Astartup; no continuousjet result",
+  "project": "artifacts/hardware-research/cases/v6-tip-flat08-shortbar-full-fit-sncu-h010.mhd.json",
+  "output": "artifacts/hardware-research/v6-tip-flat08-shortbar-gravity-dc30-startup3600us-h010",
+  "command": "30A,20usramp,positive lobe specified10ms; simulate onlyfirst3.6ms. CurrentremainsONatend. No reverse pulse.",
+  "steps": 1200,
+  "dt_us": 3,
+  "acceleration_m_s2": [
+    0,
+    0,
+    -9.81
+  ],
+  "purpose": "Test whether modest maintained terminal current starts sustained outward flow in the nearflush head. A3.6msstartup does not establish steady state, replenishment, long jet length or desired droplet size/rate.",
+  "thermal": "Notthermallycoupled; nominalheadpower0.9Wfor1mOhm. Currentpath, actualJoulepower and I2dt recorded; no physicalhead safety claim."
+}

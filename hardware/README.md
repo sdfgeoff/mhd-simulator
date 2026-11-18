@@ -69,6 +69,14 @@ quantifies travel after pinch-off. A 0.5 mm SnCu sphere starting at 250 °C and
 not native MHD thermal integration or oxide kinetics. Centre travel after release
 is not the mechanical nozzle gap: breakup position and drop radius also matter.
 
+A [30 A maintained-current startup](continuous-current-screening.json) now tests
+whether the near-flush head sustains outward flow. It covers only 3.6 ms with
+current still on at the end, and is not a steady-state or thermal qualification.
+The [thermal qualification record](nozzle-thermal-qualification.json) separates
+electronics capability from unqualified head limits. Revision 2 of the driver
+handoff starts the real-head mode disarmed and reserves full-current validation
+waveforms for dummy loads.
+
 ## Physical scope and limits
 
 1. **Gravity and domain boundaries.** Earlier generated flow cases use

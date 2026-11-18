@@ -1,0 +1,138 @@
+{
+  "status": "Unqualified head thermal sensitivity; not a melting-margin proof",
+  "waveform": {
+    "positive_us": 250,
+    "reverse_duration_us": 83.33333333333333,
+    "reverse_fraction": 0.25,
+    "ramp_us_each_edge": 20,
+    "delay_us": 25,
+    "frequency_Hz": 200
+  },
+  "cases": [
+    {
+      "geometry": "machined_nearflush",
+      "cell_um": 100,
+      "peak_A": 30,
+      "I2dt_A2s": 0.20418749999999997,
+      "rms_A_at200Hz": 6.390422521242237,
+      "head_power_W_assuming1mOhm": 0.04083749999999999,
+      "scaled_initial_field_adiabatic_steel_peak_K": 0.6197252367221364
+    },
+    {
+      "geometry": "machined_nearflush",
+      "cell_um": 100,
+      "peak_A": 150,
+      "I2dt_A2s": 5.1046875,
+      "rms_A_at200Hz": 31.952112606211188,
+      "head_power_W_assuming1mOhm": 1.0209375,
+      "scaled_initial_field_adiabatic_steel_peak_K": 15.493130918053408
+    },
+    {
+      "geometry": "machined_nearflush",
+      "cell_um": 100,
+      "peak_A": 175,
+      "I2dt_A2s": 6.948046874999999,
+      "rms_A_at200Hz": 37.27746470724639,
+      "head_power_W_assuming1mOhm": 1.3896093749999998,
+      "scaled_initial_field_adiabatic_steel_peak_K": 21.087872638461587
+    },
+    {
+      "geometry": "machined_nearflush",
+      "cell_um": 100,
+      "peak_A": 200,
+      "I2dt_A2s": 9.075,
+      "rms_A_at200Hz": 42.60281680828158,
+      "head_power_W_assuming1mOhm": 1.8149999999999997,
+      "scaled_initial_field_adiabatic_steel_peak_K": 27.543343854317172
+    },
+    {
+      "geometry": "machined_nearflush",
+      "cell_um": 100,
+      "peak_A": 250,
+      "I2dt_A2s": 14.179687499999998,
+      "rms_A_at200Hz": 53.253521010351974,
+      "head_power_W_assuming1mOhm": 2.8359374999999996,
+      "scaled_initial_field_adiabatic_steel_peak_K": 43.03647477237059
+    },
+    {
+      "geometry": "machined_nearflush",
+      "cell_um": 100,
+      "peak_A": 300,
+      "I2dt_A2s": 20.41875,
+      "rms_A_at200Hz": 63.904225212422375,
+      "head_power_W_assuming1mOhm": 4.08375,
+      "scaled_initial_field_adiabatic_steel_peak_K": 61.97252367221363
+    },
+    {
+      "geometry": "wide_cone_reference",
+      "cell_um": 50,
+      "peak_A": 30,
+      "I2dt_A2s": 0.20418749999999997,
+      "rms_A_at200Hz": 6.390422521242237,
+      "head_power_W_assuming1mOhm": 0.04083749999999999,
+      "scaled_initial_field_adiabatic_steel_peak_K": 0.7811818248275912
+    },
+    {
+      "geometry": "wide_cone_reference",
+      "cell_um": 50,
+      "peak_A": 150,
+      "I2dt_A2s": 5.1046875,
+      "rms_A_at200Hz": 31.952112606211188,
+      "head_power_W_assuming1mOhm": 1.0209375,
+      "scaled_initial_field_adiabatic_steel_peak_K": 19.52954562068978
+    },
+    {
+      "geometry": "wide_cone_reference",
+      "cell_um": 50,
+      "peak_A": 175,
+      "I2dt_A2s": 6.948046874999999,
+      "rms_A_at200Hz": 37.27746470724639,
+      "head_power_W_assuming1mOhm": 1.3896093749999998,
+      "scaled_initial_field_adiabatic_steel_peak_K": 26.581881539272203
+    },
+    {
+      "geometry": "wide_cone_reference",
+      "cell_um": 50,
+      "peak_A": 200,
+      "I2dt_A2s": 9.075,
+      "rms_A_at200Hz": 42.60281680828158,
+      "head_power_W_assuming1mOhm": 1.8149999999999997,
+      "scaled_initial_field_adiabatic_steel_peak_K": 34.71919221455961
+    },
+    {
+      "geometry": "wide_cone_reference",
+      "cell_um": 50,
+      "peak_A": 250,
+      "I2dt_A2s": 14.179687499999998,
+      "rms_A_at200Hz": 53.253521010351974,
+      "head_power_W_assuming1mOhm": 2.8359374999999996,
+      "scaled_initial_field_adiabatic_steel_peak_K": 54.24873783524939
+    },
+    {
+      "geometry": "wide_cone_reference",
+      "cell_um": 50,
+      "peak_A": 300,
+      "I2dt_A2s": 20.41875,
+      "rms_A_at200Hz": 63.904225212422375,
+      "head_power_W_assuming1mOhm": 4.08375,
+      "scaled_initial_field_adiabatic_steel_peak_K": 78.11818248275912
+    }
+  ],
+  "interpretation": "Electronics300A/100Arms capability does not qualify the head. Cold-path hotspot estimates are not spatially converged or upper bounds. Approx1W at30Arms can still matter locally; steady/running heat balance depends on real contact spots, edge radii, thermal attachments and temperature-dependent conductivity.",
+  "required_followup": [
+    "Use nativeGPUthermal transport with Joule source and realistic geometry/thermal boundaries; retain clear frozen-current-path scope until electrical feedback exists.",
+    "Resolve contact edges/attachment geometry and establish peak convergence; raw sharpCAD corners can make current crowding mesh-sensitive.",
+    "Separate single-pulse dose limits from repetition/steady-state thermal limits.",
+    "Qualify through low-energy single-shot measurements; bulk heater thermocouple does not resolve250us hotspots."
+  ],
+  "continuous_current_power_W_at1mOhm": {
+    "30": 0.9,
+    "50": 2.5,
+    "100": 10.0,
+    "150": 22.5,
+    "175": 30.625,
+    "200": 40.0,
+    "250": 62.5,
+    "300": 90.0
+  }
+}
