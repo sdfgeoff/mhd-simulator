@@ -93,9 +93,16 @@ One cold candidate warmup took 54.96 s, versus 24.35 s for the already cached
 original. Warmups are excluded from the medians; first-use shader startup can
 therefore be substantially longer than the warmed measurements.
 
-The integrated code passes **154 headless tests** and strict Clippy. Full moving
-controls of this production implementation are still being completed before
-merging, in addition to the successful research trajectories.
+The integrated code passes **154 headless tests** and strict Clippy. Full
+1.5-period production drop controls also pass using automatic preconditioner
+selection: frequency errors are **1.570% at 64³** and **0.1096% at 96³**, with
+maximum volume drift below 6.5e-8. The 96³ frequency error increases from the
+previous 0.0134%; both remain within the existing bounds.
+
+The production 2 ms coarse nozzle release passes. Across both core cutoffs,
+primary volume differs by less than 3.7e-7 relative and fitted speed by less than
+1.4e-6 from the original solver; saved release times match. Maximum saved fraction
+relative L1 difference is 5.0e-6. Thin-neck and satellite limitations still apply.
 
 The same V6 project fails its original EM iteration cap at tick five with either
 pressure method. A separate diagnostic allowing more EM work, without changing
