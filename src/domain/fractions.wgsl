@@ -9,7 +9,7 @@ struct Cell {state:vec4<f32>,flux:vec4<f32>,budget:vec4<f32>,valid:vec4<f32>}
 @group(0) @binding(3) var<storage,read_write> thermal:array<Cell>;
 @group(0) @binding(4) var<storage,read> catalog:array<vec4<f32>>;
 @group(0) @binding(5) var<storage,read> original:array<u32>;
-@group(0) @binding(6) var<storage,read_write> invalid:atomic<u32>;
+@group(0) @binding(6) var<storage,read_write> invalid:array<atomic<u32>>;
 const SCALE:i32=1048576;
 struct VertexOut {@builtin(position) position:vec4<f32>,@location(0) height:f32,@location(1) @interpolate(flat) direction:f32}
 @vertex fn vertex(@location(0) v:vec4<f32>)->VertexOut{
@@ -36,7 +36,7 @@ fn sampled_fraction(g:vec2<u32>)->f32 {
   let value=bitcast<i32>(atomicLoad(&coverage[at].sum));
   // One unit for rounding and one for f32 interpolation/arithmetic per crossing.
   let error=2i*i32(atomicLoad(&coverage[at].count))+1i;
-  if value < -error || value>SCALE+error {atomicOr(&invalid,1u);}
+  if value < -error || value>SCALE+error {atomicOr(&invalid[0],1u);}
   sum+=clamp(value,0i,SCALE);
  }}
  return f32(sum)/(f32(samples*samples)*f32(SCALE));

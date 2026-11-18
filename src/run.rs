@@ -142,6 +142,7 @@ pub struct RunState {
     pub em_config: EmConfig,
     pub fluid_config: FluidConfig,
     prescribed_force: Option<crate::forcing::Pulse>,
+    impressed_force: Option<(wgpu::Buffer, crate::simulation::GridSi)>,
     failed: bool,
 }
 impl RunState {
@@ -153,7 +154,57 @@ impl RunState {
         em_config: EmConfig,
         fluid_config: FluidConfig,
     ) -> Result<Self, String> {
-        let (em_config, fluid_config) = effective(volume, &config, &em_config, &fluid_config)?;
+        Self::construct(
+            context,
+            volume,
+            model,
+            config,
+            em_config,
+            fluid_config,
+            None,
+        )
+    }
+    /// Research client for an externally computed force packet on the normal
+    /// fluid/interface clock. The producer must refresh the packet before each
+    /// step. Its electrical/thermal accounting is separate from this force-only
+    /// ledger; EM sources and thermal evolution are therefore disallowed here.
+    pub fn new_with_impressed_force(
+        context: GpuContext,
+        volume: &Volume,
+        model: &Model,
+        config: RunConfig,
+        fluid_config: FluidConfig,
+        field: ForceField<'_>,
+    ) -> Result<Self, String> {
+        Self::construct(
+            context,
+            volume,
+            model,
+            config,
+            EmConfig::default(),
+            fluid_config,
+            Some(field),
+        )
+    }
+    fn construct(
+        context: GpuContext,
+        volume: &Volume,
+        model: &Model,
+        config: RunConfig,
+        em_config: EmConfig,
+        fluid_config: FluidConfig,
+        impressed: Option<ForceField<'_>>,
+    ) -> Result<Self, String> {
+        if impressed.is_some()
+            && (config.thermal_enabled
+                || !config.fluid_enabled
+                || config.prescribed_jet.is_some()
+                || em_config.has_sources())
+        {
+            return Err("Impressed-force research runs require fluids, no prescribed jet, no EM sources, and thermal evolution disabled".into());
+        }
+        let (em_config, mut fluid_config) = effective(volume, &config, &em_config, &fluid_config)?;
+        fluid_config.use_em_force |= impressed.is_some();
         em_config.validate(model)?;
         fluid_config.validate()?;
         let em_enabled = em_config.has_sources();
@@ -329,6 +380,12 @@ impl RunState {
                             buffer: &s.force,
                             grid: &volume.inputs.snapshot().grid,
                         })
+                    })
+                    .or_else(|| {
+                        impressed.as_ref().map(|f| ForceField {
+                            buffer: f.buffer,
+                            grid: f.grid,
+                        })
                     }),
             )?)
         } else {
@@ -379,6 +436,7 @@ impl RunState {
             em_config,
             fluid_config,
             prescribed_force,
+            impressed_force: impressed.map(|f| (f.buffer.clone(), f.grid.clone())),
             failed: false,
         })
     }
@@ -458,6 +516,9 @@ impl RunState {
                         buffer: &source.force,
                         grid: &fluid.grid.clone(),
                     })?;
+                }
+                if let Some((buffer, grid)) = &self.impressed_force {
+                    fluid.update_force(ForceField { buffer, grid })?;
                 }
                 fluid.step(volume)?;
             }
@@ -563,7 +624,7 @@ impl RunState {
             ledger.induction_numerical_loss_j += e.backward_euler_j;
             ledger.fluid_loss_j +=
                 f.em_work_j + f.acceleration_work_j + f.surface_work_j - f.delta_kinetic_j;
-            if self.prescribed_force.is_some() {
+            if self.prescribed_force.is_some() || self.impressed_force.is_some() {
                 ledger.external_work_j += f.em_work_j;
             } else {
                 ledger.coupling_defect_j += f.em_work_j - e.mechanical_j;
@@ -588,7 +649,8 @@ impl RunState {
                 + self
                     .prescribed_force
                     .as_ref()
-                    .map_or(0, |s| s.force.size() + 80),
+                    .map_or(0, |s| s.force.size() + 80)
+                + self.impressed_force.as_ref().map_or(0, |(b, _)| b.size()),
             thermal: self.thermal.as_ref().map_or(0, |s| s.working_bytes()),
             surface: self.surface.as_ref().map_or(0, |s| s.working_bytes())
                 + self

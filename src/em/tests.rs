@@ -18,6 +18,49 @@ pub(super) fn setup(n: u32) -> (GpuDomain, Volume, Model) {
     (gpu, volume, model)
 }
 #[test]
+fn applied_only_fields_allow_cropped_conductors_but_induction_requires_padding() {
+    let _lock = crate::gpu_test_lock();
+    let (gpu, _, model) = setup(16);
+    let materials = default_materials();
+    let volume = gpu
+        .build(
+            &model,
+            &DomainSettings {
+                min_mm: [-3., -8., -8.],
+                max_mm: [3., 8., 8.],
+                cell_mm: 1.,
+            },
+            &materials,
+        )
+        .unwrap();
+    let config = EmConfig {
+        uniform: vec![UniformField {
+            tesla: [0., 0.5, 0.],
+            scale: Waveform::Constant { value: 1. },
+        }],
+        ..Default::default()
+    };
+    let applied = EmState::new(
+        gpu.context.clone(),
+        &volume,
+        &model,
+        config.clone(),
+        Mode::Applied,
+    )
+    .unwrap();
+    assert!((applied.probe([0.; 3]).unwrap().unwrap().b[1] - 0.5).abs() < 1e-7);
+    let error = EmState::new(
+        gpu.context.clone(),
+        &volume,
+        &model,
+        config,
+        Mode::Induction,
+    )
+    .err()
+    .expect("A cropped conductor requires induction boundary conditions");
+    assert!(error.contains("outer boundary"), "{error}");
+}
+#[test]
 fn uniform_field_and_zero_dc_induction() {
     let _lock = crate::gpu_test_lock();
     let (gpu, volume, model) = setup(16);

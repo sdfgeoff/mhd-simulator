@@ -19,12 +19,14 @@ fn accumulate(@builtin(global_invocation_id) g:vec3<u32>){
   }
  }else{fractions=vec4<f32>(0.);}
  if p.flags.y!=0u {
-  if fractions.x>1.00001{atomicOr(&invalid,2u);}
+  if fractions.x>1.00001{atomicOr(&invalid[0],2u);}
   let open=1.-fractions.y;var ratio=0.;
+  atomicMax(&invalid[1],bitcast<u32>(max(0.,fractions.x+fractions.y-1.)));
   if !wall&&fractions.x>0. {
-   if open<=1e-6||fractions.x+fractions.y>1.00001{atomicOr(&invalid,4u);}
+   if open<=1e-6||fractions.x+fractions.y>1.00001{atomicOr(&invalid[0],4u);}
    ratio=fractions.x/max(open,1e-6);
-   if ratio>1.00001{atomicOr(&invalid,4u);}
+   atomicMax(&invalid[2],bitcast<u32>(max(0.,ratio-1.)));
+   if ratio>1.00001{atomicOr(&invalid[0],4u);}
    if p.flags.z!=0u{c.state.z/=max(open,1e-6);if ratio>1.{c.state.z/=ratio;}}
   }
   fractions=vec4<f32>(clamp(ratio,0.,1.),0.,0.,0.);

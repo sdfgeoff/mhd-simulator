@@ -131,7 +131,7 @@ fn initialize_impl(
         return Err("CAD fraction workspace exceeds GPU buffer limits; simplify geometry or increase cell spacing".into());
     }
     let workspace =
-        uniform_bytes + vertex_bytes + coverage_bytes + width as u64 * height as u64 + 132;
+        uniform_bytes + vertex_bytes + coverage_bytes + width as u64 * height as u64 + 140;
     context.ensure_memory(workspace, "CAD fraction initialization workspace")?;
     let device = &context.device;
     let buffer = |label, size| {
@@ -145,7 +145,7 @@ fn initialize_impl(
         })
     };
     let coverage = buffer("Fixed-point CAD ray integrals", coverage_bytes);
-    let invalid = buffer("CAD fraction validity flags", 4);
+    let invalid = buffer("CAD fraction validity flags and excess diagnostics", 12);
     let absent_thermal = buffer("Absent initial thermal state", 64);
     let absent_catalog = buffer("Absent initial thermal catalog", 64);
     let mut uniforms = vec![0u8; uniform_bytes as usize];
@@ -368,7 +368,7 @@ fn initialize_impl(
         view_formats: &[],
     });
     let target = target.create_view(&Default::default());
-    context.queue.write_buffer(&invalid, 0, &[0; 4]);
+    context.queue.write_buffer(&invalid, 0, &[0; 12]);
     for (tile_index, &[_, _, tw, th]) in tiles.iter().enumerate() {
         for start in (0..nz).step_by(8) {
             let mut encoder = device.create_command_encoder(&Default::default());
@@ -418,8 +418,9 @@ fn initialize_impl(
             context.queue.submit(Some(encoder.finish()));
         }
     }
-    let flags = read_bytes(context, &invalid, 0, 4)?;
-    let flags = bytemuck::pod_read_unaligned::<u32>(&flags);
+    let flags = read_bytes(context, &invalid, 0, 12)?;
+    let diagnostics: &[u32] = bytemuck::cast_slice(&flags);
+    let flags = diagnostics[0];
     if flags & 1 != 0 {
         return Err("CAD liquid integration found invalid oriented lengths; check outward surface winding and cavity orientation".into());
     }
@@ -429,7 +430,11 @@ fn initialize_impl(
         );
     }
     if flags & 4 != 0 {
-        return Err("Wall-conditioned initialization has unresolved open volume or overlapping liquid/solid fractions; refine the grid or resolve CAD intersections".into());
+        return Err(format!(
+            "Wall-conditioned initialization has unresolved open volume or overlapping liquid/solid fractions (maximum total fraction excess {:.6e}, maximum liquid/open ratio excess {:.6e}); refine the grid or resolve CAD intersections",
+            f32::from_bits(diagnostics[1]),
+            f32::from_bits(diagnostics[2])
+        ));
     }
     Ok(workspace)
 }

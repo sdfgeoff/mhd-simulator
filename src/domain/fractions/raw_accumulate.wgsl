@@ -19,7 +19,7 @@ fn accumulate(@builtin(global_invocation_id) g:vec3<u32>){
   }
  } else {total=0.0;}
  if p.flags.y!=0u {
-  if total>1.00001 {atomicOr(&invalid,2u);}
+  if total>1.00001 {atomicOr(&invalid[0],2u);}
   if total>1.0 && p.flags.z!=0u && !wall {c.state.z/=total;c.state.w=1.0;}
   total=clamp(total,0.0,1.0);
  }

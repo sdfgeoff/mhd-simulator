@@ -660,6 +660,52 @@ fn optional_workspace_is_lazy_accounted_reused_and_can_be_unavailable() {
 }
 
 #[test]
+fn difficult_small_domain_enables_adaptive_hierarchy_without_changing_pressure_equation() {
+    let _lock = crate::gpu_test_lock();
+    let (mut state, mask) = fixture([48, 24, 96], [false; 3], false, false);
+    state.config.max_iterations = 20000;
+    let candidate = manufactured_gradient(&state, &mask, false);
+    state.force_multigrid = Some(false);
+    state
+        .context
+        .queue
+        .write_buffer(&state.scratch, 0, bytemuck::cast_slice(&candidate));
+    let baseline = state.project(false).unwrap();
+    let old = packets(&state.context, &state.velocity);
+    assert!(
+        baseline.0 >= 256,
+        "The fixture must exercise a difficult Jacobi solve: {baseline:?}"
+    );
+    state.diagnostics.iterations = baseline.0;
+    state.force_multigrid = None;
+    state
+        .context
+        .queue
+        .write_buffer(&state.scratch, 0, bytemuck::cast_slice(&candidate));
+    let accelerated = state.project(false).unwrap();
+    assert!(state.multigrid.is_some());
+    let new = packets(&state.context, &state.velocity);
+    let norm: f64 = candidate
+        .iter()
+        .flat_map(|v| &v[..3])
+        .map(|&v| (v as f64).powi(2))
+        .sum();
+    let difference: f64 = old
+        .iter()
+        .zip(new)
+        .flat_map(|(a, b)| (0..3).map(move |k| (a[k] as f64 - b[k] as f64).powi(2)))
+        .sum();
+    assert!((difference / norm).sqrt() < 2e-4);
+    assert!(
+        accelerated.0 < baseline.0,
+        "Jacobi {baseline:?}, adaptive {accelerated:?}"
+    );
+    eprintln!(
+        "Difficult small-domain pressure: Jacobi {baseline:?}, adaptive {accelerated:?}, velocity delta {:.3e}",
+        (difference / norm).sqrt()
+    );
+}
+#[test]
 fn pressure_mode_follows_topology_and_reuses_multigrid_storage() {
     let _lock = crate::gpu_test_lock();
     let dims = [16, 12, 8];

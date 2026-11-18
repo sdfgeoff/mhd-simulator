@@ -576,7 +576,7 @@ impl EmState {
         ]);
         let check = state.read_f32(&state.scalars, 0, 4)?;
         state.conductivity_range = [if check[3] > 0. { check[1] } else { 0. }, check[2]];
-        if check[0] > 0. {
+        if mode == Mode::Induction && check[0] > 0. {
             return Err(
                 "A conductor touches the EM outer boundary; add air padding to the domain".into(),
             );

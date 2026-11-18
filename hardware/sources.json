@@ -121,5 +121,57 @@
       ]
     },
     "limitations": "Refractory nozzle and water-cooled coil; does not validate metal wall or our voltage/current budgets."
+  },
+  {
+    "id": "nasa-conduction-pumps",
+    "url": "https://ntrs.nasa.gov/api/citations/20070018816/downloads/20070018816.pdf",
+    "author": "Polzin and Markusic, NASA technical report",
+    "facts": {
+      "measured_pressure_kpa_at_30a_approx": 10
+    },
+    "limitations": "Gallium pressure characterization and hot bismuth compatibility are separate tests. Macor/AlN insulating pump body, not evidence of solder drop-on-demand jetting or long-term solder/electrode compatibility."
+  },
+  {
+    "id": "tecap-eek-temperature",
+    "url": "https://www.ensinger-online.com/modules/public/sheet/createsheet.php?FILENAME=SG_TECAPEEK_natural_DE_DE_202603.pdf&FL=1&SID=1392&ZOOM=1.2",
+    "author": "Ensinger",
+    "facts": {
+      "continuous_service_temperature_c": 260,
+      "glass_transition_c": 143,
+      "melting_c": 343
+    },
+    "limitations": "Manufacturer explicitly requires application-specific checking of service-temperature figures. Not qualification as a molten-solder pressure seal or load-bearing pump body."
+  },
+  {
+    "id": "conduction-pump-current-shunts",
+    "url": "https://www.sciencedirect.com/science/article/abs/pii/S1359431120330921",
+    "doi": "10.1016/j.applthermaleng.2020.115610",
+    "author": "Zhang, Zhou, Liu (2020)",
+    "facts": {
+      "reported_pressure_kpa_at_300a": 120
+    },
+    "limitations": "Liquid-metal circulation pump; geometry/fluid differ from solder DOD. Paper highlights current leakage into surrounding fluid and conductive walls; simple I B / depth is an upper screening estimate, not a qualified head."
+  },
+  {
+    "id": "smco-recoma26",
+    "url": "https://www.arnoldmagnetics.com/wp-content/uploads/2017/10/Recoma-Combined-160301.pdf",
+    "author": "Arnold Magnetic Technologies",
+    "facts": {
+      "Recoma26_nominal_Br_T": 1.04,
+      "electrical_resistivity_ohm_m": 9e-07,
+      "nominal_HcJ_A_m": 2000000
+    },
+    "limitations": "A material-grade reference, not confirmation of stock 10 mm cubes. Study effective Br 0.95 T is an assumed hot-field value requiring supplier/temperature qualification; unit recoil permeability and ideal magnetization are approximations."
+  },
+  {
+    "id": "mhiaoui-solder-transport-thesis",
+    "url": "https://docnum.univ-lorraine.fr/public/UPV-M/Theses/2007/Mhiaou.Souad.SMZ0755.pdf",
+    "author": "Souad Mhiaoui, 2007",
+    "facts": {
+      "Sn60Pb40_resistivity": "PDF page 107, printed page 102, Table 5.1; fit 250\u20131000 C; resistivity in microohm cm",
+      "viscosity": "PDF page 169, printed page 164, Table 7.1; eta0 in mPa s, Ea in kJ/mol; absolute temperature",
+      "Sn60Pb40_surface_density": "PDF page 145, reprinted Kaban et al. paper Table 1; absolute temperature"
+    },
+    "limitations": "See solder-properties.json for units, temperature domains and uncertainty; Sn99Cu1 resistivity table is not substituted for Sn99.3Cu0.7."
   }
 ]

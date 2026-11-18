@@ -1,0 +1,188 @@
+"""Measure accepted native RunState exports; no additional fluid solver.
+
+Usage: python scripts/hardware_flow_report.py RUN_DIRECTORY [--plot]
+Detached regions use six-neighbour connectivity at several alpha thresholds; this is
+a diagnostic, not a grid-independent pinch-off certification.
+"""
+
+import argparse
+import csv
+import json
+from pathlib import Path
+
+import numpy as np
+from scipy import ndimage
+
+
+def components(alpha, fields, h, origin, threshold):
+    labels, count = ndimage.label(alpha >= threshold)
+    sizes = np.bincount(labels.ravel(), weights=alpha.ravel(), minlength=count + 1)
+    sizes[0] = 0
+    main_id = int(sizes.argmax())
+    result = []
+    shape = np.array(alpha.shape)
+    for label in np.flatnonzero(sizes >= 1):
+        if label == main_id:
+            continue
+        indices = np.array(np.nonzero(labels == label))
+        positions = origin[:, None] + (indices[::-1] + 0.5) * h
+        if not np.any(positions[2] < 0):
+            continue
+        weights = alpha[tuple(indices)]
+        volume = float(sizes[label] * h**3)
+        centre = np.sum(positions * weights, axis=1) / weights.sum()
+        velocity = (
+            np.sum(fields[tuple(indices)][:, :3] * weights[:, None], axis=0)
+            / weights.sum()
+        )
+        result.append(
+            {
+                "volume_nl": volume * 1e12,
+                "equivalent_diameter_mm": (6 * volume / np.pi) ** (1 / 3) * 1000,
+                "cells": int(indices.shape[1]),
+                "centre_mm": (centre * 1000).tolist(),
+                "velocity_m_s": velocity.tolist(),
+                "touches_domain_boundary": bool(
+                    np.any(indices == 0) or np.any(indices == shape[:, None] - 1)
+                ),
+            }
+        )
+    return result
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("directory", type=Path)
+    parser.add_argument("--plot", action="store_true")
+    args = parser.parse_args()
+    records = sorted(args.directory.glob("frame-*/metadata.json"))
+    if not records:
+        raise SystemExit("No accepted native exports")
+    rows, sections = [], []
+    initial_aperture = None
+    for path in records:
+        m = json.loads(path.read_text())
+        if m["format_version"] != 1 or not m["moving_interface"]:
+            raise ValueError("Expected version-1 moving-interface export")
+        nx, ny, nz = m["dims"]
+        h = m["cell_m"]
+        origin = np.array(m["origin_m"])
+        f = np.memmap(path.parent / "fluid.bin", dtype="<f4", mode="r").reshape(
+            nz, ny, nx, 16
+        )
+        alpha = f[..., 14]
+        z = origin[2] + (np.arange(nz) + 0.5) * h
+        if initial_aperture is None:
+            first = np.flatnonzero(z >= 0)
+            if len(first):
+                k = int(first[0])
+                initial_aperture = {"plane_z_mm": float(z[k] * 1000), "alpha_area_mm2": float(alpha[k].sum(dtype=np.float64) * h**2 * 1e6), "meaning": "Initial liquid-fraction area at the first cell-centre plane at or above the nominal exit; a voxel-aperture proxy, not the CAD area."}
+        below = np.clip((0 - (z - h / 2)) / h, 0, 1)
+        below_guard = np.clip((-h - (z - h / 2)) / h, 0, 1)
+        thresholds = {
+            str(t): components(alpha, f, h, origin, t) for t in [0.01, 0.25, 0.5, 0.75]
+        }
+        detached = thresholds["0.5"]
+        occupied_z = z[np.any(alpha >= 0.5, axis=(1, 2))]
+        row = {
+            "step": m["step"],
+            "time_us": m["time_s"] * 1e6,
+            "liquid_volume_nl": float(alpha.sum(dtype=np.float64) * h**3 * 1e12),
+            "below_tip_nl": float(
+                np.einsum("zyx,z->", alpha, below, dtype=np.float64) * h**3 * 1e12
+            ),
+            "below_one_cell_guard_nl": float(
+                np.einsum("zyx,z->", alpha, below_guard, dtype=np.float64) * h**3 * 1e12
+            ),
+            "front_z_mm_alpha_half": (
+                float(occupied_z.min() * 1000) if len(occupied_z) else None
+            ),
+            "detached_below_tip": detached,
+            "connectivity_thresholds": thresholds,
+        }
+        row["below_tip_change_nl"] = row["below_tip_nl"] - (
+            rows[0]["below_tip_nl"] if rows else row["below_tip_nl"]
+        )
+        rows.append(row)
+        section = np.mean(alpha[:, (ny - 1) // 2 : ny // 2 + 1, :], axis=1)
+        sections.append((m, section))
+        del f
+    (args.directory / "flow-analysis.json").write_text(
+        json.dumps(
+            {
+                "method": "Accepted native exports; six-neighbour components at several alpha thresholds. Component volumes include alpha only above that threshold. Below-tip volume includes all alpha. No convergence or wetting claim.",
+                "initial_aperture_proxy": initial_aperture,
+                "frames": rows,
+            },
+            indent=2,
+        )
+    )
+    with (args.directory / "flow-analysis.csv").open("w") as out:
+        writer = csv.DictWriter(
+            out,
+            fieldnames=[
+                k
+                for k in rows[0]
+                if k not in ["detached_below_tip", "connectivity_thresholds"]
+            ],
+        )
+        writer.writeheader()
+        writer.writerows(
+            {
+                k: v
+                for k, v in row.items()
+                if k not in ["detached_below_tip", "connectivity_thresholds"]
+            }
+            for row in rows
+        )
+    print(json.dumps(rows[-1], indent=2))
+    if args.plot:
+        import matplotlib
+
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+
+        indices = np.unique(np.linspace(0, len(sections) - 1, 4).round().astype(int))
+        fig, axes = plt.subplots(
+            1,
+            len(indices),
+            figsize=(3.5 * len(indices), 5),
+            squeeze=False,
+            constrained_layout=True,
+        )
+        for ax, index in zip(axes[0], indices):
+            m, section = sections[index]
+            h = m["cell_m"] * 1000
+            x, _, z = np.array(m["origin_m"]) * 1000
+            ax.imshow(
+                section,
+                origin="lower",
+                interpolation="nearest",
+                vmin=0,
+                vmax=1,
+                extent=[x, x + section.shape[1] * h, z, z + section.shape[0] * h],
+                cmap="Blues",
+            )
+            ax.axhline(0, color="darkorange", lw=0.8, ls=":")
+            ax.set(
+                xlim=(-0.8, 0.8),
+                ylim=(-1.8, 1.8),
+                xlabel="x (mm)",
+                ylabel="z (mm)",
+                title=f"{m['time_s']*1e6:.1f} µs",
+            )
+            ax.set_aspect("equal")
+        title = (
+            "Current-driven MHD research trial (inductionless)"
+            if (args.directory / "current-diagnostics.csv").exists()
+            else "Computed EM + fluid/interface"
+        )
+        fig.suptitle(
+            title
+            + " · central liquid fraction\nOrange: nominal nozzle exit; no CAD wall overlay"
+        )
+        fig.savefig(args.directory / "tip-sections.png", dpi=160)
+
+
+if __name__ == "__main__":
+    main()

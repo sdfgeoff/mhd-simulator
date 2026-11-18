@@ -1029,7 +1029,12 @@ impl FluidState {
         self.dispatch(&preparation);
         let mut iterations = 0;
         let mut residual = self.convergence()?;
-        let preferred = self.params.dims[3] >= multigrid::MIN_CELLS;
+        // A small but difficult, high-contrast or elongated domain can need
+        // more acceleration than a larger easy one. Keep an allocated hierarchy
+        // and also try it after a preceding projection needed many iterations.
+        let preferred = self.params.dims[3] >= multigrid::MIN_CELLS
+            || self.multigrid.is_some()
+            || self.diagnostics.iterations >= 256;
         #[cfg(test)]
         let preferred = self.force_multigrid.unwrap_or(preferred);
         if preferred && !residual.1 && !self.multigrid_attempted {

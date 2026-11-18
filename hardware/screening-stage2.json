@@ -1,0 +1,397 @@
+{
+  "study": "Stage 2 research checkpoint, 2026-11-18 NZDT",
+  "claim": "No qualified hardware design. Coarse numerical detachment has not been confirmed by grid refinement.",
+  "method": "Normal RunState fluid/interface engine; experimental direct-current client uses GPU finite-volume current continuity with motional voltage and imposed static magnet field. Not a GUI current-source feature.",
+  "limits": [
+    "Thermal evolution, feeding, contact chemistry, oxidation and switching circuit not modeled.",
+    "Inductionless DC model omits current self-field and magnetic reaction.",
+    "0.1 mm is five cells across the cross-channel aperture; 0.075 mm trials remain underresolved for a validated breakup claim.",
+    "Native artifacts remain local and ignored; generators and methods are committed."
+  ],
+  "trials": [
+    {
+      "local_artifact_directory": "artifacts/hardware-research/foil-neck-flow-h010",
+      "name": "foil-neck-flow-h010",
+      "final_interface": {
+        "step": 400,
+        "time_us": 1444.7323531144243,
+        "liquid_volume_nl": 168408.02385055556,
+        "below_tip_nl": 7.077923852472172e-06,
+        "front_z_mm_alpha_half": 0.050000002374872565,
+        "detached_below_tip": []
+      }
+    },
+    {
+      "local_artifact_directory": "artifacts/hardware-research/foil-neck-zero-flow-h010",
+      "name": "foil-neck-zero-flow-h010",
+      "final_interface": {
+        "step": 400,
+        "time_us": 1444.7323531144243,
+        "liquid_volume_nl": 168408.02384758426,
+        "below_tip_nl": 8.675664558614147e-06,
+        "front_z_mm_alpha_half": 0.050000002374872565,
+        "detached_below_tip": []
+      }
+    },
+    {
+      "local_artifact_directory": "artifacts/hardware-research/foil-neck-freewheel-flow-h010",
+      "name": "foil-neck-freewheel-flow-h010",
+      "final_interface": {
+        "step": 160,
+        "time_us": 577.8929412457675,
+        "liquid_volume_nl": 168408.0238494995,
+        "below_tip_nl": 1.0234618443118167e-05,
+        "below_one_cell_guard_nl": 1.7572346750494852e-07,
+        "front_z_mm_alpha_half": 0.050000002374872565,
+        "detached_below_tip": [],
+        "below_tip_change_nl": 1.0234618443118167e-05
+      }
+    },
+    {
+      "local_artifact_directory": "artifacts/hardware-research/foil-neck-z6-freewheel-flow-h015",
+      "name": "foil-neck-z6-freewheel-flow-h015",
+      "final_interface": {
+        "step": 400,
+        "time_us": 1444.7323531144243,
+        "liquid_volume_nl": 165424.66338182843,
+        "below_tip_nl": 0.6807040374945166,
+        "below_one_cell_guard_nl": 0.1742088057066318,
+        "front_z_mm_alpha_half": 0.14999981794971973,
+        "detached_below_tip": [],
+        "below_tip_change_nl": -11.4832778892423
+      }
+    },
+    {
+      "local_artifact_directory": "artifacts/hardware-research/foil-open-z6-freewheel-flow-h015",
+      "name": "foil-open-z6-freewheel-flow-h015",
+      "final_interface": {
+        "step": 240,
+        "time_us": 866.8394118686484,
+        "liquid_volume_nl": 218030.21272597747,
+        "below_tip_nl": 1.8983250955153677,
+        "below_one_cell_guard_nl": 0.005786365673929938,
+        "front_z_mm_alpha_half": -1.8917489796876907e-07,
+        "detached_below_tip": [],
+        "below_tip_change_nl": -10.265656831221449
+      }
+    },
+    {
+      "local_artifact_directory": "artifacts/hardware-research/foil-open-10mm-flow-h015",
+      "name": "foil-open-10mm-flow-h015",
+      "final_interface": {
+        "step": 300,
+        "time_us": 2021.6524822417675,
+        "liquid_volume_nl": 619838.2031057696,
+        "below_tip_nl": 0.04920566764614937,
+        "below_one_cell_guard_nl": 8.194956062920763e-06,
+        "front_z_mm_alpha_half": 0.17500000831205398,
+        "detached_below_tip": [],
+        "connectivity_thresholds": {
+          "0.01": [],
+          "0.25": [],
+          "0.5": [],
+          "0.75": []
+        },
+        "below_tip_change_nl": -7.915810535957895
+      }
+    },
+    {
+      "local_artifact_directory": "artifacts/hardware-research/cross-flow-100A-300us-h010",
+      "name": "cross-flow-100A-300us-h010",
+      "status": {
+        "accepted_steps": 700,
+        "contact_resistivity_ohm_m2": 0.0,
+        "error": null,
+        "fluid_mechanical_work_J": 5.611164678001363e-07,
+        "joule_generated_J": 0.0018617044999134586,
+        "lagged_electrical_work_J": 0.0018622579206302768,
+        "lagged_mechanical_work_J": 5.551649932569948e-07,
+        "limitations": [
+          "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+          "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+          "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+          "New research client; not a GUI electrode feature or frozen-baseline claim."
+        ],
+        "max_terminal_voltage_V": 0.06813579797744751,
+        "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+        "peak_A": 100.0,
+        "positive_duration_s": 0.0003,
+        "project": "artifacts/hardware-research/cases/cross-channel-dc-h010.mhd.json",
+        "retract_fraction": 0.0,
+        "rise_s": 2e-05,
+        "status": "complete",
+        "time_s": 0.0020999999999999825
+      },
+      "final_interface": {
+        "step": 700,
+        "time_us": 2099.9999999999827,
+        "liquid_volume_nl": 18486.00256334767,
+        "below_tip_nl": 116.90827435686364,
+        "below_one_cell_guard_nl": 65.80389338444866,
+        "front_z_mm_alpha_half": -0.2500000118743628,
+        "detached_below_tip": [],
+        "below_tip_change_nl": 116.90827435686364
+      }
+    },
+    {
+      "local_artifact_directory": "artifacts/hardware-research/cross-compact-flow-130A-350us-retract-h010",
+      "name": "cross-compact-flow-130A-350us-retract-h010",
+      "status": {
+        "accepted_steps": 900,
+        "contact_resistivity_ohm_m2": 0.0,
+        "error": null,
+        "fluid_mechanical_work_J": 1.575519020605761e-06,
+        "joule_generated_J": 0.003821817504791183,
+        "lagged_electrical_work_J": 0.003823990302041867,
+        "lagged_mechanical_work_J": 1.5584445682744633e-06,
+        "limitations": [
+          "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+          "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+          "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+          "New research client; not a GUI electrode feature or frozen-baseline claim."
+        ],
+        "max_terminal_voltage_V": 0.08944746106863022,
+        "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+        "peak_A": 130.0,
+        "positive_duration_s": 0.00035,
+        "project": "artifacts/hardware-research/cases/cross-flight5-compact-h010.mhd.json",
+        "retract_fraction": 0.25,
+        "rise_s": 2e-05,
+        "status": "complete",
+        "time_s": 0.0026999999999999754
+      },
+      "final_interface": {
+        "step": 900,
+        "time_us": 2699.9999999999754,
+        "liquid_volume_nl": 20072.002127660213,
+        "below_tip_nl": 182.9764783472224,
+        "below_one_cell_guard_nl": 172.1665508138675,
+        "front_z_mm_alpha_half": -1.7500001995358616,
+        "detached_below_tip": [
+          {
+            "volume_nl": 117.52517157546202,
+            "equivalent_diameter_mm": 0.6077301144555265,
+            "cells": 136,
+            "centre_mm": [
+              0.0002361122491337671,
+              -0.0002178056711440436,
+              -1.506215895488096
+            ],
+            "velocity_m_s": [
+              0.00017195538384839892,
+              0.0007784082554280758,
+              -0.40602993965148926
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "connectivity_thresholds": {
+          "0.01": [
+            {
+              "volume_nl": 129.4441229728506,
+              "equivalent_diameter_mm": 0.6276168165487352,
+              "cells": 230,
+              "centre_mm": [
+                0.0004622122337780995,
+                -0.0007424447648458711,
+                -1.5064177357299853
+              ],
+              "velocity_m_s": [
+                0.0001873906294349581,
+                0.0007020769407972693,
+                -0.4013448655605316
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.25": [
+            {
+              "volume_nl": 123.4698786538929,
+              "equivalent_diameter_mm": 0.6178088611010604,
+              "cells": 154,
+              "centre_mm": [
+                0.0003001452737403348,
+                -0.0003451010920579886,
+                -1.5082226029384442
+              ],
+              "velocity_m_s": [
+                0.0001763238979037851,
+                0.0008238870650529861,
+                -0.40362778306007385
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.5": [
+            {
+              "volume_nl": 117.52517157546202,
+              "equivalent_diameter_mm": 0.6077301144555265,
+              "cells": 136,
+              "centre_mm": [
+                0.0002361122491337671,
+                -0.0002178056711440436,
+                -1.506215895488096
+              ],
+              "velocity_m_s": [
+                0.00017195538384839892,
+                0.0007784082554280758,
+                -0.40602993965148926
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.75": [
+            {
+              "volume_nl": 92.30572519709786,
+              "equivalent_diameter_mm": 0.5607165034524607,
+              "cells": 96,
+              "centre_mm": [
+                0.0001212413552905674,
+                -0.0025416547617288544,
+                -1.5042778289979175
+              ],
+              "velocity_m_s": [
+                0.0003267266438342631,
+                -0.0002797610068228096,
+                -0.4211888611316681
+              ],
+              "touches_domain_boundary": false
+            }
+          ]
+        },
+        "below_tip_change_nl": 182.97644100490496
+      }
+    },
+    {
+      "local_artifact_directory": "artifacts/hardware-research/cross-compact-flow-130A-350us-retract-h0075",
+      "name": "cross-compact-flow-130A-350us-retract-h0075",
+      "status": {
+        "accepted_steps": 1200,
+        "contact_resistivity_ohm_m2": 0.0,
+        "error": null,
+        "fluid_mechanical_work_J": 1.781509126944314e-06,
+        "joule_generated_J": 0.003778164858464844,
+        "lagged_electrical_work_J": 0.003779345962350151,
+        "lagged_mechanical_work_J": 1.7686702020448572e-06,
+        "limitations": [
+          "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+          "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+          "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+          "New research client; not a GUI electrode feature or frozen-baseline claim."
+        ],
+        "max_terminal_voltage_V": 0.08841794729232788,
+        "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+        "peak_A": 130.0,
+        "positive_duration_s": 0.00035,
+        "project": "artifacts/hardware-research/cases/cross-flight5-compact-h0075.mhd.json",
+        "retract_fraction": 0.25,
+        "rise_s": 2e-05,
+        "status": "complete",
+        "time_s": 0.0023999999999999968
+      },
+      "final_interface": {
+        "step": 1200,
+        "time_us": 2399.999999999997,
+        "liquid_volume_nl": 20432.25258993674,
+        "below_tip_nl": 227.45220842858993,
+        "below_one_cell_guard_nl": 213.3057790433487,
+        "front_z_mm_alpha_half": -1.837500160036143,
+        "detached_below_tip": [],
+        "below_tip_change_nl": 227.45218131312845
+      }
+    },
+    {
+      "local_artifact_directory": "artifacts/hardware-research/cross-fit-flow-110A-300us-h0075",
+      "name": "cross-fit-flow-110A-300us-h0075",
+      "status": {
+        "accepted_steps": 1500,
+        "contact_resistivity_ohm_m2": 0.0,
+        "error": null,
+        "fluid_mechanical_work_J": 9.521466145192588e-07,
+        "joule_generated_J": 0.002285305478742545,
+        "lagged_electrical_work_J": 0.0022859626865507922,
+        "lagged_mechanical_work_J": 9.44330322790049e-07,
+        "limitations": [
+          "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+          "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+          "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+          "New research client; not a GUI electrode feature or frozen-baseline claim."
+        ],
+        "max_terminal_voltage_V": 0.0748114213347435,
+        "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+        "peak_A": 110.0,
+        "positive_duration_s": 0.0003,
+        "project": "artifacts/hardware-research/cases/cross-fit-sncu-h0075.mhd.json",
+        "retract_fraction": 0.25,
+        "rise_s": 2e-05,
+        "status": "complete",
+        "time_s": 0.0029999999999999463
+      },
+      "final_interface": {
+        "step": 1500,
+        "time_us": 2999.9999999999463,
+        "liquid_volume_nl": 20432.25258542784,
+        "below_tip_nl": 162.32799750454865,
+        "below_one_cell_guard_nl": 145.44969808140118,
+        "front_z_mm_alpha_half": -0.7125001066015102,
+        "detached_below_tip": [],
+        "connectivity_thresholds": {
+          "0.01": [],
+          "0.25": [],
+          "0.5": [],
+          "0.75": []
+        },
+        "below_tip_change_nl": 162.32797038908717
+      }
+    },
+    {
+      "local_artifact_directory": "artifacts/hardware-research/cross-compact-zero-control-h010",
+      "name": "cross-compact-zero-control-h010",
+      "status": {
+        "accepted_steps": 900,
+        "contact_resistivity_ohm_m2": 0.0,
+        "error": null,
+        "fluid_mechanical_work_J": -4.1523362492777177e-10,
+        "joule_generated_J": 4.1516400724983484e-10,
+        "lagged_electrical_work_J": -1.5737407472319974e-19,
+        "lagged_mechanical_work_J": -4.151961381636502e-10,
+        "limitations": [
+          "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+          "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+          "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+          "New research client; not a GUI electrode feature or frozen-baseline claim."
+        ],
+        "max_terminal_voltage_V": 5.8611767599359155e-06,
+        "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+        "peak_A": 0.0,
+        "positive_duration_s": 0.0003,
+        "project": "artifacts/hardware-research/cases/cross-flight5-compact-h010.mhd.json",
+        "retract_fraction": 0.25,
+        "rise_s": 2e-05,
+        "status": "complete",
+        "time_s": 0.0026999999999999754
+      },
+      "final_interface": {
+        "step": 900,
+        "time_us": 2699.9999999999754,
+        "liquid_volume_nl": 20072.00218585846,
+        "below_tip_nl": 3.7473880644794886e-06,
+        "below_one_cell_guard_nl": 3.6926096023278795e-07,
+        "front_z_mm_alpha_half": 0.249999895459041,
+        "detached_below_tip": [],
+        "connectivity_thresholds": {
+          "0.01": [],
+          "0.25": [],
+          "0.5": [],
+          "0.75": []
+        },
+        "below_tip_change_nl": -3.359492939313265e-05
+      }
+    }
+  ],
+  "ongoing_at_checkpoint": [
+    "cross-fit-flow-110A-300us-h0050: 110 A, 300 us push, reverse fraction .25, dt 1 us, 3500 steps planned",
+    "v6-direct-matched-flow-250A-800us-h010: 250 A, 800 us push, reverse fraction .25, dt 3 us, 1400 steps planned"
+  ],
+  "v6_geometry_fix": "Generate the liquid profile in the same axial traversal direction as the steel bore, then orient outward. Shared conical faces get matching triangle diagonals. No dimensions or initializer tolerances changed. Original initialization max fraction excess 3.194809e-5; matched mesh accepted."
+}
