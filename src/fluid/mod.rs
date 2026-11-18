@@ -172,6 +172,8 @@ pub struct FluidState {
     pub(crate) euler_viscosity_reference: bool,
     #[cfg(test)]
     pub(crate) force_multigrid: Option<bool>,
+    #[cfg(test)]
+    pub(crate) floating_pressure: bool,
     multigrid: Option<multigrid::Multigrid>,
     multigrid_attempted: bool,
 }
@@ -624,6 +626,8 @@ impl FluidState {
             euler_viscosity_reference: false,
             #[cfg(test)]
             force_multigrid: None,
+            #[cfg(test)]
+            floating_pressure: false,
             multigrid: None,
             multigrid_attempted: false,
             max_face_speed: 0.,
@@ -967,6 +971,18 @@ impl FluidState {
         Ok((residual, s[6] > 0.5, s[7] as u32))
     }
     fn project(&mut self, warm_start: bool) -> Result<(u32, f32), String> {
+        #[cfg(test)]
+        if self.floating_pressure {
+            if self.components != 1 {
+                return Err(
+                    "Floating-pressure research supports exactly one connected region".into(),
+                );
+            }
+            self.params.solve[2] = 1.;
+            self.context
+                .queue
+                .write_buffer(&self._uniform, 0, bytemuck::bytes_of(&self.params));
+        }
         let _stage = self.context.profiler.stage(crate::profile::Stage::Pressure);
         let cells = groups(self.params.dims[3]);
         // A transport correction solves for a small pressure increment. Starting
@@ -979,6 +995,19 @@ impl FluidState {
             ("pressure_refresh", cells),
             ("initial_reduce", [1, 1, 1]),
         ];
+        #[cfg(test)]
+        if self.floating_pressure {
+            self.dispatch(&preparation[usize::from(!warm_start)..3]);
+            self.dispatch(&[("floating_collect", cells), ("floating_prepare", [1, 1, 1])]);
+            self.dispatch(&preparation[3..]);
+        } else {
+            self.dispatch(if warm_start {
+                &preparation
+            } else {
+                &preparation[1..]
+            });
+        }
+        #[cfg(not(test))]
         self.dispatch(if warm_start {
             &preparation
         } else {
@@ -1023,6 +1052,10 @@ impl FluidState {
                         ("beta_reduce", [1, 1, 1]),
                         ("search", cells),
                     ]);
+                    #[cfg(test)]
+                    if self.floating_pressure {
+                        stages.push(("floating_search_reduce", [1, 1, 1]));
+                    }
                 }
                 self.dispatch(&stages);
             }
@@ -1032,6 +1065,10 @@ impl FluidState {
             }
             iterations = residual.2;
             if residual.1 {
+                #[cfg(test)]
+                if self.floating_pressure {
+                    self.dispatch(&[("floating_collect", cells), ("floating_prepare", [1, 1, 1])]);
+                }
                 self.dispatch(&[("pressure_refresh", cells), ("initial_reduce", [1, 1, 1])]);
                 residual = self.convergence()?;
                 if !residual.1
@@ -1451,4 +1488,6 @@ mod viscosity_tests;
 
 mod stabilized;
 
+#[cfg(test)]
+mod floating;
 mod multigrid;

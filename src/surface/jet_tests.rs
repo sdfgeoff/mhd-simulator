@@ -361,6 +361,9 @@ fn pulsed_nozzle_experiment() {
             "1" => true,
             _ => panic!("MHD_JET_PRESSURE_MG must be 0 or 1"),
         });
+    if std::env::var("MHD_FLOATING_PRESSURE").as_deref() == Ok("1") {
+        fluid.enable_floating_pressure().unwrap();
+    }
     fluid
         .update_surface(&volume, surface.field(), None)
         .unwrap();
@@ -371,7 +374,7 @@ fn pulsed_nozzle_experiment() {
     std::fs::create_dir_all(out).unwrap();
     std::fs::write(
         out.join("grid.json"),
-        serde_json::to_string_pretty(&serde_json::json!({"origin_m":grid.origin_m,"cell_m":grid.cell_m,"dims":grid.dims,"dt_s":dt,"pulse_s":pulse_s,"force_peak_n_m3":peak,"initialization":initialization,"pressure_multigrid_override":fluid.force_multigrid,"record_every":record_every})).unwrap(),
+        serde_json::to_string_pretty(&serde_json::json!({"origin_m":grid.origin_m,"cell_m":grid.cell_m,"dims":grid.dims,"dt_s":dt,"pulse_s":pulse_s,"force_peak_n_m3":peak,"initialization":initialization,"pressure_multigrid_override":fluid.force_multigrid,"record_every":record_every,"floating_pressure":fluid.floating_pressure})).unwrap(),
     )
     .unwrap();
     let mut csv = String::from(

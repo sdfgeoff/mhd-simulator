@@ -133,13 +133,26 @@ impl Multigrid {
             bind_group_layouts: &[&layout],
             push_constant_ranges: &[],
         });
+        let source = include_str!("multigrid.wgsl").to_owned();
+        #[cfg(test)]
+        let source = if state.floating_pressure {
+            let old = "return (mask[i]&3u)==1u;";
+            assert_eq!(source.matches(old).count(), 1);
+            let source = source.replace(old, "return mask[i]!=0u;");
+            let old =
+                "if fine && (mask[index(n,p.child.xyz)]&3u)==2u {c.w+=beta;diag+=beta;continue;}";
+            assert_eq!(source.matches(old).count(), 1);
+            source.replace(old, "")
+        } else {
+            source
+        };
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("Aggregation pressure preconditioner"),
             source: wgpu::ShaderSource::Wgsl(
                 format!(
                     "const COARSE_SWEEPS:u32={COARSE_SWEEPS}u;\n{}\n{}\n{}",
                     include_str!("../periodic.wgsl"),
-                    include_str!("multigrid.wgsl"),
+                    source,
                     if cfg!(test) {
                         include_str!("multigrid_probes.wgsl")
                     } else {
@@ -287,6 +300,10 @@ impl Multigrid {
     pub(super) fn initialize(&self, state: &FluidState) {
         self.apply(&state.context);
         self.dispatch(&state.context, &[(0, "initial_direction")]);
+        #[cfg(test)]
+        if state.floating_pressure {
+            state.dispatch(&[("floating_direction_collect", groups(state.params.dims[3]))]);
+        }
         state.dispatch(&[("initial_reduce", [1, 1, 1])]);
     }
     pub(super) fn iterate(&self, state: &FluidState, batch: u32) {
@@ -313,6 +330,17 @@ impl Multigrid {
                 self.encode_stages(&mut pass, &[(0, "preconditioned_dot")]);
                 encode_fluid(state, &mut pass, &[("beta_reduce", [1, 1, 1])]);
                 self.encode_stages(&mut pass, &[(0, "preconditioned_search")]);
+                #[cfg(test)]
+                if state.floating_pressure {
+                    encode_fluid(
+                        state,
+                        &mut pass,
+                        &[
+                            ("floating_direction_collect", cells),
+                            ("floating_search_reduce", [1, 1, 1]),
+                        ],
+                    );
+                }
             }
         }
         state.context.queue.submit(Some(encoder.finish()));
