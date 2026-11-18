@@ -143,5 +143,169 @@
       ]
     },
     "below_tip_change_nl": 142.0124578660841
+  },
+  "wide_contact_control": {
+    "artifacts": "artifacts/hardware-research/v6-tip-wide-snpb-flow-200A-250us-h010",
+    "run": {
+      "accepted_steps": 1200,
+      "contact_resistivity_ohm_m2": 0.0,
+      "error": null,
+      "field_every": 150,
+      "fluid_mechanical_work_J": 9.434827510228531e-07,
+      "frequency_hz": 0.0,
+      "grid": {
+        "cell_m": 0.00010000000474974513,
+        "dims": [
+          49,
+          52,
+          95
+        ]
+      },
+      "joule_generated_J": 0.009777351992263988,
+      "lagged_electrical_work_J": 0.009776789487350735,
+      "lagged_mechanical_work_J": 9.295027762373417e-07,
+      "limitations": [
+        "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+        "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+        "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+        "New research client; not a GUI electrode feature or frozen-baseline claim."
+      ],
+      "max_terminal_voltage_V": 0.21565423905849457,
+      "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+      "peak_A": 200.0,
+      "positive_duration_s": 0.00025,
+      "project": "artifacts/hardware-research/cases/v6-tip-wide-pool35-medium-fit-snpb-h010.mhd.json",
+      "released_static_workspace_bytes": 55093784,
+      "retract_fraction": 0.25,
+      "rise_s": 2e-05,
+      "status": "complete",
+      "tail_timestep_s": 3e-06,
+      "tail_transition_not_before_s": 0.00035833333333333333,
+      "time_s": 0.0035999999999999648,
+      "timestep_s": 3e-06
+    },
+    "final": {
+      "step": 1200,
+      "time_us": 3599.999999999965,
+      "first_nonnegative_cell_plane_z_mm": 0.04999988595955074,
+      "exit_plane_alpha_area_mm2": 0.1150188853330216,
+      "exit_plane_mean_uz_m_s": 0.25857903820626715,
+      "exit_plane_mean_pressure_pa": 1298.965157018215,
+      "exit_plane_downward_flux_proxy_nl_s": -29741.472744969655,
+      "liquid_volume_nl": 11348.001025510925,
+      "below_tip_nl": 132.33058663636166,
+      "below_one_cell_guard_nl": 127.68849793334093,
+      "front_z_mm_alpha_half": -1.1500001710373908,
+      "detached_below_tip": [
+        {
+          "volume_nl": 90.23390160294774,
+          "equivalent_diameter_mm": 0.5564895814729044,
+          "cells": 108,
+          "centre_mm": [
+            -1.5243017694214575e-06,
+            -4.4908769493602435e-07,
+            -0.8682536095735972
+          ],
+          "velocity_m_s": [
+            -1.601171970833093e-05,
+            -5.672864972439129e-06,
+            -0.008263574913144112
+          ],
+          "touches_domain_boundary": false
+        }
+      ],
+      "connectivity_thresholds": {
+        "0.01": [
+          {
+            "volume_nl": 123.61477814806554,
+            "equivalent_diameter_mm": 0.6180504455158417,
+            "cells": 242,
+            "centre_mm": [
+              -1.0698155465234168e-05,
+              3.3303903602546313e-06,
+              -0.8676772182006609
+            ],
+            "velocity_m_s": [
+              -5.245292413746938e-05,
+              6.495576144516235e-06,
+              -0.011645147576928139
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "0.25": [
+          {
+            "volume_nl": 111.84918680128078,
+            "equivalent_diameter_mm": 0.59778461865704,
+            "cells": 162,
+            "centre_mm": [
+              -3.2816370959855343e-06,
+              -3.5594974441181836e-08,
+              -0.8778545078083375
+            ],
+            "velocity_m_s": [
+              -1.9965804312960245e-05,
+              -8.067469821071427e-07,
+              0.00026027491549029946
+            ],
+            "touches_domain_boundary": false
+          },
+          {
+            "volume_nl": 1.334132921064568,
+            "equivalent_diameter_mm": 0.13658410448423536,
+            "cells": 4,
+            "centre_mm": [
+              -0.00011598518571157533,
+              -2.8067882044470528e-05,
+              -0.35000014867628065
+            ],
+            "velocity_m_s": [
+              -0.002001785673201084,
+              -2.248913369840011e-05,
+              -0.5184586048126221
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "0.5": [
+          {
+            "volume_nl": 90.23390160294774,
+            "equivalent_diameter_mm": 0.5564895814729044,
+            "cells": 108,
+            "centre_mm": [
+              -1.5243017694214575e-06,
+              -4.4908769493602435e-07,
+              -0.8682536095735972
+            ],
+            "velocity_m_s": [
+              -1.601171970833093e-05,
+              -5.672864972439129e-06,
+              -0.008263574913144112
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "0.75": [
+          {
+            "volume_nl": 66.46473210407704,
+            "equivalent_diameter_mm": 0.5025711396425766,
+            "cells": 70,
+            "centre_mm": [
+              -1.1669879293873576e-06,
+              2.8151366961291564e-07,
+              -0.8998624598784007
+            ],
+            "velocity_m_s": [
+              -1.0043781003332697e-05,
+              -1.042789972416358e-05,
+              -0.007163951639086008
+            ],
+            "touches_domain_boundary": false
+          }
+        ]
+      },
+      "below_tip_change_nl": 132.33056064128166
+    },
+    "interpretation": "Separated but almost stalled: alpha.01 D0.618mm downward0.0116m/s at3.6ms; not a successful repeatable jet. Matched original small contacts depart faster with the same waveform."
   }
 }

@@ -32,8 +32,9 @@ Oxide skins are absent. Numerical breakup alone does not qualify a nozzle finish
 ## Reproduce the calculations
 
 Use the study worktree. All runtime output stays under ignored `artifacts/`.
-Headless checks use the same `RunState` as the GUI; there is no separate fluid
-or electromagnetic solver for the study.
+Fluid/interface and induction checks use the same engines as the GUI. The
+direct-current research clients add the GPU charge solver described below;
+they are not a GUI electrode feature.
 
 1. Generate a loadable CAD/project pair, for example:
 
@@ -326,13 +327,15 @@ are inherited screening properties, not new sourced temperature fits.
 tungsten pins at x=±0.5 mm, extending from z=2 to 14 mm. With a 3.5 mm free
 surface they dip 1.5 mm into the pool. The liquid CAD subtracts their volumes.
 The cold ideal-contact calculation at 50 A puts about 41 A through liquid at
-the central x plane. A moving-interface trial is running. The entire pin bodies
+the central x plane. Its completed 150 A / 600 µs moving-interface trial
+retracts by 4.2 ms without a detached drop. The entire pin bodies
 are ideal terminals: their full bulk voltage drop, external mount, thermal
 expansion and practical feedstock routing require separate design. Tungsten
 properties are explicit screening assumptions. This variant uses an 8.5 mm pole
 gap and magnet centres at z=-7 mm; the conductive heater block is still omitted.
 
-For the 10-turn, 50 kHz single-coil carrier, moving the winding centre from
+In the earlier 0.5 µs cold screen of the 10-turn, 50 kHz single-coil carrier,
+moving the winding centre from
 z=4 to 6 mm changes the cold time-mean axial liquid force from slightly upward
 to about 0.028 N downward over 80–240 µs at 200 A peak. This remains a cold
 screen. The prefix circuit fit gives approximately 10.8 µF series capacitance,
@@ -543,6 +546,18 @@ component: approximately 0.600 mm at alpha 0.01 or 0.549 mm at alpha 0.5, moving
 downward about 0.14 m/s. It has no domain-boundary contact. This is a coarse
 single-pulse control, not confirmation that the wider-contact geometry or
 repeated operation works with both alloys.
+
+The matching wider-contact Sn60Pb40 control also completes 3.6 ms, but its
+approximately 0.618 mm alpha 0.01 component moves downward only about
+0.012 m/s. Separation with almost no departing speed is not a robust jetting
+result. Two material-specific coarse waveform checks are queued: 200 A /
+230 µs and 240 A / 200 µs, each with 15% reverse current. Neither is a result
+yet, and the smaller-contact Sn60Pb40 control currently departs more clearly.
+
+[Both unmodified immersed-pin controls](immersed-pin-flow-screening.json),
+using 0.5 and 1 mm electrodes with the wider pole spacing, complete 4.2 ms
+and retract without detached components. This does not establish the outcome
+of the closer-pole, milled-collar variant.
 
 ### Contact and heater controls
 

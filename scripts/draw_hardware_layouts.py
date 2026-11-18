@@ -425,8 +425,8 @@ def v6_detail():
     fig.savefig(OUT / "v6-disc-stack-setup.png", dpi=180)
 
 
-def v6_tip_detail():
-    parts, _ = load("v6-tip-disc20-compact-h010")
+def v6_tip_detail(case="v6-tip-disc20-compact-h010", filename="v6-tip-contact-setup.png"):
+    parts, _ = load(case)
     fig, axes = plt.subplots(1, 3, figsize=(15, 8))
     fig.subplots_adjust(left=.055, right=.985, bottom=.19, top=.85, wspace=.28)
     ax = axes[0]
@@ -453,7 +453,7 @@ def v6_tip_detail():
     fig.suptitle("V6 tip-contact variant — concentrate current near the orifice\nActual generated CAD sections; the metal nozzle remains intact",fontsize=16,weight="bold")
     fig.text(.5,.015,"Geometry under test • ideal electrical wetting assumed • heater, contact mounting and driver omitted",ha="center",fontsize=10)
     OUT.mkdir(parents=True,exist_ok=True)
-    fig.savefig(OUT/"v6-tip-contact-setup.png",dpi=180)
+    fig.savefig(OUT/filename,dpi=180)
 
 
 def v6_pin_detail(case="v6-immersed-pins-pool35-v2-h010", filename="v6-immersed-pin-setup.png"):

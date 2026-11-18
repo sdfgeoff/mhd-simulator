@@ -1,0 +1,127 @@
+{
+  "status": "Both unmodified V6 controls complete4.2ms and retract without detached components at any reported threshold; does not cover milled-collar closer-pole variant.",
+  "cases": [
+    {
+      "artifacts": "artifacts/hardware-research/v6-immersed-pins-flow-150A-600us-h010",
+      "run": {
+        "accepted_steps": 1400,
+        "contact_resistivity_ohm_m2": 0.0,
+        "error": null,
+        "field_every": 150,
+        "fluid_mechanical_work_J": 2.0871124698485476e-06,
+        "frequency_hz": 0.0,
+        "grid": {
+          "cell_m": 0.00010000000474974513,
+          "dims": [
+            76,
+            84,
+            190
+          ]
+        },
+        "joule_generated_J": 0.0016832658597023184,
+        "lagged_electrical_work_J": 0.001685375479531141,
+        "lagged_mechanical_work_J": 2.0739723996044265e-06,
+        "limitations": [
+          "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+          "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+          "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+          "New research client; not a GUI electrode feature or frozen-baseline claim."
+        ],
+        "max_terminal_voltage_V": 0.019770173355937004,
+        "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+        "peak_A": 150.0,
+        "positive_duration_s": 0.0006,
+        "project": "artifacts/hardware-research/cases/v6-immersed-pins-pool35-v2-fit-sncu-h010.mhd.json",
+        "released_static_workspace_bytes": 272367128,
+        "retract_fraction": 0.25,
+        "rise_s": 2e-05,
+        "status": "complete",
+        "time_s": 0.0042,
+        "timestep_s": 3e-06
+      },
+      "final": {
+        "step": 1400,
+        "time_us": 4200.0,
+        "first_nonnegative_cell_plane_z_mm": 0.04999988595955074,
+        "exit_plane_alpha_area_mm2": 5.0681290400515574e-08,
+        "exit_plane_mean_uz_m_s": 0.03647714273896375,
+        "exit_plane_mean_pressure_pa": -0.07680593980545676,
+        "exit_plane_downward_flux_proxy_nl_s": -0.0018487086641344797,
+        "liquid_volume_nl": 10868.000117098469,
+        "below_tip_nl": 0.13401899815313703,
+        "below_one_cell_guard_nl": 0.1340062634335684,
+        "front_z_mm_alpha_half": 0.44999990495853126,
+        "detached_below_tip": [],
+        "connectivity_thresholds": {
+          "0.01": [],
+          "0.25": [],
+          "0.5": [],
+          "0.75": []
+        },
+        "below_tip_change_nl": 0.13399300307312992
+      }
+    },
+    {
+      "artifacts": "artifacts/hardware-research/v6-immersed-pins1mm-flow-150A-600us-h010",
+      "run": {
+        "accepted_steps": 1400,
+        "contact_resistivity_ohm_m2": 0.0,
+        "error": null,
+        "field_every": 150,
+        "fluid_mechanical_work_J": 1.2742682867682641e-06,
+        "frequency_hz": 0.0,
+        "grid": {
+          "cell_m": 0.00010000000474974513,
+          "dims": [
+            76,
+            84,
+            190
+          ]
+        },
+        "joule_generated_J": 0.0011687365489442126,
+        "lagged_electrical_work_J": 0.001170044000557298,
+        "lagged_mechanical_work_J": 1.266234072364939e-06,
+        "limitations": [
+          "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+          "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+          "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+          "New research client; not a GUI electrode feature or frozen-baseline claim."
+        ],
+        "max_terminal_voltage_V": 0.01388783473521471,
+        "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+        "peak_A": 150.0,
+        "positive_duration_s": 0.0006,
+        "project": "artifacts/hardware-research/cases/v6-immersed-pins1mm-pool35-fit-sncu-h010.mhd.json",
+        "released_static_workspace_bytes": 272367128,
+        "retract_fraction": 0.25,
+        "rise_s": 2e-05,
+        "status": "complete",
+        "tail_timestep_s": 3e-06,
+        "tail_transition_not_before_s": 0.0008249999999999999,
+        "time_s": 0.0042,
+        "timestep_s": 3e-06
+      },
+      "final": {
+        "step": 1400,
+        "time_us": 4200.0,
+        "first_nonnegative_cell_plane_z_mm": 0.04999988595955074,
+        "exit_plane_alpha_area_mm2": 5.951198684525258e-08,
+        "exit_plane_mean_uz_m_s": 0.09995030831800092,
+        "exit_plane_mean_pressure_pa": 0.030258332780574722,
+        "exit_plane_downward_flux_proxy_nl_s": -0.00594824143379981,
+        "liquid_volume_nl": 9632.000243227716,
+        "below_tip_nl": 0.1496365768493492,
+        "below_one_cell_guard_nl": 0.1496286151508581,
+        "front_z_mm_alpha_half": 0.6499999144580215,
+        "detached_below_tip": [],
+        "connectivity_thresholds": {
+          "0.01": [],
+          "0.25": [],
+          "0.5": [],
+          "0.75": []
+        },
+        "below_tip_change_nl": 0.14961058176934208
+      }
+    }
+  ]
+}
