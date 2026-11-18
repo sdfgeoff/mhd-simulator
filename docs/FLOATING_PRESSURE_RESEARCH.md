@@ -194,4 +194,37 @@ MHD_FLOATING_PRESSURE=1 MHD_RESEARCH_PROJECT=/path/to/project.mhd.json \
 Omit `MHD_FLOATING_PRESSURE` for the original solver. Optional
 `MHD_RESEARCH_PROFILE=1` enables the existing GPU profiler;
 `MHD_RESEARCH_TICKS` defaults to three. The complete 64³ moving-drop check also
-passes (frequency error 1.58%); the 96³ check is still underway.
+passes (frequency error 1.58%); the 96³ check also passes (frequency error 0.1096%).
+
+
+## Longer V6 limit
+
+The ten-tick probe fails at tick five in **both** pressure variants, at the
+project's unchanged EM iteration cap of 1,000. The reported true EM relative
+residual is 1.732e-4 against 1e-4, with conducting-edge conductivity range
+0.1988…5.8e7 S/m. This is not a pressure convergence failure, and neither solver
+is claimed to complete that longer run. Diagnostic continuation with more EM
+work, at the same tolerance, remains separate from the original-cap result.
+
+## Warmed nozzle timing
+
+After the other GPU jobs exited, three alternating warmed repetitions of each
+variant ran the same 120-step 0.200167 ms prefix, 36×36×70 cells, 50 µm spacing,
+7e7 N/m³ prescribed pulse and original physical tolerances. One warmup per
+variant is excluded. The RTX 3060 Laptop GPU used driver 620.70.06.
+
+| Variant | Median process time |
+| --- | ---: |
+| Original pinned solver, physical check every 64 iterations | 12.6567 s |
+| Original pinned solver, physical check every 16 iterations | 13.2795 s |
+| Mean-free residual, original reference gauge | 9.6446 s |
+
+The new candidate reduces this prefix's process time by **23.8%**. The simpler
+16-iteration check is **4.9% slower** than the original schedule. This is a short
+nozzle experiment, not an application-wide or hardware-independent claim.
+
+All repeated fraction and flow snapshots are byte-identical within each variant,
+including warmups. Maximum fraction relative L1 difference from the original is
+4.49e-9 for mean-free pressure and 3.74e-9 for the frequent-check control. Geometry,
+forcing and actual timesteps match. The full 2 ms moving trajectory comparison
+and its late unresolved-fragment differences remain documented above.
