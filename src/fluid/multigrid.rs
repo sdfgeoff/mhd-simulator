@@ -309,6 +309,16 @@ impl Multigrid {
                         ("update", cells),
                     ],
                 );
+                if state.params.initial[3] > 0. {
+                    encode_fluid(
+                        state,
+                        &mut pass,
+                        &[
+                            ("pressure_residual_mean", [1, 1, 1]),
+                            ("pressure_residual_subspace", cells),
+                        ],
+                    );
+                }
                 self.encode_stages(&mut pass, &self.cycle);
                 self.encode_stages(&mut pass, &[(0, "preconditioned_dot")]);
                 encode_fluid(state, &mut pass, &[("beta_reduce", [1, 1, 1])]);

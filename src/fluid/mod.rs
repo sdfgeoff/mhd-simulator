@@ -123,6 +123,7 @@ struct Params {
     flags: [u32; 4],
     physical: [f32; 4],
     acceleration: [f32; 4],
+    // Initial velocity xyz; inverse fluid-cell count w during mean-free pressure.
     initial: [f32; 4],
     solve: [f32; 4],
     surface: [f32; 4],
@@ -172,6 +173,8 @@ pub struct FluidState {
     pub(crate) euler_viscosity_reference: bool,
     #[cfg(test)]
     pub(crate) force_multigrid: Option<bool>,
+    #[cfg(test)]
+    pub(crate) force_meanfree_pressure: Option<bool>,
     multigrid: Option<multigrid::Multigrid>,
     multigrid_attempted: bool,
 }
@@ -454,11 +457,12 @@ impl FluidState {
                 label: Some("MAC fluid solver"),
                 source: wgpu::ShaderSource::Wgsl(
                     format!(
-                        "{}\n{}\n{}\n{}\n{}",
+                        "{}\n{}\n{}\n{}\n{}\n{}",
                         include_str!("../periodic.wgsl"),
                         include_str!("viscosity.wgsl"),
                         include_str!("solver.wgsl"),
                         include_str!("stabilized.wgsl"),
+                        include_str!("pressure_subspace.wgsl"),
                         if cfg!(test) {
                             include_str!("stress_probes.wgsl")
                         } else {
@@ -476,6 +480,9 @@ impl FluidState {
             "viscosity_bound_reduce",
             "stress_diffuse",
             "pressure_coefficients",
+            "pressure_residual_mean",
+            "pressure_initial_subspace",
+            "pressure_residual_subspace",
             "pressure_guess",
             "pressure_warm",
             "pressure_commit",
@@ -624,6 +631,8 @@ impl FluidState {
             euler_viscosity_reference: false,
             #[cfg(test)]
             force_multigrid: None,
+            #[cfg(test)]
+            force_meanfree_pressure: None,
             multigrid: None,
             multigrid_attempted: false,
             max_face_speed: 0.,
@@ -966,24 +975,58 @@ impl FluidState {
         }
         Ok((residual, s[6] > 0.5, s[7] as u32))
     }
+    fn configure_pressure_projection(&mut self) -> bool {
+        // A global projection is valid for exactly one null vector. Disconnected
+        // graphs retain the existing independent point references and MG graph.
+        let meanfree = self.components == 1;
+        #[cfg(test)]
+        let meanfree = self.force_meanfree_pressure.unwrap_or(meanfree) && self.components == 1;
+        let inverse = if meanfree {
+            1. / self.fluid_cells.max(1) as f32
+        } else {
+            0.
+        };
+        let bound = if meanfree {
+            1.
+        } else {
+            self.fluid_cells.max(1) as f32
+        };
+        if self.params.initial[3] != inverse || self.params.solve[2] != bound {
+            self.params.initial[3] = inverse;
+            self.params.solve[2] = bound;
+            self.context
+                .queue
+                .write_buffer(&self._uniform, 0, bytemuck::bytes_of(&self.params));
+        }
+        meanfree
+    }
+    fn pressure_refresh_stages(&self) -> Vec<(&'static str, [u32; 3])> {
+        let cells = groups(self.params.dims[3]);
+        let mut stages = vec![("pressure_refresh", cells)];
+        if self.params.initial[3] > 0. {
+            stages.extend([
+                ("pressure_residual_mean", [1, 1, 1]),
+                ("pressure_initial_subspace", cells),
+            ]);
+        }
+        stages.push(("initial_reduce", [1, 1, 1]));
+        stages
+    }
     fn project(&mut self, warm_start: bool) -> Result<(u32, f32), String> {
+        let meanfree = self.configure_pressure_projection();
         let _stage = self.context.profiler.stage(crate::profile::Stage::Pressure);
         let cells = groups(self.params.dims[3]);
-        // A transport correction solves for a small pressure increment. Starting
-        // from the preceding force-balance pressure wastes iterations and changes
-        // the relative-residual scale; its physical contribution is added later.
-        let preparation = [
-            ("pressure_warm", groups(self.params.faces[3])),
+        // Solve a zero-based correction, retaining the preceding force balance.
+        let mut preparation = Vec::with_capacity(7);
+        if warm_start {
+            preparation.push(("pressure_warm", groups(self.params.faces[3])));
+        }
+        preparation.extend([
             ("pressure_coefficients", groups(self.params.faces[3])),
             ("pressure_guess", cells),
-            ("pressure_refresh", cells),
-            ("initial_reduce", [1, 1, 1]),
-        ];
-        self.dispatch(if warm_start {
-            &preparation
-        } else {
-            &preparation[1..]
-        });
+        ]);
+        preparation.extend(self.pressure_refresh_stages());
+        self.dispatch(&preparation);
         let mut iterations = 0;
         let mut residual = self.convergence()?;
         let preferred = self.params.dims[3] >= multigrid::MIN_CELLS;
@@ -1020,9 +1063,14 @@ impl FluidState {
                         ("pressure_apply", cells),
                         ("alpha_reduce", [1, 1, 1]),
                         ("update", cells),
-                        ("beta_reduce", [1, 1, 1]),
-                        ("search", cells),
                     ]);
+                    if meanfree {
+                        stages.extend([
+                            ("pressure_residual_mean", [1, 1, 1]),
+                            ("pressure_residual_subspace", cells),
+                        ]);
+                    }
+                    stages.extend([("beta_reduce", [1, 1, 1]), ("search", cells)]);
                 }
                 self.dispatch(&stages);
             }
@@ -1032,7 +1080,7 @@ impl FluidState {
             }
             iterations = residual.2;
             if residual.1 {
-                self.dispatch(&[("pressure_refresh", cells), ("initial_reduce", [1, 1, 1])]);
+                self.dispatch(&self.pressure_refresh_stages());
                 residual = self.convergence()?;
                 if !residual.1
                     && let Some(mg) = mg
@@ -1452,3 +1500,6 @@ mod viscosity_tests;
 mod stabilized;
 
 mod multigrid;
+
+#[cfg(test)]
+mod pressure_tests;

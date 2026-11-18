@@ -19,7 +19,8 @@ fn canonical(q0:vec3<i32>,d:vec3<u32>)->vec3<i32> {
  var q=q0;for(var a=0u;a<3u;a++){if (p.location.w&(1u<<a))!=0u {q[a]=wrap_periodic(q[a],d[a]);}}return q;
 }
 fn valid(q:vec3<i32>,d:vec3<u32>)->bool {return all(q>=vec3<i32>(0))&&all(q<vec3<i32>(d));}
-fn fine_active(i:u32)->bool {return (mask[i]&3u)==1u;}
+fn mean_free_pressure()->bool {return scalars[2].x>0.5;}
+fn fine_active(i:u32)->bool {return mask[i]!=0u && (mean_free_pressure() || (mask[i]&3u)==1u);}
 fn edge(q:vec3<i32>,axis:u32,sign:i32,d:vec3<u32>,offset:u32,fine:bool)->f32 {
  var face=q;if sign>0 {face[axis]+=1;}face=canonical(face,d);
  if fine {return cache[index(face,p.faces.xyz)][axis];}
@@ -56,7 +57,7 @@ fn build(@builtin(global_invocation_id) g:vec3<u32>){
   for(var a=0u;a<3u;a++){for(var s=-1;s<=1;s+=2){
    var n=child;n[a]+=s;n=canonical(n,p.child.xyz);if !valid(n,p.child.xyz){continue;}
    let beta=edge(child,a,s,p.child.xyz,p.location.y,fine);if beta==0.{continue;}
-   if fine && (mask[index(n,p.child.xyz)]&3u)==2u {c.w+=beta;diag+=beta;continue;}
+   if fine && !mean_free_pressure() && (mask[index(n,p.child.xyz)]&3u)==2u {c.w+=beta;diag+=beta;continue;}
    let parent=n/2;if all(parent==q){continue;}diag+=beta;if s<0{c[a]+=beta;}
   }}
  }}}

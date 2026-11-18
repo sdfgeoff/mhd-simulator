@@ -55,10 +55,12 @@ fn capillary_force(pos:vec3<i32>,axis:u32)->f32 {
  let wl=al*(1.0-al);let wr=ar*(1.0-ar);let k=select(0.5*(kl+kr),(wl*kl+wr*kr)/max(wl+wr,1e-20),wl+wr>1e-6);
  return p.surface.z*k*(ar-al)/p.physical.x;
 }
+// initial.w is inverse connected-fluid count in mean-free pressure mode.
+fn mean_free_pressure()->bool {return p.initial.w>0.0;}
 fn diagonal(pos:vec3<i32>)->f32 {
     var d=0.0;
     for(var axis=0u;axis<3u;axis++) {for(var sign=-1;sign<=1;sign+=2) {var q=pos;q[axis]+=sign;if fluid(q) {var fp=pos;if sign>0 {fp[axis]+=1;}d+=mobility(fp,axis);}}}
-    if (mask[index(pos,p.dims.xyz)]&3u)==2u{return 1.0;}return max(d,1e-30);
+    if !mean_free_pressure() && (mask[index(pos,p.dims.xyz)]&3u)==2u{return 1.0;}return max(d,1e-30);
 }
 fn laplacian(pos:vec3<i32>,kind:u32)->f32 {
     let center=potential(pos,kind);var out=0.0;
@@ -74,7 +76,7 @@ fn cached_mobility(pos:vec3<i32>,axis:u32)->f32 {
 }
 fn cached_diagonal(i:u32)->f32 {return velocity[i].w;}
 fn apply(pos:vec3<i32>,kind:u32)->f32 {
-    if (mask[index(pos,p.dims.xyz)]&3u)==2u {return potential(pos,kind);}
+    if !mean_free_pressure() && (mask[index(pos,p.dims.xyz)]&3u)==2u {return potential(pos,kind);}
     let center=potential(pos,kind);var out=0.0;
     for(var axis=0u;axis<3u;axis++) {for(var sign=-1;sign<=1;sign+=2) {
         var fp=pos;if sign>0 {fp[axis]+=1;}
@@ -102,7 +104,7 @@ fn pressure_coefficients(@builtin(global_invocation_id) gid:vec3<u32>) {
 fn divergence(pos:vec3<i32>,star:bool)->f32 {
     var sum=0.0;for(var axis=0u;axis<3u;axis++) {var q=pos;q[axis]+=1;sum+=face(q,axis,star)-face(pos,axis,star);}return sum/p.physical.x;
 }
-fn rhs(pos:vec3<i32>)->f32 {if (mask[index(pos,p.dims.xyz)]&3u)==2u{return 0.0;}return -p.physical.x*p.physical.x*divergence(pos,true);}
+fn rhs(pos:vec3<i32>)->f32 {if !mean_free_pressure() && (mask[index(pos,p.dims.xyz)]&3u)==2u{return 0.0;}return -p.physical.x*p.physical.x*divergence(pos,true);}
 fn em_force(pos:vec3<i32>)->vec3<f32> {let q=wrap_cell(pos);if p.flags.z==0u || !valid_cell(q) {return vec3<f32>(0.0);}return em[index(q,p.dims.xyz)].force.xyz;}
 fn sample_component(position:vec3<f32>,axis:u32)->f32 {
     var offset=vec3<f32>(0.5);offset[axis]=0.0;let q=position-offset;
@@ -174,7 +176,7 @@ fn pressure_warm(@builtin(global_invocation_id) gid:vec3<u32>){
 }
 @compute @workgroup_size(256)
 fn pressure_guess(@builtin(global_invocation_id) gid:vec3<u32>) {
-    let i=flat_id(gid);if i<p.dims.w {work[i]=vec4<f32>(0.0);}if i==0u {scalars[1].w=0.0;}
+    let i=flat_id(gid);if i<p.dims.w {work[i]=vec4<f32>(0.0);}if i==0u {scalars[1].w=0.0;scalars[2].x=select(0.0,1.0,mean_free_pressure());}
 }
 @compute @workgroup_size(256)
 fn pressure_commit(@builtin(global_invocation_id) gid:vec3<u32>){
@@ -189,7 +191,7 @@ fn pressure_refresh(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_
         work[i].y=r;work[i].z=r/d;
         let physical=-p.physical.x*p.physical.x*divergence(pos,true);
         let true_residual=physical-laplacian(pos,0u);
-        sum=vec4<f32>(r*r/d,true_residual*true_residual,physical*physical,0.0);
+        sum=vec4<f32>(r*r/d,true_residual*true_residual,physical*physical,select(0.0,r,mean_free_pressure()));
     }
     reduce[l]=sum;let total=sum_group(l);if l==0u {partials[group_id(group)]=total;}
 }
@@ -217,7 +219,12 @@ fn update(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invocation
     let i=flat_id(gid);var sum=vec4<f32>(0.0);
     if i<p.dims.w && mask[i]!=0u && scalars[1].z<0.5 {
         let a=scalars[1].x;let v=work[i];let r=v.y-a*v.w;
-        let diagonal=cached_diagonal(i);work[i]=vec4<f32>(v.x+a*v.z,r,v.z,diagonal);sum=vec4<f32>(r*r/diagonal,r*r,0.0,0.0);
+        let diagonal=cached_diagonal(i);if mean_free_pressure() {
+            // Reference only the solution gauge; the operator retains every row.
+            // Search lanes stay read-only across invocations during this update.
+            work[i].x=v.x+a*(v.z-work[mask[i]>>2u].z);work[i].y=r;work[i].w=diagonal;
+        } else {work[i]=vec4<f32>(v.x+a*v.z,r,v.z,diagonal);}
+        sum=vec4<f32>(r*r/diagonal,r*r,0.0,select(0.0,r,mean_free_pressure()));
     }
     reduce[l]=sum;let total=sum_group(l);if l==0u {partials[group_id(group)]=total;}
 }
@@ -259,7 +266,8 @@ fn fields(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invocation
             let old_reserved=output_fields[i].reserved;
             melt=select(1.0,old_reserved.y,p.flags.w!=0u);
             if p.surface.x>0.5{melt*=old_reserved.z;}
-            let speed=length(v);let div=divergence(pos,false);let pressure=work[i].x*p.physical.w/p.physical.y;let force=em_force(pos);
+            let speed=length(v);let div=divergence(pos,false);let potential_value=select(work[i].x,work[i].x-work[mask[i]>>2u].x,mean_free_pressure());
+    let pressure=potential_value*p.physical.w/p.physical.y;let force=em_force(pos);
             out=Result(vec4<f32>(v,speed),vec4<f32>(pressure,div,0.0,0.0),vec4<f32>(p.physical.w*p.acceleration.xyz+force,0.0),vec4<f32>(1.0,select(1.0,old_reserved.y,p.flags.w!=0u),old_reserved.zw));
             let bad=any(v!=v)||any(force!=force)||any(abs(force)>vec3<f32>(1e30))||speed>1e25||!(abs(pressure)<1e30)||!(abs(div)<1e30);
             stats=vec4<f32>(speed,abs(div),div*div,0.5*select(p.physical.w,density(pos),p.surface.x>0.5)*face_energy*p.physical.x*p.physical.x*p.physical.x);

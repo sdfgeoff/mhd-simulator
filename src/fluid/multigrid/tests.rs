@@ -35,7 +35,8 @@ fn fixture(d: [u32; 3], periodic: [bool; 3], walls: bool, reverse: bool) -> (Flu
             u32::from(!walls || (x != d[0] / 2 && !(x == 1 && y == 1)))
         })
         .collect();
-    anchors(&mut mask, d, periodic);
+    state.components = anchors(&mut mask, d, periodic);
+    state.fluid_cells = mask.iter().filter(|&&m| m != 0).count() as u64;
     let mut fields = vec![FluidCell::default(); count as usize];
     for (i, field) in fields.iter_mut().enumerate() {
         let x = i as u32 % d[0];
@@ -44,11 +45,16 @@ fn fixture(d: [u32; 3], periodic: [bool; 3], walls: bool, reverse: bool) -> (Flu
     state.params.surface[0] = 1.;
     state.params.surface[1] = 1.;
     state.params.physical[3] = 7000.;
+    state.force_meanfree_pressure = Some(false);
+    state.configure_pressure_projection();
     let queue = &state.context.queue;
     queue.write_buffer(&state._mask, 0, bytemuck::cast_slice(&mask));
     queue.write_buffer(&state.result, 0, bytemuck::cast_slice(&fields));
     queue.write_buffer(&state._uniform, 0, bytemuck::bytes_of(&state.params));
-    state.dispatch(&[("pressure_coefficients", groups(state.params.faces[3]))]);
+    state.dispatch(&[
+        ("pressure_guess", groups(state.params.dims[3])),
+        ("pressure_coefficients", groups(state.params.faces[3])),
+    ]);
     state
         .context
         .queue
@@ -64,110 +70,130 @@ fn parent_index(i: usize, child: [u32; 4], parent: [u32; 4]) -> usize {
 #[test]
 fn aggregation_is_gpu_galerkin_on_odd_periodic_and_disconnected_domains() {
     let _lock = crate::gpu_test_lock();
-    for (dims, periodic, walls) in [
-        ([17, 13, 9], [true; 3], false),
-        ([16, 12, 8], [false; 3], true),
-        ([13, 1, 3], [true; 3], true),
-        ([1, 1, 1], [false; 3], false),
-    ] {
-        for reverse in [false, true] {
-            let (state, mask) = fixture(dims, periodic, walls, reverse);
-            let mg = Multigrid::new(&state).unwrap();
-            mg.build(&state.context);
-            assert!(
-                packets(&state.context, &mg.coeff)
-                    .iter()
-                    .flatten()
-                    .all(|c| c.is_finite() && *c >= 0.)
-            );
-            let mut values = packets(&state.context, &mg.value);
-            for level in 1..mg.levels.len() {
-                let p = mg.levels[level];
-                let child = mg.levels[level - 1];
-                let vector: Vec<_> = (0..p.dims[3]).map(|i| (i as f32 * 0.71).sin()).collect();
-                for (i, &v) in vector.iter().enumerate() {
-                    values[p.meta[0] as usize + i][1] = v;
-                }
-                let mut work = vec![[0.; 4]; state.params.dims[3] as usize];
-                for i in 0..p.child[3] as usize {
-                    let v = vector[parent_index(i, p.child, p.dims)];
-                    if level == 1 {
-                        if mask[i] & 3 == 1 {
-                            work[i][3] = v;
-                            work[i][2] = v;
-                        }
-                    } else {
-                        values[p.meta[1] as usize + i][1] = v;
-                    }
-                }
-                state
-                    .context
-                    .queue
-                    .write_buffer(&state._work, 0, bytemuck::cast_slice(&work));
-                state
-                    .context
-                    .queue
-                    .write_buffer(&mg.value, 0, bytemuck::cast_slice(&values));
-                mg.dispatch(
-                    &state.context,
-                    &[(level - 1, "probe_action"), (level, "probe_action")],
-                );
-                let current = packets(&state.context, &mg.value);
-                let fine_action = if level == 1 {
-                    packets(&state.context, &state.scratch)
-                } else {
-                    Vec::new()
-                };
-                let mut restricted = vec![0f64; p.dims[3] as usize];
-                for i in 0..p.child[3] as usize {
-                    if level == 1 && mask[i] & 3 != 1 {
+    for floating in [false, true] {
+        for (dims, periodic, walls) in [
+            ([17, 13, 9], [true; 3], false),
+            ([16, 12, 8], [false; 3], true),
+            ([13, 1, 3], [true; 3], true),
+            ([1, 1, 1], [false; 3], false),
+        ] {
+            for reverse in [false, true] {
+                let (mut state, mask) = fixture(dims, periodic, walls, reverse);
+                let mut topology: Vec<_> = mask.iter().map(|&m| u32::from(m != 0)).collect();
+                state.components = anchors(&mut topology, dims, periodic);
+                if floating {
+                    if state.components != 1 {
                         continue;
                     }
-                    restricted[parent_index(i, p.child, p.dims)] += if level == 1 {
-                        fine_action[i][3]
-                    } else {
-                        current[p.meta[1] as usize + i][2]
-                    } as f64;
+                    state.force_meanfree_pressure = Some(true);
+                    assert!(state.configure_pressure_projection());
+                    state.dispatch(&[
+                        ("pressure_guess", groups(state.params.dims[3])),
+                        ("pressure_coefficients", groups(state.params.faces[3])),
+                    ]);
+                    state.dispatch(&[("pressure_coefficients", groups(state.params.faces[3]))]);
                 }
-                let mut error = 0f64;
-                let mut norm = 0f64;
-                for (i, r) in restricted.iter().enumerate() {
-                    error += (current[p.meta[0] as usize + i][2] as f64 - r).powi(2);
-                    norm += r * r;
-                }
-                let relative = (error / norm.max(1e-30)).sqrt();
-                eprintln!(
-                    "Galerkin {dims:?} periodic={periodic:?} reverse={reverse} level={level}: {relative:.3e}"
+                let active = |m: u32| if floating { m != 0 } else { m & 3 == 1 };
+                let mg = Multigrid::new(&state).unwrap();
+                mg.build(&state.context);
+                assert!(
+                    packets(&state.context, &mg.coeff)
+                        .iter()
+                        .flatten()
+                        .all(|c| c.is_finite() && *c >= 0.)
                 );
-                if relative >= 2e-6 {
-                    let coefficients = packets(&state.context, &mg.coeff);
-                    for (i, r) in restricted.iter().enumerate().take(30) {
-                        eprintln!(
-                            "cell {i}: actual={} expected={r} coeff={:?} vector={}",
-                            current[p.meta[0] as usize + i][2],
-                            coefficients[p.meta[0] as usize + i],
-                            vector[i]
-                        );
+                let mut values = packets(&state.context, &mg.value);
+                for level in 1..mg.levels.len() {
+                    let p = mg.levels[level];
+                    let child = mg.levels[level - 1];
+                    let vector: Vec<_> = (0..p.dims[3]).map(|i| (i as f32 * 0.71).sin()).collect();
+                    for (i, &v) in vector.iter().enumerate() {
+                        values[p.meta[0] as usize + i][1] = v;
                     }
-                }
-                assert!(relative < 2e-6);
-                if level == 1 {
-                    // Compare the prototype fine action to the existing production GPU stencil.
-                    state.context.queue.write_buffer(
-                        &state.scalars,
-                        0,
-                        bytemuck::cast_slice(&[[0f32; 4]; 2]),
-                    );
-                    state.dispatch(&[("pressure_apply", groups(state.params.dims[3]))]);
-                    let original = packets(&state.context, &state._work);
-                    for (i, (&m, v)) in mask.iter().zip(&original).enumerate() {
-                        if m & 3 == 1 {
-                            assert!((v[3] - fine_action[i][3]).abs() < 1e-6 * (1. + v[3].abs()));
+                    let mut work = vec![[0.; 4]; state.params.dims[3] as usize];
+                    for i in 0..p.child[3] as usize {
+                        let v = vector[parent_index(i, p.child, p.dims)];
+                        if level == 1 {
+                            if active(mask[i]) {
+                                work[i][3] = v;
+                                work[i][2] = v;
+                            }
+                        } else {
+                            values[p.meta[1] as usize + i][1] = v;
                         }
                     }
+                    state
+                        .context
+                        .queue
+                        .write_buffer(&state._work, 0, bytemuck::cast_slice(&work));
+                    state
+                        .context
+                        .queue
+                        .write_buffer(&mg.value, 0, bytemuck::cast_slice(&values));
+                    mg.dispatch(
+                        &state.context,
+                        &[(level - 1, "probe_action"), (level, "probe_action")],
+                    );
+                    let current = packets(&state.context, &mg.value);
+                    let fine_action = if level == 1 {
+                        packets(&state.context, &state.scratch)
+                    } else {
+                        Vec::new()
+                    };
+                    let mut restricted = vec![0f64; p.dims[3] as usize];
+                    for i in 0..p.child[3] as usize {
+                        if level == 1 && !active(mask[i]) {
+                            continue;
+                        }
+                        restricted[parent_index(i, p.child, p.dims)] += if level == 1 {
+                            fine_action[i][3]
+                        } else {
+                            current[p.meta[1] as usize + i][2]
+                        }
+                            as f64;
+                    }
+                    let mut error = 0f64;
+                    let mut norm = 0f64;
+                    for (i, r) in restricted.iter().enumerate() {
+                        error += (current[p.meta[0] as usize + i][2] as f64 - r).powi(2);
+                        norm += r * r;
+                    }
+                    let relative = (error / norm.max(1e-30)).sqrt();
+                    eprintln!(
+                        "Galerkin {dims:?} periodic={periodic:?} reverse={reverse} level={level}: {relative:.3e}"
+                    );
+                    if relative >= 2e-6 {
+                        let coefficients = packets(&state.context, &mg.coeff);
+                        for (i, r) in restricted.iter().enumerate().take(30) {
+                            eprintln!(
+                                "cell {i}: actual={} expected={r} coeff={:?} vector={}",
+                                current[p.meta[0] as usize + i][2],
+                                coefficients[p.meta[0] as usize + i],
+                                vector[i]
+                            );
+                        }
+                    }
+                    assert!(relative < 2e-6);
+                    if level == 1 {
+                        // Compare the prototype fine action to the existing production GPU stencil.
+                        state.context.queue.write_buffer(
+                            &state.scalars,
+                            0,
+                            bytemuck::cast_slice(&[[0f32; 4]; 2]),
+                        );
+                        state.dispatch(&[("pressure_apply", groups(state.params.dims[3]))]);
+                        let original = packets(&state.context, &state._work);
+                        for (i, (&m, v)) in mask.iter().zip(&original).enumerate() {
+                            if active(m) {
+                                assert!(
+                                    (v[3] - fine_action[i][3]).abs() < 1e-6 * (1. + v[3].abs())
+                                );
+                            }
+                        }
+                    }
+                    // Read diagonals remain fixed; only test vectors changed above.
+                    assert_eq!(child.dims, p.child);
                 }
-                // Read diagonals remain fixed; only test vectors changed above.
-                assert_eq!(child.dims, p.child);
             }
         }
     }
@@ -377,6 +403,132 @@ fn manufactured_pressure_projection_keeps_physical_acceptance() {
     }
 }
 #[test]
+fn meanfree_pressure_contrast_and_disconnected_controls() {
+    let _lock = crate::gpu_test_lock();
+    for (dims, periodic, walls) in [
+        ([17, 13, 9], [true; 3], false),
+        ([16, 12, 8], [false; 3], false),
+        ([13, 1, 3], [true; 3], true),
+        ([16, 12, 8], [false; 3], true),
+    ] {
+        for reverse in [false, true] {
+            for multigrid in [false, true] {
+                let (mut state, mask) = fixture(dims, periodic, walls, reverse);
+                let mut topology: Vec<_> = mask.iter().map(|&m| u32::from(m != 0)).collect();
+                state.components = anchors(&mut topology, dims, periodic);
+                state.force_multigrid = Some(multigrid);
+                if state.components != 1 {
+                    state.force_meanfree_pressure = Some(true);
+                    assert!(!state.configure_pressure_projection());
+                    assert_eq!(state.params.initial[3], 0.);
+                    continue;
+                }
+                state.force_meanfree_pressure = Some(true);
+                assert!(state.configure_pressure_projection());
+                state.dispatch(&[
+                    ("pressure_guess", groups(state.params.dims[3])),
+                    ("pressure_coefficients", groups(state.params.faces[3])),
+                ]);
+                state.config.max_iterations = 20000;
+                let candidate = manufactured_gradient(&state, &mask, false);
+                state.context.queue.write_buffer(
+                    &state.scratch,
+                    0,
+                    bytemuck::cast_slice(&candidate),
+                );
+                let result = state.project(false);
+                eprintln!(
+                    "Floating contrast {dims:?} periodic={periodic:?} walls={walls} reverse={reverse} MG={multigrid}: {result:?}"
+                );
+                assert!(result.is_ok());
+                let work = packets(&state.context, &state._work);
+                for (i, &m) in mask.iter().enumerate() {
+                    if m & 3 == 2 {
+                        assert_eq!(work[i][0], 0., "reference pressure drifted");
+                    }
+                }
+                let output = packets(&state.context, &state.velocity);
+                let norm: f64 = candidate
+                    .iter()
+                    .flat_map(|v| &v[..3])
+                    .map(|&v| (v as f64).powi(2))
+                    .sum();
+                let error: f64 = output
+                    .iter()
+                    .flat_map(|v| &v[..3])
+                    .map(|&v| (v as f64).powi(2))
+                    .sum();
+                assert!((error / norm).sqrt() < 2e-4);
+            }
+        }
+    }
+}
+#[test]
+fn meanfree_neumann_v_cycle_is_symmetric_positive() {
+    let _lock = crate::gpu_test_lock();
+    for (dims, periodic, walls) in [
+        ([17, 13, 9], [true; 3], false),
+        ([16, 12, 8], [false; 3], false),
+        ([13, 1, 3], [true; 3], true),
+    ] {
+        for reverse in [false, true] {
+            let (mut state, mask) = fixture(dims, periodic, walls, reverse);
+            state.force_meanfree_pressure = Some(true);
+            assert!(state.configure_pressure_projection());
+            state.dispatch(&[
+                ("pressure_guess", groups(state.params.dims[3])),
+                ("pressure_coefficients", groups(state.params.faces[3])),
+            ]);
+            // Rebuild the fine diagonal including the former reference row.
+            state.dispatch(&[("pressure_coefficients", groups(state.params.faces[3]))]);
+            let mg = Multigrid::new(&state).unwrap();
+            mg.build(&state.context);
+            let vector = |frequency: f64| -> Vec<f32> {
+                mask.iter()
+                    .enumerate()
+                    .map(|(i, &m)| {
+                        if m != 0 {
+                            (i as f64 * frequency).sin() as f32
+                        } else {
+                            0.
+                        }
+                    })
+                    .collect()
+            };
+            let r = vector(0.17);
+            let s = vector(0.37);
+            let apply = |rhs: &[f32]| {
+                let work: Vec<_> = rhs.iter().map(|&v| [0.125, v, -0.25, 0.]).collect();
+                state
+                    .context
+                    .queue
+                    .write_buffer(&state._work, 0, bytemuck::cast_slice(&work));
+                mg.apply(&state.context);
+                let out = packets(&state.context, &state._work);
+                for (a, b) in out.iter().zip(work) {
+                    assert_eq!(a[..3], b[..3]);
+                }
+                out.iter().map(|v| v[3]).collect::<Vec<_>>()
+            };
+            let mr = apply(&r);
+            let ms = apply(&s);
+            let dot = |a: &[f32], b: &[f32]| {
+                a.iter()
+                    .zip(b)
+                    .map(|(&a, &b)| a as f64 * b as f64)
+                    .sum::<f64>()
+            };
+            let rr = dot(&r, &mr);
+            let ss = dot(&s, &ms);
+            let symmetry = (dot(&r, &ms) - dot(&s, &mr)).abs() / (rr * ss).sqrt();
+            eprintln!(
+                "Neumann V-cycle {dims:?} reverse={reverse}: rMr={rr:e}, sMs={ss:e}, symmetry={symmetry:e}"
+            );
+            assert!(rr > 0. && ss > 0. && symmetry < 3e-6);
+        }
+    }
+}
+#[test]
 #[ignore = "GPU pressure preconditioner timing study"]
 fn pressure_projection_timing() {
     let _lock = crate::gpu_test_lock();
@@ -505,4 +657,58 @@ fn optional_workspace_is_lazy_accounted_reused_and_can_be_unavailable() {
     state.project(false).unwrap();
     assert!(state.multigrid.is_none());
     assert_eq!(state.bytes, base_bytes);
+}
+
+#[test]
+fn pressure_mode_follows_topology_and_reuses_multigrid_storage() {
+    let _lock = crate::gpu_test_lock();
+    let dims = [16, 12, 8];
+    let (mut state, _) = fixture(dims, [false; 3], false, false);
+    state.force_meanfree_pressure = None;
+    state.force_multigrid = Some(true);
+    let mut allocated = None;
+    for split in [false, true, false] {
+        let mut mask: Vec<_> = (0..dims.iter().product::<u32>())
+            .map(|i| u32::from(!split || i % dims[0] != dims[0] / 2))
+            .collect();
+        state.fluid_cells = mask.iter().filter(|&&m| m != 0).count() as u64;
+        state.components = anchors(&mut mask, dims, [false; 3]);
+        state.params.solve[1] = state.config.absolute_divergence_tolerance.powi(2)
+            * state.grid.cell_m.powi(4)
+            * state.fluid_cells as f32;
+        state
+            .context
+            .queue
+            .write_buffer(&state._mask, 0, bytemuck::cast_slice(&mask));
+        assert_eq!(state.configure_pressure_projection(), !split);
+        state.dispatch(&[
+            ("pressure_guess", groups(state.params.dims[3])),
+            ("pressure_coefficients", groups(state.params.faces[3])),
+        ]);
+        let candidate = manufactured_gradient(&state, &mask, false);
+        state
+            .context
+            .queue
+            .write_buffer(&state.scratch, 0, bytemuck::cast_slice(&candidate));
+        state.project(false).unwrap();
+        let out = packets(&state.context, &state.velocity);
+        let norm: f64 = candidate
+            .iter()
+            .flat_map(|v| &v[..3])
+            .map(|&v| (v as f64).powi(2))
+            .sum();
+        let error: f64 = out
+            .iter()
+            .flat_map(|v| &v[..3])
+            .map(|&v| (v as f64).powi(2))
+            .sum();
+        assert!((error / norm).sqrt() < 2e-4);
+        let bytes = state.multigrid.as_ref().unwrap().bytes;
+        if let Some(old) = allocated {
+            assert_eq!(bytes, old);
+        } else {
+            allocated = Some(bytes);
+        }
+        assert_eq!(state.params.initial[3] > 0., !split);
+    }
 }

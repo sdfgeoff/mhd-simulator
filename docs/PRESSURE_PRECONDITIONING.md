@@ -4,9 +4,9 @@ The solver retains the fine pressure equation, pressure gauge, tolerances and in
 
 ## Operator and cycle
 
-For each free pressure cell, the fine operator is the weighted graph Laplacian assembled from cached MAC-face mobilities. Connections to a pressure anchor contribute a diagonal reaction; the anchor itself has zero correction. Walls have no connecting edge.
+The fine operator is the weighted graph Laplacian assembled from cached MAC-face mobilities. A connected graph uses [mean-free residuals](PRESSURE_SUBSPACE.md), retaining every cell. Disconnected graphs keep pinned reference cells: connections to an anchor contribute a diagonal reaction, and the anchor itself has zero correction. Walls have no connecting edge.
 
-1. Aggregate adjacent cells in blocks of up to 2×2×2. Piecewise-constant prolongation, `P`, excludes anchored fine cells; restriction is its transpose, `R = Pᵀ`, using sums rather than averages.
+1. Aggregate adjacent cells in blocks of up to 2×2×2. Piecewise-constant prolongation, `P`, excludes pinned fine cells only in the disconnected mode; restriction is its transpose, `R = Pᵀ`, using sums rather than averages.
 2. Construct the coarse graph as `A_c = R A P`. Sum edges crossing aggregate boundaries and accumulate anchor reactions separately. Internal edges cancel analytically. Later levels also sum the existing reactions. This preserves a seven-point graph without subtracting large internal-edge sums.
 3. Use a fixed symmetric V-cycle: one weighted-Jacobi sweep before and after each coarse correction, with weight 2/3. The first sweep starts from zero, so it is a diagonal-only operation. The post-sweep uses a separate scratch lane and then commits its result.
 4. Stop when every dimension is at most four. Apply eight fixed weighted-Jacobi steps from zero within one workgroup. Equal pre/post smoothing and fixed coarse work preserve the symmetric positive preconditioner required by CG. Empty coarse rows produce zero correction.

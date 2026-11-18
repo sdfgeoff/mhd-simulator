@@ -712,11 +712,11 @@ fn stabilized_variable_density_stress_dissipates_energy_and_preserves_momentum_a
 #[test]
 fn failed_projection_after_stabilized_stress_restores_packets_and_retry_rebuilds_display() {
     let _lock = crate::gpu_test_lock();
-    for multigrid in [false, true] {
-        check_failed_projection_after_stabilized_stress(multigrid);
+    for (multigrid, floating) in [(false, false), (true, false), (false, true), (true, true)] {
+        check_failed_projection_after_stabilized_stress(multigrid, floating);
     }
 }
-fn check_failed_projection_after_stabilized_stress(multigrid: bool) {
+fn check_failed_projection_after_stabilized_stress(multigrid: bool, floating: bool) {
     let n = 12u32;
     let mut materials = default_materials();
     materials[3].density_kg_m3 = Some(1.);
@@ -748,6 +748,7 @@ fn check_failed_projection_after_stabilized_stress(multigrid: bool) {
     )
     .unwrap();
     s.force_multigrid = Some(multigrid);
+    s.force_meanfree_pressure = Some(floating);
     let f = s.params.faces;
     let initial: Vec<[f32; 4]> = (0..f[3])
         .map(|i| {
