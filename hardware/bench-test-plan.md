@@ -11,7 +11,9 @@ manufacturing-ready designs.
    four-wire resistance of the empty nozzle at operating temperature before
    fitting wall conductivity. Repeat after filling with solder. The difference
    constrains the liquid path, but does not uniquely identify steel/solder
-   interface resistivity: the steel remains a parallel current path.
+   interface resistivity: the steel remains a parallel current path. Include
+   the heater, frame and feedstock in the electrical diagram: an unintended
+   external ground return can bypass the modeled two-terminal current path.
 
 2. **Establish the stationary meniscus first.** Record fill height, alloy,
    temperature, surface preparation and atmosphere. Observe the unpowered
