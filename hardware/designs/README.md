@@ -1,7 +1,7 @@
 # Reproducible geometry and project inputs
 
 These are **research inputs, not manufacturing drawings or qualified jetters**.
-The first three retain zero uniform acceleration; the new flat-tip case has
+The first three retain zero uniform acceleration; the flat-tip cases have
 −9.81 m/s² acceleration. See the gravity correction in the
 [study README](../README.md). Their manifests record original and packaged hashes;
 only geometry/buffer filenames changed, with identical float32 CAD payloads and
@@ -19,8 +19,13 @@ simulation properties.
    solver completed the 250 A / 50 kHz trial without resolved ejection at 200 µm.
 4. `v6-flat-compact-150A`: two external flats 0.8 mm apart over the lower 0.6 mm,
    preserving the 0.4 mm bore with 0.2 mm nominal minimum wall. Compact poles;
-   cold field screens complete, 150 A / 250 µs gravity-on fluid trial running.
-   No completed drop result yet. Threads, fillets, clamps and tolerances omitted.
+   first 150 A / 250 µs gravity-on trial completes 3.6 ms without detachment.
+   Threads, fillets, clamps and tolerances omitted.
+
+5. `v6-flat-shortbar`: machined tip and 4 mm shoulder clearance flats, with two
+   25 × 5 × 5 mm SmCo bars stacked per pole. Nominal projection 0.2 mm below exit,
+   excluding mounts/tolerances. The first 150 A case separates a component moving
+   upward at 3.6 ms; this is not a usable jet. A 175 A amplitude control is running.
 
 ## Inspect and reproduce
 
@@ -47,6 +52,11 @@ For the new flat-tip trial, use
 `hardware/designs/v6-flat-compact-150A/case.mhd.json` with `150` peak amperes;
 the other arguments remain `250 1200 OUTPUT 0 .25 3 0 150`. This case explicitly
 uses gravity and full-height nonperiodic bounds. It is an exploratory run.
+
+For the near-flush short-bar case, use
+`hardware/designs/v6-flat-shortbar/case.mhd.json` with `150` or `175` peak amperes
+and `250 1200 OUTPUT 0 .25 3 0 150`. The peak is a research-client argument;
+the inspection project does not impose it through the normal GUI.
 
 The single-coil case uses the normal combined engine:
 

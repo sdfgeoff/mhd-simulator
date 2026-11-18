@@ -6,6 +6,9 @@ Research branch: `research/hardware-design-20261118`. Frozen application baselin
 manufacture.** The target remains 0.4–0.6 mm solder drops, 24/48 V supply and
 actuator currents below a few hundred amps, using accessible parts.
 
+The [near-flush CAD/project bundle](designs/v6-flat-shortbar) is available for
+inspection and research reproduction; its first 150 A separation moves upward.
+
 The circuit-design handoff is [pulse-generator-handoff.md](pulse-generator-handoff.md):
 a proposed ±300 A peak / 100 A RMS bipolar current driver on 24/48 V.
 

@@ -1,0 +1,19 @@
+{
+  "source_project": "artifacts/hardware-research/cases/v6-tip-flat08-shortbar-full-fit-sncu-h010.mhd.json",
+  "source_project_sha256": "b9538e0c18cafe640de18f6ff190380a6aa6ecfcc2b84c32617575ad2deff712",
+  "source_geometry": "artifacts/hardware-research/cases/pole-clearance-v4-stock-bar-stack.gltf",
+  "source_geometry_sha256": "bf1b4d7a778fd89bd66ef62a4d6f71a615ffe169a0e835eec63d03c5c9639af9",
+  "source_binary_sha256": "d827441deb294e260f2d7d715fcee8eb0a46a17d9f9f9b4f0c155b6fd51dca2d",
+  "packaging_change": "Only geometry and buffer URI strings renamed; all simulation properties and float32 payload retained.",
+  "scope": "Research input, not manufacturing drawing. First150Agravity-on case separates a stalled/upward component;175A control running. Nominalmagnetprojection0.2mm excludesmounts/tolerances.",
+  "uniform_acceleration_m_s2": [
+    0.0,
+    0.0,
+    -9.81
+  ],
+  "packaged_sha256": {
+    "case.mhd.json": "c257d01b397cf769ea57b636501f0d3552ca090db38ce042f89d16cffcf364d8",
+    "geometry.gltf": "cafe2882d3f8eb8ce4583b5bec868e0893cada75c034149b1a6990f10959b70f",
+    "geometry.bin": "d827441deb294e260f2d7d715fcee8eb0a46a17d9f9f9b4f0c155b6fd51dca2d"
+  }
+}
