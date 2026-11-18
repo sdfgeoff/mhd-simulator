@@ -485,7 +485,7 @@
     "scope": "Full100um cold charge solve with source subdivisions4. No moving flow result."
   },
   "nearflush_fluid_trial": {
-    "status": "queued/running",
+    "status": "Complete3.6ms; separated component is moving UPWARD, not a usable jet",
     "project": "artifacts/hardware-research/cases/v6-tip-flat08-shortbar-full-fit-sncu-h010.mhd.json",
     "output": "artifacts/hardware-research/v6-tip-flat08-shortbar-gravity-flow-150A-250us-h010",
     "peak_A": 150,
@@ -497,6 +497,173 @@
       0,
       0,
       -9.81
-    ]
+    ],
+    "run_status": {
+      "accepted_steps": 1200,
+      "contact_resistivity_ohm_m2": 0.0,
+      "error": null,
+      "field_every": 150,
+      "fluid_mechanical_work_J": 1.0730330434711996e-06,
+      "frequency_hz": 0.0,
+      "grid": {
+        "cell_m": 0.00010000000474974513,
+        "dims": [
+          76,
+          76,
+          195
+        ]
+      },
+      "joule_generated_J": 0.005049402159341833,
+      "lagged_electrical_work_J": 0.0050503947583660554,
+      "lagged_mechanical_work_J": 1.019237056157319e-06,
+      "limitations": [
+        "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+        "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+        "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+        "New research client; not a GUI electrode feature or frozen-baseline claim."
+      ],
+      "max_terminal_voltage_V": 0.14887793362140656,
+      "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+      "peak_A": 150.0,
+      "positive_duration_s": 0.00025,
+      "project": "artifacts/hardware-research/cases/v6-tip-flat08-shortbar-full-fit-sncu-h010.mhd.json",
+      "released_static_workspace_bytes": 253071836,
+      "retract_fraction": 0.25,
+      "rise_s": 2e-05,
+      "status": "complete",
+      "tail_timestep_s": 3e-06,
+      "tail_transition_not_before_s": 0.00035833333333333333,
+      "time_s": 0.0035999999999999648,
+      "timestep_s": 3e-06
+    },
+    "final_saved_frame": {
+      "step": 1200,
+      "time_us": 3599.999999999965,
+      "first_nonnegative_cell_plane_z_mm": 0.04999988595955074,
+      "exit_plane_alpha_area_mm2": 0.11756560369552181,
+      "exit_plane_mean_uz_m_s": 0.4161232674320311,
+      "exit_plane_mean_pressure_pa": 2602.486946600419,
+      "exit_plane_downward_flux_proxy_nl_s": -48921.7831473998,
+      "liquid_volume_nl": 11348.000850149567,
+      "minimum_liquid_fraction": 0.0,
+      "maximum_liquid_fraction": 1.0,
+      "below_tip_maximum_liquid_fraction_at_cell_centres": 1.0,
+      "boundary_maximum_liquid_fraction": {
+        "z_min": 0.0,
+        "z_max": 0.0,
+        "y_min": 0.0,
+        "y_max": 0.0,
+        "x_min": 0.0,
+        "x_max": 0.0
+      },
+      "liquid_touches_domain_boundary_alpha01": false,
+      "below_tip_nl": 129.10755006068834,
+      "below_one_cell_guard_nl": 121.54502473087025,
+      "front_z_mm_alpha_half": -1.1500001710373908,
+      "detached_below_tip": [
+        {
+          "volume_nl": 91.10388253898611,
+          "equivalent_diameter_mm": 0.5582723101571374,
+          "cells": 106,
+          "centre_mm": [
+            -7.279677563859746e-06,
+            -1.0365641007486699e-05,
+            -0.8659016998425776
+          ],
+          "velocity_m_s": [
+            1.410643380950205e-05,
+            8.946614252636209e-05,
+            0.04426311329007149
+          ],
+          "touches_domain_boundary": false
+        }
+      ],
+      "connectivity_thresholds": {
+        "0.01": [
+          {
+            "volume_nl": 120.96049420531267,
+            "equivalent_diameter_mm": 0.6135947617802607,
+            "cells": 230,
+            "centre_mm": [
+              3.568136735260951e-05,
+              5.991304987951174e-06,
+              -0.885449022107669
+            ],
+            "velocity_m_s": [
+              1.9647764929686673e-05,
+              4.3195701437070966e-05,
+              0.05570659041404724
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "0.25": [
+          {
+            "volume_nl": 109.86946670154744,
+            "equivalent_diameter_mm": 0.5942366923993903,
+            "cells": 158,
+            "centre_mm": [
+              2.178832163884293e-05,
+              -6.8682729039469325e-06,
+              -0.879271078039399
+            ],
+            "velocity_m_s": [
+              2.4947379642981105e-05,
+              4.912328586215153e-05,
+              0.05673183500766754
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "0.5": [
+          {
+            "volume_nl": 91.10388253898611,
+            "equivalent_diameter_mm": 0.5582723101571374,
+            "cells": 106,
+            "centre_mm": [
+              -7.279677563859746e-06,
+              -1.0365641007486699e-05,
+              -0.8659016998425776
+            ],
+            "velocity_m_s": [
+              1.410643380950205e-05,
+              8.946614252636209e-05,
+              0.04426311329007149
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "0.75": [
+          {
+            "volume_nl": 67.71922599621172,
+            "equivalent_diameter_mm": 0.5057133919247242,
+            "cells": 70,
+            "centre_mm": [
+              -2.2053476152791106e-05,
+              -6.983854159915705e-06,
+              -0.8879825659403932
+            ],
+            "velocity_m_s": [
+              7.091126462910324e-05,
+              6.291324098128825e-05,
+              0.03622622787952423
+            ],
+            "touches_domain_boundary": false
+          }
+        ]
+      },
+      "below_tip_change_nl": 129.10752406560835,
+      "relative_liquid_volume_change": 1.4684811144860532e-09
+    },
+    "any_saved_boundary_contact": false,
+    "maximum_saved_relative_volume_drift": 1.1131045418721897e-08,
+    "interpretation": "Atalpha.01D.613595mm,vz+.055707m/s;alpha.5D.558272mm,vz+.044263. Threshold-dependent size, weak/stalled/upward motion. Not successful departingjet. No finegrid,repetition or laterflight conclusion."
+  },
+  "nearflush_175A_control": {
+    "status": "Queued/running next",
+    "change": "Only positive peak increases150\u2192175A; reverse remains25% ofpositive, so scales correspondingly. Same250uspositive/83.333usreverse,25usgap,3usfixedstep,1200steps,geometry,gravity.",
+    "output": "artifacts/hardware-research/v6-tip-flat08-shortbar-gravity-flow-175A-250us-h010",
+    "electrical_sensitivity": "hardware/pulse-shape-evidence.json",
+    "hypothesis": "Slightly more impulse may produce downward rather than stalled/upward separation. Size/heating may worsen; no improvement assumed."
   }
 }

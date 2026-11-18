@@ -251,7 +251,9 @@ before claiming comparable jetting.
 3. The shorter gravity-on 250 A / 150 µs control has completed without a
    detached component by 3.6 ms; further waveform changes are unproven.
 4. The first flat-contact/compact-disc 150 A trial completes 3.6 ms without
-   detachment. A near-flush short-pole trial now tests the same 150 A waveform.
+   detachment. The near-flush short-pole150A case separates a component by3.6ms, but it
+   moves UPWARD at0.056m/s (alpha0.01), so is not a usable jet. A175A control
+   retains all other timing/geometry settings.
 5. The exploratory two-phase unified fluid trial at 200 A per coil, explicitly
    zero gravity and 200 µm resolution.
 
