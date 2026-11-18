@@ -54,6 +54,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("directory", type=Path)
     parser.add_argument("--plot", action="store_true")
+    parser.add_argument("--pool-view", action="store_true", help="Include the initial pool and free surface in the section plot")
     args = parser.parse_args()
     records = sorted(args.directory.glob("frame-*/metadata.json"))
     if not records:
@@ -143,7 +144,8 @@ def main():
         )
         rows.append(row)
         section = np.mean(alpha[:, (ny - 1) // 2 : ny // 2 + 1, :], axis=1)
-        sections.append((m, section))
+        solid = 1 - np.mean(f[:, (ny - 1) // 2 : ny // 2 + 1, :, 12], axis=1)
+        sections.append((m, section, solid))
         del f
     (args.directory / "flow-analysis.json").write_text(
         json.dumps(
@@ -184,7 +186,7 @@ def main():
         fig, axes = plt.subplots(
             1,
             len(indices),
-            figsize=(3.5 * len(indices), 5),
+            figsize=(3.5 * len(indices), 7 if args.pool_view else 5),
             squeeze=False,
             constrained_layout=True,
         )
@@ -192,8 +194,21 @@ def main():
             -1.8,
             min(r["front_z_mm_alpha_half"] for r in rows if r["front_z_mm_alpha_half"] is not None) - 0.4,
         )
+        xlimits, upper_z = (-0.8, 0.8), 1.8
+        if args.pool_view:
+            initial, section, _ = sections[0]
+            occupied = np.nonzero(section >= .5)
+            if len(occupied[0]):
+                h = initial["cell_m"] * 1000
+                origin = np.array(initial["origin_m"]) * 1000
+                xlimits = (origin[0] + occupied[1].min()*h - .3, origin[0] + (occupied[1].max()+1)*h + .3)
+                upper_z = origin[2] + (occupied[0].max()+1)*h + .3
+            for m, section, _ in sections:
+                occupied = np.nonzero(section >= .5)
+                if len(occupied[0]):
+                    upper_z = max(upper_z, (m["origin_m"][2] + (occupied[0].max()+1)*m["cell_m"])*1000 + .3)
         for ax, index in zip(axes[0], indices):
-            m, section = sections[index]
+            m, section, solid = sections[index]
             h = m["cell_m"] * 1000
             x, _, z = np.array(m["origin_m"]) * 1000
             picture = ax.imshow(
@@ -205,10 +220,14 @@ def main():
                 extent=[x, x + section.shape[1] * h, z, z + section.shape[0] * h],
                 cmap="Blues",
             )
+            rgba = np.empty((*solid.shape, 4))
+            rgba[..., :3] = .55
+            rgba[..., 3] = np.clip(solid, 0, 1)
+            ax.imshow(rgba, origin="lower", interpolation="nearest", extent=picture.get_extent())
             ax.axhline(0, color="darkorange", lw=0.8, ls=":")
             ax.set(
-                xlim=(-0.8, 0.8),
-                ylim=(lower_z, 1.8),
+                xlim=xlimits,
+                ylim=(lower_z, upper_z),
                 xlabel="x (mm)",
                 ylabel="z (mm)",
                 title=f"{m['time_s']*1e6:.1f} µs",
@@ -222,10 +241,10 @@ def main():
         fig.suptitle(
             title
             + f" · central liquid fraction · {sections[0][0]['cell_m']*1e6:.0f} µm grid"
-            + "\nOrange: nominal nozzle exit; no CAD wall overlay; breakup requires refinement"
+            + "\nOrange: nominal nozzle exit; grey: native impermeable solid mask; breakup requires refinement"
         )
         fig.colorbar(picture, ax=axes[0].tolist(), label="Liquid fraction", shrink=0.6)
-        fig.savefig(args.directory / "tip-sections.png", dpi=160)
+        fig.savefig(args.directory / ("pool-sections.png" if args.pool_view else "tip-sections.png"), dpi=160, bbox_inches="tight")
 
 
 if __name__ == "__main__":

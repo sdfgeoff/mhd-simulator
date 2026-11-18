@@ -543,3 +543,30 @@ component: approximately 0.600 mm at alpha 0.01 or 0.549 mm at alpha 0.5, moving
 downward about 0.14 m/s. It has no domain-boundary contact. This is a coarse
 single-pulse control, not confirmation that the wider-contact geometry or
 repeated operation works with both alloys.
+
+### Contact and heater controls
+
+[The wider-contact interface screen](tip-contact-resistance-screening.json)
+retains the same CAD and grid. Specific steel/liquid resistivities 1e-10,
+1e-9 and 1e-8 Ωm² reduce cold downward liquid force by approximately 8%,
+43% and 86%. These are sensitivity inputs, not measured resistivities.
+This parameter acts on the liquid/solid interface; copper lead/nozzle joint
+resistance is separate and still absent. A dry clamp, braze or weld must be
+qualified electrically and thermally rather than assumed equivalent to the
+ideal terminal CAD.
+
+[Matched full-head heater controls](tip-heater-screening.json), at 200 µm
+spacing, change downward liquid force by only about 0.03% when the simplified
+13 MS/m aluminium block is included. That supports retaining a conventional
+heater as a candidate for localized tip contacts, subject to finer geometry
+and actual thread contact. It does not qualify heater shunting for the other
+contact positions.
+
+The full-domain milled-pin trial at 3 µs stops at 2.154 ms on the conservative
+interface CFL guard. Its saved 2.1 ms frame is still attached; gas is drawn
+down between the electrodes while liquid rises outside them. The maximum
+saved speed is approximately 4.4 m/s in a nearly gas-only cell, versus roughly
+1 m/s in liquid. A fixed 1.5 µs rerun is in progress. This is an incomplete
+trajectory, not a completed failed-jet result. `hardware_flow_report.py --plot
+--pool-view` includes the free pool and native impermeable solid mask, rather
+than hiding this circulation in a tip-only crop.

@@ -1,0 +1,77 @@
+{
+  "status": "Coarse matched full-domain cold comparison, 200 micrometre cells; no fluid/heating result",
+  "heater_assumptions": "23 x 16 mm aluminium block z=6.5..18mm with radius3mm smooth nozzle bore, conductivity13MS/m; ideal metal contact; threaded contact, heater/sensor holes and mounts omitted.",
+  "relative_liquid_axial_force_change": -0.00030830139107451693,
+  "relative_terminal_voltage_change": 2.1923212798480307e-06,
+  "cases": [
+    {
+      "artifacts": "artifacts/hardware-research/v6-tip-wide-full-heater-control-cold-30A-h020",
+      "report": {
+        "contact_resistivity_ohm_m2": 0.0,
+        "current_A": 30.0,
+        "iterations": 256,
+        "joule_power_W": 1.070521593093872,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          -4.190192984179771e-05,
+          9.126425812269434e-06,
+          -0.002190639556004337
+        ],
+        "liquid_joule_power_W": 0.042733544808034825,
+        "liquid_mean_By_T": -0.1263239223094514,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 2.107751511692939,
+        "mean_wall_current_over_x_plus_minus_2mm_A": 7.307553869446055,
+        "midplane_adjacent_cell_liquid_current_A": 11.978478992894367,
+        "midplane_adjacent_cell_wall_current_A": 18.020371403903837,
+        "power_relative_defect": -2.4437904357910156e-06,
+        "project": "artifacts/hardware-research/cases/v6-tip-wide-full-heater-control-fit-sncu-h020.mhd.json",
+        "released_static_workspace_bytes": 270045740,
+        "return_current_A": -29.999876022338867,
+        "source_power_W": 1.0705242156982422,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_voltage_V": 0.03568413853645325,
+        "true_relative_residual": 9.989061254600529e-06
+      }
+    },
+    {
+      "artifacts": "artifacts/hardware-research/v6-tip-wide-full-heater13M-cold-30A-h020",
+      "report": {
+        "contact_resistivity_ohm_m2": 0.0,
+        "current_A": 30.000003814697266,
+        "iterations": 704,
+        "joule_power_W": 1.0705275535583496,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          -4.192241958080134e-05,
+          9.121074003568223e-06,
+          -0.002189964178781878
+        ],
+        "liquid_joule_power_W": 0.042732112756503654,
+        "liquid_mean_By_T": -0.1263239223094514,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 2.106144062736351,
+        "mean_wall_current_over_x_plus_minus_2mm_A": 7.2492096524172975,
+        "midplane_adjacent_cell_liquid_current_A": 11.975751699510278,
+        "midplane_adjacent_cell_wall_current_A": 17.95870355472999,
+        "power_relative_defect": 8.344650268554688e-07,
+        "project": "artifacts/hardware-research/cases/v6-tip-wide-full-heater13M-fit-sncu-h020.mhd.json",
+        "released_static_workspace_bytes": 270120988,
+        "return_current_A": -30.000045776367188,
+        "source_power_W": 1.0705265998840332,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_voltage_V": 0.035684216767549515,
+        "true_relative_residual": 9.438082088308875e-06
+      }
+    }
+  ],
+  "limits": "Small difference within this coarse model is not a fine-grid or real thread-contact qualification. The block is distant from localized tip contacts; do not transfer this result to upper contacts or electrode geometries."
+}

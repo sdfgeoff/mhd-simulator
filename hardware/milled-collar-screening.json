@@ -67,5 +67,44 @@
   },
   "crop_liquid_force_relative_change": 0.07486447109417549,
   "decision": "Use full domain for fluid trial; the previous compact-domain agreement does not carry over to this geometry.",
-  "CAD_checks": "Closed positive-volume bodies; nozzle/pole, nozzle/pin and liquid/pin Boolean intersections below 1e-5 mm3. Nominal 0.2 mm pole/flat clearance excludes fabrication and mounting tolerances."
+  "CAD_checks": "Closed positive-volume bodies; nozzle/pole, nozzle/pin and liquid/pin Boolean intersections below 1e-5 mm3. Nominal 0.2 mm pole/flat clearance excludes fabrication and mounting tolerances.",
+  "fluid_3us_failure": {
+    "accepted_steps": 718,
+    "contact_resistivity_ohm_m2": 0.0,
+    "error": "Conservative interface CFL exceeds 0.45; reduce common timestep",
+    "field_every": 100,
+    "fluid_mechanical_work_J": 1.4129695428124578e-05,
+    "frequency_hz": 0.0,
+    "grid": {
+      "cell_m": 0.00010000000474974513,
+      "dims": [
+        76,
+        84,
+        190
+      ]
+    },
+    "joule_generated_J": 0.0018206175813503336,
+    "lagged_electrical_work_J": 0.001834727555398492,
+    "lagged_mechanical_work_J": 1.4058208741749912e-05,
+    "limitations": [
+      "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+      "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+      "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+      "New research client; not a GUI electrode feature or frozen-baseline claim."
+    ],
+    "max_terminal_voltage_V": 0.019683972001075745,
+    "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+    "peak_A": 150.0,
+    "positive_duration_s": 0.0007999999999999999,
+    "project": "artifacts/hardware-research/cases/v6-flat4-pins1mm-cube-gap44-fit-sncu-h010.mhd.json",
+    "released_static_workspace_bytes": 272373272,
+    "retract_fraction": 0.25,
+    "rise_s": 2e-05,
+    "status": "failed",
+    "tail_timestep_s": 3e-06,
+    "tail_transition_not_before_s": 0.0010916666666666666,
+    "time_s": 0.002153999999999982,
+    "timestep_s": 3e-06
+  },
+  "next_check": "Same full-domain case at fixed1.5us through4.2ms; running, not a completed jetting result."
 }
