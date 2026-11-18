@@ -26,11 +26,34 @@ def frames(directory):
     return status, result
 
 
+def comparison_grid(a, b, overlap):
+    if a["cell_m"] != b["cell_m"]:
+        raise ValueError("Different grid spacings require a separate refinement diagnostic")
+    if not overlap and any(a[k] != b[k] for k in ["dims", "origin_m"]):
+        raise ValueError("Different domains require explicit --overlap")
+    h = a["cell_m"]
+    offset = (np.array(a["origin_m"]) - b["origin_m"]) / h
+    integer_offset = np.rint(offset).astype(int)
+    if np.max(abs(offset - integer_offset)) > 1e-4:
+        raise ValueError("Native cell centres do not align; interpolation is not performed")
+    start_a = np.maximum(0, -integer_offset)
+    start_b = np.maximum(0, integer_offset)
+    dims = np.minimum(np.array(a["dims"]) - start_a, np.array(b["dims"]) - start_b)
+    if np.any(dims <= 0):
+        raise ValueError("No common native cells")
+    slices = [tuple(slice(int(s), int(s + n)) for s, n in zip(start[::-1], dims[::-1]))
+              for start in [start_a, start_b]]
+    grid = {"dims": dims.tolist(), "origin_m": (np.array(a["origin_m"]) + start_a * h).tolist(),
+            "cell_m": h, "scope": "common aligned native cells; no interpolation"}
+    return slices, grid
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("reference", type=Path)
     parser.add_argument("driven", type=Path)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--overlap", action="store_true", help="Compare only common aligned cells of different-size domains")
     args = parser.parse_args()
     reference_status, reference = frames(args.reference)
     driven_status, driven = frames(args.driven)
@@ -39,13 +62,14 @@ def main():
     rows = []
     for step in sorted(reference):
         (pa, a), (pb, b) = reference[step], driven[step]
-        if any(a[k] != b[k] for k in ["dims", "origin_m", "cell_m"]):
-            raise ValueError(f"Grid mismatch at step {step}")
+        slices, grid = comparison_grid(a, b, args.overlap)
         if abs(a["time_s"] - b["time_s"]) > 1e-12:
             raise ValueError(f"Clock mismatch at step {step}")
-        nx, ny, nz = a["dims"]
-        first = np.memmap(pa.parent / "fluid.bin", dtype="<f4", mode="r").reshape(nz, ny, nx, 16)
-        second = np.memmap(pb.parent / "fluid.bin", dtype="<f4", mode="r").reshape(nz, ny, nx, 16)
+        fields = [np.memmap(path.parent / "fluid.bin", dtype="<f4", mode="r").reshape(*meta["dims"][::-1], 16)
+                  for path, meta in [(pa, a), (pb, b)]]
+        whole_volumes = [float(f[..., 14].sum(dtype=float) * grid["cell_m"]**3 * 1e12) for f in fields]
+        first, second = [f[s] for f, s in zip(fields, slices)]
+        nx, ny, nz = grid["dims"]
         alpha_a, alpha_b = first[..., 14].astype(float), second[..., 14].astype(float)
         if not all(np.isfinite(f[..., :3]).all() and np.isfinite(f[..., 14]).all()
                    for f in [first, second]):
@@ -62,16 +86,18 @@ def main():
         current_only = source_configs[0] == source_configs[1] and all(
             a[k] == b[k] for k in ["bodies", "materials", "cad_curves", "fluid", "run", "geometry"])
         row = {"step": step, "time_us": a["time_s"] * 1e6,
+               "comparison_grid": grid,
                "exported_configuration_matches_except_wire_currents": current_only,
                "alpha_L1_volume_difference_nl": float(np.abs(alpha_a - alpha_b).sum() * cell * 1e12),
                "alpha_RMS_difference": float(np.sqrt(np.mean((alpha_a - alpha_b) ** 2))),
                "common_liquid_weighted_velocity_RMS_difference_m_s": float(np.sqrt(np.sum(weight * np.sum(du * du, axis=-1)) / weight.sum())),
                "static_open_mask_identical": bool(np.array_equal(first[..., 12], second[..., 12]))}
-        z = a["origin_m"][2] + (np.arange(nz) + .5) * a["cell_m"]
+        z = grid["origin_m"][2] + (np.arange(nz) + .5) * a["cell_m"]
         below = np.clip(-(z - a["cell_m"] / 2) / a["cell_m"], 0, 1)
         for label, alpha, field in [("reference", alpha_a, first), ("driven", alpha_b, second)]:
             w = np.clip(alpha, 0, 1)
             row[label] = {"liquid_volume_nl": float(alpha.sum() * cell * 1e12),
+                          "whole_domain_liquid_volume_nl": whole_volumes[0 if label == "reference" else 1],
                           "below_tip_nl": float(np.sum(alpha * below[:, None, None]) * cell * 1e12),
                           "liquid_weighted_RMS_speed_m_s": float(np.sqrt(np.sum(w * np.sum(field[..., :3].astype(float) ** 2, axis=-1)) / w.sum())),
                           "liquid_centre_z_mm": float(np.sum(w * z[:, None, None]) / w.sum() * 1000)}
