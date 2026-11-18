@@ -143,3 +143,55 @@ time overlaps other GPU jobs and is not a performance comparison.
 The cleaned candidate's fine-grid prefix and 1.5-period 64³/96³ drop oscillations
 are currently running. A separate benchmark driver waits for the offset study
 and an explicit idle gate before alternating warmed timing comparisons.
+
+## Coupled V6 and cleanup checks
+
+The cleaned solver completes the 25 µm nozzle prefix: 340 steps through
+0.200167 ms, at unchanged physical tolerances. Its timestep is 0.588726 µs,
+slightly different from the full fine release run, so this is a scalability
+check rather than a matching-frame comparison. Its full coarse 2 ms release
+run has **all 122 saved fraction/flow snapshots byte-identical** to the preceding
+reference-gauge candidate. Removing unused reductions does not change those
+physical fields.
+
+A new ignored `floating_coupled_project_probe` loads a project through the normal
+loader, constructs the normal `RunState`, and optionally enables research pressure
+before stepping. It saves diagnostics and final fluid/interface fields. It uses
+the existing automatic multigrid threshold unless a test explicitly overrides it.
+The original prototype's accidental default forced-Jacobi behavior was removed.
+
+The actual V6 project completes three coupled 10 µs ticks with both original and
+mean-free pressure, preserving the input files. The 172×112×124 graph is connected.
+Pressure iteration totals change 128/128/106 to 45/41/42; EM totals remain
+858/864/873. Working memory is identical at 1,809,708,416 bytes after lazy MG
+allocation. These are correctness runs overlapping other jobs, not timings.
+
+At the final tick:
+
+1. Velocity relative L2 difference is 1.10e-5, maximum component difference
+   2.99e-7 m/s. Pressure relative L2 difference is 3.67e-6.
+2. Liquid fraction relative L1 difference is 1.47e-10, with maximum fraction
+   difference 5.96e-8. Reported material volume is identical at every tick.
+3. EM force relative L2 difference is 6.82e-8; heating and active phase flags
+   are identical. Thermal energy differs by less than 1.1e-9 J.
+4. Unweighted curvature relative L2 differs **1.95%**, driven by nearly pure
+   cells; weighting by `alpha(1-alpha)` gives 2.02e-7. Raw local curvature is
+   not claimed identical. The volume-correction lane's maximum absolute change
+   is 4.50e-9 in fraction units; its near-zero reference makes relative norms
+   uninformative.
+5. Final RMS divergence is 8.96e-5 versus 3.16e-6 s^-1, both satisfying the same
+   configured 1e-4 absolute floor. The larger relative residual is allowed by
+   that physical absolute criterion, which is unchanged.
+
+Reproduce the test-only coupled probe using an existing project:
+
+```sh
+MHD_FLOATING_PRESSURE=1 MHD_RESEARCH_PROJECT=/path/to/project.mhd.json \
+  MHD_RESEARCH_OUTPUT=artifacts/floating/combined-test \
+  cargo test --lib floating_coupled_project_probe -- --ignored --nocapture
+```
+
+Omit `MHD_FLOATING_PRESSURE` for the original solver. Optional
+`MHD_RESEARCH_PROFILE=1` enables the existing GPU profiler;
+`MHD_RESEARCH_TICKS` defaults to three. The complete 64³ moving-drop check also
+passes (frequency error 1.58%); the 96³ check is still underway.
