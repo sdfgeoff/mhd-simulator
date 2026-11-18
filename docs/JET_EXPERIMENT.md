@@ -178,4 +178,43 @@ initialization/output; one pair is not a general performance ratio. The full
 Jacobi run overlapped other GPU validation, so its wall time is not used as a
 paired speedup measurement. Production's automatic size threshold is unchanged.
 
-Spatial and temporal controls around the release case remain required.
+## Release refinement controls
+
+The exact half-timestep and twice-finer spatial controls both complete 2 ms and
+retain a released main bolus. For the `α>0.01` primary core:
+
+| Cell size | Actual timestep | Core volume at 2 ms | Equivalent diameter | Late centroid speed |
+| --- | ---: | ---: | ---: | ---: |
+| 50 µm | 1.66806 µs | 43.830 nL | 0.43745 mm | 0.36567 m/s |
+| 50 µm | 0.83403 µs | 43.832 nL | 0.43745 mm | 0.36512 m/s |
+| 25 µm | 0.58997 µs | 39.298 nL | 0.42182 mm | 0.36066 m/s |
+
+Across both 0.01/0.5 cutoffs, halving the timestep changes core volume by less
+than 0.06% and fitted speed by less than 0.2%. First saved release frames are
+unchanged. The spatial control changes volume by **−10.34%**, diameter by
+**−3.57%**, and speed by **−1.37%** at the 0.01 cutoff. Two grids do not establish
+a convergence order or a complete error bound.
+
+The nozzle's initialized liquid cross-section is **0.08000 mm²** at 50 µm,
+versus **0.07000 mm²** at 25 µm. The polygonal CAD opening is 0.0706354 mm²:
+the coarse voxel opening is **13.26% too large**, while the finer one is
+**0.90% too small**. This is an important geometric contribution to the spatial
+change, alongside transport, curvature and unresolved-neck errors.
+
+At 25 µm the two core cutoffs give diameter **0.415–0.422 mm** and speed about
+**0.361 m/s**. First saved large-core separation is 1.357/1.416 ms; frames are
+59.0 µs apart. There is no separate trailing component at 2 ms at either cutoff,
+unlike the coarse result. Transient tiny fragments and the physical satellite
+count remain unresolved. Maximum sampled relative volume drift is below
+2.7×10⁻⁷ across the completed controls, with no significant boundary contact.
+
+```sh
+MHD_JET_CELL_MM=0.025 MHD_JET_FORCE_N_M3=70000000 MHD_JET_END_S=0.002 \
+  MHD_JET_DT_FACTOR=0.1 MHD_JET_PRESSURE_MG=1 MHD_JET_RECORD_EVERY=100 \
+  MHD_JET_OUTPUT=artifacts/jet-force70-fine \
+  cargo test --offline --lib pulsed_nozzle_experiment -- --ignored --nocapture
+```
+
+This supports qualitative release in the idealized model. Quantitative nozzle
+thresholds and real-alloy droplet/satellite predictions still require further
+spatial checks, material data and contact physics.

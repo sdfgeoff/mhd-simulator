@@ -32,7 +32,10 @@ def main():
     for ax, filename in zip(axes[0], selected):
         step = int(filename.stem.split("-")[1])
         alpha = np.fromfile(filename, dtype="<f4").reshape(dims[::-1])
-        section = alpha[:, dims[1] // 2, :]
+        middle = dims[1] // 2
+        section = alpha[:, middle, :]
+        if dims[1] % 2 == 0:
+            section = .5 * (section + alpha[:, middle - 1, :])
         ax.imshow(
             section, origin="lower", interpolation="nearest", vmin=0, vmax=1,
             extent=[origin_mm[0], origin_mm[0] + dims[0] * spacing_mm,
@@ -54,7 +57,7 @@ def main():
         ax.set_aspect("equal")
     forcing = "Unforced" if grid["force_peak_n_m3"] == 0 else "Prescribed force pulse"
     fig.suptitle(
-        f"{forcing} — liquid fraction at central slice\n"
+        f"{forcing} · {spacing_mm * 1000:.0f} µm cells — central liquid fraction\n"
         "Grey: ideal CAD wall (simulation uses voxel walls)"
     )
     fig.savefig(directory / "sections.png", dpi=160, bbox_inches="tight", pad_inches=.15)
