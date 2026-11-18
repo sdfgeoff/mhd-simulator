@@ -57,18 +57,30 @@ fn main() -> Result<(), Box<dyn Error>> {
             ]
         })
         .collect();
-    let em = EmState::new(
-        gpu.context.clone(),
-        &volume,
-        &p.model,
-        p.electromagnetics.clone(),
-        Mode::Applied,
-    )?;
     let contact: f32 = a.get(4).map(|s| s.parse()).transpose()?.unwrap_or(0.);
-    // Keep only B before allocating the conduction workspace, reducing startup peak.
-    let static_field = em.result_buffer().clone();
-    let released_static_workspace_bytes = em.bytes - static_field.size();
-    drop(em);
+    // Static J and Joule heat do not require a magnetic solve when B=0.
+    let (static_field, released_static_workspace_bytes) = if p.electromagnetics.has_sources() {
+        let em = EmState::new(
+            gpu.context.clone(),
+            &volume,
+            &p.model,
+            p.electromagnetics.clone(),
+            Mode::Applied,
+        )?;
+        let field = em.result_buffer().clone();
+        let released = em.bytes - field.size();
+        (field, released)
+    } else {
+        (
+            gpu.context.device.create_buffer(&wgpu::BufferDescriptor {
+                label: Some("Zero applied field for cold electrical heat screen"),
+                size: ids.len() as u64 * std::mem::size_of::<mhd_workbench::em::CellField>() as u64,
+                usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
+                mapped_at_creation: false,
+            }),
+            0,
+        )
+    };
     let mut solver = conduction::Conduction::new(
         gpu.context.clone(),
         grid.dims,

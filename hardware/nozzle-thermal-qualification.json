@@ -134,5 +134,758 @@
     "200": 40.0,
     "250": 62.5,
     "300": 90.0
+  },
+  "native_replay": {
+    "status": "NativeGPUdiffusion replay implemented; fixedcoldcurrentpath, notfullyelectrothermalcoupled or headqualified",
+    "reports": {
+      "nearflush-thermal-zero-control-h010": {
+        "I2dt_A2s": 0.0,
+        "adiabatic_control": false,
+        "cold": "artifacts/hardware-research/v6-tip-flat08-shortbar-full-cold-30A-h010",
+        "dt_us": 2.0,
+        "expected_joule_J": 0.0,
+        "grid": {
+          "cell_m": 0.00010000000474974513,
+          "dims": [
+            76,
+            76,
+            195
+          ],
+          "origin_m": [
+            -0.003800000064074993,
+            -0.003800000064074993,
+            -0.005000000353902578
+          ]
+        },
+        "initial_temperature_C": 250.0,
+        "joule_J": 0.0,
+        "limits": [
+          "Fixed current path/material properties; no temperature-dependent conductivity, moving interface, electrical contact heating or heater/clamp cooling.",
+          "Closed insulated retained conductors initially250C; magnet/air heat transfer omitted, no repetition equilibrium or qualified melting margin.",
+          "Sharp contact geometry and finite grid do not resolve real microscopic contact areas or establish peak convergence."
+        ],
+        "method": "Native ThermalState diffusion/enthalpy with exact per-interval I\u00b2dt scaling of accepted cold Joule field. Isolated zero-Joule magnet bodies omitted from thermal domain; all retained material IDs/grid match.",
+        "peak_A": 0.0,
+        "peak_temperature_C": 250.00003051757812,
+        "peak_time_s": 2e-05,
+        "per_material_at_global_peak": [
+          {
+            "id": 4,
+            "index": 489253,
+            "maximum_C_at_global_peak_frame": 250.00003051757812,
+            "name": "Sn99.3Cu0.7 molten research properties"
+          },
+          {
+            "id": 14,
+            "index": 1010158,
+            "maximum_C_at_global_peak_frame": 250.00003051757812,
+            "name": "Thin-wall stainless screening"
+          },
+          {
+            "id": 16,
+            "index": 315053,
+            "maximum_C_at_global_peak_frame": 250.00003051757812,
+            "name": "Positive copper terminal"
+          },
+          {
+            "id": 17,
+            "index": 315095,
+            "maximum_C_at_global_peak_frame": 250.00003051757812,
+            "name": "Negative copper terminal"
+          }
+        ],
+        "positive_us": 250.0,
+        "project": "artifacts/hardware-research/cases/v6-tip-flat08-shortbar-full-fit-sncu-h010.mhd.json",
+        "source_energy_relative_error": 0.0,
+        "status": "complete",
+        "steps": 10,
+        "summed_step_energy_error_J": 0.0,
+        "time_s": 2e-05
+      },
+      "nearflush-thermal-adiabatic300-control-h010": {
+        "I2dt_A2s": 20.418750000000003,
+        "adiabatic_control": true,
+        "cold": "artifacts/hardware-research/v6-tip-flat08-shortbar-full-cold-30A-h010",
+        "dt_us": 2.0,
+        "expected_joule_J": 0.020266252963962006,
+        "grid": {
+          "cell_m": 0.00010000000474974513,
+          "dims": [
+            76,
+            76,
+            195
+          ],
+          "origin_m": [
+            -0.003800000064074993,
+            -0.003800000064074993,
+            -0.005000000353902578
+          ]
+        },
+        "initial_temperature_C": 250.0,
+        "joule_J": 0.02026625227800627,
+        "limits": [
+          "Fixed current path/material properties; no temperature-dependent conductivity, moving interface, electrical contact heating or heater/clamp cooling.",
+          "Closed insulated retained conductors initially250C; magnet/air heat transfer omitted, no repetition equilibrium or qualified melting margin.",
+          "Sharp contact geometry and finite grid do not resolve real microscopic contact areas or establish peak convergence."
+        ],
+        "method": "Native ThermalState diffusion/enthalpy with exact per-interval I\u00b2dt scaling of accepted cold Joule field. Isolated zero-Joule magnet bodies omitted from thermal domain; all retained material IDs/grid match.",
+        "peak_A": 300.0,
+        "peak_temperature_C": 311.9725646972656,
+        "peak_time_s": 0.0003599999999999992,
+        "per_material_at_global_peak": [
+          {
+            "id": 4,
+            "index": 303279,
+            "maximum_C_at_global_peak_frame": 271.9828796386719,
+            "name": "Sn99.3Cu0.7 molten research properties"
+          },
+          {
+            "id": 14,
+            "index": 315061,
+            "maximum_C_at_global_peak_frame": 311.9725646972656,
+            "name": "Thin-wall stainless screening"
+          },
+          {
+            "id": 16,
+            "index": 315053,
+            "maximum_C_at_global_peak_frame": 252.44778442382812,
+            "name": "Positive copper terminal"
+          },
+          {
+            "id": 17,
+            "index": 315062,
+            "maximum_C_at_global_peak_frame": 252.44778442382812,
+            "name": "Negative copper terminal"
+          }
+        ],
+        "positive_us": 250.0,
+        "project": "artifacts/hardware-research/cases/v6-tip-flat08-shortbar-full-fit-sncu-h010.mhd.json",
+        "source_energy_relative_error": -3.3847191085423455e-08,
+        "status": "complete",
+        "steps": 180,
+        "summed_step_energy_error_J": -1.8166309050473122e-11,
+        "time_s": 0.0003599999999999992
+      },
+      "nearflush-thermal-diffusion300-h010": {
+        "I2dt_A2s": 20.418750000000003,
+        "adiabatic_control": false,
+        "cold": "artifacts/hardware-research/v6-tip-flat08-shortbar-full-cold-30A-h010",
+        "dt_us": 2.0,
+        "expected_joule_J": 0.020266252963962006,
+        "grid": {
+          "cell_m": 0.00010000000474974513,
+          "dims": [
+            76,
+            76,
+            195
+          ],
+          "origin_m": [
+            -0.003800000064074993,
+            -0.003800000064074993,
+            -0.005000000353902578
+          ]
+        },
+        "initial_temperature_C": 250.0,
+        "joule_J": 0.02026625227800627,
+        "limits": [
+          "Fixed current path/material properties; no temperature-dependent conductivity, moving interface, electrical contact heating or heater/clamp cooling.",
+          "Closed insulated retained conductors initially250C; magnet/air heat transfer omitted, no repetition equilibrium or qualified melting margin.",
+          "Sharp contact geometry and finite grid do not resolve real microscopic contact areas or establish peak convergence."
+        ],
+        "method": "Native ThermalState diffusion/enthalpy with exact per-interval I\u00b2dt scaling of accepted cold Joule field. Isolated zero-Joule magnet bodies omitted from thermal domain; all retained material IDs/grid match.",
+        "peak_A": 300.0,
+        "peak_temperature_C": 299.8516540527344,
+        "peak_time_s": 0.00023799999999999952,
+        "per_material_at_global_peak": [
+          {
+            "id": 4,
+            "index": 303279,
+            "maximum_C_at_global_peak_frame": 267.6393737792969,
+            "name": "Sn99.3Cu0.7 molten research properties"
+          },
+          {
+            "id": 14,
+            "index": 315061,
+            "maximum_C_at_global_peak_frame": 299.8516540527344,
+            "name": "Thin-wall stainless screening"
+          },
+          {
+            "id": 16,
+            "index": 315053,
+            "maximum_C_at_global_peak_frame": 253.15408325195312,
+            "name": "Positive copper terminal"
+          },
+          {
+            "id": 17,
+            "index": 315062,
+            "maximum_C_at_global_peak_frame": 253.15408325195312,
+            "name": "Negative copper terminal"
+          }
+        ],
+        "positive_us": 250.0,
+        "project": "artifacts/hardware-research/cases/v6-tip-flat08-shortbar-full-fit-sncu-h010.mhd.json",
+        "source_energy_relative_error": -3.3847191085423455e-08,
+        "status": "complete",
+        "steps": 180,
+        "summed_step_energy_error_J": -2.5736190956138216e-11,
+        "time_s": 0.0003599999999999992
+      },
+      "nearflush-thermal-scalarQ-regression-h010": {
+        "I2dt_A2s": 20.418750000000003,
+        "adiabatic_control": false,
+        "cold": "artifacts/hardware-research/v6-tip-flat08-shortbar-full-cold-30A-h010",
+        "dt_us": 2.0,
+        "expected_joule_J": 0.020266252963962006,
+        "grid": {
+          "cell_m": 0.00010000000474974513,
+          "dims": [
+            76,
+            76,
+            195
+          ],
+          "origin_m": [
+            -0.003800000064074993,
+            -0.003800000064074993,
+            -0.005000000353902578
+          ]
+        },
+        "initial_temperature_C": 250.0,
+        "joule_J": 0.02026625227800627,
+        "limits": [
+          "Fixed current path/material properties; no temperature-dependent conductivity, moving interface, electrical contact heating or heater/clamp cooling.",
+          "Closed insulated retained conductors initially250C; magnet/air heat transfer omitted, no repetition equilibrium or qualified melting margin.",
+          "Sharp contact geometry and finite grid do not resolve real microscopic contact areas or establish peak convergence."
+        ],
+        "method": "Native ThermalState diffusion/enthalpy with exact per-interval I\u00b2dt scaling of accepted cold Joule field. Isolated zero-Joule magnet bodies omitted from thermal domain; all retained material IDs/grid match.",
+        "peak_A": 300.0,
+        "peak_temperature_C": 299.8516540527344,
+        "peak_time_s": 0.00023799999999999952,
+        "per_material_at_global_peak": [
+          {
+            "id": 4,
+            "index": 303279,
+            "maximum_C_at_global_peak_frame": 267.6393737792969,
+            "name": "Sn99.3Cu0.7 molten research properties"
+          },
+          {
+            "id": 14,
+            "index": 315061,
+            "maximum_C_at_global_peak_frame": 299.8516540527344,
+            "name": "Thin-wall stainless screening"
+          },
+          {
+            "id": 16,
+            "index": 315053,
+            "maximum_C_at_global_peak_frame": 253.15408325195312,
+            "name": "Positive copper terminal"
+          },
+          {
+            "id": 17,
+            "index": 315062,
+            "maximum_C_at_global_peak_frame": 253.15408325195312,
+            "name": "Negative copper terminal"
+          }
+        ],
+        "positive_us": 250.0,
+        "project": "artifacts/hardware-research/cases/v6-tip-flat08-shortbar-full-fit-sncu-h010.mhd.json",
+        "source_energy_relative_error": -3.3847191085423455e-08,
+        "status": "complete",
+        "steps": 180,
+        "summed_step_energy_error_J": -2.5736190956138216e-11,
+        "time_s": 0.0003599999999999992
+      },
+      "nearflush-thermal-diffusion300-dt1-h010": {
+        "I2dt_A2s": 20.418750000000003,
+        "adiabatic_control": false,
+        "cold": "artifacts/hardware-research/v6-tip-flat08-shortbar-full-cold-30A-h010",
+        "dt_us": 1.0,
+        "expected_joule_J": 0.020266252963962006,
+        "grid": {
+          "cell_m": 0.00010000000474974513,
+          "dims": [
+            76,
+            76,
+            195
+          ],
+          "origin_m": [
+            -0.003800000064074993,
+            -0.003800000064074993,
+            -0.005000000353902578
+          ]
+        },
+        "initial_temperature_C": 250.0,
+        "joule_J": 0.020266252253696826,
+        "limits": [
+          "Fixed current path/material properties; no temperature-dependent conductivity, moving interface, electrical contact heating or heater/clamp cooling.",
+          "Closed insulated retained conductors initially250C; magnet/air heat transfer omitted, no repetition equilibrium or qualified melting margin.",
+          "Sharp contact geometry and finite grid do not resolve real microscopic contact areas or establish peak convergence."
+        ],
+        "method": "Native ThermalState diffusion/enthalpy with exact per-interval I\u00b2dt scaling of accepted cold Joule field. Isolated zero-Joule magnet bodies omitted from thermal domain; all retained material IDs/grid match.",
+        "peak_A": 300.0,
+        "peak_temperature_C": 299.8215026855469,
+        "peak_time_s": 0.00023899999999999944,
+        "per_material_at_global_peak": [
+          {
+            "id": 4,
+            "index": 303279,
+            "maximum_C_at_global_peak_frame": 267.6361999511719,
+            "name": "Sn99.3Cu0.7 molten research properties"
+          },
+          {
+            "id": 14,
+            "index": 315061,
+            "maximum_C_at_global_peak_frame": 299.8215026855469,
+            "name": "Thin-wall stainless screening"
+          },
+          {
+            "id": 16,
+            "index": 315053,
+            "maximum_C_at_global_peak_frame": 253.16482543945312,
+            "name": "Positive copper terminal"
+          },
+          {
+            "id": 17,
+            "index": 315062,
+            "maximum_C_at_global_peak_frame": 253.16482543945312,
+            "name": "Negative copper terminal"
+          }
+        ],
+        "positive_us": 250.0,
+        "project": "artifacts/hardware-research/cases/v6-tip-flat08-shortbar-full-fit-sncu-h010.mhd.json",
+        "source_energy_relative_error": -3.5046694683371244e-08,
+        "status": "complete",
+        "steps": 360,
+        "summed_step_energy_error_J": -5.138500736023843e-11,
+        "time_s": 0.00036000000000000225
+      },
+      "wide-thermal-diffusion300-h010": {
+        "I2dt_A2s": 20.418750000000003,
+        "adiabatic_control": false,
+        "cold": "artifacts/hardware-research/v6-tip-wide-cold-30A-h010",
+        "dt_us": 2.0,
+        "expected_joule_J": 0.021737727536260985,
+        "grid": {
+          "cell_m": 0.00010000000474974513,
+          "dims": [
+            49,
+            52,
+            95
+          ],
+          "origin_m": [
+            -0.002400000113993883,
+            -0.0026000000070780516,
+            -0.005000000353902578
+          ]
+        },
+        "initial_temperature_C": 250.0,
+        "joule_J": 0.021737727156360187,
+        "limits": [
+          "Fixed current path/material properties; no temperature-dependent conductivity, moving interface, electrical contact heating or heater/clamp cooling.",
+          "Closed insulated retained conductors initially250C; magnet/air heat transfer omitted, no repetition equilibrium or qualified melting margin.",
+          "Sharp contact geometry and finite grid do not resolve real microscopic contact areas or establish peak convergence."
+        ],
+        "method": "Native ThermalState diffusion/enthalpy with exact per-interval I\u00b2dt scaling of accepted cold Joule field. Isolated zero-Joule magnet bodies omitted from thermal domain; all retained material IDs/grid match.",
+        "peak_A": 300.0,
+        "peak_temperature_C": 286.2621765136719,
+        "peak_time_s": 0.00023799999999999952,
+        "per_material_at_global_peak": [
+          {
+            "id": 4,
+            "index": 128698,
+            "maximum_C_at_global_peak_frame": 255.38442993164062,
+            "name": "Sn99.3Cu0.7 molten research properties"
+          },
+          {
+            "id": 14,
+            "index": 141592,
+            "maximum_C_at_global_peak_frame": 286.2621765136719,
+            "name": "Thin-wall stainless screening"
+          },
+          {
+            "id": 16,
+            "index": 131387,
+            "maximum_C_at_global_peak_frame": 254.69326782226562,
+            "name": "Positive copper terminal"
+          },
+          {
+            "id": 17,
+            "index": 131398,
+            "maximum_C_at_global_peak_frame": 254.69454956054688,
+            "name": "Negative copper terminal"
+          }
+        ],
+        "positive_us": 250.0,
+        "project": "artifacts/hardware-research/cases/v6-tip-wide-pool35-medium-fit-sncu-h010.mhd.json",
+        "source_energy_relative_error": -1.7476564543644395e-08,
+        "status": "complete",
+        "steps": 180,
+        "summed_step_energy_error_J": -7.455265849110049e-10,
+        "time_s": 0.0003599999999999992
+      },
+      "wide-thermal-diffusion300-h0050": {
+        "I2dt_A2s": 20.418750000000003,
+        "adiabatic_control": false,
+        "cold": "artifacts/hardware-research/v6-tip-wide-cold-30A-h0050",
+        "dt_us": 2.0,
+        "expected_joule_J": 0.020786177470946424,
+        "grid": {
+          "cell_m": 5.0000002374872565e-05,
+          "dims": [
+            97,
+            104,
+            190
+          ],
+          "origin_m": [
+            -0.002400000113993883,
+            -0.0026000000070780516,
+            -0.005000000353902578
+          ]
+        },
+        "initial_temperature_C": 250.0,
+        "joule_J": 0.020786175436657478,
+        "limits": [
+          "Fixed current path/material properties; no temperature-dependent conductivity, moving interface, electrical contact heating or heater/clamp cooling.",
+          "Closed insulated retained conductors initially250C; magnet/air heat transfer omitted, no repetition equilibrium or qualified melting margin.",
+          "Sharp contact geometry and finite grid do not resolve real microscopic contact areas or establish peak convergence."
+        ],
+        "method": "Native ThermalState diffusion/enthalpy with exact per-interval I\u00b2dt scaling of accepted cold Joule field. Isolated zero-Joule magnet bodies omitted from thermal domain; all retained material IDs/grid match.",
+        "peak_A": 300.0,
+        "peak_temperature_C": 296.3569030761719,
+        "peak_time_s": 0.00023399999999999953,
+        "per_material_at_global_peak": [
+          {
+            "id": 4,
+            "index": 1013892,
+            "maximum_C_at_global_peak_frame": 255.96151733398438,
+            "name": "Sn99.3Cu0.7 molten research properties"
+          },
+          {
+            "id": 14,
+            "index": 1044844,
+            "maximum_C_at_global_peak_frame": 296.3569030761719,
+            "name": "Thin-wall stainless screening"
+          },
+          {
+            "id": 16,
+            "index": 1044824,
+            "maximum_C_at_global_peak_frame": 257.9169006347656,
+            "name": "Positive copper terminal"
+          },
+          {
+            "id": 17,
+            "index": 1044845,
+            "maximum_C_at_global_peak_frame": 257.9179382324219,
+            "name": "Negative copper terminal"
+          }
+        ],
+        "positive_us": 250.0,
+        "project": "artifacts/hardware-research/cases/v6-tip-wide-pool35-medium-fit-sncu-h0050.mhd.json",
+        "source_energy_relative_error": -9.786739040752875e-08,
+        "status": "complete",
+        "steps": 180,
+        "summed_step_energy_error_J": 1.0428181929089675e-09,
+        "time_s": 0.0003599999999999992
+      },
+      "wide-thermal-diffusion300-dt1-h0050": {
+        "I2dt_A2s": 20.418750000000003,
+        "adiabatic_control": false,
+        "cold": "artifacts/hardware-research/v6-tip-wide-cold-30A-h0050",
+        "dt_us": 1.0,
+        "expected_joule_J": 0.020786177470946424,
+        "grid": {
+          "cell_m": 5.0000002374872565e-05,
+          "dims": [
+            97,
+            104,
+            190
+          ],
+          "origin_m": [
+            -0.002400000113993883,
+            -0.0026000000070780516,
+            -0.005000000353902578
+          ]
+        },
+        "initial_temperature_C": 250.0,
+        "joule_J": 0.0207861754476327,
+        "limits": [
+          "Fixed current path/material properties; no temperature-dependent conductivity, moving interface, electrical contact heating or heater/clamp cooling.",
+          "Closed insulated retained conductors initially250C; magnet/air heat transfer omitted, no repetition equilibrium or qualified melting margin.",
+          "Sharp contact geometry and finite grid do not resolve real microscopic contact areas or establish peak convergence."
+        ],
+        "method": "Native ThermalState diffusion/enthalpy with exact per-interval I\u00b2dt scaling of accepted cold Joule field. Isolated zero-Joule magnet bodies omitted from thermal domain; all retained material IDs/grid match.",
+        "peak_A": 300.0,
+        "peak_temperature_C": 296.3572692871094,
+        "peak_time_s": 0.00023499999999999945,
+        "per_material_at_global_peak": [
+          {
+            "id": 4,
+            "index": 1013892,
+            "maximum_C_at_global_peak_frame": 255.97427368164062,
+            "name": "Sn99.3Cu0.7 molten research properties"
+          },
+          {
+            "id": 14,
+            "index": 1044844,
+            "maximum_C_at_global_peak_frame": 296.3572692871094,
+            "name": "Thin-wall stainless screening"
+          },
+          {
+            "id": 16,
+            "index": 1044824,
+            "maximum_C_at_global_peak_frame": 257.9466857910156,
+            "name": "Positive copper terminal"
+          },
+          {
+            "id": 17,
+            "index": 1044845,
+            "maximum_C_at_global_peak_frame": 257.9477844238281,
+            "name": "Negative copper terminal"
+          }
+        ],
+        "positive_us": 250.0,
+        "project": "artifacts/hardware-research/cases/v6-tip-wide-pool35-medium-fit-sncu-h0050.mhd.json",
+        "source_energy_relative_error": -9.733938468124382e-08,
+        "status": "complete",
+        "steps": 360,
+        "summed_step_energy_error_J": 8.198454415353496e-10,
+        "time_s": 0.00036000000000000225
+      },
+      "nearflush-thermal-tipROI300-h010": {
+        "I2dt_A2s": 20.418750000000003,
+        "adiabatic_control": false,
+        "cold": "artifacts/hardware-research/v6-tip-flat08-shortbar-full-cold-30A-h010",
+        "dt_us": 2.0,
+        "expected_joule_J": 0.02024272341024444,
+        "grid": {
+          "cell_m": 0.00010000000474974513,
+          "dims": [
+            30,
+            20,
+            12
+          ],
+          "origin_m": [
+            -0.001500000013038516,
+            -0.0010000000474974513,
+            0.0
+          ]
+        },
+        "initial_temperature_C": 250.0,
+        "joule_J": 0.02024272275885608,
+        "limits": [
+          "Fixed current path/material properties; no temperature-dependent conductivity, moving interface, electrical contact heating or heater/clamp cooling.",
+          "Closed insulated retained conductors initially250C; magnet/air heat transfer omitted, no repetition equilibrium or qualified melting margin.",
+          "TIP_ROI when enabled uses insulated cuts and exact native-cell source mapping from the full-head electrical solution; validate thermal cut sensitivity before use, and do not extrapolate it to steady heating.",
+          "Sharp contact geometry and finite grid do not resolve real microscopic contact areas or establish peak convergence."
+        ],
+        "method": "Native ThermalState diffusion/enthalpy with exact per-interval I\u00b2dt scaling of accepted cold Joule field. Isolated zero-Joule magnet bodies omitted from thermal domain; all retained material IDs/grid match.",
+        "peak_A": 300.0,
+        "peak_temperature_C": 299.8516540527344,
+        "peak_time_s": 0.00023799999999999952,
+        "per_material_at_global_peak": [
+          {
+            "id": 4,
+            "index": 1516,
+            "maximum_C_at_global_peak_frame": 267.6393737792969,
+            "name": "Sn99.3Cu0.7 molten research properties"
+          },
+          {
+            "id": 14,
+            "index": 2808,
+            "maximum_C_at_global_peak_frame": 299.8516540527344,
+            "name": "Thin-wall stainless screening"
+          },
+          {
+            "id": 16,
+            "index": 2800,
+            "maximum_C_at_global_peak_frame": 253.15408325195312,
+            "name": "Positive copper terminal"
+          },
+          {
+            "id": 17,
+            "index": 2809,
+            "maximum_C_at_global_peak_frame": 253.15408325195312,
+            "name": "Negative copper terminal"
+          }
+        ],
+        "positive_us": 250.0,
+        "project": "artifacts/hardware-research/cases/v6-tip-flat08-shortbar-full-fit-sncu-h010.mhd.json",
+        "source_energy_relative_error": -3.217888950595969e-08,
+        "source_offset_cells": [
+          23,
+          28,
+          50
+        ],
+        "status": "complete",
+        "steps": 180,
+        "summed_step_energy_error_J": 1.3765599771176085e-10,
+        "time_s": 0.0003599999999999992,
+        "tip_roi": true
+      },
+      "nearflush-thermal-tipROI300-h0050": {
+        "I2dt_A2s": 20.418750000000003,
+        "adiabatic_control": false,
+        "cold": "artifacts/hardware-research/nearflush-thermal-current-only-cold30-h0050",
+        "dt_us": 2.0,
+        "expected_joule_J": 0.0186695511209293,
+        "grid": {
+          "cell_m": 5.0000002374872565e-05,
+          "dims": [
+            60,
+            40,
+            24
+          ],
+          "origin_m": [
+            -0.001500000013038516,
+            -0.0010000000474974513,
+            0.0
+          ]
+        },
+        "initial_temperature_C": 250.0,
+        "joule_J": 0.01866954807115752,
+        "limits": [
+          "Fixed current path/material properties; no temperature-dependent conductivity, moving interface, electrical contact heating or heater/clamp cooling.",
+          "Closed insulated retained conductors initially250C; magnet/air heat transfer omitted, no repetition equilibrium or qualified melting margin.",
+          "TIP_ROI when enabled uses insulated cuts and exact native-cell source mapping from the full-head electrical solution; validate thermal cut sensitivity before use, and do not extrapolate it to steady heating.",
+          "Sharp contact geometry and finite grid do not resolve real microscopic contact areas or establish peak convergence."
+        ],
+        "method": "Native ThermalState diffusion/enthalpy with exact per-interval I\u00b2dt scaling of accepted cold Joule field. Isolated zero-Joule magnet bodies omitted from thermal domain; all retained material IDs/grid match.",
+        "peak_A": 300.0,
+        "peak_temperature_C": 322.1916198730469,
+        "peak_time_s": 0.00023399999999999953,
+        "per_material_at_global_peak": [
+          {
+            "id": 4,
+            "index": 10832,
+            "maximum_C_at_global_peak_frame": 265.5517883300781,
+            "name": "Sn99.3Cu0.7 molten research properties"
+          },
+          {
+            "id": 14,
+            "index": 22357,
+            "maximum_C_at_global_peak_frame": 322.1916198730469,
+            "name": "Thin-wall stainless screening"
+          },
+          {
+            "id": 16,
+            "index": 23241,
+            "maximum_C_at_global_peak_frame": 257.1640930175781,
+            "name": "Positive copper terminal"
+          },
+          {
+            "id": 17,
+            "index": 23258,
+            "maximum_C_at_global_peak_frame": 257.1640930175781,
+            "name": "Negative copper terminal"
+          }
+        ],
+        "positive_us": 250.0,
+        "project": "artifacts/hardware-research/cases/nearflush-thermal-current-only-h0050.mhd.json",
+        "source_energy_relative_error": -1.6335538881374267e-07,
+        "source_offset_cells": [
+          46,
+          56,
+          100
+        ],
+        "status": "complete",
+        "steps": 180,
+        "summed_step_energy_error_J": 2.1346994033555333e-09,
+        "time_s": 0.0003599999999999992,
+        "tip_roi": true
+      },
+      "nearflush-thermal-tipROI300-dt1-h0050": {
+        "I2dt_A2s": 20.418750000000003,
+        "adiabatic_control": false,
+        "cold": "artifacts/hardware-research/nearflush-thermal-current-only-cold30-h0050",
+        "dt_us": 1.0,
+        "expected_joule_J": 0.0186695511209293,
+        "grid": {
+          "cell_m": 5.0000002374872565e-05,
+          "dims": [
+            60,
+            40,
+            24
+          ],
+          "origin_m": [
+            -0.001500000013038516,
+            -0.0010000000474974513,
+            0.0
+          ]
+        },
+        "initial_temperature_C": 250.0,
+        "joule_J": 0.018669548066287636,
+        "limits": [
+          "Fixed current path/material properties; no temperature-dependent conductivity, moving interface, electrical contact heating or heater/clamp cooling.",
+          "Closed insulated retained conductors initially250C; magnet/air heat transfer omitted, no repetition equilibrium or qualified melting margin.",
+          "TIP_ROI when enabled uses insulated cuts and exact native-cell source mapping from the full-head electrical solution; validate thermal cut sensitivity before use, and do not extrapolate it to steady heating.",
+          "Sharp contact geometry and finite grid do not resolve real microscopic contact areas or establish peak convergence."
+        ],
+        "method": "Native ThermalState diffusion/enthalpy with exact per-interval I\u00b2dt scaling of accepted cold Joule field. Isolated zero-Joule magnet bodies omitted from thermal domain; all retained material IDs/grid match.",
+        "peak_A": 300.0,
+        "peak_temperature_C": 322.2146911621094,
+        "peak_time_s": 0.00023299999999999946,
+        "per_material_at_global_peak": [
+          {
+            "id": 4,
+            "index": 10832,
+            "maximum_C_at_global_peak_frame": 265.5170593261719,
+            "name": "Sn99.3Cu0.7 molten research properties"
+          },
+          {
+            "id": 14,
+            "index": 22357,
+            "maximum_C_at_global_peak_frame": 322.2146911621094,
+            "name": "Thin-wall stainless screening"
+          },
+          {
+            "id": 16,
+            "index": 23241,
+            "maximum_C_at_global_peak_frame": 257.1409606933594,
+            "name": "Positive copper terminal"
+          },
+          {
+            "id": 17,
+            "index": 23258,
+            "maximum_C_at_global_peak_frame": 257.1409606933594,
+            "name": "Negative copper terminal"
+          }
+        ],
+        "positive_us": 250.0,
+        "project": "artifacts/hardware-research/cases/nearflush-thermal-current-only-h0050.mhd.json",
+        "source_energy_relative_error": -1.6361623505710824e-07,
+        "source_offset_cells": [
+          46,
+          56,
+          100
+        ],
+        "status": "complete",
+        "steps": 360,
+        "summed_step_energy_error_J": 2.1897691299122e-09,
+        "time_s": 0.00036000000000000225,
+        "tip_roi": true
+      }
+    },
+    "checks": {
+      "zero_current_temperature_C": 250.00003051757812,
+      "adiabatic_analytic_peak_C": 311.97252367221364,
+      "adiabatic_GPU_peak_C": 311.9725646972656,
+      "scalar_Q_memory_optimization_final_field_bit_identical": true,
+      "source_current_zero_B_control": {
+        "material_ids_identical": true,
+        "J_max_absolute_difference_A_m2": 0.0,
+        "J_difference_over_max_J": 0.0,
+        "Joule_L1_relative_difference": 0.0,
+        "Joule_fields_bit_identical": true
+      },
+      "thermal_tip_window_vs_full100um_peak_difference_K": 0.0,
+      "100um_machined_dt2_to1us_peak_change_K": -0.0301513671875,
+      "50um_machined_dt2_to1us_peak_change_K": 0.0230712890625
+    },
+    "scope": [
+      "Onepulseonly; cannotinfer sustainedheadtemperature or allowed duty.",
+      "Thermalwindowmaps acceptedfullhead Joulefield cellforcell; no local current-solve truncation. Its100umpeak matchesfullthermalmodel exactly, but this does not validate long-time thermalcuts.",
+      "Sharp ideal contact geometry/currentcrowding remainsmesh-sensitive: machinedpeak300\u2192322C on100\u219250um.",
+      "Isolated zero-Joule magnets omitted fromthermal replay; their existing material entries have borrowedthermalproperties and must be replaced before magnet thermalqualification.",
+      "No external Cu/steel contact resistivity, realistic attachment fillets, temperature-dependent conductivity or moving current-path feedback. No physicalmeltingmargin established."
+    ]
   }
 }

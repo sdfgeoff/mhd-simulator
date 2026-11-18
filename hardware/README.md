@@ -107,7 +107,14 @@ waveforms for dummy loads.
    separate measurements; coating either surface may change both behavior and
    current paths. Published angles are not substituted for nozzle measurements.
 
-4. **Thermal estimates are not solved temperatures.** Refining the wider-contact
+4. **Thermal replay is separate from the moving-fluid trials.** The native GPU
+   heat solver now replays accepted cold Joule fields with diffusion for a single
+   300 A pulse. Starting at 250 °C, the machined tip peaks around 300/322 °C on
+   100/50 µm grids; the wider-contact reference peaks around 286/296 °C. The
+   current path, properties and ideal external contacts stay fixed. These peaks
+   are not spatially converged and do not qualify melting margin or repetition.
+   [Checks, sources and results](nozzle-thermal-qualification.json).
+   The earlier adiabatic estimates remain useful comparisons. Refining the wider-contact
    cold field from 100 to 50 µm increases its initial-field adiabatic steel peak
    rise from 20.1 to 34.7 K for 200 A / 250 µs, despite only a few percent change
    in total energy and force. Scaling the same stationary current path to 250 A
@@ -276,3 +283,30 @@ before claiming comparable jetting.
 [research-notes.md](research-notes.md) preserves the earlier detailed notes and
 commands as history. It contains interim statements; this README and the
 completed run-status/field records take precedence for current status.
+
+## Fixed-path thermal replay
+
+This reuses `ThermalState`, with exact time-integrated squared-current scaling of
+an accepted cold Joule field. It does not introduce a second thermal PDE solver.
+For example, create a new cold output using the packaged near-flush case, then:
+
+```sh
+cargo build --offline -j2 --example conduction_probe --example thermal_replay
+target/debug/examples/conduction_probe \
+  hardware/designs/v6-flat-shortbar/case.mhd.json 30 COLD_OUTPUT 0
+target/debug/examples/thermal_replay \
+  hardware/designs/v6-flat-shortbar/case.mhd.json COLD_OUTPUT \
+  300 250 180 2 THERMAL_OUTPUT false false
+```
+
+The final two optional booleans select a near-zero-diffusion verification control
+and a small tip thermal window, respectively. The window maps native cells from
+the full-head electrical solution and checks material IDs; it does not solve a
+truncated electrical problem. Its 100 µm peak matches the full thermal-domain
+result, but the insulated cuts are not validated for long-time heating. Nonzero
+magnet thermal coupling is excluded: the existing magnet entries contain borrowed
+thermal properties, which must be replaced before any magnet thermal analysis.
+All outputs above must be new directories. Current is in amperes, lobe duration
+and timestep in microseconds. The default reverse lobe is 25% for one third of the
+positive duration, following a 25 µs gap. These are numerical experiments, not
+qualified commands for a physical nozzle.
