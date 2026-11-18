@@ -303,6 +303,9 @@ fn simulate_drop(
                     "1" => true,
                     _ => panic!("MHD_DROP_PRESSURE_MG must be 0 or 1"),
                 });
+        if std::env::var_os("MHD_FLOATING_PRESSURE").is_some() {
+            fluid.enable_floating_pressure().unwrap();
+        }
     }
     fluid.euler_viscosity_reference =
         dump && std::env::var_os("MHD_DROP_EULER_VISCOSITY").is_some();

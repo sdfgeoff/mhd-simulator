@@ -1,7 +1,12 @@
-# Floating pressure gauge research
+# Pressure null-space research
 
 This is a test-only experiment preserved on a separate research branch. Production
-on main is unchanged. No performance or general-correctness claim has been made.
+on main is unchanged. The current candidate uses mean-free residuals with the
+original air-cell pressure reference; the unsuccessful rank-one and mean-gauge
+variants below are retained as historical controls. No speedup claim has been
+made and adoption remains pending further moving-case and timing checks.
+
+## Initial rank-one hypothesis
 
 The physical closed/periodic pressure graph is a Neumann Laplacian with one
 constant null vector per connected region. The current solver pins one cell
@@ -11,7 +16,7 @@ cost more than treating the constant mode globally. The primary
 explains compatibility with the null space and orthogonalized right-hand sides;
 it does not describe or validate this implementation.
 
-For exactly one connected region, the prototype uses
+For exactly one connected region, the first prototype used
 `A_g = A + gamma 11^T/N`, where `gamma` is the harmonic mean of the positive
 Jacobi diagonals. This is a rank-one gauge term; pressure gradients are unchanged
 for a compatible right-hand side. Residual verification still evaluates the
@@ -120,3 +125,21 @@ Compared with main's anchored multigrid release trajectory:
 No runtime comparison is valid yet: another fine-grid job runs concurrently.
 Before adoption, compare with a simpler control that checks the existing pinned
 solver's physical residual more frequently, then test additional moving cases.
+
+## Cleanup and simpler control
+
+The reference-gauge candidate no longer needs search-vector means. Those
+reductions and their scalar bookkeeping have been removed, retaining only the
+residual projection and its reduction per iteration. Analytic, Galerkin,
+contrast, symmetry and rollback/retry checks still pass. The frozen test binary
+for the next paired comparison is `artifacts/floating/meanfree-clean-test`.
+
+`MHD_PRESSURE_CHECK_STRIDE=8|16|32|64` is a research-only control of how often
+the existing independent physical check runs; default 64 preserves main's
+schedule. It changes no physical acceptance criterion or iteration cap. The
+anchored 16-iteration control completes the 2 ms release experiment. Its wall
+time overlaps other GPU jobs and is not a performance comparison.
+
+The cleaned candidate's fine-grid prefix and 1.5-period 64³/96³ drop oscillations
+are currently running. A separate benchmark driver waits for the offset study
+and an explicit idle gate before alternating warmed timing comparisons.

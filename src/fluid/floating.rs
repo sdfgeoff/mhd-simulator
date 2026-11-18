@@ -26,15 +26,6 @@ impl FluidState {
             assert_eq!(solver.matches(old).count(), 1, "source drift: {old}");
             solver = solver.replace(old, new);
         }
-        let a = solver.find("fn initial_reduce(").unwrap();
-        let b = a + solver[a..].find("@compute").unwrap();
-        let old = "scalars[0]=total;scalars[1]=";
-        assert_eq!(solver[a..b].matches(old).count(), 1);
-        let function = solver[a..b].replace(
-            old,
-            "scalars[0]=total;scalars[0].w*=scalars[2].z;scalars[1]=",
-        );
-        solver.replace_range(a..b, &function);
         let old = "v.x+a*v.z,r,v.z,diagonal);sum=vec4<f32>(r*r/diagonal,r*r,0.0,0.0);";
         assert_eq!(solver.matches(old).count(), 1);
         solver = solver.replace(
@@ -49,13 +40,6 @@ impl FluidState {
             old,
             "work[i].x=v.x+a*(v.z-work[mask[i]>>2u].z);work[i].y=r;work[i].w=diagonal;",
         );
-        let a = solver
-            .find("@compute @workgroup_size(256)\nfn search(")
-            .unwrap();
-        let b = a + solver[a..]
-            .find("@compute @workgroup_size(256)\nfn correct(")
-            .unwrap();
-        solver.replace_range(a..b, "");
         let source = format!(
             "{}\n{}\n{}\n{}\n{}\n{}",
             include_str!("../periodic.wgsl"),
@@ -80,13 +64,9 @@ impl FluidState {
             "pressure_coefficients",
             "pressure_refresh",
             "pressure_apply",
-            "initial_reduce",
-            "search",
             "fields",
             "floating_collect",
             "floating_prepare",
-            "floating_direction_collect",
-            "floating_search_reduce",
             "update",
             "floating_residual_reduce",
             "floating_initial_project",

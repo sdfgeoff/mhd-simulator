@@ -1019,6 +1019,12 @@ impl FluidState {
             &preparation[1..]
         });
         let mut iterations = 0;
+        let physical_check_stride = 64u32;
+        #[cfg(test)]
+        let physical_check_stride = std::env::var("MHD_PRESSURE_CHECK_STRIDE")
+            .map(|s| s.parse::<u32>().unwrap())
+            .unwrap_or(physical_check_stride);
+        assert!(matches!(physical_check_stride, 8 | 16 | 32 | 64));
         let mut residual = self.convergence()?;
         let preferred = self.params.dims[3] >= multigrid::MIN_CELLS;
         #[cfg(test)]
@@ -1044,7 +1050,7 @@ impl FluidState {
             // stopping at each independent physical-residual check and the cap.
             let batch = (if mg.is_some() { 8u32 } else { 32u32 })
                 .min(self.config.max_iterations - iterations)
-                .min(64 - iterations % 64);
+                .min(physical_check_stride - iterations % physical_check_stride);
             if let Some(mg) = mg {
                 mg.iterate(self, batch);
             } else {
@@ -1063,10 +1069,6 @@ impl FluidState {
                         ]);
                     }
                     stages.extend([("beta_reduce", [1, 1, 1]), ("search", cells)]);
-                    #[cfg(test)]
-                    if self.floating_pressure {
-                        stages.push(("floating_search_reduce", [1, 1, 1]));
-                    }
                 }
                 self.dispatch(&stages);
             }
@@ -1078,24 +1080,26 @@ impl FluidState {
             if residual.1 {
                 #[cfg(test)]
                 if self.floating_pressure {
-                    self.dispatch(&[("floating_collect", cells), ("floating_prepare", [1, 1, 1])]);
-                }
-                self.dispatch(&[("pressure_refresh", cells)]);
-                #[cfg(test)]
-                if self.floating_pressure {
                     self.dispatch(&[
+                        ("pressure_refresh", cells),
                         ("floating_residual_reduce", [1, 1, 1]),
                         ("floating_initial_project", cells),
+                        ("initial_reduce", [1, 1, 1]),
                     ]);
+                } else {
+                    self.dispatch(&[("pressure_refresh", cells), ("initial_reduce", [1, 1, 1])]);
                 }
-                self.dispatch(&[("initial_reduce", [1, 1, 1])]);
+                #[cfg(not(test))]
+                self.dispatch(&[("pressure_refresh", cells), ("initial_reduce", [1, 1, 1])]);
                 residual = self.convergence()?;
                 if !residual.1
                     && let Some(mg) = mg
                 {
                     mg.initialize(self);
                 }
-            } else if iterations % 64 == 0 || iterations == self.config.max_iterations {
+            } else if iterations % physical_check_stride == 0
+                || iterations == self.config.max_iterations
+            {
                 // Inspect the full physical equation without resetting CG conjugacy.
                 // The conservative inner gauge bound may be below f32 precision.
                 self.dispatch(&[("pressure_check", cells), ("check_reduce", [1, 1, 1])]);

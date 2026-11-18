@@ -64,110 +64,125 @@ fn parent_index(i: usize, child: [u32; 4], parent: [u32; 4]) -> usize {
 #[test]
 fn aggregation_is_gpu_galerkin_on_odd_periodic_and_disconnected_domains() {
     let _lock = crate::gpu_test_lock();
-    for (dims, periodic, walls) in [
-        ([17, 13, 9], [true; 3], false),
-        ([16, 12, 8], [false; 3], true),
-        ([13, 1, 3], [true; 3], true),
-        ([1, 1, 1], [false; 3], false),
-    ] {
-        for reverse in [false, true] {
-            let (state, mask) = fixture(dims, periodic, walls, reverse);
-            let mg = Multigrid::new(&state).unwrap();
-            mg.build(&state.context);
-            assert!(
-                packets(&state.context, &mg.coeff)
-                    .iter()
-                    .flatten()
-                    .all(|c| c.is_finite() && *c >= 0.)
-            );
-            let mut values = packets(&state.context, &mg.value);
-            for level in 1..mg.levels.len() {
-                let p = mg.levels[level];
-                let child = mg.levels[level - 1];
-                let vector: Vec<_> = (0..p.dims[3]).map(|i| (i as f32 * 0.71).sin()).collect();
-                for (i, &v) in vector.iter().enumerate() {
-                    values[p.meta[0] as usize + i][1] = v;
-                }
-                let mut work = vec![[0.; 4]; state.params.dims[3] as usize];
-                for i in 0..p.child[3] as usize {
-                    let v = vector[parent_index(i, p.child, p.dims)];
-                    if level == 1 {
-                        if mask[i] & 3 == 1 {
-                            work[i][3] = v;
-                            work[i][2] = v;
-                        }
-                    } else {
-                        values[p.meta[1] as usize + i][1] = v;
-                    }
-                }
-                state
-                    .context
-                    .queue
-                    .write_buffer(&state._work, 0, bytemuck::cast_slice(&work));
-                state
-                    .context
-                    .queue
-                    .write_buffer(&mg.value, 0, bytemuck::cast_slice(&values));
-                mg.dispatch(
-                    &state.context,
-                    &[(level - 1, "probe_action"), (level, "probe_action")],
-                );
-                let current = packets(&state.context, &mg.value);
-                let fine_action = if level == 1 {
-                    packets(&state.context, &state.scratch)
-                } else {
-                    Vec::new()
-                };
-                let mut restricted = vec![0f64; p.dims[3] as usize];
-                for i in 0..p.child[3] as usize {
-                    if level == 1 && mask[i] & 3 != 1 {
+    for floating in [false, true] {
+        for (dims, periodic, walls) in [
+            ([17, 13, 9], [true; 3], false),
+            ([16, 12, 8], [false; 3], true),
+            ([13, 1, 3], [true; 3], true),
+            ([1, 1, 1], [false; 3], false),
+        ] {
+            for reverse in [false, true] {
+                let (mut state, mask) = fixture(dims, periodic, walls, reverse);
+                let mut topology: Vec<_> = mask.iter().map(|&m| u32::from(m != 0)).collect();
+                state.components = anchors(&mut topology, dims, periodic);
+                if floating {
+                    if state.components != 1 {
                         continue;
                     }
-                    restricted[parent_index(i, p.child, p.dims)] += if level == 1 {
-                        fine_action[i][3]
-                    } else {
-                        current[p.meta[1] as usize + i][2]
-                    } as f64;
+                    state.enable_floating_pressure().unwrap();
+                    state.dispatch(&[("pressure_coefficients", groups(state.params.faces[3]))]);
                 }
-                let mut error = 0f64;
-                let mut norm = 0f64;
-                for (i, r) in restricted.iter().enumerate() {
-                    error += (current[p.meta[0] as usize + i][2] as f64 - r).powi(2);
-                    norm += r * r;
-                }
-                let relative = (error / norm.max(1e-30)).sqrt();
-                eprintln!(
-                    "Galerkin {dims:?} periodic={periodic:?} reverse={reverse} level={level}: {relative:.3e}"
+                let active = |m: u32| if floating { m != 0 } else { m & 3 == 1 };
+                let mg = Multigrid::new(&state).unwrap();
+                mg.build(&state.context);
+                assert!(
+                    packets(&state.context, &mg.coeff)
+                        .iter()
+                        .flatten()
+                        .all(|c| c.is_finite() && *c >= 0.)
                 );
-                if relative >= 2e-6 {
-                    let coefficients = packets(&state.context, &mg.coeff);
-                    for (i, r) in restricted.iter().enumerate().take(30) {
-                        eprintln!(
-                            "cell {i}: actual={} expected={r} coeff={:?} vector={}",
-                            current[p.meta[0] as usize + i][2],
-                            coefficients[p.meta[0] as usize + i],
-                            vector[i]
-                        );
+                let mut values = packets(&state.context, &mg.value);
+                for level in 1..mg.levels.len() {
+                    let p = mg.levels[level];
+                    let child = mg.levels[level - 1];
+                    let vector: Vec<_> = (0..p.dims[3]).map(|i| (i as f32 * 0.71).sin()).collect();
+                    for (i, &v) in vector.iter().enumerate() {
+                        values[p.meta[0] as usize + i][1] = v;
                     }
-                }
-                assert!(relative < 2e-6);
-                if level == 1 {
-                    // Compare the prototype fine action to the existing production GPU stencil.
-                    state.context.queue.write_buffer(
-                        &state.scalars,
-                        0,
-                        bytemuck::cast_slice(&[[0f32; 4]; 2]),
-                    );
-                    state.dispatch(&[("pressure_apply", groups(state.params.dims[3]))]);
-                    let original = packets(&state.context, &state._work);
-                    for (i, (&m, v)) in mask.iter().zip(&original).enumerate() {
-                        if m & 3 == 1 {
-                            assert!((v[3] - fine_action[i][3]).abs() < 1e-6 * (1. + v[3].abs()));
+                    let mut work = vec![[0.; 4]; state.params.dims[3] as usize];
+                    for i in 0..p.child[3] as usize {
+                        let v = vector[parent_index(i, p.child, p.dims)];
+                        if level == 1 {
+                            if active(mask[i]) {
+                                work[i][3] = v;
+                                work[i][2] = v;
+                            }
+                        } else {
+                            values[p.meta[1] as usize + i][1] = v;
                         }
                     }
+                    state
+                        .context
+                        .queue
+                        .write_buffer(&state._work, 0, bytemuck::cast_slice(&work));
+                    state
+                        .context
+                        .queue
+                        .write_buffer(&mg.value, 0, bytemuck::cast_slice(&values));
+                    mg.dispatch(
+                        &state.context,
+                        &[(level - 1, "probe_action"), (level, "probe_action")],
+                    );
+                    let current = packets(&state.context, &mg.value);
+                    let fine_action = if level == 1 {
+                        packets(&state.context, &state.scratch)
+                    } else {
+                        Vec::new()
+                    };
+                    let mut restricted = vec![0f64; p.dims[3] as usize];
+                    for i in 0..p.child[3] as usize {
+                        if level == 1 && !active(mask[i]) {
+                            continue;
+                        }
+                        restricted[parent_index(i, p.child, p.dims)] += if level == 1 {
+                            fine_action[i][3]
+                        } else {
+                            current[p.meta[1] as usize + i][2]
+                        }
+                            as f64;
+                    }
+                    let mut error = 0f64;
+                    let mut norm = 0f64;
+                    for (i, r) in restricted.iter().enumerate() {
+                        error += (current[p.meta[0] as usize + i][2] as f64 - r).powi(2);
+                        norm += r * r;
+                    }
+                    let relative = (error / norm.max(1e-30)).sqrt();
+                    eprintln!(
+                        "Galerkin {dims:?} periodic={periodic:?} reverse={reverse} level={level}: {relative:.3e}"
+                    );
+                    if relative >= 2e-6 {
+                        let coefficients = packets(&state.context, &mg.coeff);
+                        for (i, r) in restricted.iter().enumerate().take(30) {
+                            eprintln!(
+                                "cell {i}: actual={} expected={r} coeff={:?} vector={}",
+                                current[p.meta[0] as usize + i][2],
+                                coefficients[p.meta[0] as usize + i],
+                                vector[i]
+                            );
+                        }
+                    }
+                    assert!(relative < 2e-6);
+                    if level == 1 {
+                        // Compare the prototype fine action to the existing production GPU stencil.
+                        state.context.queue.write_buffer(
+                            &state.scalars,
+                            0,
+                            bytemuck::cast_slice(&[[0f32; 4]; 2]),
+                        );
+                        state.dispatch(&[("pressure_apply", groups(state.params.dims[3]))]);
+                        let original = packets(&state.context, &state._work);
+                        for (i, (&m, v)) in mask.iter().zip(&original).enumerate() {
+                            if active(m) {
+                                assert!(
+                                    (v[3] - fine_action[i][3]).abs() < 1e-6 * (1. + v[3].abs())
+                                );
+                            }
+                        }
+                    }
+                    // Read diagonals remain fixed; only test vectors changed above.
+                    assert_eq!(child.dims, p.child);
                 }
-                // Read diagonals remain fixed; only test vectors changed above.
-                assert_eq!(child.dims, p.child);
             }
         }
     }

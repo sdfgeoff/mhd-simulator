@@ -300,10 +300,6 @@ impl Multigrid {
     pub(super) fn initialize(&self, state: &FluidState) {
         self.apply(&state.context);
         self.dispatch(&state.context, &[(0, "initial_direction")]);
-        #[cfg(test)]
-        if state.floating_pressure {
-            state.dispatch(&[("floating_direction_collect", groups(state.params.dims[3]))]);
-        }
         state.dispatch(&[("initial_reduce", [1, 1, 1])]);
     }
     pub(super) fn iterate(&self, state: &FluidState, batch: u32) {
@@ -341,17 +337,6 @@ impl Multigrid {
                 self.encode_stages(&mut pass, &[(0, "preconditioned_dot")]);
                 encode_fluid(state, &mut pass, &[("beta_reduce", [1, 1, 1])]);
                 self.encode_stages(&mut pass, &[(0, "preconditioned_search")]);
-                #[cfg(test)]
-                if state.floating_pressure {
-                    encode_fluid(
-                        state,
-                        &mut pass,
-                        &[
-                            ("floating_direction_collect", cells),
-                            ("floating_search_reduce", [1, 1, 1]),
-                        ],
-                    );
-                }
             }
         }
         state.context.queue.submit(Some(encoder.finish()));
