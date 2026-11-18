@@ -1,0 +1,74 @@
+{
+  "status": "Lumped compliance screen, not a PCB/switching design or demonstrated repetition rate",
+  "assumptions": {
+    "inductor_bank": "Four Coilcraft AGP4233-332ME, equal sharing; 3.3 uH each gives 0.825 uH parallel; add assumed 0.2 uH external loop inductance. No current-sharing or hot-L qualification.",
+    "series_R": "0.75 mOhm total assumed parasitics, including 0.1875 mOhm from four parallel maximum 25 C inductor DCR values; remaining 0.5625 mOhm is an allowance for switches, shunt, leads and copper, not a measured design.",
+    "head_R": "0.3066116 mOhm from the 180 A cold V6 tin/copper screen, ideal steel/liquid contact.",
+    "bus_C": "1000 uF ideal bulk capacitor, no ESR/current-ripple qualification."
+  },
+  "source": "https://www.coilcraft.com/en-us/products/power/shielded-inductors/high-current-flat-wire/agp-ver/agp4233/",
+  "cases": [
+    {
+      "inputs": {
+        "peak_a": 180.0,
+        "positive_us": 800.0,
+        "head_mohm": 0.3066116,
+        "parasitic_mohm": 0.75,
+        "series_uh": 1.025,
+        "frequency_hz": 200.0,
+        "bus_v": 24.0,
+        "bulk_uf": 1000.0,
+        "retract_fraction": 0.25,
+        "rise_us": 20.0
+      },
+      "method": "Exact integrals of piecewise-linear prescribed current; V=IR+L dI/dt. Head modeled as constant cold resistance. Four-quadrant current regulation assumed.",
+      "rms_current_a": 71.47307185227174,
+      "head_heat_w": 1.5662946974399998,
+      "parasitic_heat_w": 3.8313,
+      "required_voltage_min_v": -9.225,
+      "required_voltage_max_v": 9.415190088,
+      "ideal_bus_compliance": true,
+      "peak_inductor_energy_j": 0.016604999999999998,
+      "bulk_rise_if_all_peak_inductor_energy_returns_v": 0.6821798064919697,
+      "limitations": [
+        "No PWM ripple, switching/gate losses, current-loop dynamics, bus/lead ringing or protection design.",
+        "No capacitor ESR/ripple rating or switch SOA/temperature qualification.",
+        "Input R and L assumptions must be replaced with measured assembled values; motional voltage is omitted from this lumped check.",
+        "Electrical compliance is not a droplet or repetition-rate prediction."
+      ],
+      "per_inductor_equal_share_peak_A": 45.0,
+      "per_inductor_equal_share_rms_A": 17.868267963067936
+    },
+    {
+      "inputs": {
+        "peak_a": 180.0,
+        "positive_us": 800.0,
+        "head_mohm": 0.3066116,
+        "parasitic_mohm": 0.75,
+        "series_uh": 1.025,
+        "frequency_hz": 500.0,
+        "bus_v": 24.0,
+        "bulk_uf": 1000.0,
+        "retract_fraction": 0.25,
+        "rise_us": 20.0
+      },
+      "method": "Exact integrals of piecewise-linear prescribed current; V=IR+L dI/dt. Head modeled as constant cold resistance. Four-quadrant current regulation assumed.",
+      "rms_current_a": 113.00884921102417,
+      "head_heat_w": 3.9157367435999997,
+      "parasitic_heat_w": 9.57825,
+      "required_voltage_min_v": -9.225,
+      "required_voltage_max_v": 9.415190088,
+      "ideal_bus_compliance": true,
+      "peak_inductor_energy_j": 0.016604999999999998,
+      "bulk_rise_if_all_peak_inductor_energy_returns_v": 0.6821798064919697,
+      "limitations": [
+        "No PWM ripple, switching/gate losses, current-loop dynamics, bus/lead ringing or protection design.",
+        "No capacitor ESR/ripple rating or switch SOA/temperature qualification.",
+        "Input R and L assumptions must be replaced with measured assembled values; motional voltage is omitted from this lumped check.",
+        "Electrical compliance is not a droplet or repetition-rate prediction."
+      ],
+      "per_inductor_equal_share_peak_A": 45.0,
+      "per_inductor_equal_share_rms_A": 28.252212302756043
+    }
+  ]
+}

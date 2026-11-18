@@ -78,7 +78,10 @@ def load(name):
 
 def section(ax, parts, plane="xz", height=0):
     for name, _, solid in parts:
-        shape = (solid.rotate([-90, 0, 0]) if plane == "xz" else solid).slice(height)
+        oriented = solid.rotate([-90, 0, 0]) if plane == "xz" else solid
+        if plane == "yz":
+            oriented = solid.transform([[0, 1, 0, 0], [0, 0, 1, 0], [1, 0, 0, 0]])
+        shape = oriented.slice(height)
         vertices, codes = [], []
         for polygon in shape.to_polygons():
             if len(polygon) < 3:
@@ -106,8 +109,8 @@ def section(ax, parts, plane="xz", height=0):
     ax.set_facecolor("#f7fafc")
     ax.spines[["right", "top"]].set_visible(False)
     ax.tick_params(labelsize=9)
-    ax.set_xlabel("x (mm)", fontsize=10)
-    ax.set_ylabel("z (mm)" if plane == "xz" else "y (mm)", fontsize=10)
+    ax.set_xlabel("y (mm)" if plane == "yz" else "x (mm)", fontsize=10)
+    ax.set_ylabel("z (mm)" if plane in ["xz", "yz"] else "y (mm)", fontsize=10)
 
 
 def coils(ax, curves, radius=0.3):
@@ -342,6 +345,84 @@ def detail():
         color="#475767",
     )
     fig.savefig(OUT / "cross-channel-setup.png", dpi=180)
+
+
+def v6_detail():
+    parts, _ = load("v6-direct-disc20-h010")
+    fig, axes = plt.subplots(1, 3, figsize=(15, 8))
+    fig.subplots_adjust(left=0.055, right=0.985, bottom=0.19, top=0.85, wspace=0.25)
+    ax = axes[0]
+    section(ax, parts, "xy", 3.5)
+    ax.set(xlim=(-11, 11), ylim=(-16, 16), title="Plan at contact height")
+    for text, xy, start, color in [
+        ("I", (3, 0), (-3, 0), "#9b541f"),
+        ("B", (0, -4), (0, 4), "#32678b"),
+    ]:
+        ax.annotate(
+            text,
+            xy=xy,
+            xytext=start,
+            fontsize=13,
+            color=color,
+            arrowprops={"arrowstyle": "->", "color": color, "lw": 2},
+        )
+    ax.hlines([-9.75, 9.75], -9.9, 9.9, colors="#6c8596", linestyles=":", linewidths=1)
+    ax.text(0, 10, "Two 20 × 5 mm discs", ha="center", fontsize=9)
+    ax.text(0, -11, "Two 20 × 5 mm discs", ha="center", fontsize=9)
+    ax.text(-10, -3, "Downward force\ninto this page", fontsize=9, color="#27735b")
+    ax = axes[1]
+    section(ax, parts)
+    ax.set(xlim=(-6, 6), ylim=(-2, 14), title="Section through copper jaws")
+    label(ax, "Copper contacts", (4.4, 3.4), (1.2, 6))
+    label(ax, "Stainless V6", (2.5, 8), (-5.5, 11.7))
+    label(ax, "Open solder pool", (0, 10.5), (-5.5, 13))
+    label(ax, "0.4 mm orifice", (0.2, 0), (-5.5, -1.2))
+    ax = axes[2]
+    section(ax, parts, "yz")
+    ax.set(xlim=(-16, 16), ylim=(-7, 16), title="Section through magnet axes")
+    ax.annotate(
+        "B",
+        xy=(-4, 4.5),
+        xytext=(4, 4.5),
+        color="#32678b",
+        fontsize=13,
+        arrowprops={"arrowstyle": "->", "color": "#32678b", "lw": 2},
+    )
+    ax.annotate(
+        "Jet / force",
+        xy=(0, -4),
+        xytext=(0, -1.5),
+        ha="center",
+        fontsize=10,
+        color="#27735b",
+        arrowprops={"arrowstyle": "->", "color": "#27735b", "lw": 2},
+    )
+    ax.vlines([-9.75, 9.75], -5.5, 14.5, colors="#6c8596", linestyles=":", linewidths=1)
+    ax.text(0, 15, "9.5 mm pole gap", ha="center", fontsize=10)
+    handles = [
+        Patch(facecolor=COLORS[k], edgecolor="#596673", label=v)
+        for k, v in [
+            ("steel", "Stainless steel"),
+            ("liquid", "Solder"),
+            ("copper", "Copper"),
+            ("magnet", "SmCo"),
+        ]
+    ]
+    fig.legend(handles=handles, loc="lower center", ncol=4, bbox_to_anchor=(0.5, 0.045))
+    fig.suptitle(
+        "V6 direct-current concept — larger catalogue magnet stacks\nActual generated CAD sections; externally clamped current contacts, metal nozzle retained",
+        fontsize=16,
+        weight="bold",
+    )
+    fig.text(
+        0.5,
+        0.015,
+        "180 A current-controlled trial • hot Br assumed 0.95 T • heater, mounting, contact preparation and driver remain to be designed",
+        ha="center",
+        fontsize=10,
+    )
+    OUT.mkdir(parents=True, exist_ok=True)
+    fig.savefig(OUT / "v6-disc-stack-setup.png", dpi=180)
 
 
 if __name__ == "__main__":

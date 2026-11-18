@@ -215,3 +215,13 @@ Conduction profiling is separate from RunState profiling: cold probes write
 with charge and fluid wall times. A tested diagonal cache was rejected: the
 first layout slowed three alternating cold solves, and the packed version
 showed no reliable gain above concurrent-GPU timing variation.
+
+[The lumped V6 driver budget](v6-driver-budget.json) checks a 180 A,
+800 µs pulse with assumed 1.025 µH total series inductance and 0.75 mΩ
+parasitics. Required voltage is about ±9.4 V, within 24 V compliance. At
+200 Hz, head/parasitic heat is 1.57/3.83 W and current RMS is 71.5 A.
+The 500 Hz electrical-only case is 3.92/9.58 W and 113 A RMS. Four
+parallel 3.3 µH AGP4233-332ME parts are one catalogue bank option, assuming
+equal sharing and room-temperature maximum DCR. This is neither a PCB
+design nor a demonstrated fluid repetition rate. PWM, protection, hot
+component limits and measured assembled impedance remain unresolved.
