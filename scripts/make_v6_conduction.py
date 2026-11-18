@@ -39,6 +39,8 @@ def main():
     p.add_argument("--tip-contact-height-mm", type=float, default=.4)
     p.add_argument("--tip-contact-width-mm", type=float, default=.4)
     p.add_argument("--tip-contact-z-mm", type=float, default=.3)
+    p.add_argument("--tip-flat-width-mm", type=float, help="Distance between opposed x contact planes on a custom V6-like tip")
+    p.add_argument("--tip-flat-height-mm", type=float, default=.6, help="Machining reach above the exit for the optional tip flats")
     p.add_argument("--nozzle-flat-width-mm", type=float)
     p.add_argument("--magnet", choices=["cube10", "disc20-stack10", "disc"], default="cube10")
     p.add_argument("--magnet-disc-diameter-mm", type=float, default=20.)
@@ -107,6 +109,27 @@ def main():
                 y = max(-width / 2, min(width / 2, y))
             return x, y, z
         parts[0] = ("V6 with two milled collar flats", [tuple(flat_vertex(v) for v in t) for t in parts[0][1]], 14)
+    tip_solid = None
+    if args.tip_flat_width_mm is not None:
+        width, reach = args.tip_flat_width_mm, args.tip_flat_height_mm
+        bottom = args.tip_contact_z_mm - args.tip_contact_height_mm / 2
+        top = args.tip_contact_z_mm + args.tip_contact_height_mm / 2
+        bore_at_reach = ro + max(0., reach - land) * math.tan(math.pi / 6)
+        outer_at_bottom = args.orifice * 1.25 + bottom * math.tan(math.radians(35))
+        if (args.contact_band != "tip" or not all(math.isfinite(v) and v > 0 for v in [width, reach])
+                or not top <= reach < 2. or bottom < 0 or width / 2 <= bore_at_reach
+                or (width / 2)**2 + (args.tip_contact_width_mm / 2)**2 > outer_at_bottom**2):
+            raise ValueError("Tip flats must clear the bore, contain the contact height, and provide the full contact width")
+        # CAD boolean cuts only the external lands; the liquid/bore input stays
+        # unchanged. Small overreach below z=0 avoids a coincident cutter bottom.
+        points = np.asarray(parts[0][1], dtype=np.float32).reshape(-1, 3)
+        vertices, indices = np.unique(points, axis=0, return_inverse=True)
+        tip_solid = cad.Manifold(cad.Mesh(vertices, indices.reshape(-1, 3).astype(np.uint32)))
+        for sign in [-1, 1]:
+            tip_solid -= box([20., 20., reach + .02], [sign * (10. + width / 2), 0., reach / 2 - .01])
+        if tip_solid.is_empty() or not tip_solid.volume() > 0:
+            raise ValueError("Invalid custom tip geometry")
+        parts[0] = ("Custom V6-like nozzle with opposed tip flats", tip_solid, 14)
     if args.contact_band == "upper":
         # Concave patches contact +/-x faces of the M6 barrel from z=6.5 to 10.25.
         # They stop below the initial free surface rather than energizing air-filled bore.
@@ -132,7 +155,12 @@ def main():
             circular_segments=96,
         )
         for i, sign in enumerate([-1, 1]):
-            pad = box([4.5, width, height], [sign * 2.75, 0.0, centre_z]) - outer
+            if tip_solid is None:
+                pad = box([4.5, width, height], [sign * 2.75, 0.0, centre_z]) - outer
+            else:
+                bore_at_contact_top = ro + max(0., centre_z + height / 2 - land) * math.tan(math.pi / 6)
+                inner = (bore_at_contact_top + args.tip_flat_width_mm / 2) / 2
+                pad = box([5. - inner, width, height], [sign * (5. + inner) / 2, 0., centre_z]) - tip_solid
             parts[i + 2] = (
                 f"{'Positive' if sign < 0 else 'Negative'} tip copper contact",
                 pad,

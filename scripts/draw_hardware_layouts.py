@@ -425,7 +425,7 @@ def v6_detail():
     fig.savefig(OUT / "v6-disc-stack-setup.png", dpi=180)
 
 
-def v6_tip_detail(case="v6-tip-disc20-compact-h010", filename="v6-tip-contact-setup.png"):
+def v6_tip_detail(case="v6-tip-disc20-compact-h010", filename="v6-tip-contact-setup.png", title=None, footer=None):
     parts, _ = load(case)
     magnets = np.concatenate([faces.reshape(-1, 3) for name, faces, _ in parts if category(name) == "magnet"])
     gap = 2 * abs(magnets[:, 1]).min()
@@ -455,8 +455,8 @@ def v6_tip_detail(case="v6-tip-disc20-compact-h010", filename="v6-tip-contact-se
     ax.text(3,-2.7,"Pole face",ha="center",fontsize=9)
     handles=[Patch(facecolor=COLORS[k],edgecolor="#596673",label=v) for k,v in [("steel","Stainless steel"),("liquid","Solder"),("copper","Copper"),("magnet","SmCo")]]
     fig.legend(handles=handles,loc="lower center",ncol=4,bbox_to_anchor=(.5,.045))
-    fig.suptitle("V6 tip-contact variant — concentrate current near the orifice\nActual generated CAD sections; the metal nozzle remains intact",fontsize=16,weight="bold")
-    fig.text(.5,.015,"Geometry under test • ideal electrical wetting assumed • heater, contact mounting and driver omitted",ha="center",fontsize=10)
+    fig.suptitle(title or "V6 tip-contact variant — concentrate current near the orifice\nActual generated CAD sections; the metal nozzle remains intact",fontsize=16,weight="bold")
+    fig.text(.5,.015,footer or "Geometry under test • ideal electrical wetting assumed • heater, contact mounting and driver omitted",ha="center",fontsize=10)
     OUT.mkdir(parents=True,exist_ok=True)
     fig.savefig(OUT/filename,dpi=180)
 

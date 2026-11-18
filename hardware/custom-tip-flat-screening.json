@@ -1,0 +1,381 @@
+{
+  "status": "Three matched100um cold screens complete; compact150A gravity-on fluid trial running, no jet result yet",
+  "authorization_replies": [
+    633,
+    635,
+    636
+  ],
+  "geometry": {
+    "two_opposing_x_flat_distance_mm": 0.8,
+    "flat_reach_above_exit_mm": 0.6,
+    "unchanged_bore_mm": 0.4,
+    "unchanged_outlet_land_length_mm": 0.6,
+    "minimum_nominal_steel_wall_mm": 0.2,
+    "contact_width_y_mm": 0.8,
+    "contact_height_z_mm": 0.4,
+    "contact_z_range_mm": [
+      0.1,
+      0.5
+    ],
+    "scope": "Conceptual two externally machined flats on V6-like body. Threads, cutter fillets, clamps, tolerances and joint preparation not resolved."
+  },
+  "cases": [
+    {
+      "artifacts": "artifacts/hardware-research/v6-tip-wide-fullheight-cold-30A-h010",
+      "report": {
+        "contact_resistivity_ohm_m2": 0.0,
+        "current_A": 29.999996185302734,
+        "iterations": 256,
+        "joule_power_W": 0.9578694105148315,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          -9.03147177624932e-11,
+          5.432090925653312e-10,
+          -0.0025191767641509935
+        ],
+        "liquid_joule_power_W": 0.042833788042140254,
+        "liquid_mean_By_T": -0.12040774386343643,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 2.4855002684384893,
+        "mean_wall_current_over_x_plus_minus_2mm_A": 7.740337345380171,
+        "midplane_adjacent_cell_liquid_current_A": 15.35515246069237,
+        "midplane_adjacent_cell_wall_current_A": 14.641150894123218,
+        "power_relative_defect": 3.5762786865234375e-07,
+        "project": "artifacts/hardware-research/cases/v6-tip-wide-fullheight-gravity-fit-sncu-h010.mhd.json",
+        "released_static_workspace_bytes": 253065692,
+        "return_current_A": -29.999996185302734,
+        "source_power_W": 0.9578691124916077,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_voltage_V": 0.03192897513508797,
+        "true_relative_residual": 9.973462510970421e-06
+      },
+      "grid": {
+        "cell_m": 0.00010000000474974513,
+        "dims": [
+          76,
+          76,
+          195
+        ],
+        "origin_m": [
+          -0.003800000064074993,
+          -0.003800000064074993,
+          -0.005000000353902578
+        ]
+      },
+      "land_z_mm": [
+        0,
+        0.6
+      ],
+      "land_downward_force_N_at30A": 0.0006993698401548452,
+      "land_area_mean_force_integral_Pa_at30A": 5828.081447652336,
+      "land_profile": {
+        "cell_z_mm": [
+          0.04999988595955074,
+          0.14999989070929587,
+          0.249999895459041,
+          0.34999990020878613,
+          0.44999990495853126,
+          0.5499999097082764
+        ],
+        "downward_force_density_N_m3": [
+          11247982.25,
+          11118219.333333334,
+          10625931.833333334,
+          9707798.083333334,
+          8482292.416666666,
+          7098587.791666667
+        ]
+      },
+      "warning": "Land area-mean force integral is not solved pressure or an ejection criterion."
+    },
+    {
+      "artifacts": "artifacts/hardware-research/v6-tip-flat08-full-cold-30A-h010",
+      "report": {
+        "contact_resistivity_ohm_m2": 0.0,
+        "current_A": 29.999998092651367,
+        "iterations": 224,
+        "joule_power_W": 0.8932735919952393,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          -3.1397180930635043e-10,
+          9.396647600262842e-10,
+          -0.0018689802062436195
+        ],
+        "liquid_joule_power_W": 0.0777341813855467,
+        "liquid_mean_By_T": -0.12040774386343643,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 1.450264182336761,
+        "mean_wall_current_over_x_plus_minus_2mm_A": 4.54608203849436,
+        "midplane_adjacent_cell_liquid_current_A": 14.641418120391227,
+        "midplane_adjacent_cell_wall_current_A": 15.353465473764562,
+        "power_relative_defect": 2.384185791015625e-07,
+        "project": "artifacts/hardware-research/cases/v6-tip-flat08-pool35-full-fit-sncu-h010.mhd.json",
+        "released_static_workspace_bytes": 253065692,
+        "return_current_A": -29.999996185302734,
+        "source_power_W": 0.8932733535766602,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_voltage_V": 0.02977577969431877,
+        "true_relative_residual": 9.836368008109275e-06
+      },
+      "grid": {
+        "cell_m": 0.00010000000474974513,
+        "dims": [
+          76,
+          76,
+          195
+        ],
+        "origin_m": [
+          -0.003800000064074993,
+          -0.003800000064074993,
+          -0.005000000353902578
+        ]
+      },
+      "land_z_mm": [
+        0,
+        0.6
+      ],
+      "land_downward_force_N_at30A": 0.0012125189537746633,
+      "land_area_mean_force_integral_Pa_at30A": 10104.323654929598,
+      "land_profile": {
+        "cell_z_mm": [
+          0.04999988595955074,
+          0.14999989070929587,
+          0.249999895459041,
+          0.34999990020878613,
+          0.44999990495853126,
+          0.5499999097082764
+        ],
+        "downward_force_density_N_m3": [
+          18611308.333333332,
+          19549067.5,
+          19497162.5,
+          18094504.583333332,
+          15053624.666666666,
+          10237564.166666666
+        ]
+      },
+      "warning": "Land area-mean force integral is not solved pressure or an ejection criterion."
+    },
+    {
+      "artifacts": "artifacts/hardware-research/v6-tip-flat08-disc10x5-full-cold-30A-h010",
+      "report": {
+        "contact_resistivity_ohm_m2": 0.0,
+        "current_A": 29.999998092651367,
+        "iterations": 224,
+        "joule_power_W": 0.8932735919952393,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          -4.864482333057627e-11,
+          7.994888734809425e-12,
+          -0.001528769401785106
+        ],
+        "liquid_joule_power_W": 0.0777341813855467,
+        "liquid_mean_By_T": -0.0854842383325359,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 1.450264182336761,
+        "mean_wall_current_over_x_plus_minus_2mm_A": 4.54608203849436,
+        "midplane_adjacent_cell_liquid_current_A": 14.641418120391227,
+        "midplane_adjacent_cell_wall_current_A": 15.353465473764562,
+        "power_relative_defect": 2.384185791015625e-07,
+        "project": "artifacts/hardware-research/cases/v6-tip-flat08-disc10x5-pool35-full-fit-sncu-h010.mhd.json",
+        "released_static_workspace_bytes": 253065692,
+        "return_current_A": -29.999996185302734,
+        "source_power_W": 0.8932733535766602,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_voltage_V": 0.02977577969431877,
+        "true_relative_residual": 9.836368008109275e-06
+      },
+      "grid": {
+        "cell_m": 0.00010000000474974513,
+        "dims": [
+          76,
+          76,
+          195
+        ],
+        "origin_m": [
+          -0.003800000064074993,
+          -0.003800000064074993,
+          -0.005000000353902578
+        ]
+      },
+      "land_z_mm": [
+        0,
+        0.6
+      ],
+      "land_downward_force_N_at30A": 0.0010028475628980963,
+      "land_area_mean_force_integral_Pa_at30A": 8357.062230272471,
+      "land_profile": {
+        "cell_z_mm": [
+          0.04999988595955074,
+          0.14999989070929587,
+          0.249999895459041,
+          0.34999990020878613,
+          0.44999990495853126,
+          0.5499999097082764
+        ],
+        "downward_force_density_N_m3": [
+          15409880.416666666,
+          16182805.583333334,
+          16132815.25,
+          14962251.583333334,
+          12435934.25,
+          8446931.25
+        ]
+      },
+      "warning": "Land area-mean force integral is not solved pressure or an ejection criterion."
+    }
+  ],
+  "relative_flat_large_vs_unmodified_large": {
+    "land_force_change": 0.7337306874803227,
+    "total_liquid_force_change": -0.2580988230599617
+  },
+  "comparison_flat_compact150_vs_unmodified_large200": {
+    "cold_land_force_ratio": 1.075447680167398,
+    "scope": "Different geometry/magnets/current; this only motivates a new fluid trial, not equivalent flow performance."
+  },
+  "driver_150A": {
+    "inputs": {
+      "peak_a": 150.0,
+      "positive_us": 250.0,
+      "head_mohm": 0.992526,
+      "parasitic_mohm": 5.65,
+      "series_uh": 1.025,
+      "frequency_hz": 200.0,
+      "bus_v": 24.0,
+      "bulk_uf": 1000.0,
+      "retract_fraction": 0.25,
+      "rise_us": 20.0
+    },
+    "method": "Exact integrals of piecewise-linear prescribed current; V=IR+L dI/dt. Head modeled as constant cold resistance. Four-quadrant current regulation assumed.",
+    "rms_current_a": 31.95211260621119,
+    "head_heat_w": 1.0133070131250002,
+    "parasitic_heat_w": 5.768296875000002,
+    "required_voltage_min_v": -7.687500000000001,
+    "required_voltage_max_v": 8.683878900000002,
+    "ideal_bus_compliance": true,
+    "peak_inductor_energy_j": 0.01153125,
+    "bulk_rise_if_all_peak_inductor_energy_returns_v": 0.47575330812108163,
+    "limitations": [
+      "No PWM ripple, switching/gate losses, current-loop dynamics, bus/lead ringing or protection design.",
+      "No capacitor ESR/ripple rating or switch SOA/temperature qualification.",
+      "Input R and L assumptions must be replaced with measured assembled values; motional voltage is omitted from this lumped check.",
+      "Electrical compliance is not a droplet or repetition-rate prediction."
+    ]
+  },
+  "driver_lead_allowance": "3.65mohm hotcopper pair (4.6mm at0.32mm2 plus20mm at0.64mm2 per side, rho4e-8), plus2mohm other series allowance. Not measured.",
+  "initial_cold_heat_150A": {
+    "inputs": {
+      "cold": "artifacts/hardware-research/v6-tip-flat08-full-cold-30A-h010",
+      "project": "artifacts/hardware-research/cases/v6-tip-flat08-pool35-full-fit-sncu-h010.mhd.json",
+      "driver": "artifacts/hardware-research/v6-tip-flat08-driver-150A-250us.json"
+    },
+    "cold_current_a": 29.999998092651367,
+    "pulse_integral_i_squared_a2_s": 5.104687500000001,
+    "materials": [
+      {
+        "material": "Sn99.3Cu0.7 molten research properties",
+        "material_id": 4,
+        "pulse_energy_j": 0.00044089861610930757,
+        "average_power_w": 0.08817972322186152,
+        "maximum_initial_field_adiabatic_rise_k": 5.495637502544741,
+        "maximum_position_mm": [
+          -0.14999989070929587,
+          -0.04999988595955074,
+          0.249999895459041
+        ],
+        "thermal_diffusion_length_over_pulse_pair_mm": 0.1202999329853491,
+        "volumetric_heat_capacity_j_m3_k": 1498000.0,
+        "thermal_conductivity_w_m_k": 60.5
+      },
+      {
+        "material": "Thin-wall stainless screening",
+        "material_id": 14,
+        "pulse_energy_j": 0.004559463771650339,
+        "average_power_w": 0.9118927543300678,
+        "maximum_initial_field_adiabatic_rise_k": 15.493325486078152,
+        "maximum_position_mm": [
+          -0.34999990020878613,
+          0.3500001330394298,
+          0.44999990495853126
+        ],
+        "thermal_diffusion_length_over_pulse_pair_mm": 0.036657195746537946,
+        "volumetric_heat_capacity_j_m3_k": 4000000.0,
+        "thermal_conductivity_w_m_k": 15.0
+      },
+      {
+        "material": "Positive copper terminal",
+        "material_id": 16,
+        "pulse_energy_j": 3.308719801567634e-05,
+        "average_power_w": 0.006617439603135268,
+        "maximum_initial_field_adiabatic_rise_k": 0.6119390805985293,
+        "maximum_position_mm": [
+          -0.44999990495853126,
+          -0.34999990020878613,
+          0.44999990495853126
+        ],
+        "thermal_diffusion_length_over_pulse_pair_mm": 0.20076718249580555,
+        "volumetric_heat_capacity_j_m3_k": 3502660.0,
+        "thermal_conductivity_w_m_k": 394.0
+      },
+      {
+        "material": "Negative copper terminal",
+        "material_id": 17,
+        "pulse_energy_j": 3.3087194385675366e-05,
+        "average_power_w": 0.006617438877135073,
+        "maximum_initial_field_adiabatic_rise_k": 0.6119390805985293,
+        "maximum_position_mm": [
+          0.4500001377891749,
+          -0.34999990020878613,
+          0.44999990495853126
+        ],
+        "thermal_diffusion_length_over_pulse_pair_mm": 0.20076718249580555,
+        "volumetric_heat_capacity_j_m3_k": 3502660.0,
+        "thermal_conductivity_w_m_k": 394.0
+      }
+    ],
+    "limits": [
+      "Initial cold-field extrapolation: fixed geometry, conductivity, current paths and material properties; no thermal PDE or temperature-dependent resistance.",
+      "No phase change, external contact heating, rod/lead losses or cooling. Local maxima depend on the voxel resolution.",
+      "Diffusion length is sqrt(k*t/(rho*cp)), an order-of-magnitude scale, not a simulated temperature correction.",
+      "Repetition power assumes identical electrical pulses, not demonstrated repeatable droplet formation."
+    ]
+  },
+  "validation": [
+    "Default generated CAD payload remains byte-identical when optional tip-flat arguments are absent. SHA256173301cf5f14fb06afbe6e593b0a6ec39d5398d511ef81ba84e68ddffce65d6a.",
+    "Liquid/bore triangle payload remains unchanged by the optional outer-flat boolean.",
+    "All three cold GPU runs pass overlap validation and charge residual checks.",
+    "Actual CAD sections rendered and inspected headlessly."
+  ],
+  "limits": [
+    "Current redistribution helps the outlet-land metric while reducing total force; neither establishes jetting.",
+    "Sharp contact geometry and100um walls need refinement; earlier hotspots were strongly grid-dependent.",
+    "Applied-current self-field, thermal evolution, wetting/hysteresis and externaljoint resistance remain unmodeled."
+  ],
+  "moving_fluid": {
+    "status": "running",
+    "project": "artifacts/hardware-research/cases/v6-tip-flat08-disc10x5-full-gravity-fit-sncu-h010.mhd.json",
+    "output": "artifacts/hardware-research/v6-tip-flat08-disc10x5-gravity-flow-150A-250us-h010",
+    "peak_A": 150,
+    "positive_us": 250,
+    "retract_fraction": 0.25,
+    "dt_us": 3,
+    "duration_ms": 3.6,
+    "acceleration_m_s2": [
+      0,
+      0,
+      -9.81
+    ]
+  }
+}

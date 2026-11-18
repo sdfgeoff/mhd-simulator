@@ -1,0 +1,51 @@
+{
+  "status": "Conceptual bias-field options, not a qualified magnet lifetime or electromagnet design",
+  "permanent": {
+    "model_remanence_T": 0.95,
+    "outlet_land_B0_rms_T": {
+      "compact_disc10x5_pair": 0.3095717,
+      "larger_disc20x10_pair": 0.3743283
+    },
+    "scope": "Cold model values near the outlet, not manufacturer-rated air-gap measurements.",
+    "consumable": "No normal consumption by applying the solder-current pulse; energy is supplied electrically. Irreversible loss can occur if temperature/opposing-field operating point is outside the selected grade demagnetization curve.",
+    "stock_example": {
+      "url": "https://aussiemagnets.com.au/products/10mm-x-5mm-disc-samarium-cobalt",
+      "grade_listed": "Sm2Co17 / YXG26",
+      "supplier_maximum_operating_temperature_C": 350,
+      "limits": "Catalogue claim does not qualify this hot air-gap assembly, coatings, attachments or lifetime."
+    },
+    "primary_background": [
+      "https://www.arnoldmagnetics.com/products/recoma-samarium-cobalt-magnets/",
+      "https://ntrs.nasa.gov/citations/19920019480"
+    ]
+  },
+  "electromagnet_ideal_gap": {
+    "method": "Ampere-law ideal high-permeability return path: NI=B_gap*g/mu0. Fringing, core reluctance, saturation and local pole geometry omitted.",
+    "target_gap_B_T": 0.35,
+    "gap_m": 0.0042,
+    "required_ampere_turns": 1169.7888317254306,
+    "illustrative_turns": 200,
+    "illustrative_current_A": 5.848944158627153,
+    "suggested_round_number_current_A": 6,
+    "wire_area_mm2": 0.5,
+    "assumed_mean_turn_length_mm": 60,
+    "assumed_warm_copper_resistivity_ohm_m": 2.5e-08,
+    "wire_length_m": 12.0,
+    "wire_R_ohm": 0.6,
+    "winding_power_W_at6A": 21.599999999999998,
+    "winding_voltage_V_at6A": 3.5999999999999996,
+    "copper_window_area_mm2": 99.99999999999999,
+    "window_area_mm2_at_assumed50percent_fill": 199.99999999999997,
+    "scope": "One illustrative winding for scale only; a current regulator from24V would be needed. No manufactured coil/yoke layout, thermal design or loaded field solution. SteadyDCbias, separate from50kHzinduction actuation."
+  },
+  "tradeoffs": [
+    "Permanent magnets are compact and need no bias power; use a hot-qualified grade and measure the assembled field.",
+    "Electromagnet gives tunable field but adds continuous heat and bulk. A rough1.2kA-turn scale does not demonstrate actual pole field or jetting.",
+    "The solder-current pulse still needs its own controlled200A-class path; the bias coil is not a replacement for that current."
+  ],
+  "reply_context": [
+    635,
+    636,
+    637
+  ]
+}

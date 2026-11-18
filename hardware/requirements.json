@@ -1,6 +1,6 @@
 {
   "topic": 19,
-  "latest_authorization_reply": 610,
+  "latest_authorization_reply": 635,
   "droplet_mm": [
     0.4,
     0.6
@@ -33,5 +33,20 @@
   "pneumatic_actuation_allowed": false,
   "mechanically_vibrating_actuator_allowed": false,
   "simulator_baseline_tag": "simulator-baseline-2026-11-18",
-  "stop": "credible best designs OR live weekly_remaining.py <=40%; present evidence and uncertainty"
+  "stop": "credible best designs OR live weekly_remaining.py <=40%; present evidence and uncertainty",
+  "fabrication_updates": [
+    {
+      "reply": 633,
+      "instruction": "Prefer external tip contacts over fiddly inside-nozzle electrodes."
+    },
+    {
+      "reply": 635,
+      "instruction": "Custom machined V6-like nozzle geometry is allowed and considered practical by the user."
+    },
+    {
+      "reply": 636,
+      "context": "Coil experiments remain interesting; asks about stockV6externalcoil performance."
+    }
+  ],
+  "current_focus": "External tip contacts are the primary electrode option. Continue bounded single/two-coil investigation, without claiming stockV6carrier jetting was ruled out."
 }

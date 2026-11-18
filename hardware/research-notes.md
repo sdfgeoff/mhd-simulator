@@ -1,6 +1,6 @@
 # Historical research notes
 
-Preserved on19November2026 from the earlier study README. Interim running/queued
+Preserved on 19 November 2026 from the earlier study README. Interim running/queued
 statements are historical; see [README.md](README.md) for current evidence.
 
 # Solder jetter hardware study

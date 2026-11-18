@@ -68,7 +68,8 @@ a departing, repeatable jet.
    Accepted liquid fraction updates conductivity; forces drive the normal
    fluid/interface engine. Applied-current self-field and magnetic reaction are
    omitted. Postprocessed local force corrections are roughly 10–15% for the
-   leading tip cases, and are not fed back. External return wiring is absent.
+   leading tip cases, and are not fed back. External return wiring is absent. The assumed 0.95 T hot magnet remanence
+   does not qualify a catalogue grade or its hot load line.
 
 6. **Alloy transfer is incomplete.** Sn60Pb40 separates with the smaller
    contacts in a coarse trial at about 0.600 mm / 0.14 m/s, while wider-contact
@@ -106,7 +107,8 @@ PCB. Hot differential inductance and ripple/core losses remain unresolved.
 The recorded MOSFET example is a 60 V part on a 24 V bus, not a completed bridge.
 
 The scaled single-coil resonant estimate at 250 A implies roughly 62 W
-electrical heat at 200 Hz, with internal reactive voltages above the bus.
+electrical heat at 200 Hz before AC winding and switching losses, with internal
+reactive voltages above the bus.
 The two-coil air matrix has about 0.388 µH self inductance, 0.0974 µH mutual
 inductance and coupling coefficient 0.251. Prescribed quadrature currents imply
 about 612 W of opposite-signed **air mutual power exchange** during the steady
@@ -162,6 +164,21 @@ pulse heat are separate; no replenishing wire is simulated in the flow trials.
 | Self-field and analytical cylinder limits | [conduction-self-field-screening.json](conduction-self-field-screening.json), [cylinder-induction-screening.json](cylinder-induction-screening.json) |
 | Surface evidence and geometry bounds | [wetting-evidence.json](wetting-evidence.json), [candidate-envelopes.json](candidate-envelopes.json) |
 
+## Machinable tip-contact variant
+
+The user has authorized custom V6-like machining. Two opposed external flats,
+0.8 mm apart over the lower 0.6 mm, retain the 0.4 mm bore with a nominal 0.2 mm
+minimum steel wall. In matched 100 µm cold screens, this increases outlet-land
+force by 73% while decreasing total liquid force by 26%. With the compact
+magnets at 150 A, its cold outlet-land force is about 8% above the unmodified
+large-pole case at 200 A. This motivates a gravity-on fluid trial; it does not
+establish equivalent jetting. Clamping, cutter radii and tolerances remain open.
+[custom-tip-flat-screening.json](custom-tip-flat-screening.json) retains geometry,
+fields, validation and electrical budgets.
+
+[Bias-field alternatives](bias-field-options.json) records the SmCo lifetime
+assumptions and an illustrative DC electromagnet estimate.
+
 ## Work still in progress
 
 1. Wider-contact 50 µm, fixed-step flow refinement.
@@ -169,7 +186,8 @@ pulse heat are separate; no replenishing wire is simulated in the flow trials.
    with and without the retract pulse.
 3. A shorter gravity-on 250 A / 150 µs pulse with smaller retract amplitude,
    testing stronger initial forcing at lower total I²dt. No improvement assumed.
-4. The exploratory two-phase unified fluid trial at 200 A per coil, explicitly
+4. The custom flat-contact/compact-pole 150 A gravity-on flow trial.
+5. The exploratory two-phase unified fluid trial at 200 A per coil, explicitly
    zero gravity and 200 µm resolution.
 
 [research-notes.md](research-notes.md) preserves the earlier detailed notes and
