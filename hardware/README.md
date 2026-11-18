@@ -28,6 +28,10 @@ The original **smaller-contact** V6 reference completes 3.6 ms at 50 µm with a
 0.618 mm component moving down at 0.504 m/s. Its corresponding coarse result is
 0.591 mm / 0.289 m/s: velocity and breakup timing are **not mesh-converged**.
 This is a different contact geometry from the wider-contact candidate above.
+The wider-contact 50 µm run also has a separated component in its accepted
+2.4 ms prefix: 0.625 mm / 0.387 m/s downward at alpha 0.01. Its requested
+3.6 ms run remains unfinished; this is slightly above the size target.
+[Prefix record](tip-wide-fine-prefix.json).
 
 Equivalent diameters in the table use six-neighbour connectivity at alpha 0.01,
 excluding the main pool and components smaller than one alpha-weighted cell.

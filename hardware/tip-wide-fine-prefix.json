@@ -1,0 +1,140 @@
+{
+  "status": "Accepted saved prefix; requested3600steps/3.6ms not complete",
+  "artifacts": "artifacts/hardware-research/v6-tip-wide-flow-200A-250us-h0050",
+  "accepted_saved_step": 2400,
+  "accepted_saved_time_s": 0.002399999999999994,
+  "requested_steps": 3600,
+  "uniform_acceleration_m_s2": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "frame_sha256": {
+    "metadata": "3f85693a2f0afe130636fd788645695237754c761cd42e8e81b30c68c88f7952",
+    "fluid": "954069469d4e472479e8f993e4e637489697ccb7392648cf2ae1031f61528b2a"
+  },
+  "final_saved_frame": {
+    "step": 2400,
+    "time_us": 2399.999999999994,
+    "first_nonnegative_cell_plane_z_mm": 0.024999884772114456,
+    "exit_plane_alpha_area_mm2": 0.12999996749683818,
+    "exit_plane_mean_uz_m_s": -0.0024912799528014956,
+    "exit_plane_mean_pressure_pa": 2697.772424548291,
+    "exit_plane_downward_flux_proxy_nl_s": 323.866312889719,
+    "liquid_volume_nl": 11323.00078350243,
+    "minimum_liquid_fraction": 0.0,
+    "maximum_liquid_fraction": 1.0,
+    "below_tip_maximum_liquid_fraction_at_cell_centres": 1.0,
+    "boundary_maximum_liquid_fraction": {
+      "z_min": 0.0,
+      "z_max": 0.0,
+      "y_min": 0.0,
+      "y_max": 0.0,
+      "x_min": 0.0,
+      "x_max": 0.0
+    },
+    "liquid_touches_domain_boundary_alpha01": false,
+    "below_tip_nl": 181.5070780971545,
+    "below_one_cell_guard_nl": 174.16529181057982,
+    "front_z_mm_alpha_half": -1.525000188848935,
+    "detached_below_tip": [
+      {
+        "volume_nl": 121.0819197572134,
+        "equivalent_diameter_mm": 0.6138000110674509,
+        "cells": 1032,
+        "centre_mm": [
+          0.00013685699926511047,
+          0.00019767400435397443,
+          -1.2172742375227752
+        ],
+        "velocity_m_s": [
+          0.00031938496977090836,
+          0.00032062261016108096,
+          -0.393915593624115
+        ],
+        "touches_domain_boundary": false
+      }
+    ],
+    "connectivity_thresholds": {
+      "0.01": [
+        {
+          "volume_nl": 128.07446572756524,
+          "equivalent_diameter_mm": 0.6253953438161763,
+          "cells": 1359,
+          "centre_mm": [
+            5.2032881763872665e-05,
+            9.540612248563493e-05,
+            -1.2168580458847338
+          ],
+          "velocity_m_s": [
+            0.00025090479175560176,
+            0.0003793394425883889,
+            -0.3871365487575531
+          ],
+          "touches_domain_boundary": false
+        }
+      ],
+      "0.25": [
+        {
+          "volume_nl": 125.0457991287163,
+          "equivalent_diameter_mm": 0.6204262456800973,
+          "cells": 1115,
+          "centre_mm": [
+            0.00014011840294182672,
+            0.00011771677849846962,
+            -1.217652562000393
+          ],
+          "velocity_m_s": [
+            0.0002567468036431819,
+            0.00045841894461773336,
+            -0.39027073979377747
+          ],
+          "touches_domain_boundary": false
+        }
+      ],
+      "0.5": [
+        {
+          "volume_nl": 121.0819197572134,
+          "equivalent_diameter_mm": 0.6138000110674509,
+          "cells": 1032,
+          "centre_mm": [
+            0.00013685699926511047,
+            0.00019767400435397443,
+            -1.2172742375227752
+          ],
+          "velocity_m_s": [
+            0.00031938496977090836,
+            0.00032062261016108096,
+            -0.393915593624115
+          ],
+          "touches_domain_boundary": false
+        }
+      ],
+      "0.75": [
+        {
+          "volume_nl": 111.82193763251865,
+          "equivalent_diameter_mm": 0.5977360697809114,
+          "cells": 914,
+          "centre_mm": [
+            0.00015535257132307713,
+            2.771726994183686e-05,
+            -1.2153094682217573
+          ],
+          "velocity_m_s": [
+            0.0003538469027262181,
+            0.0003281818062532693,
+            -0.4025361239910126
+          ],
+          "touches_domain_boundary": false
+        }
+      ]
+    },
+    "below_tip_change_nl": 181.5070509639978,
+    "relative_liquid_volume_change": 2.839422719169704e-08
+  },
+  "limits": [
+    "Leading component size/velocity at2.4ms only, not completed3.6ms result.",
+    "Coarse and fine breakup timing/velocity are not converged.",
+    "This is unmodified external cone contact geometry, not the new machined-flat geometry."
+  ]
+}
