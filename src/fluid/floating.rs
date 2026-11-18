@@ -1,4 +1,4 @@
-//! Test-only rank-one gauge research. Production pressure code is unchanged.
+//! Test-only mean-free pressure research. Production pressure code is unchanged.
 use super::*;
 impl FluidState {
     pub(crate) fn enable_floating_pressure(&mut self) -> Result<(), String> {
@@ -15,7 +15,7 @@ impl FluidState {
             ),
             (
                 "sum=vec4<f32>(r*r/d,true_residual*true_residual,physical*physical,0.0);",
-                "sum=vec4<f32>(r*r/d,true_residual*true_residual,physical*physical,r/d);",
+                "sum=vec4<f32>(r*r/d,true_residual*true_residual,physical*physical,r);",
             ),
             (
                 "let pressure=work[i].x*p.physical.w/p.physical.y;",
@@ -35,10 +35,12 @@ impl FluidState {
             "scalars[0]=total;scalars[0].w*=scalars[2].z;scalars[1]=",
         );
         solver.replace_range(a..b, &function);
-        let a = solver.find("fn apply(").unwrap();
-        let b = a + solver[a..].find("@compute").unwrap();
-        let function = solver[a..b].replace("return out;", "return out+scalars[2].w*scalars[0].w;");
-        solver.replace_range(a..b, &function);
+        let old = "v.x+a*v.z,r,v.z,diagonal);sum=vec4<f32>(r*r/diagonal,r*r,0.0,0.0);";
+        assert_eq!(solver.matches(old).count(), 1);
+        solver = solver.replace(
+            old,
+            "v.x+a*(v.z-scalars[0].w),r,v.z,diagonal);sum=vec4<f32>(r*r/diagonal,r*r,0.0,r);",
+        );
         let a = solver
             .find("@compute @workgroup_size(256)\nfn search(")
             .unwrap();
@@ -77,9 +79,10 @@ impl FluidState {
             "floating_prepare",
             "floating_direction_collect",
             "floating_search_reduce",
-            "floating_constant_rhs",
-            "floating_constant_collect",
-            "floating_constant_reduce",
+            "update",
+            "floating_residual_reduce",
+            "floating_initial_project",
+            "floating_residual_project",
         ] {
             let pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
                 label: Some(entry),

@@ -982,7 +982,6 @@ impl FluidState {
             self.context
                 .queue
                 .write_buffer(&self._uniform, 0, bytemuck::bytes_of(&self.params));
-            self.context.queue.write_buffer(&self.scalars, 32, &[0; 4]);
         }
         let _stage = self.context.profiler.stage(crate::profile::Stage::Pressure);
         let cells = groups(self.params.dims[3]);
@@ -1000,7 +999,12 @@ impl FluidState {
         if self.floating_pressure {
             self.dispatch(&preparation[usize::from(!warm_start)..3]);
             self.dispatch(&[("floating_collect", cells), ("floating_prepare", [1, 1, 1])]);
-            self.dispatch(&preparation[3..]);
+            self.dispatch(&[
+                ("pressure_refresh", cells),
+                ("floating_residual_reduce", [1, 1, 1]),
+                ("floating_initial_project", cells),
+                ("initial_reduce", [1, 1, 1]),
+            ]);
         } else {
             self.dispatch(if warm_start {
                 &preparation
@@ -1033,10 +1037,6 @@ impl FluidState {
             && let Some(mg) = mg
         {
             mg.build(&self.context);
-            #[cfg(test)]
-            if self.floating_pressure {
-                mg.calibrate_floating_gauge(self);
-            }
             mg.initialize(self);
         }
         while !residual.1 && iterations < self.config.max_iterations {
@@ -1054,9 +1054,15 @@ impl FluidState {
                         ("pressure_apply", cells),
                         ("alpha_reduce", [1, 1, 1]),
                         ("update", cells),
-                        ("beta_reduce", [1, 1, 1]),
-                        ("search", cells),
                     ]);
+                    #[cfg(test)]
+                    if self.floating_pressure {
+                        stages.extend([
+                            ("floating_residual_reduce", [1, 1, 1]),
+                            ("floating_residual_project", cells),
+                        ]);
+                    }
+                    stages.extend([("beta_reduce", [1, 1, 1]), ("search", cells)]);
                     #[cfg(test)]
                     if self.floating_pressure {
                         stages.push(("floating_search_reduce", [1, 1, 1]));
@@ -1074,7 +1080,15 @@ impl FluidState {
                 if self.floating_pressure {
                     self.dispatch(&[("floating_collect", cells), ("floating_prepare", [1, 1, 1])]);
                 }
-                self.dispatch(&[("pressure_refresh", cells), ("initial_reduce", [1, 1, 1])]);
+                self.dispatch(&[("pressure_refresh", cells)]);
+                #[cfg(test)]
+                if self.floating_pressure {
+                    self.dispatch(&[
+                        ("floating_residual_reduce", [1, 1, 1]),
+                        ("floating_initial_project", cells),
+                    ]);
+                }
+                self.dispatch(&[("initial_reduce", [1, 1, 1])]);
                 residual = self.convergence()?;
                 if !residual.1
                     && let Some(mg) = mg

@@ -72,3 +72,14 @@ snapshot and before its 120-step snapshot: the surface-update projection reaches
 10,000 iterations with physical relative residual 4.858e-5 against the unchanged
 1e-5 target. Thus the short-prefix result did not establish robustness. Neither
 rank-one variant is eligible for production. No speedup is claimed.
+
+## Mean-free residual candidate
+
+A subsequent candidate removes the rank-one term entirely, projects each
+residual into the constant-orthogonal subspace, and centers pressure increments
+by their global mean. Preconditioning induces `P M P` on that quotient space;
+the physical residual norm remains unprojected for final acceptance. The
+analytic periodic check passes with the same 1/4 floating Jacobi/MG iterations.
+The stronger-pulse run again fails between saved steps 100 and 120, reaching
+relative physical residual 4.846e-5 after 10,000 iterations. This rules out the
+rank-one term as the sole explanation. This version is also excluded from main.
