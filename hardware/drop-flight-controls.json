@@ -10,5 +10,20 @@
   },
   "purpose": "Diagnose unexpected first-dropdeceleration in hardware repetition runs before trusting their long-timevelocity. Not a hardwarejettingresult.",
   "measurement": "UseactualinitialnativeVOFmass/COM and accepted clocks; no assumption of exact CADspherevolume. ComparenativeCOMtransport and alpha-weightedvelocity, volume drift and boundary contact.",
-  "limits": "Coarse6-cell-diameterdrop andfiniteclosed/periodicdomains require carefulscope; passingonecontrolcannotvalidate alljettingphysics."
+  "limits": "Coarse6-cell-diameterdrop andfiniteclosed/periodicdomains require carefulscope; passingonecontrolcannotvalidate alljettingphysics.",
+  "initial_translation_prefix_observation": {
+    "time_us": 600,
+    "expected_speed_m_s": -0.2,
+    "observed_alpha_weighted_speed_m_s": -0.18238523602485657,
+    "expected_COM_travel_mm": -0.12,
+    "observed_COM_z_mm": -0.11242476453280681,
+    "scope": "Incomplete6mscontrol; prefixalreadyshows~9%speedloss. ActualinitialCOM~0. Whole-domain uniformtranslation withperiodicboundaries should be a Galilean transform ofstationarycase. Treat hardwaredeparturevelocities asprovisional."
+  },
+  "nearzero_surface_tension_control": {
+    "status": "Running300steps/600usprefix",
+    "case": "artifacts/hardware-research/cases/drop-flight-h010-v1/translation-periodic-nearzero-sigma.mhd.json",
+    "output": "artifacts/hardware-research/drop-flight-translation-nearzero-sigma-h010-prefix",
+    "surface_tension_N_m": 1e-12,
+    "purpose": "Separate capillary/advection-induced numericalmomentum drift fromuniformadvectionwithoutcapillaryforcing."
+  }
 }

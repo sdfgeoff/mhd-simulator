@@ -78,6 +78,12 @@ electronics capability from unqualified head limits. Revision 2 of the driver
 handoff starts the real-head mode disarmed and reserves full-current validation
 waveforms for dummy loads.
 
+The [isolated-drop flight controls](drop-flight-controls.json) are now a priority:
+an initial 0.6 ms periodic-translation prefix already loses about 9% of its liquid
+speed. Hardware-run departure velocities remain provisional until that numerical
+behavior is understood. The zero-gravity at-rest control remains centred in its
+initial prefix; gravity and translation controls continue.
+
 ## Physical scope and limits
 
 1. **Gravity and domain boundaries.** Earlier generated flow cases use
