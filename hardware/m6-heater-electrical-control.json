@@ -1,0 +1,58 @@
+{
+  "status": "Accepted tighter paired screen; no resolved electrical heater-shunt effect at this precision",
+  "without_heater": "artifacts/hardware-research/m6-heater-control-v2-tight6-cold30-h010",
+  "with_heater": "artifacts/hardware-research/m6-heater-included-v2-tight6-cold30-h010",
+  "spacing_um": 100.00000474974513,
+  "magnet_subdivisions": 2,
+  "native_grid": {
+    "cell_m": 0.00010000000474974513,
+    "dims": [
+      260,
+      240,
+      205
+    ],
+    "origin_m": [
+      -0.013000000268220901,
+      -0.012000000104308128,
+      -0.0020000000949949026
+    ]
+  },
+  "liquid_mask_bit_identical": true,
+  "B_bit_identical": true,
+  "R_ohm": [
+    0.002674190058237024,
+    0.002674193431933721
+  ],
+  "relative_R_change": 1.2615770097479384e-06,
+  "outlet_land_force_relative_change": -2.7536614100043266e-07,
+  "total_liquid_force_relative_change": -0.00017509214281841157,
+  "heater_joule_power_at30A_W": 1.2349842402623432e-08,
+  "charge_relative_residuals": [
+    8.959443675848888e-07,
+    9.98224209070031e-07
+  ],
+  "power_relative_defects": [
+    3.2186508178710938e-06,
+    4.410743713378906e-06
+  ],
+  "scope": "100 um full-CAD domain and source subdivision 2 due the native source-work budget. Matched geometry/materials/grid except one 13 MS/m reference aluminium heater body added, with ideal metal contact at the M6 interface. Current is supplied at the actual outermost copper pad planes. Static zero velocity. This does not model heater thermal coupling, real thread-contact resistance, eddy shielding or spatially converged head performance.",
+  "loose_tolerance_failed_result": {
+    "status": "Not accepted: heater case power defect0.495% and nonmonotone resistance; investigate/tighten charge convergence before interpretation",
+    "R_ohm": [
+      0.0026743583381175994,
+      0.0026872223555688673
+    ],
+    "relative_R_change": 0.004810132310213433,
+    "outlet_land_force_relative_change": 0.005579514310661615,
+    "power_relative_defects": [
+      6.639957427978516e-05,
+      0.004949212074279785
+    ]
+  },
+  "requested_relative_tolerance": 1e-06,
+  "interpretation": "Changes below 0.001% are at the remaining numerical precision; do not interpret their sign. The loose 1e-5 stop accepted about 0.5% power defect. Require physical power closure as well as algebraic convergence.",
+  "loose_field_archives": [
+    "artifacts/hardware-research/m6-heater-control-v2-cold30-h010/em.bin.zst",
+    "artifacts/hardware-research/m6-heater-included-v2-cold30-h010/em.bin.zst"
+  ]
+}

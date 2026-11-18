@@ -271,6 +271,14 @@ impl Conduction {
             self.iterations, self.relative_residual
         ))
     }
+    pub fn set_relative_tolerance(&mut self, tolerance: f32) -> Result<(), String> {
+        if !tolerance.is_finite() || tolerance <= 0. || tolerance >= 1. {
+            return Err("Relative tolerance must lie between zero and one".into());
+        }
+        self.params.physical[2] = tolerance;
+        self.write_params();
+        Ok(())
+    }
     pub fn set_contact_resistivity(&mut self, resistance_ohm_m2: f32) -> Result<(), String> {
         if !resistance_ohm_m2.is_finite() || resistance_ohm_m2 < 0. {
             return Err("Invalid contact resistivity".into());

@@ -1,0 +1,49 @@
+{
+  "source_directory": "artifacts/hardware-research/tip-boss07-hot-ends-cold30-h0050",
+  "current_A": 125.0,
+  "method": "Free-space Biot-Savart convolution of exported cold J; zero-padded linear FFT, self-cell integral zero by symmetry. Source cubes within four cells use subcell quadrature when enabled; farther sources use cell centres.",
+  "near_subdivisions": 4,
+  "regions": {
+    "all_liquid": {
+      "cells": 90584,
+      "self_B_rms_T": 0.01084878154642933,
+      "self_B_max_T": 0.061274303434805395,
+      "applied_B_rms_T": 0.4267769455909729,
+      "self_force_integral_N": [
+        -3.191139485966405e-11,
+        -1.620626258226457e-10,
+        5.5005839780116214e-05
+      ],
+      "applied_force_integral_N": [
+        -1.6343621704000192e-09,
+        -9.919671908661178e-11,
+        -0.010953395174801381
+      ],
+      "self_over_applied_force_L2": 0.11433999401935617
+    },
+    "liquid_outlet_land": {
+      "cells": 624,
+      "self_B_rms_T": 0.0367762115909197,
+      "self_B_max_T": 0.061274303434805395,
+      "applied_B_rms_T": 0.31709352135658264,
+      "self_force_integral_N": [
+        -1.7963247250563294e-11,
+        -1.5995395937481983e-10,
+        0.00028019772549813405
+      ],
+      "applied_force_integral_N": [
+        -7.246289903309428e-10,
+        -2.396241185326238e-10,
+        -0.006997483369347906
+      ],
+      "self_over_applied_force_L2": 0.11603645301389758
+    }
+  },
+  "limits": [
+    "Diagnostic only: no feedback on current, moving interface or force in the recorded fluid run.",
+    "External return leads beyond exported CAD are absent; this is not a complete closed-circuit field or an error bound.",
+    "Near-neighbour cell-centre quadrature requires grid refinement. Permeability is unity; magnetic diffusion and terminal transients are absent.",
+    "Net force cancellation does not establish negligible local pinching or unchanged breakup."
+  ],
+  "scope": "Omitted-field diagnostic on fixed exported J, including resolved modeled copper. External return path omitted; not a full-circuit field or coupled jetting result. Coordinate-grid memory released before FFT scratch; finite-wire/direct-sum checks pass."
+}

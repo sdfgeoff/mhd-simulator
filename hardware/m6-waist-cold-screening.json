@@ -1,0 +1,386 @@
+{
+  "status": "Completed cold whole-layout screen; no jetting result",
+  "source": {
+    "source_project": "hardware/designs/slim-square07/case.mhd.json",
+    "source_sha256": "f6124809b1f1e42f7d21c6c7a7d4718c0e8f0855f865a250a38950a7ab61f143",
+    "cell_mm": 0.05,
+    "interface": "M6x1 outer envelope from V6 drawing approximation, z6.5..12.5 mm retained. Helical thread is not modeled; final machining drawing required.",
+    "shared": {
+      "outlet_mm": 0.4,
+      "boss_square_mm": 0.7,
+      "outlet_land_mm": 0.6,
+      "internal_funnel_half_angle_deg": 45,
+      "free_level_mm": 3.5,
+      "waist_cut_top_mm": 5.4,
+      "magnet_bottom_mm": 0.1,
+      "pole_height_mm": 5,
+      "pole_x_width_mm": 25,
+      "pole_y_depth_mm": 10,
+      "pole_clearance_each_side_mm": 0.1
+    },
+    "cases": [
+      {
+        "label": "ch32-w04",
+        "project": "artifacts/hardware-research/cases/m6-waist-v1/ch32-w04.mhd.json",
+        "chamber_diameter_mm": 3.2,
+        "upper_feed_diameter_mm": 3.2,
+        "waist_width_mm": 4.0,
+        "waist_wall_mm": 0.4,
+        "pole_gap_mm": 4.2,
+        "nominal_boss_wall_mm": 0.15,
+        "reference_heater_overlap_mm3": 0.0,
+        "nominal_liquid_volume_mm3": 16.408337005518103,
+        "scope": "Whole-layout comparison; chamber, waist and pole gap vary together. Funnel and raised magnets differ from the previous slim-tip candidate. Threads/tool radii/clamps not detailed."
+      },
+      {
+        "label": "ch20-w04",
+        "project": "artifacts/hardware-research/cases/m6-waist-v1/ch20-w04.mhd.json",
+        "chamber_diameter_mm": 2.0,
+        "upper_feed_diameter_mm": 3.2,
+        "waist_width_mm": 2.8,
+        "waist_wall_mm": 0.4,
+        "pole_gap_mm": 3.0,
+        "nominal_boss_wall_mm": 0.15,
+        "reference_heater_overlap_mm3": 0.0,
+        "nominal_liquid_volume_mm3": 7.706058225269061,
+        "scope": "Whole-layout comparison; chamber, waist and pole gap vary together. Funnel and raised magnets differ from the previous slim-tip candidate. Threads/tool radii/clamps not detailed."
+      },
+      {
+        "label": "ch12-w04",
+        "project": "artifacts/hardware-research/cases/m6-waist-v1/ch12-w04.mhd.json",
+        "chamber_diameter_mm": 1.2,
+        "upper_feed_diameter_mm": 3.2,
+        "waist_width_mm": 2.0,
+        "waist_wall_mm": 0.4,
+        "pole_gap_mm": 2.2,
+        "nominal_boss_wall_mm": 0.15,
+        "reference_heater_overlap_mm3": 0.0,
+        "nominal_liquid_volume_mm3": 3.1184212546449723,
+        "scope": "Whole-layout comparison; chamber, waist and pole gap vary together. Funnel and raised magnets differ from the previous slim-tip candidate. Threads/tool radii/clamps not detailed."
+      },
+      {
+        "label": "ch40-w04",
+        "project": "artifacts/hardware-research/cases/m6-waist-v1/ch40-w04.mhd.json",
+        "chamber_diameter_mm": 4.0,
+        "upper_feed_diameter_mm": 4.0,
+        "waist_width_mm": 4.8,
+        "waist_wall_mm": 0.4,
+        "pole_gap_mm": 5.0,
+        "nominal_boss_wall_mm": 0.15,
+        "reference_heater_overlap_mm3": 0.0,
+        "nominal_liquid_volume_mm3": 22.25171311927064,
+        "scope": "Whole-layout comparison; chamber, waist and pole gap vary together. Funnel and raised magnets differ from the previous slim-tip candidate. Threads/tool radii/clamps not detailed."
+      },
+      {
+        "label": "ch20-w02",
+        "project": "artifacts/hardware-research/cases/m6-waist-v1/ch20-w02.mhd.json",
+        "chamber_diameter_mm": 2.0,
+        "upper_feed_diameter_mm": 3.2,
+        "waist_width_mm": 2.4,
+        "waist_wall_mm": 0.2,
+        "pole_gap_mm": 2.6,
+        "nominal_boss_wall_mm": 0.15,
+        "reference_heater_overlap_mm3": 0.0,
+        "nominal_liquid_volume_mm3": 7.706058225269061,
+        "scope": "Whole-layout comparison; chamber, waist and pole gap vary together. Funnel and raised magnets differ from the previous slim-tip candidate. Threads/tool radii/clamps not detailed."
+      },
+      {
+        "label": "ch12-w02",
+        "project": "artifacts/hardware-research/cases/m6-waist-v1/ch12-w02.mhd.json",
+        "chamber_diameter_mm": 1.2,
+        "upper_feed_diameter_mm": 3.2,
+        "waist_width_mm": 1.6,
+        "waist_wall_mm": 0.2,
+        "pole_gap_mm": 1.8,
+        "nominal_boss_wall_mm": 0.15,
+        "reference_heater_overlap_mm3": 0.0,
+        "nominal_liquid_volume_mm3": 3.1184212546449723,
+        "scope": "Whole-layout comparison; chamber, waist and pole gap vary together. Funnel and raised magnets differ from the previous slim-tip candidate. Threads/tool radii/clamps not detailed."
+      }
+    ]
+  },
+  "cases": [
+    {
+      "label": "ch32-w04",
+      "project": "artifacts/hardware-research/cases/m6-waist-v1/ch32-w04.mhd.json",
+      "chamber_diameter_mm": 3.2,
+      "upper_feed_diameter_mm": 3.2,
+      "waist_width_mm": 4.0,
+      "waist_wall_mm": 0.4,
+      "pole_gap_mm": 4.2,
+      "nominal_boss_wall_mm": 0.15,
+      "reference_heater_overlap_mm3": 0.0,
+      "nominal_liquid_volume_mm3": 16.408337005518103,
+      "scope": "Whole-layout comparison; chamber, waist and pole gap vary together. Funnel and raised magnets differ from the previous slim-tip candidate. Threads/tool radii/clamps not detailed.",
+      "cold_output": "artifacts/hardware-research/m6-waist-v1-ch32-w04-cold30-h0050",
+      "cell_um": 50.000002374872565,
+      "current_A": 30.00000762939453,
+      "nozzle_and_modeled_copper_R_ohm": 0.0022599924817104386,
+      "static_total_power_W": 2.0339865684509277,
+      "liquid_volume_native_mm3": 16.42000233972456,
+      "land_mean_By_T": -0.28373780249594116,
+      "land_downward_force_N": 0.001495044944782453,
+      "all_liquid_downward_force_N": 0.0026106256702015,
+      "land_force_per_sqrt_total_power_N_sqrt_W": 0.0010482870203118626,
+      "current_return_relative_error": 3.941852838680817e-06,
+      "true_relative_residual": 7.035960152279586e-06,
+      "native_power_relative_defect": -3.7550926208496094e-06,
+      "by_material": {
+        "4": {
+          "joule_W": 0.1922384931866755,
+          "peak_Q_W_m3": 3606786560.0
+        },
+        "14": {
+          "joule_W": 0.9595969432796121,
+          "peak_Q_W_m3": 25095360512.0
+        },
+        "16": {
+          "joule_W": 0.44107570439190935,
+          "peak_Q_W_m3": 1054892736.0
+        },
+        "17": {
+          "joule_W": 0.4410756696199044,
+          "peak_Q_W_m3": 1054910016.0
+        }
+      },
+      "land_force_ratio_to_family_control": 1.0,
+      "force_per_sqrt_power_ratio_to_family_control": 1.0
+    },
+    {
+      "label": "ch20-w04",
+      "project": "artifacts/hardware-research/cases/m6-waist-v1/ch20-w04.mhd.json",
+      "chamber_diameter_mm": 2.0,
+      "upper_feed_diameter_mm": 3.2,
+      "waist_width_mm": 2.8,
+      "waist_wall_mm": 0.4,
+      "pole_gap_mm": 3.0,
+      "nominal_boss_wall_mm": 0.15,
+      "reference_heater_overlap_mm3": 0.0,
+      "nominal_liquid_volume_mm3": 7.706058225269061,
+      "scope": "Whole-layout comparison; chamber, waist and pole gap vary together. Funnel and raised magnets differ from the previous slim-tip candidate. Threads/tool radii/clamps not detailed.",
+      "cold_output": "artifacts/hardware-research/m6-waist-v1-ch20-w04-cold30-h0050",
+      "cell_um": 50.000002374872565,
+      "current_A": 29.999980926513672,
+      "nozzle_and_modeled_copper_R_ohm": 0.0022600287660145863,
+      "static_total_power_W": 2.0340161323547363,
+      "liquid_volume_native_mm3": 7.733001101893424,
+      "land_mean_By_T": -0.32332327149999446,
+      "land_downward_force_N": 0.0016992238933763893,
+      "all_liquid_downward_force_N": 0.0029479619592050694,
+      "land_force_per_sqrt_total_power_N_sqrt_W": 0.0011914433830342462,
+      "current_return_relative_error": 4.32332631640518e-06,
+      "true_relative_residual": 6.810851118643768e-06,
+      "native_power_relative_defect": -3.516674041748047e-06,
+      "by_material": {
+        "4": {
+          "joule_W": 0.19226069750133762,
+          "peak_Q_W_m3": 3606976512.0
+        },
+        "14": {
+          "joule_W": 0.9596059707837128,
+          "peak_Q_W_m3": 25093154816.0
+        },
+        "16": {
+          "joule_W": 0.44107479544377987,
+          "peak_Q_W_m3": 1054808704.0
+        },
+        "17": {
+          "joule_W": 0.44107474055377205,
+          "peak_Q_W_m3": 1054784704.0
+        }
+      },
+      "land_force_ratio_to_family_control": 1.136570441782703,
+      "force_per_sqrt_power_ratio_to_family_control": 1.1365621818724752
+    },
+    {
+      "label": "ch12-w04",
+      "project": "artifacts/hardware-research/cases/m6-waist-v1/ch12-w04.mhd.json",
+      "chamber_diameter_mm": 1.2,
+      "upper_feed_diameter_mm": 3.2,
+      "waist_width_mm": 2.0,
+      "waist_wall_mm": 0.4,
+      "pole_gap_mm": 2.2,
+      "nominal_boss_wall_mm": 0.15,
+      "reference_heater_overlap_mm3": 0.0,
+      "nominal_liquid_volume_mm3": 3.1184212546449723,
+      "scope": "Whole-layout comparison; chamber, waist and pole gap vary together. Funnel and raised magnets differ from the previous slim-tip candidate. Threads/tool radii/clamps not detailed.",
+      "cold_output": "artifacts/hardware-research/m6-waist-v1-ch12-w04-cold30-h0050",
+      "cell_um": 50.000002374872565,
+      "current_A": 30.000011444091797,
+      "nozzle_and_modeled_copper_R_ohm": 0.0022602919559159764,
+      "static_total_power_W": 2.0342602729797363,
+      "liquid_volume_native_mm3": 3.0875004399451638,
+      "land_mean_By_T": -0.35495253427861595,
+      "land_downward_force_N": 0.0018616147488908423,
+      "all_liquid_downward_force_N": 0.0030612346379544093,
+      "land_force_per_sqrt_total_power_N_sqrt_W": 0.001305228511933376,
+      "current_return_relative_error": 4.641213236028072e-06,
+      "true_relative_residual": 6.816165750933578e-06,
+      "native_power_relative_defect": -1.9669532775878906e-06,
+      "by_material": {
+        "4": {
+          "joule_W": 0.1923643687026675,
+          "peak_Q_W_m3": 3608492288.0
+        },
+        "14": {
+          "joule_W": 0.9597439657798125,
+          "peak_Q_W_m3": 25078349824.0
+        },
+        "16": {
+          "joule_W": 0.44107598296394906,
+          "peak_Q_W_m3": 1054285440.0
+        },
+        "17": {
+          "joule_W": 0.44107608695796385,
+          "peak_Q_W_m3": 1054348864.0
+        }
+      },
+      "land_force_ratio_to_family_control": 1.2451898221439286,
+      "force_per_sqrt_power_ratio_to_family_control": 1.2451060507694485
+    },
+    {
+      "label": "ch40-w04",
+      "project": "artifacts/hardware-research/cases/m6-waist-v1/ch40-w04.mhd.json",
+      "chamber_diameter_mm": 4.0,
+      "upper_feed_diameter_mm": 4.0,
+      "waist_width_mm": 4.8,
+      "waist_wall_mm": 0.4,
+      "pole_gap_mm": 5.0,
+      "nominal_boss_wall_mm": 0.15,
+      "reference_heater_overlap_mm3": 0.0,
+      "nominal_liquid_volume_mm3": 22.25171311927064,
+      "scope": "Whole-layout comparison; chamber, waist and pole gap vary together. Funnel and raised magnets differ from the previous slim-tip candidate. Threads/tool radii/clamps not detailed.",
+      "cold_output": "artifacts/hardware-research/m6-waist-v1-ch40-w04-cold30-h0050",
+      "cell_um": 50.000002374872565,
+      "current_A": 29.99997329711914,
+      "nozzle_and_modeled_copper_R_ohm": 0.0022599977999508665,
+      "static_total_power_W": 2.033994197845459,
+      "liquid_volume_native_mm3": 22.200003163330408,
+      "land_mean_By_T": -0.26100181974470615,
+      "land_downward_force_N": 0.0013770066034628934,
+      "all_liquid_downward_force_N": 0.0023885516127175026,
+      "land_force_per_sqrt_total_power_N_sqrt_W": 0.0009655197638639353,
+      "current_return_relative_error": 6.993617878637333e-07,
+      "true_relative_residual": 6.865690011181869e-06,
+      "native_power_relative_defect": -1.1920928955078125e-07,
+      "by_material": {
+        "4": {
+          "joule_W": 0.19224118472030807,
+          "peak_Q_W_m3": 3606760704.0
+        },
+        "14": {
+          "joule_W": 0.9595971738650416,
+          "peak_Q_W_m3": 25094955008.0
+        },
+        "16": {
+          "joule_W": 0.44107795795023047,
+          "peak_Q_W_m3": 1054879040.0
+        },
+        "17": {
+          "joule_W": 0.44107791655422457,
+          "peak_Q_W_m3": 1054876928.0
+        }
+      },
+      "land_force_ratio_to_family_control": 0.9210469613428675,
+      "force_per_sqrt_power_ratio_to_family_control": 0.9210452339443216
+    },
+    {
+      "label": "ch20-w02",
+      "project": "artifacts/hardware-research/cases/m6-waist-v1/ch20-w02.mhd.json",
+      "chamber_diameter_mm": 2.0,
+      "upper_feed_diameter_mm": 3.2,
+      "waist_width_mm": 2.4,
+      "waist_wall_mm": 0.2,
+      "pole_gap_mm": 2.6,
+      "nominal_boss_wall_mm": 0.15,
+      "reference_heater_overlap_mm3": 0.0,
+      "nominal_liquid_volume_mm3": 7.706058225269061,
+      "scope": "Whole-layout comparison; chamber, waist and pole gap vary together. Funnel and raised magnets differ from the previous slim-tip candidate. Threads/tool radii/clamps not detailed.",
+      "cold_output": "artifacts/hardware-research/m6-waist-v1-ch20-w02-cold30-h0050",
+      "cell_um": 50.000002374872565,
+      "current_A": 29.999984741210938,
+      "nozzle_and_modeled_copper_R_ohm": 0.0022600458633338233,
+      "static_total_power_W": 2.0340349674224854,
+      "liquid_volume_native_mm3": 7.733001101893424,
+      "land_mean_By_T": -0.3384756710475836,
+      "land_downward_force_N": 0.001776815676682624,
+      "all_liquid_downward_force_N": 0.003143232905403845,
+      "land_force_per_sqrt_total_power_N_sqrt_W": 0.0012458425799794523,
+      "current_return_relative_error": 4.069012486273441e-06,
+      "true_relative_residual": 6.981530077609932e-06,
+      "native_power_relative_defect": -2.086162567138672e-06,
+      "by_material": {
+        "4": {
+          "joule_W": 0.1922869975970109,
+          "peak_Q_W_m3": 3607076352.0
+        },
+        "14": {
+          "joule_W": 0.9595957744046698,
+          "peak_Q_W_m3": 25092515840.0
+        },
+        "16": {
+          "joule_W": 0.4410761345899707,
+          "peak_Q_W_m3": 1054813824.0
+        },
+        "17": {
+          "joule_W": 0.44107607407196203,
+          "peak_Q_W_m3": 1054816384.0
+        }
+      },
+      "land_force_ratio_to_family_control": 1.1884697399121815,
+      "force_per_sqrt_power_ratio_to_family_control": 1.1884556002694924
+    },
+    {
+      "label": "ch12-w02",
+      "project": "artifacts/hardware-research/cases/m6-waist-v1/ch12-w02.mhd.json",
+      "chamber_diameter_mm": 1.2,
+      "upper_feed_diameter_mm": 3.2,
+      "waist_width_mm": 1.6,
+      "waist_wall_mm": 0.2,
+      "pole_gap_mm": 1.8,
+      "nominal_boss_wall_mm": 0.15,
+      "reference_heater_overlap_mm3": 0.0,
+      "nominal_liquid_volume_mm3": 3.1184212546449723,
+      "scope": "Whole-layout comparison; chamber, waist and pole gap vary together. Funnel and raised magnets differ from the previous slim-tip candidate. Threads/tool radii/clamps not detailed.",
+      "cold_output": "artifacts/hardware-research/m6-waist-v1-ch12-w02-cold30-h0050",
+      "cell_um": 50.000002374872565,
+      "current_A": 30.00002670288086,
+      "nozzle_and_modeled_copper_R_ohm": 0.002260548347779791,
+      "static_total_power_W": 2.0345001220703125,
+      "liquid_volume_native_mm3": 3.0875004399451638,
+      "land_mean_By_T": -0.373071669242703,
+      "land_downward_force_N": 0.0019543876612352715,
+      "all_liquid_downward_force_N": 0.003323446146481748,
+      "land_force_per_sqrt_total_power_N_sqrt_W": 0.001370193339198198,
+      "current_return_relative_error": 0.0,
+      "true_relative_residual": 6.930493327672593e-06,
+      "native_power_relative_defect": 1.5497207641601562e-06,
+      "by_material": {
+        "4": {
+          "joule_W": 0.19270425674276098,
+          "peak_Q_W_m3": 3610065152.0
+        },
+        "14": {
+          "joule_W": 0.959638367149393,
+          "peak_Q_W_m3": 25067900928.0
+        },
+        "16": {
+          "joule_W": 0.44107877599034706,
+          "peak_Q_W_m3": 1053967168.0
+        },
+        "17": {
+          "joule_W": 0.44107876828434595,
+          "peak_Q_W_m3": 1053951680.0
+        }
+      },
+      "land_force_ratio_to_family_control": 1.307243416364087,
+      "force_per_sqrt_power_ratio_to_family_control": 1.307078417121457
+    }
+  ],
+  "scope": "Chamber, external relief and magnet gap vary intentionally. Native liquid masks and B fields differ. All share the same 0.4 mm outlet and 0.7 mm tip boss, material parameters, native grid and terminal type. This family also changes funnel angle and raises the magnets relative to the prior slim-tip case.",
+  "limits": [
+    "Cold binary phase geometry; moving alpha/current, self-field, real contact films, thermal feedback, hydraulic pressure and droplet outcomes are not determined here.",
+    "Land JxB integral is not a chamber-pressure calculation. Total pool force alone does not establish useful nozzle pumping.",
+    "M6 outer envelope is retained but thread helix, machining radii, fit and clamping need detailing. Larger feed bore has less wall at the real thread root."
+  ]
+}

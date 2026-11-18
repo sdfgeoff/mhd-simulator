@@ -1,0 +1,13 @@
+{
+  "status": "Completed separate one-shot thermal screen; no moving-fluid result",
+  "case": "ch12-w02",
+  "peak_A": 110,
+  "positive_us": 250,
+  "RMS_A_at_assumed200Hz": 23.431549244554873,
+  "modeled_nozzle_and_copper_average_W": 1.241125813494147,
+  "extra_outer_CAD_copper_average_W": 0.1882414285714286,
+  "thermal_peak_C": 261.5243225097656,
+  "thermal_start_C": 250,
+  "native_thermal_output": "artifacts/hardware-research/m6-waist-ch12-w02-thermal110-h0050",
+  "scope": "Fixed cold current path and material properties; native 50 um tip thermal window; ideal joints; no repetition equilibrium. Selected current roughly matches the previous 0.7 mm boss at 125 A in cold outlet-region force, not its droplet outcome."
+}

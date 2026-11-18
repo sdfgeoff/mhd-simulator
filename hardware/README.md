@@ -428,3 +428,50 @@ height-function coverage is 19% / 76% / 99% at 100 / 50 / 25 µm initially. The
 fallback estimate warrants further work; simply trying other coordinate axes
 recovers no extra cells in the 50 µm initial sphere. Tiny-domain 25 µm slow-motion
 and gravity controls are progressing separately; no correction is applied.
+
+## Relieved M6 lower bodies
+
+The [new chamber/waist family](m6-waist-cold-screening.json) retains the M6 outer
+connection and 0.4 mm outlet while changing the lower body. It uses a 45° internal
+funnel and pole bottoms 0.1 mm above the exit. Chamber, waist and pole gap change
+together; compare whole layouts rather than attributing all gains to one change.
+
+| Chamber diameter | Waist wall | Pole gap | Outlet-region force at 30 A | Mean outlet By |
+| --- | --- | --- | --- | --- |
+| 3.2 mm | 0.4 mm | 4.2 mm | 1.50 mN | −0.284 T |
+| 2.0 mm | 0.4 mm | 3.0 mm | 1.70 mN | −0.323 T |
+| 1.2 mm | 0.4 mm | 2.2 mm | 1.86 mN | −0.355 T |
+| 4.0 mm | 0.4 mm | 5.0 mm | 1.38 mN | −0.261 T |
+| 2.0 mm | 0.2 mm | 2.6 mm | 1.78 mN | −0.339 T |
+| 1.2 mm | 0.2 mm | 1.8 mm | 1.95 mN | −0.373 T |
+
+All six electrical screens use 50 µm cells, fixed material properties and resolved
+copper with outer-end current supply. Resistance remains near 2.26 mΩ inside the
+modeled copper extent. The small-chamber/close-pole layout improves force per amp
+31% over the new family control; its pool is smaller too. These are not pressure
+or droplet predictions. The previous slim-tip layout has a different funnel and
+magnet height, so it is a separate reference.
+
+A [separate 110 A thermal screen](m6-waist-selected-thermal.json) of the 1.2 mm /
+0.2 mm-wall variant gives 23.4 A RMS at an assumed 200 Hz and about 1.43 W including
+the same outer-lead estimate. Its fixed-path one-shot peak is 261.5 °C from 250 °C.
+No repeat heating, real joints or moving-fluid outcome is established. Wrench
+features, thread details, tool radii, clamping and magnet mounts remain to design.
+
+A [full-domain conductive-heater control](m6-heater-electrical-control.json) finds
+no resolved electrical shunting effect above 0.001% in the paired static screen.
+The 100 µm / source-subdivision-2 pair needs a tighter charge tolerance of 1e-6:
+both close power to a few parts per million. The loose 1e-5 pair missed 0.5% power
+balance and must not be interpreted. This is electrical contact screening, not a
+heater thermal model. The research probe now accepts an optional charge tolerance
+and locates terminal planes at the actual outer copper ends, including when the
+pads are fully inside a larger domain.
+
+The [125 A omitted-self-field diagnostic](tip-boss07-self-field-screening.json)
+for the earlier 0.7 mm head gives a local self-force norm around 12% of the applied
+force in the outlet region. Its external return is missing and it is not coupled
+back into the flow; small net-force cancellation does not qualify breakup.
+
+Finally, the completed 25 µm gravity control falls 39 µm instead of the dragless
+44 µm over 3 ms and remains downward, with about 14% speed error. This is a marked
+improvement over coarser pinning, but still not a converged jetting prediction.

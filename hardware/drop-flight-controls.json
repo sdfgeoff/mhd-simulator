@@ -309,7 +309,7 @@
     }
   },
   "tiny_domain_followup": {
-    "status": "50/25um slow translation600us complete;25um gravity3ms running",
+    "status": "Complete25um gravity3ms and50/25um slow translation600us",
     "half_domain_mm": [
       0.7,
       0.7,
@@ -348,6 +348,20 @@
         "relative_volume_drift": 2.7649841971566502e-08
       }
     },
-    "interpretation": "At0.02m/s, speedloss fallsfrom39.17% at50um to5.20% at25um over600us. Positionerror fallsfrom1.55um to0.240um. Small-box50um reproduces earlierlarger-boxslowcontrol closely. Gravity25um is still running."
+    "interpretation": "Slow-translation speed loss falls39.17% to5.20% from50 to25um; COM error1.55um to0.240um. Gravity25um falls39.20um vs44.15um dragless by3ms and remains downward; speed-.02537 vs-.02943m/s (~14% low). This improves strongly over50um pinning but is not converged. Tiny gravity box differs from earlier larger-box50um control, so not a formal isolated spatial-convergence proof.",
+    "gravity_25um_final": {
+      "time_s": 0.003000000000000236,
+      "step": 6000,
+      "volume_m3": 1.1294976097109228e-10,
+      "COM_z_m": -3.919609528046897e-05,
+      "liquid_vz_m_s": -0.025373909614915334,
+      "boundary_max_alpha": 0.0,
+      "cell_estimated_mixture_momentum_z_kg_m_s": -2.0058400008061717e-08,
+      "reference_z_m": -4.414513221998819e-05,
+      "reference_vz_m_s": -0.029430001258852412,
+      "position_error_m": 4.9490369395192225e-06,
+      "velocity_error_m_s": 0.0040560916439370785,
+      "relative_volume_drift": -3.839716156139872e-07
+    }
   }
 }
