@@ -8,12 +8,12 @@ actuator currents below a few hundred amps, using accessible parts.
 
 ## Leading candidates and completed controls
 
-All completed moving-fluid results in this table use **zero gravity**, unless
-specified otherwise. New gravity-on controls are running separately.
+Completed moving-fluid results use **zero gravity** unless explicitly marked
+gravity-on. The matched gravity-on tip-contact control is now complete.
 
 | Configuration | Accepted evidence | Main unresolved issue |
 | --- | --- | --- |
-| Stainless V6 approximation, 0.4 mm bore, 0.8 × 0.4 mm external tip contacts, larger SmCo poles | Full-height 100 µm case: one 0.59484 mm component moving down at 0.1477 m/s at 3.6 ms, with 200 A / 250 µs. | Wider-contact 50 µm refinement, gravity and refill/repetition; actual electrical wetting and contacts. |
+| Stainless V6 approximation, 0.4 mm bore, 0.8 × 0.4 mm external tip contacts, larger SmCo poles | Gravity-on full-height 100 µm case: one 0.59993 mm component moving down at 0.1795 m/s at 3.6 ms, with 200 A / 250 µs. | Wider-contact 50 µm refinement and refill/repetition; actual electrical wetting and contacts. |
 | Same tip contacts, one 10 × 5 mm SmCo disc per pole | 100 µm case: one 0.5962 mm component moving down at 0.212 m/s at 3.6 ms, with 250 A / 250 µs. | Higher peak current, local heating and omitted self-field; no fine-grid or gravity/repetition confirmation. |
 | V6 with two milled collar flats and immersed 1 mm tungsten pins | Fixed 1.5 µs rerun completes 4.2 ms without a detached component. The earlier 3 µs run hit its CFL guard at 2.154 ms. | Gas is drawn between the electrodes; a large cold force did not establish jetting. |
 | Custom stainless chamber, one ten-turn coil | Normal unified solver completes 3.597 ms at 250 A / 50 kHz without resolved ejection on the 200 µm grid. Matched zero-current control completes too. | Coarse interface; geometry, frequency and loaded driver remain open. |
@@ -45,7 +45,10 @@ a departing, repeatable jet.
    capillary motion. The full-height zero-gravity control preserves the wider
    contact drop size within 0.03% but changes speed by 8.1% relative to the
    cropped case. It changes domain extent and periodic air return together.
-   Initial states start at rest, not from settled hydrostatic/wetting equilibrium.
+   The matched gravity-on case gives 0.59993 mm / 0.1795 m/s instead of
+   0.59484 mm / 0.1477 m/s without gravity. Exported settings match except uniform
+   acceleration; initial states start at rest, not from settled hydrostatic/
+   wetting equilibrium.
 
 2. **Repetition has not passed.** The cropped zero-gravity two-pulse case
    completes 9.999 ms without a second resolved detached component in saved
@@ -188,8 +191,8 @@ assumptions and an illustrative DC electromagnet estimate.
 ## Work still in progress
 
 1. Wider-contact 50 µm, fixed-step flow refinement.
-2. Full-height gravity-on 200 A / 250 µs control, followed by two-pulse tests
-   with and without the retract pulse.
+2. Gravity-on full-height two-pulse tests with and without the retract pulse;
+   the matched 200 A / 250 µs single-pulse gravity pair is complete.
 3. A shorter gravity-on 250 A / 150 µs pulse with smaller retract amplitude,
    testing stronger initial forcing at lower total I²dt. No improvement assumed.
 4. The custom flat-contact/compact-pole 150 A gravity-on flow trial.
