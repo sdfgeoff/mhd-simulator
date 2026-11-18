@@ -83,3 +83,40 @@ analytic periodic check passes with the same 1/4 floating Jacobi/MG iterations.
 The stronger-pulse run again fails between saved steps 100 and 120, reaching
 relative physical residual 4.846e-5 after 10,000 iterations. This rules out the
 rank-one term as the sole explanation. This version is also excluded from main.
+
+## Reference-gauge mean-free candidate
+
+Keeping the same mean-free residual algorithm but referencing each pressure
+increment to the original air-cell search value completes the full 2 ms,
+7e7 N/m³ release run. Search lanes are read-only during that update; individual
+component stores avoid a cross-invocation read/write race at the reference cell.
+This is a gauge choice on the Neumann solution, not a pinned operator row.
+
+The original reference improves floating-point conditioning in this high-density-
+contrast case. The earlier mean choice can give air potentials an unnecessary
+large common offset. Cancellation is a supported explanation from this control,
+not yet an independent error decomposition.
+
+The periodic analytic, twelve density-contrast projections, six Neumann V-cycle
+symmetry/positivity checks and four anchored/floating Jacobi/MG failure-and-retry
+controls pass. The V-cycle preserves the live work lanes. Disconnected graphs
+remain explicitly unsupported by the research method.
+
+Compared with main's anchored multigrid release trajectory:
+
+1. First saved release times match at both fraction cutoffs. Primary core volume
+   changes by less than 7.1e-7 relative and fitted speed by less than 2.8e-6.
+2. Maximum saved fraction relative L1 difference is 7.60e-5. Final whole-domain
+   velocity relative L2 difference is **1.73%**, and the liquid-weighted value is
+   **0.773%**. Primary-drop agreement does not mean every local field agrees;
+   differences grow late in the trajectory with the unresolved fragment.
+3. Peak-normalized kinetic-energy and expelled-volume differences are 3.90e-5
+   and 1.70e-5. Maximum sampled speed differs by 3.84% of the reference peak.
+4. Both use the original physical relative/absolute acceptance criterion. The
+   new method avoids the pinned row's extra internal stopping factor; final RMS
+   divergence is 9.68e-4 versus 1.07e-4 s^-1, both below the configured 1e-3
+   absolute floor. This difference in excess solve accuracy is explicit.
+
+No runtime comparison is valid yet: another fine-grid job runs concurrently.
+Before adoption, compare with a simpler control that checks the existing pinned
+solver's physical residual more frequently, then test additional moving cases.

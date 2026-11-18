@@ -409,6 +409,12 @@ fn floating_pressure_contrast_and_disconnected_controls() {
                     "Floating contrast {dims:?} periodic={periodic:?} walls={walls} reverse={reverse} MG={multigrid}: {result:?}"
                 );
                 assert!(result.is_ok());
+                let work = packets(&state.context, &state._work);
+                for (i, &m) in mask.iter().enumerate() {
+                    if m & 3 == 2 {
+                        assert_eq!(work[i][0], 0., "reference pressure drifted");
+                    }
+                }
                 let output = packets(&state.context, &state.velocity);
                 let norm: f64 = candidate
                     .iter()
@@ -422,6 +428,66 @@ fn floating_pressure_contrast_and_disconnected_controls() {
                     .sum();
                 assert!((error / norm).sqrt() < 2e-4);
             }
+        }
+    }
+}
+#[test]
+fn floating_neumann_v_cycle_is_symmetric_positive() {
+    let _lock = crate::gpu_test_lock();
+    for (dims, periodic, walls) in [
+        ([17, 13, 9], [true; 3], false),
+        ([16, 12, 8], [false; 3], false),
+        ([13, 1, 3], [true; 3], true),
+    ] {
+        for reverse in [false, true] {
+            let (mut state, mask) = fixture(dims, periodic, walls, reverse);
+            state.enable_floating_pressure().unwrap();
+            // Rebuild the fine diagonal including the former reference row.
+            state.dispatch(&[("pressure_coefficients", groups(state.params.faces[3]))]);
+            let mg = Multigrid::new(&state).unwrap();
+            mg.build(&state.context);
+            let vector = |frequency: f64| -> Vec<f32> {
+                mask.iter()
+                    .enumerate()
+                    .map(|(i, &m)| {
+                        if m != 0 {
+                            (i as f64 * frequency).sin() as f32
+                        } else {
+                            0.
+                        }
+                    })
+                    .collect()
+            };
+            let r = vector(0.17);
+            let s = vector(0.37);
+            let apply = |rhs: &[f32]| {
+                let work: Vec<_> = rhs.iter().map(|&v| [0.125, v, -0.25, 0.]).collect();
+                state
+                    .context
+                    .queue
+                    .write_buffer(&state._work, 0, bytemuck::cast_slice(&work));
+                mg.apply(&state.context);
+                let out = packets(&state.context, &state._work);
+                for (a, b) in out.iter().zip(work) {
+                    assert_eq!(a[..3], b[..3]);
+                }
+                out.iter().map(|v| v[3]).collect::<Vec<_>>()
+            };
+            let mr = apply(&r);
+            let ms = apply(&s);
+            let dot = |a: &[f32], b: &[f32]| {
+                a.iter()
+                    .zip(b)
+                    .map(|(&a, &b)| a as f64 * b as f64)
+                    .sum::<f64>()
+            };
+            let rr = dot(&r, &mr);
+            let ss = dot(&s, &ms);
+            let symmetry = (dot(&r, &ms) - dot(&s, &mr)).abs() / (rr * ss).sqrt();
+            eprintln!(
+                "Neumann V-cycle {dims:?} reverse={reverse}: rMr={rr:e}, sMs={ss:e}, symmetry={symmetry:e}"
+            );
+            assert!(rr > 0. && ss > 0. && symmetry < 3e-6);
         }
     }
 }

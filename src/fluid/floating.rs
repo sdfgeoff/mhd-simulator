@@ -39,7 +39,15 @@ impl FluidState {
         assert_eq!(solver.matches(old).count(), 1);
         solver = solver.replace(
             old,
-            "v.x+a*(v.z-scalars[0].w),r,v.z,diagonal);sum=vec4<f32>(r*r/diagonal,r*r,0.0,r);",
+            "v.x+a*(v.z-work[mask[i]>>2u].z),r,v.z,diagonal);sum=vec4<f32>(r*r/diagonal,r*r,0.0,r);",
+        );
+        // Search lanes remain read-only while all cells use the reference search.
+        // Individual stores avoid reading a lane another invocation writes.
+        let old = "work[i]=vec4<f32>(v.x+a*(v.z-work[mask[i]>>2u].z),r,v.z,diagonal);";
+        assert_eq!(solver.matches(old).count(), 1);
+        solver = solver.replace(
+            old,
+            "work[i].x=v.x+a*(v.z-work[mask[i]>>2u].z);work[i].y=r;work[i].w=diagonal;",
         );
         let a = solver
             .find("@compute @workgroup_size(256)\nfn search(")
