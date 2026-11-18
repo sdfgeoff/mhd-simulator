@@ -15,7 +15,7 @@ from pathlib import Path
 import numpy as np
 
 
-def inductance(points, radius_m, maximum_segment_m):
+def discretize(points, maximum_segment_m):
     points = np.asarray(points, dtype=float)
     dl = np.diff(points, axis=0)
     count = np.maximum(
@@ -25,7 +25,11 @@ def inductance(points, radius_m, maximum_segment_m):
     for p, d, n in zip(points[:-1], dl, count):
         centres.extend(p + ((np.arange(n) + 0.5) / n)[:, None] * d)
         segments.extend(np.repeat((d / n)[None, :], n, axis=0))
-    centres, segments = np.array(centres), np.array(segments)
+    return np.array(centres), np.array(segments)
+
+
+def inductance(points, radius_m, maximum_segment_m):
+    centres, segments = discretize(points, maximum_segment_m)
     gmr = radius_m * math.exp(-0.25)
     result = 0.0
     for start in range(0, len(centres), 128):
@@ -36,14 +40,32 @@ def inductance(points, radius_m, maximum_segment_m):
     return float(1e-7 * result), len(centres)
 
 
+def mutual_inductance(first, second, maximum_segment_m):
+    """Neumann mutual integral for separate closed filaments; no self softening."""
+    a, da = discretize(first, maximum_segment_m)
+    b, db = discretize(second, maximum_segment_m)
+    result = 0.
+    for start in range(0, len(a), 128):
+        distance = a[start:start + 128, None, :] - b[None, :, :]
+        distance = np.linalg.norm(distance, axis=2)
+        if np.any(distance == 0):
+            raise ValueError("Mutual winding filaments intersect at segment centres")
+        result += np.sum((da[start:start + 128] @ db.T) / distance)
+    return float(1e-7 * result)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("project", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     p = json.loads(args.project.read_text())
-    points = np.array(p["cad_curves"][0]["points_mm"]) * 0.001
-    radius = p["electromagnetics"]["wires"][0]["core_radius_mm"] * 0.001
+    wires = p["electromagnetics"]["wires"]
+    if len(wires) != 1:
+        raise ValueError("This single-winding report requires exactly one source; use the matrix helper for multiple coils")
+    wire = wires[0]
+    points = np.array(p["cad_curves"][wire["cad_curve"]]["points_mm"]) * 0.001
+    radius = wire["core_radius_mm"] * 0.001
     if np.linalg.norm(points[0] - points[-1]) > 1e-9:
         raise ValueError("Expected a closed winding including its return lead")
     results = []

@@ -179,5 +179,80 @@
     "tail_dt_us": 3.0,
     "tail_after_us": 300.0,
     "scope": "Exploratory response, not time/grid-converged or gravity-complete. Two-phase cold half-timestep refinement also running."
+  },
+  "air_winding_matrix": {
+    "project": "artifacts/hardware-research/cases/foil-two-phase-plus90-200A-h020.mhd.json",
+    "method": "Lumped air-core winding matrix from actual CAD centreline curves.\n\nThin-wire Neumann integrals, not a volumetric EM solver or loaded driver model.\nSelf terms retain the round-wire low-frequency internal-inductance convention.\nMutual terms are unsoftened and require physically separate windings.\n",
+    "wire_names": [
+      "Phase A lower coil with return lead / 0:0",
+      "Phase B upper coil with return lead / 0:0"
+    ],
+    "refinement": [
+      {
+        "maximum_segment_m": 0.00025,
+        "matrix_h": [
+          [
+            3.877718719769413e-07,
+            9.736395014709325e-08
+          ],
+          [
+            9.736395014709325e-08,
+            3.8777187066989876e-07
+          ]
+        ],
+        "coupling_coefficients": [
+          [
+            1.0,
+            0.25108564428565044
+          ],
+          [
+            0.25108564428565044,
+            1.0
+          ]
+        ],
+        "reciprocity_absolute_error_h": 2.6469779601696886e-23
+      },
+      {
+        "maximum_segment_m": 0.000125,
+        "matrix_h": [
+          [
+            3.877156284045169e-07,
+            9.735666947012206e-08
+          ],
+          [
+            9.735666947012206e-08,
+            3.877156270977098e-07
+          ]
+        ],
+        "coupling_coefficients": [
+          [
+            1.0,
+            0.25110328937428933
+          ],
+          [
+            0.25110328937428933,
+            1.0
+          ]
+        ],
+        "reciprocity_absolute_error_h": 1.3234889800848443e-23
+      }
+    ],
+    "far_loop_check": {
+      "measured_h": 7.286437343695837e-13,
+      "dipole_limit_h": 7.310818074881006e-13,
+      "relative_error": 0.0033348841313585176
+    },
+    "limits": [
+      "No induced-metal reaction, magnetic cores, skin/proximity effect or physical lead uncertainty.",
+      "Discretization agreement does not qualify insulation clearances or winding manufacture.",
+      "Air matrix alone cannot establish loaded resonance, bus voltage, cooling or controllability."
+    ]
+  },
+  "air_only_quadrature_exchange": {
+    "carrier_hz": 50000,
+    "peak_A_each": 200,
+    "opposite_signed_mean_power_transfer_W_during_steady_envelope": 611.7099951706103,
+    "formula": "P_A=-omega M Ipk\u00b2/2, P_B=+omega M Ipk\u00b2/2 for I_A=Ipk sin(omega t), I_B=Ipk cos(omega t).",
+    "scope": "Air mutual term only. Not actual loaded input power; metal reaction, lead inductance, resistance and switching not included. Demonstrates that independent uncoupled resonance assumptions are insufficient."
   }
 }

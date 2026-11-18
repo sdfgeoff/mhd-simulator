@@ -786,3 +786,20 @@ inductance, temperature and PWM losses still require checking. The switch
 example uses [Infineon IPT007N06N](https://www.infineon.com/assets/row/public/documents/24/49/infineon-ipt007n06n-datasheet-en.pdf)
 60 V MOSFETs on a 24 V bus; it is not a qualified bridge design. Assumptions,
 component facts and calculation inputs: [driver-hot-allowance.json](driver-hot-allowance.json).
+
+
+The actual two-coil air-core matrix gives about **0.388 µH self** and
+**0.0974 µH mutual**, coupling coefficient **0.251**. Halving filament segment
+length changes entries by less than 0.02%; reciprocity and a distant-loop dipole
+limit pass. Cross-section, AC current distribution and induced-metal loading
+remain outside this integral. At prescribed quadrature currents, the air mutual
+term alone transfers about **612 W between phases during the steady envelope**,
+with opposite signs. That is internal exchange, not total loaded consumption.
+Any eventual driver must account for coupling and bidirectional phase power;
+two independently tuned uncoupled-coil estimates are insufficient.
+
+```sh
+OPENBLAS_NUM_THREADS=1 python scripts/winding_matrix.py \
+  artifacts/hardware-research/cases/foil-two-phase-plus90-200A-h020.mhd.json \
+  --output artifacts/hardware-research/NEW_TWO_COIL_AIR_MATRIX.json
+```
