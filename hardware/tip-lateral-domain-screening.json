@@ -1,0 +1,118 @@
+{
+  "status": "Completed cold lateral-domain control",
+  "source": {
+    "source": "artifacts/hardware-research/cases/v6-tip-wide-fullheight-gravity-fit-sncu-h010.mhd.json",
+    "source_sha256": "52d601fc7a75a5b2601c60912c2e0f7d893e4c9c615c1966a865ccbff2b0c8b9",
+    "change": "Extend only y from\u00b13.8 to\u00b14.3mm to contain unmodified hex corners. Same100um cell, x,z domain, CAD, materials, terminals and applied magnets.",
+    "reason": "Boundary occupancy audit found300stainlesscells on each y boundary in originalwidefullheight cold grid; nearflush milledcollar has no nonterminal conductor on y boundaries. Copperterminal stubs atx boundaries are intentional Dirichlet source regions."
+  },
+  "metrics": {
+    "terminal_voltage_V": {
+      "original": 0.03192897513508797,
+      "wider_y": 0.03192894533276558,
+      "relative_change": -9.333942684319751e-07
+    },
+    "joule_power_W": {
+      "original": 0.9578694105148315,
+      "wider_y": 0.9578677415847778,
+      "relative_change": -1.7423356831747228e-06
+    },
+    "liquid_joule_power_W": {
+      "original": 0.042833788042140254,
+      "wider_y": 0.042833564650456075,
+      "relative_change": -5.215314694106965e-06
+    },
+    "liquid_mean_By_T": {
+      "original": -0.12040774386343643,
+      "wider_y": -0.12040774178552346,
+      "relative_change": -1.725730336410436e-08
+    },
+    "midplane_adjacent_cell_liquid_current_A": {
+      "original": 15.35515246069237,
+      "wider_y": 15.354903122074933,
+      "relative_change": -1.6238107571675542e-05
+    },
+    "liquid_force_z_N": {
+      "original": -0.0025191767641509935,
+      "wider_y": -0.0025191306449329725,
+      "relative_change": -1.830725762375085e-05
+    }
+  },
+  "common_grid_offset_cells": [
+    0,
+    5,
+    0
+  ],
+  "common_material_id_changes": 0,
+  "nonterminal_conducting_boundary_cells_new": {
+    "xlo": 0,
+    "xhi": 0,
+    "ylo": 0,
+    "yhi": 0,
+    "zlo": 0,
+    "zhi": 0
+  },
+  "interpretation": "Original domain clips300stainlesscells on eachy boundary. Clearing those corners changes the cold terminal resistance and total liquid force only by the recorded small amounts. This does not prove moving-interface or lateral fluid-domain convergence. Xterminal stubs remain intentional ideal voltage-source regions.",
+  "original_report": {
+    "contact_resistivity_ohm_m2": 0.0,
+    "current_A": 29.999996185302734,
+    "iterations": 256,
+    "joule_power_W": 0.9578694105148315,
+    "limitations": [
+      "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+      "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+      "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+      "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+    ],
+    "liquid_force_N": [
+      -9.03147177624932e-11,
+      5.432090925653312e-10,
+      -0.0025191767641509935
+    ],
+    "liquid_joule_power_W": 0.042833788042140254,
+    "liquid_mean_By_T": -0.12040774386343643,
+    "mean_liquid_current_over_x_plus_minus_2mm_A": 2.4855002684384893,
+    "mean_wall_current_over_x_plus_minus_2mm_A": 7.740337345380171,
+    "midplane_adjacent_cell_liquid_current_A": 15.35515246069237,
+    "midplane_adjacent_cell_wall_current_A": 14.641150894123218,
+    "power_relative_defect": 3.5762786865234375e-07,
+    "project": "artifacts/hardware-research/cases/v6-tip-wide-fullheight-gravity-fit-sncu-h010.mhd.json",
+    "released_static_workspace_bytes": 253065692,
+    "return_current_A": -29.999996185302734,
+    "source_power_W": 0.9578691124916077,
+    "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+    "terminal_voltage_V": 0.03192897513508797,
+    "true_relative_residual": 9.973462510970421e-06
+  },
+  "wider_y_report": {
+    "contact_resistivity_ohm_m2": 0.0,
+    "current_A": 30.000001907348633,
+    "iterations": 256,
+    "joule_power_W": 0.9578677415847778,
+    "limitations": [
+      "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+      "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+      "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+      "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+    ],
+    "liquid_force_N": [
+      -6.30130018319994e-11,
+      7.621731717764911e-10,
+      -0.0025191306449329725
+    ],
+    "liquid_joule_power_W": 0.042833564650456075,
+    "liquid_mean_By_T": -0.12040774178552346,
+    "mean_liquid_current_over_x_plus_minus_2mm_A": 2.4853925626016133,
+    "mean_wall_current_over_x_plus_minus_2mm_A": 7.740411842335389,
+    "midplane_adjacent_cell_liquid_current_A": 15.354903122074933,
+    "midplane_adjacent_cell_wall_current_A": 14.641348683088474,
+    "power_relative_defect": -6.556510925292969e-07,
+    "project": "artifacts/hardware-research/cases/v6-tip-wide-fullheight-yclear-gravity-fit-sncu-h010.mhd.json",
+    "released_static_workspace_bytes": 289425552,
+    "return_current_A": -30.0,
+    "source_power_W": 0.9578683972358704,
+    "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+    "terminal_voltage_V": 0.03192894533276558,
+    "true_relative_residual": 9.970951396098826e-06
+  }
+}

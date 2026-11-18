@@ -71,7 +71,12 @@ is not the mechanical nozzle gap: breakup position and drop radius also matter.
    The matched gravity-on case gives 0.59993 mm / 0.1795 m/s instead of
    0.59484 mm / 0.1477 m/s without gravity. Exported settings match except uniform
    acceleration; initial states start at rest, not from settled hydrostatic/
-   wetting equilibrium.
+   wetting equilibrium. The older unmodified-hex domain clips its outer
+   shoulder corners. A [cold lateral-domain control](tip-lateral-domain-screening.json)
+   clears those corners with identical common-cell material IDs and changes liquid
+   force by 0.0018%, voltage by less than 0.0001%. This bounds that electrical
+   truncation; it does not establish moving-fluid lateral-domain convergence.
+   The machined near-flush collar has no nonterminal conducting boundary cells.
 
 2. **Repetition has not passed.** The cropped zero-gravity two-pulse case
    completes 9.999 ms without a second resolved detached component in saved
