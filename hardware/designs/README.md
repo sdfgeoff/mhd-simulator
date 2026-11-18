@@ -1,7 +1,8 @@
 # Reproducible geometry and project inputs
 
 These are **research inputs, not manufacturing drawings or qualified jetters**.
-All three retain zero uniform acceleration. See the gravity correction in the
+The first three retain zero uniform acceleration; the new flat-tip case has
+−9.81 m/s² acceleration. See the gravity correction in the
 [study README](../README.md). Their manifests record original and packaged hashes;
 only geometry/buffer filenames changed, with identical float32 CAD payloads and
 simulation properties.
@@ -16,6 +17,10 @@ simulation properties.
 3. `single-coil-250A`: custom 6 mm ID chamber, 0.5 mm radial stainless wall,
    0.5 mm aperture and 0.15 mm exit land, one ten-turn coil. The normal unified
    solver completed the 250 A / 50 kHz trial without resolved ejection at 200 µm.
+4. `v6-flat-compact-150A`: two external flats 0.8 mm apart over the lower 0.6 mm,
+   preserving the 0.4 mm bore with 0.2 mm nominal minimum wall. Compact poles;
+   cold field screens complete, 150 A / 250 µs gravity-on fluid trial running.
+   No completed drop result yet. Threads, fillets, clamps and tolerances omitted.
 
 ## Inspect and reproduce
 
@@ -37,6 +42,11 @@ For the compact case, replace the input with
 `hardware/designs/v6-compact-250A/case.mhd.json` and peak current with `250`.
 Both commands use fixed 3 µs steps through 3.6 ms. Thermal evolution, feeding,
 measured wetting/oxide skins, current self-field feedback and switching are absent.
+
+For the new flat-tip trial, use
+`hardware/designs/v6-flat-compact-150A/case.mhd.json` with `150` peak amperes;
+the other arguments remain `250 1200 OUTPUT 0 .25 3 0 150`. This case explicitly
+uses gravity and full-height nonperiodic bounds. It is an exploratory run.
 
 The single-coil case uses the normal combined engine:
 

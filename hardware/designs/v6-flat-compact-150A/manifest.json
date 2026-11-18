@@ -1,0 +1,19 @@
+{
+  "source_project": "artifacts/hardware-research/cases/v6-tip-flat08-disc10x5-full-gravity-fit-sncu-h010.mhd.json",
+  "source_project_sha256": "9f74d7a555a2993e19139b53b3c6673694d8850df824db274b0e9962fc37a832",
+  "source_geometry": "artifacts/hardware-research/cases/v6-tip-flat08-disc10x5-pool35-full-h010.gltf",
+  "source_geometry_sha256": "83f540c7c8b71d94756f34489bd05388ac93505e1f047293a3db2d10841940fd",
+  "source_binary_sha256": "53aee7fc85e6b80731f12aae9666f4b40961782a08962f1497376d2ae94e9769",
+  "packaging_change": "Only geometry and buffer URI strings renamed; all simulation properties and float32 payload retained.",
+  "scope": "Custom flat tip and compact poles; cold screens complete,150A gravity-on flow running. Not a manufacturing drawing or qualified jetter.",
+  "uniform_acceleration_m_s2": [
+    0.0,
+    0.0,
+    -9.81
+  ],
+  "packaged_sha256": {
+    "case.mhd.json": "e4bd7b5a9fdf2dee50a2ca69f29489629e8004e387ca5ebbf43668233fe41242",
+    "geometry.gltf": "8351b84aa0a3073dc84a6a44c2e664b17e2f07855b6ba4437ad007e9359f46e3",
+    "geometry.bin": "53aee7fc85e6b80731f12aae9666f4b40961782a08962f1497376d2ae94e9769"
+  }
+}
