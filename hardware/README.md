@@ -462,3 +462,37 @@ remain unqualified. The small-domain force differs by 7.5%, so a full-domain
 150 A / 800 µs fluid trial is queued instead of assuming the earlier domain
 validation carries over. Pin clamps, feedstock routing, real electrode contact
 and bulk rod losses remain separate engineering work.
+
+
+### Driver and bus-energy comparison
+
+[Driver comparison records](driver-comparison-screening.json) include explicit
+longer copper lead and tungsten rod assumptions. The wider-contact 200 A pulse
+has an approximately 11.3 V peak lumped requirement from a 24 V bus, with
+about 1.9 W in the head and 7.7 W in the specified leads/series path at 200 Hz.
+The milled-electrode 150 A / 800 µs waveform gives approximately 8.3–8.8 V,
+with about 15–26 W total electrical dissipation depending on assumed dry rod
+length. These are constant-property impedance budgets, not a PCB or cooling
+qualification; the modeled ideal-terminal pin length is not a completed mount.
+
+The 250 A resonant-coil estimate scales an accepted fixed-geometry 200 A
+record. It gives approximately 0.32 J peak cumulative interval drive work and
+62 W mean electrical heat if repeated at 200 Hz. Without supply assistance,
+a 1 mF/24 V bulk capacitor lacks enough stored energy; 4.7 mF/24 V falls to
+about 21.0 V in the ideal budget, and 1 mF/48 V to about 40.8 V. ESR, ripple,
+switching/control, AC winding loss and temperature-dependent load are absent.
+The fit covers accepted data through 367.75 µs, not a successful 500 µs trial.
+Electrical pulse budgets are not jetting efficiencies or repetition proofs.
+
+On the same 80–100 µs carrier cycle, reducing timestep 0.25 → 0.125 µs changes
+mean axial liquid force by approximately 4.7% and the radial diagnostic by
+1.0%. Reaction numerical loss relative to heat is 7.1%, 3.5%, 1.8% for
+0.5, 0.25, 0.125 µs respectively. Spatial/source-core refinement remains separate.
+
+The fixed-step contact check at 100 µm, 3 → 1.5 µs changes the leading alpha
+0.01 component diameter from 0.59147 to 0.59130 mm and its speed by less than
+1%. Whole-liquid velocity L2 still differs by 15%, mainly around the returning
+tail; alpha L2 differs by 0.77%. The 50 µm reference has detached a leading
+approximately 0.618 mm alpha 0.01 component at 2.4 ms, moving about 0.51 m/s.
+This is slightly above the target size and not a completed grid-convergence
+study. Shorter-pulse tuning and the wider-contact refinement are queued.

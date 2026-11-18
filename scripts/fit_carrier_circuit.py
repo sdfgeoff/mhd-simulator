@@ -111,6 +111,7 @@ def main():
         charge[:-1] + dt * (2 * current[:-1] + current[1:]) / 6
     ) / capacitance
     drive = terminal + capacitor_mid_v
+    cumulative_drive_work = np.concatenate([[0.0], np.cumsum(drive * i_mid * dt)])
     residual = terminal[selected] - matrix @ [resistance, loaded_l]
     report = {
         "method": "Interval V=R*I_mid + L_air*dI/dt + d(lambda_reaction)/dt. Fit V=R_eff*I_mid+L_eff*dI/dt over the stated steady carrier window. Series C cancels fitted L at the stated frequency; capacitor voltage integrates the actual current from zero initial charge.",
@@ -129,12 +130,18 @@ def main():
         "observed_capacitor_voltage_peak_v": float(np.max(np.abs(capacitor_mid_v))),
         "observed_drive_voltage_peak_v": float(np.max(np.abs(drive))),
         "fit_average_input_w": float(np.mean(terminal[selected] * i_mid[selected])),
+        "observed_drive_net_work_j": float(cumulative_drive_work[-1]),
+        "observed_drive_peak_cumulative_work_j": float(cumulative_drive_work.max()),
+        "observed_drive_minimum_cumulative_work_j": float(cumulative_drive_work.min()),
+        "initial_capacitor_charge_c": 0.0,
+        "initial_current_a": float(current[0]),
         "discrete_field_energy_check": energy_check,
         "limits": [
             "Cold prescribed-current screen, not a circuit solution or switching implementation. Reported maxima are interval-mean voltages, not switch-node peaks.",
             "Check waveform completion, time/grid refinement and energy/numerical losses before using component ratings.",
             "Air L retains round-wire low-frequency/internal-inductance assumptions; AC resistance, proximity, real leads, capacitor ESR/ripple and control dynamics are unresolved.",
             "No droplet or repetition-rate claim follows from electrical compliance.",
+            "Cumulative drive work uses interval-mean V and I and ideal energy recovery; DC-bus droop, ESR and switching ripple need a separate supply/capacitor budget.",
         ],
     }
     with a.output.open("x") as f:

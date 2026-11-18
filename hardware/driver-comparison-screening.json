@@ -1,0 +1,205 @@
+{
+  "status": "Circuit screening under explicit impedance assumptions; no switching or repeated-jet qualification",
+  "direct_wide_long_leads": {
+    "inputs": {
+      "peak_a": 200.0,
+      "positive_us": 250.0,
+      "head_mohm": 1.06450568,
+      "parasitic_mohm": 4.25,
+      "series_uh": 1.025,
+      "frequency_hz": 200.0,
+      "bus_v": 24.0,
+      "bulk_uf": 1000.0,
+      "retract_fraction": 0.25,
+      "rise_us": 20.0
+    },
+    "method": "Exact integrals of piecewise-linear prescribed current; V=IR+L dI/dt. Head modeled as constant cold resistance. Four-quadrant current regulation assumed.",
+    "rms_current_a": 42.60281680828159,
+    "head_heat_w": 1.9320778092000002,
+    "parasitic_heat_w": 7.713750000000001,
+    "required_voltage_min_v": -10.25,
+    "required_voltage_max_v": 11.312901136,
+    "ideal_bus_compliance": true,
+    "peak_inductor_energy_j": 0.020499999999999997,
+    "bulk_rise_if_all_peak_inductor_energy_returns_v": 0.8394846967484426,
+    "limitations": [
+      "No PWM ripple, switching/gate losses, current-loop dynamics, bus/lead ringing or protection design.",
+      "No capacitor ESR/ripple rating or switch SOA/temperature qualification.",
+      "Input R and L assumptions must be replaced with measured assembled values; motional voltage is omitted from this lumped check.",
+      "Electrical compliance is not a droplet or repetition-rate prediction."
+    ]
+  },
+  "direct_milled_short_rods": {
+    "inputs": {
+      "peak_a": 150.0,
+      "positive_us": 800.0,
+      "head_mohm": 0.0892535,
+      "parasitic_mohm": 4.092254,
+      "series_uh": 1.025,
+      "frequency_hz": 200.0,
+      "bus_v": 24.0,
+      "bulk_uf": 1000.0,
+      "retract_fraction": 0.25,
+      "rise_us": 20.0
+    },
+    "method": "Exact integrals of piecewise-linear prescribed current; V=IR+L dI/dt. Head modeled as constant cold resistance. Four-quadrant current regulation assumed.",
+    "rms_current_a": 59.56089321022645,
+    "head_heat_w": 0.31662679124999993,
+    "parasitic_heat_w": 14.517271064999997,
+    "required_voltage_min_v": -7.687500000000001,
+    "required_voltage_max_v": 8.314726125,
+    "ideal_bus_compliance": true,
+    "peak_inductor_energy_j": 0.01153125,
+    "bulk_rise_if_all_peak_inductor_energy_returns_v": 0.47575330812108163,
+    "limitations": [
+      "No PWM ripple, switching/gate losses, current-loop dynamics, bus/lead ringing or protection design.",
+      "No capacitor ESR/ripple rating or switch SOA/temperature qualification.",
+      "Input R and L assumptions must be replaced with measured assembled values; motional voltage is omitted from this lumped check.",
+      "Electrical compliance is not a droplet or repetition-rate prediction."
+    ]
+  },
+  "direct_milled_long_rods": {
+    "inputs": {
+      "peak_a": 150.0,
+      "positive_us": 800.0,
+      "head_mohm": 0.0892535,
+      "parasitic_mohm": 7.275353,
+      "series_uh": 1.025,
+      "frequency_hz": 200.0,
+      "bus_v": 24.0,
+      "bulk_uf": 1000.0,
+      "retract_fraction": 0.25,
+      "rise_us": 20.0
+    },
+    "method": "Exact integrals of piecewise-linear prescribed current; V=IR+L dI/dt. Head modeled as constant cold resistance. Four-quadrant current regulation assumed.",
+    "rms_current_a": 59.56089321022645,
+    "head_heat_w": 0.31662679124999993,
+    "parasitic_heat_w": 25.8093147675,
+    "required_voltage_min_v": -7.687500000000001,
+    "required_voltage_max_v": 8.792190975,
+    "ideal_bus_compliance": true,
+    "peak_inductor_energy_j": 0.01153125,
+    "bulk_rise_if_all_peak_inductor_energy_returns_v": 0.47575330812108163,
+    "limitations": [
+      "No PWM ripple, switching/gate losses, current-loop dynamics, bus/lead ringing or protection design.",
+      "No capacitor ESR/ripple rating or switch SOA/temperature qualification.",
+      "Input R and L assumptions must be replaced with measured assembled values; motional voltage is omitted from this lumped check.",
+      "Electrical compliance is not a droplet or repetition-rate prediction."
+    ]
+  },
+  "RF_250A_linear_scaling": {
+    "source_fit": {
+      "method": "Interval V=R*I_mid + L_air*dI/dt + d(lambda_reaction)/dt. Fit V=R_eff*I_mid+L_eff*dI/dt over the stated steady carrier window. Series C cancels fitted L at the stated frequency; capacitor voltage integrates the actual current from zero initial charge.",
+      "inputs": {
+        "run": "artifacts/hardware-research/foil-carrier-z6-50k200A-dt025-cold-h020",
+        "air_l_uh": 0.8262725,
+        "coil_r_ohm": 0.00904843,
+        "frequency_hz": 50000.0,
+        "fit_start_us": 80.0,
+        "fit_end_us": 240.0,
+        "series_r_ohm": 0.002,
+        "series_l_uh": 0.2,
+        "through_us": null
+      },
+      "input_observed_through_us": 367.7499999999939,
+      "voltage_evaluated_through_us": 367.7499999999939,
+      "fitted_total_resistance_ohm": 0.040299632761110774,
+      "fitted_loaded_inductance_uh": 0.9384230673775087,
+      "series_capacitance_uf": 10.796962176717074,
+      "fit_residual_rms_v": 0.00025814817735797307,
+      "observed_coil_and_series_voltage_peak_v": 59.50300119547909,
+      "observed_capacitor_voltage_peak_v": 58.87236996978827,
+      "observed_drive_voltage_peak_v": 16.048371917631194,
+      "fit_average_input_w": 804.750350226293,
+      "observed_drive_net_work_j": 0.19823453454157738,
+      "observed_drive_peak_cumulative_work_j": 0.20556055957116726,
+      "observed_drive_minimum_cumulative_work_j": 0.0,
+      "initial_capacitor_charge_c": 0.0,
+      "initial_current_a": 0.0,
+      "discrete_field_energy_check": {
+        "through_us": 367.7499999999939,
+        "backward_euler_reciprocal_source_work_j": 0.14923342553756078,
+        "metal_joule_heat_j": 0.14409248611246675,
+        "reaction_numerical_loss_j": 0.005140928702185937,
+        "final_reaction_energy_j": 8.748550742612612e-22,
+        "relative_work_defect": 7.185325975469631e-08,
+        "numerical_loss_over_joule_heat": 0.03567797905973633,
+        "meaning": "Accepted backward-Euler field energy check, not physical inverter input energy. Its numerical loss must decrease under time refinement."
+      },
+      "limits": [
+        "Cold prescribed-current screen, not a circuit solution or switching implementation. Reported maxima are interval-mean voltages, not switch-node peaks.",
+        "Check waveform completion, time/grid refinement and energy/numerical losses before using component ratings.",
+        "Air L retains round-wire low-frequency/internal-inductance assumptions; AC resistance, proximity, real leads, capacitor ESR/ripple and control dynamics are unresolved.",
+        "No droplet or repetition-rate claim follows from electrical compliance.",
+        "Cumulative drive work uses interval-mean V and I and ideal energy recovery; DC-bus droop, ESR and switching ripple need a separate supply/capacitor budget."
+      ]
+    },
+    "scale_from_200a": 1.25,
+    "peak_cumulative_drive_work_j": 0.32118837432994884,
+    "approx_net_electrical_heat_at_200hz_w": 61.94829204424293,
+    "bus_checks": [
+      {
+        "initial_bus_v": 24,
+        "bulk_capacitance_uf": 1000.0,
+        "no_supply_minimum_bus_v": null,
+        "scaled_observed_drive_peak_v": 20.06046489703899,
+        "meaning": "Ideal zero supply assistance and zero ESR; uses peak cumulative interval drive work. None means stored bus energy is insufficient."
+      },
+      {
+        "initial_bus_v": 24,
+        "bulk_capacitance_uf": 4700.0,
+        "no_supply_minimum_bus_v": 20.96005954261125,
+        "scaled_observed_drive_peak_v": 20.06046489703899,
+        "meaning": "Ideal zero supply assistance and zero ESR; uses peak cumulative interval drive work. None means stored bus energy is insufficient."
+      },
+      {
+        "initial_bus_v": 48,
+        "bulk_capacitance_uf": 1000.0,
+        "no_supply_minimum_bus_v": 40.763013276009204,
+        "scaled_observed_drive_peak_v": 20.06046489703899,
+        "meaning": "Ideal zero supply assistance and zero ESR; uses peak cumulative interval drive work. None means stored bus energy is insufficient."
+      }
+    ],
+    "limits": [
+      "Scaling assumes the cold fixed geometry, linear conductivity and prescribed waveform. Moving geometry, temperature and driver tracking can change the load.",
+      "The source record ends at367.75us after a solver failure in the weak late tail, not the requested500us.",
+      "AC wire/proximity loss, capacitor ESR/ripple, switching losses/control and cooling remain unresolved."
+    ]
+  },
+  "RF_time_refinement_same_80_100us_cycle": [
+    {
+      "roi_force_z_N": -0.027738782658633672,
+      "radial_pressure_proxy_Pa": 5298.429196907819,
+      "liquid_joule_power_W": 195.52464070563343,
+      "solid_joule_power_W": 370.22330410521255,
+      "dt_us": 0.5,
+      "artifacts": "artifacts/hardware-research/foil-carrier-z6-50k200A-cold-h020",
+      "samples": 40,
+      "reaction_BE_over_joule": 0.07067089615176972
+    },
+    {
+      "roi_force_z_N": -0.019804501713857607,
+      "radial_pressure_proxy_Pa": 4601.360880130119,
+      "liquid_joule_power_W": 204.45802922611412,
+      "solid_joule_power_W": 380.56576130196515,
+      "dt_us": 0.25,
+      "artifacts": "artifacts/hardware-research/foil-carrier-z6-50k200A-dt025-cold-h020",
+      "samples": 80,
+      "reaction_BE_over_joule": 0.0354911156924271
+    },
+    {
+      "roi_force_z_N": -0.018865735582250277,
+      "radial_pressure_proxy_Pa": 4553.660241141097,
+      "liquid_joule_power_W": 209.1698276106671,
+      "solid_joule_power_W": 385.89478465182185,
+      "dt_us": 0.125,
+      "artifacts": "artifacts/hardware-research/foil-carrier-z6-50k200A-dt0125-prefix-cold-h020",
+      "samples": 160,
+      "reaction_BE_over_joule": 0.017778972157978933
+    }
+  ],
+  "direct_lead_assumptions": {
+    "wide_copper": "Per side:4mm at0.32mm2 plus20mm at0.64mm2; rho4e-8ohm m. Pair3.5mohm plus0.75mohm other series R.",
+    "tungsten": "1mm rods, rho1.25e-7ohm m, dry length10.5 or20.5mm. Pair rod R plus0.75mohm other series R; ideal-terminal head R excludes these dry lengths."
+  }
+}
