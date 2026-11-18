@@ -37,10 +37,36 @@ def main():
         or min(a.air_l_uh, a.frequency_hz) <= 0
         or min(a.coil_r_ohm, a.series_r_ohm, a.series_l_uh, a.fit_start_us) < 0
         or a.fit_end_us <= a.fit_start_us
+        or (a.through_us is not None and a.through_us <= 0)
     ):
         raise ValueError("Invalid circuit parameters or fit window")
     rows = list(csv.DictReader((a.run / "diagnostics.csv").open()))
     input_through = float(rows[-1]["time_s"])
+    # Discrete reciprocity is separate from the interval-mean circuit fit. The
+    # backward-Euler work uses new linkage, not a midpoint linkage. Zero-current
+    # tails require no extra source work, even in older records without linkage.
+    work = 0.0
+    old_current = 0.0
+    for row in rows:
+        new_current = float(row["coil_current_A"])
+        change = new_current - old_current
+        if change != 0:
+            work -= float(row["reaction_linkage_Wb"]) * change
+        old_current = new_current
+    heat = float(rows[-1]["accumulated_joule_J"])
+    numerical = sum(float(row["reaction_BE_J"]) for row in rows)
+    reaction_energy = float(rows[-1]["reaction_magnetic_J"])
+    accounted = heat + numerical + reaction_energy
+    energy_check = {
+        "through_us": input_through * 1e6,
+        "backward_euler_reciprocal_source_work_j": work,
+        "metal_joule_heat_j": heat,
+        "reaction_numerical_loss_j": numerical,
+        "final_reaction_energy_j": reaction_energy,
+        "relative_work_defect": (work - accounted) / max(abs(work), abs(accounted), 1e-30),
+        "numerical_loss_over_joule_heat": numerical / max(heat, 1e-30),
+        "meaning": "Accepted backward-Euler field energy check, not physical inverter input energy. Its numerical loss must decrease under time refinement.",
+    }
     if a.through_us is not None:
         rows = [v for v in rows if float(v["time_s"]) <= a.through_us * 1e-6 + 1e-12]
     t = np.array([float(v["time_s"]) for v in rows])
@@ -58,6 +84,8 @@ def main():
             for i, v in enumerate(rows)
         ]
     )
+    if not all(np.all(np.isfinite(v)) for v in [t, current, reaction]):
+        raise ValueError("Nonfinite accepted winding observations")
     if t[-1] < a.fit_end_us * 1e-6 or np.any(np.diff(t) <= 0):
         raise ValueError("Requested complete fit window is unavailable")
     dt = np.diff(t)
@@ -101,6 +129,7 @@ def main():
         "observed_capacitor_voltage_peak_v": float(np.max(np.abs(capacitor_mid_v))),
         "observed_drive_voltage_peak_v": float(np.max(np.abs(drive))),
         "fit_average_input_w": float(np.mean(terminal[selected] * i_mid[selected])),
+        "discrete_field_energy_check": energy_check,
         "limits": [
             "Cold prescribed-current screen, not a circuit solution or switching implementation. Reported maxima are interval-mean voltages, not switch-node peaks.",
             "Check waveform completion, time/grid refinement and energy/numerical losses before using component ratings.",

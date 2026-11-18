@@ -1,0 +1,90 @@
+{
+  "method": "Accepted GPU applied B, averaged over liquid-ID cells with 0.1 < z < 0.5 mm. Same 50 micrometre sampling grid for all rows.",
+  "limits": [
+    "Tiny domain is only a magnetic-field sampling window. Discard its cropped-domain current sharing, force and resistance as physical hardware predictions.",
+    "Assumed hot Br=0.95 T and mu_r=1. Source refinement does not establish hot material grade or demagnetization load line.",
+    "The homogeneous stack assumes abutting aligned stock discs; verify full CAD clearances and mounts."
+  ],
+  "fields": [
+    {
+      "artifacts": "artifacts/hardware-research/v6-tip-disc10-stack10-field-only-h0050",
+      "diameter_mm": 10.0,
+      "stack_mm": 10.0,
+      "subdivisions": 2,
+      "pole_gap_mm": 4.2,
+      "liquid_tip_mean_by_t": -0.38063937425613403,
+      "liquid_tip_min_by_t": -0.39571434259414673,
+      "liquid_tip_max_by_t": -0.3651452660560608
+    },
+    {
+      "artifacts": "artifacts/hardware-research/v6-tip-disc10-stack10-sub4-field-only-h0050",
+      "diameter_mm": 10.0,
+      "stack_mm": 10.0,
+      "subdivisions": 4,
+      "pole_gap_mm": 4.2,
+      "liquid_tip_mean_by_t": -0.3901314437389374,
+      "liquid_tip_min_by_t": -0.4052204191684723,
+      "liquid_tip_max_by_t": -0.3745476305484772
+    },
+    {
+      "artifacts": "artifacts/hardware-research/v6-tip-disc10-stack20-gap4-field-only-h0050",
+      "diameter_mm": 10.0,
+      "stack_mm": 20.0,
+      "subdivisions": 2,
+      "pole_gap_mm": 4.0,
+      "liquid_tip_mean_by_t": -0.4105108678340912,
+      "liquid_tip_min_by_t": -0.4258190095424652,
+      "liquid_tip_max_by_t": -0.39489269256591797
+    },
+    {
+      "artifacts": "artifacts/hardware-research/v6-tip-disc10-stack20-gap4-sub3-field-only-h0050",
+      "diameter_mm": 10.0,
+      "stack_mm": 20.0,
+      "subdivisions": 3,
+      "pole_gap_mm": 4.0,
+      "liquid_tip_mean_by_t": -0.43648698925971985,
+      "liquid_tip_min_by_t": -0.45260995626449585,
+      "liquid_tip_max_by_t": -0.41988301277160645
+    },
+    {
+      "artifacts": "artifacts/hardware-research/v6-tip-disc10-stack20-gap4-sub4-field-only-h0050",
+      "diameter_mm": 10.0,
+      "stack_mm": 20.0,
+      "subdivisions": 4,
+      "pole_gap_mm": 4.0,
+      "liquid_tip_mean_by_t": -0.4446851909160614,
+      "liquid_tip_min_by_t": -0.4608176350593567,
+      "liquid_tip_max_by_t": -0.42801433801651
+    },
+    {
+      "artifacts": "artifacts/hardware-research/v6-tip-disc15-stack10-field-only-h0050",
+      "diameter_mm": 15.0,
+      "stack_mm": 10.0,
+      "subdivisions": 2,
+      "pole_gap_mm": 4.2,
+      "liquid_tip_mean_by_t": -0.3876347541809082,
+      "liquid_tip_min_by_t": -0.40309590101242065,
+      "liquid_tip_max_by_t": -0.3717406988143921
+    },
+    {
+      "artifacts": "artifacts/hardware-research/v6-tip-disc20-stack10-field-only-h0050",
+      "diameter_mm": 20.0,
+      "stack_mm": 10.0,
+      "subdivisions": 2,
+      "pole_gap_mm": 4.2,
+      "liquid_tip_mean_by_t": -0.37422582507133484,
+      "liquid_tip_min_by_t": -0.38935816287994385,
+      "liquid_tip_max_by_t": -0.3586496114730835
+    },
+    {
+      "artifacts": "artifacts/hardware-research/v6-tip-disc20-stack10-sub4-field-only-h0050",
+      "diameter_mm": 20.0,
+      "stack_mm": 10.0,
+      "subdivisions": 4,
+      "pole_gap_mm": 4.2,
+      "liquid_tip_mean_by_t": -0.381682813167572,
+      "liquid_tip_min_by_t": -0.39673709869384766,
+      "liquid_tip_max_by_t": -0.3661040961742401
+    }
+  ]
+}

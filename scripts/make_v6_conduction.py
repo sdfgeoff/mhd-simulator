@@ -13,7 +13,7 @@ import numpy as np
 from pathlib import Path
 
 from make_conduction_hardware import box, write_project
-from make_hardware import lathe
+from make_hardware import heater, lathe
 
 
 def main():
@@ -31,12 +31,26 @@ def main():
     p.add_argument("--contact-band", choices=["hex", "upper", "tip", "immersed"], default="hex")
     p.add_argument("--magnet-z", type=float)
     p.add_argument("--pole-gap", type=float)
-    p.add_argument("--magnet", choices=["cube10", "disc20-stack10"], default="cube10")
+    p.add_argument("--pin-diameter-mm", type=float, default=0.5)
+    p.add_argument("--pin-spacing-mm", type=float, default=1.0)
+    p.add_argument("--pin-tip-mm", type=float, default=2.0)
+    p.add_argument("--heater", action="store_true")
+    p.add_argument("--heater-sigma", type=float, default=13e6)
+    p.add_argument("--magnet", choices=["cube10", "disc20-stack10", "disc"], default="cube10")
+    p.add_argument("--magnet-disc-diameter-mm", type=float, default=20.)
+    p.add_argument("--magnet-stack-mm", type=float, default=10.)
+    p.add_argument("--magnet-subdivisions", type=int)
     p.add_argument("--orifice", type=float, choices=[0.4, 0.5, 0.6], default=0.4)
     p.add_argument(
         "--output", type=Path, default=Path("artifacts/hardware-research/cases")
     )
     args = p.parse_args()
+    if not all(math.isfinite(v) and v > 0 for v in [args.magnet_disc_diameter_mm, args.magnet_stack_mm]):
+        raise ValueError("Magnet dimensions must be finite and positive")
+    if args.magnet_subdivisions is None:
+        args.magnet_subdivisions = 4 if args.magnet == "cube10" else 2
+    if not 0 <= args.magnet_subdivisions <= 4:
+        raise ValueError("Choose magnet subdivisions between zero and four")
     args.output.mkdir(parents=True, exist_ok=True)
     rin, ro, length = 1.6, args.orifice / 2, 12.5
     land = {0.4: 0.6, 0.5: 0.9, 0.6: 1.2}[args.orifice]
@@ -106,7 +120,13 @@ def main():
                 16 + i,
             )
     if args.contact_band == "immersed":
-        pins = [cad.Manifold.cylinder(12., .25, circular_segments=48).translate([sign*.5,0,2.]) for sign in [-1,1]]
+        diameter, spacing, tip = args.pin_diameter_mm, args.pin_spacing_mm, args.pin_tip_mm
+        if not all(math.isfinite(v) and v > 0 for v in [diameter, spacing, tip]):
+            raise ValueError("Pin dimensions must be finite and positive")
+        bore_radius = min(rin, ro + max(0., tip - land) * math.tan(math.pi / 6))
+        if spacing <= diameter or (spacing + diameter) / 2 >= bore_radius or tip >= args.fill_height:
+            raise ValueError("Pins must be disjoint, immersed and clear of the conical wall")
+        pins = [cad.Manifold.cylinder(14. - tip, diameter / 2, circular_segments=48).translate([sign * spacing / 2, 0, tip]) for sign in [-1, 1]]
         raw = np.asarray(parts[1][1],dtype=np.float32).reshape(-1,3)
         vertices, indices = np.unique(raw,axis=0,return_inverse=True)
         pool = cad.Manifold(cad.Mesh(vertices,indices.reshape(-1,3).astype(np.uint32)))
@@ -114,37 +134,47 @@ def main():
         for i,pin in enumerate(pins):
             parts[i+2] = (f"{'Positive' if i==0 else 'Negative'} immersed tungsten electrode",pin,16+i)
         args.terminal_material = "tungsten"
+    disc_radius = args.magnet_disc_diameter_mm / 2
+    tip_magnet_z = 1.8 - disc_radius if args.magnet != "cube10" else -8.2
+    pin_magnet_z = 3.0 - disc_radius if args.magnet != "cube10" else -7.
     magnet_z = (
         args.magnet_z
         if args.magnet_z is not None
-        else ({"upper": 8.5, "tip": -8.2, "immersed": -7.}.get(args.contact_band, 4.5))
+        else ({"upper": 8.5, "tip": tip_magnet_z, "immersed": pin_magnet_z}.get(args.contact_band, 4.5))
     )
     pole_gap = (
         args.pole_gap
         if args.pole_gap is not None
         else ({"tip":4.2,"immersed":8.5}.get(args.contact_band,9.5))
     )
-    magnet_y = pole_gap / 2 + 5.0
+    stack = 10.0 if args.magnet == "cube10" else args.magnet_stack_mm
+    magnet_y = (pole_gap + stack) / 2
     if args.magnet == "cube10":
         magnets = [
             box([10.0, 10.0, 10.0], [0.0, sign * magnet_y, magnet_z])
             for sign in [-1, 1]
         ]
     else:
-        # Two axially magnetized 20 x 5 mm discs abutting per pole; no inter-disc gap.
-        # Homogeneous 10 mm stack is equivalent when magnetization is matched.
+        # A homogeneous stack represents abutting discs with matched axial
+        # magnetization. Stock-disc thickness must divide the requested stack.
         magnets = [
-            cad.Manifold.cylinder(10.0, 10.0, circular_segments=48, center=True)
+            cad.Manifold.cylinder(stack, disc_radius, circular_segments=48, center=True)
             .rotate([90, 0, 0])
             .translate([0.0, sign * magnet_y, magnet_z])
             for sign in [-1, 1]
         ]
-        args.magnet_subdivisions = 2
+    if args.heater:
+        if not math.isfinite(args.heater_sigma) or args.heater_sigma <= 0:
+            raise ValueError("Heater conductivity must be finite and positive")
+        parts.append(("Simplified aluminium heater block", heater(6.5, 18.0), 8))
     parts.extend((f"Bias magnet {i+1}", magnet, 18) for i, magnet in enumerate(magnets))
     project = write_project(parts, args)
-    if args.air_return_periodic_z:
+    if args.air_return_periodic_z or args.heater:
         data = json.loads(project.read_text())
-        data["fluid"]["periodic"][2] = True
+        if args.air_return_periodic_z:
+            data["fluid"]["periodic"][2] = True
+        if args.heater:
+            next(m for m in data["materials"] if m["id"] == 8)["conductivity_s_m"] = args.heater_sigma
         project.write_text(json.dumps(data, indent=2) + "\n")
     project.with_name(project.stem + "-assumptions.json").write_text(
         json.dumps(
@@ -154,7 +184,7 @@ def main():
                     for k, v in vars(args).items()
                 },
                 "limits": [
-                    "Screening CAD; threads, fillets, heater and mounts omitted.",
+                    "Screening CAD; threads, fillets, heater bores and mounts omitted. A bulk heater block is included only with --heater; its conductivity is an explicit hot screening assumption, not a sourced temperature fit.",
                     "Cropping conductors requires a cold-domain comparison; periodic z is an artificial air return when the upper nozzle is cropped. It must be checked against a full-height fluid domain and stopped before liquid reaches a periodic boundary.",
                 ],
             },

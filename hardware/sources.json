@@ -198,5 +198,50 @@
     "url": "https://www.indium.com/blog/soldering-to-stainless-steel/",
     "facts": "Stainless oxide inhibits soldering; appropriate flux or a nickel-plated solderable surface are preparation routes.",
     "limitations": "This establishes preparation options, not a calibrated molten-solder electrical contact resistivity or long-term nozzle compatibility."
+  },
+  {
+    "id": "nist-tungsten-hot",
+    "url": "https://www.nist.gov/system/files/documents/2016/10/06/SP260-90.PDF",
+    "author": "Hust and Lankford, National Bureau of Standards, SP260-90",
+    "facts": {
+      "location": "PDF page 68 / printed page 56, Table 4.2, RRR=75 column",
+      "temperature_k": [
+        500,
+        600
+      ],
+      "electrical_resistivity_nanoohm_m": [
+        104.4,
+        130.9
+      ],
+      "thermal_conductivity_w_m_k": [
+        144.9,
+        136.2
+      ]
+    },
+    "limitations": "Reference tungsten, not a certificate for electrode stock. The current rod budgets retain explicit conservative resistivity 125 nanoohm m and thermal conductivity 150 W/m/K assumptions; they are not fitted property curves."
+  },
+  {
+    "id": "smco-disc10-stock",
+    "url": "https://aussiemagnets.com.au/products/10mm-x-5mm-disc-samarium-cobalt",
+    "author": "Aussie Magnets",
+    "facts": {
+      "item": 3820,
+      "diameter_mm": 10,
+      "thickness_mm": 5,
+      "grade": "Sm2Co17 / YXG26",
+      "coating": "uncoated"
+    },
+    "limitations": "Catalogue geometry/grade only. Hot remanence and load-line performance remain assumptions."
+  },
+  {
+    "id": "pure-tungsten-1mm-catalogue",
+    "url": "https://www.evo-chem.com/materials-for-rd/materials/tungsten-rod",
+    "author": "EVOCHEM",
+    "facts": {
+      "part": "W-00025",
+      "diameter_mm": 1,
+      "purity_min_percent": 99.95
+    },
+    "limitations": "Listed catalogue item, not confirmed stock or delivery. A doped TIG electrode is a different material and needs separate compatibility qualification."
   }
 ]

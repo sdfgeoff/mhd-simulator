@@ -1,0 +1,81 @@
+{
+  "status": "Analytic electrode heat scales, not completed thermal or repeated-jet simulations",
+  "driver": {
+    "inputs": {
+      "peak_a": 150.0,
+      "positive_us": 600.0,
+      "head_mohm": 0.12609,
+      "parasitic_mohm": 0.75,
+      "series_uh": 1.025,
+      "frequency_hz": 200.0,
+      "bus_v": 24.0,
+      "bulk_uf": 1000.0,
+      "retract_fraction": 0.25,
+      "rise_us": 20.0
+    },
+    "method": "Exact integrals of piecewise-linear prescribed current; V=IR+L dI/dt. Head modeled as constant cold resistance. Four-quadrant current regulation assumed.",
+    "rms_current_a": 51.27133702177075,
+    "head_heat_w": 0.3314590875,
+    "parasitic_heat_w": 1.9715625,
+    "required_voltage_min_v": -7.687500000000001,
+    "required_voltage_max_v": 7.818913500000001,
+    "ideal_bus_compliance": true,
+    "peak_inductor_energy_j": 0.01153125,
+    "bulk_rise_if_all_peak_inductor_energy_returns_v": 0.47575330812108163,
+    "limitations": [
+      "No PWM ripple, switching/gate losses, current-loop dynamics, bus/lead ringing or protection design.",
+      "No capacitor ESR/ripple rating or switch SOA/temperature qualification.",
+      "Input R and L assumptions must be replaced with measured assembled values; motional voltage is omitted from this lumped check.",
+      "Electrical compliance is not a droplet or repetition-rate prediction."
+    ]
+  },
+  "rods": [
+    {
+      "inputs": {
+        "driver": "artifacts/hardware-research/v6-pins-150A-600us-head-driver-budget.json",
+        "diameter_mm": 0.5,
+        "dry_length_mm": 10.5,
+        "resistivity_ohm_m": 1.25e-07,
+        "thermal_conductivity_w_m_k": 150.0,
+        "density_kg_m3": 19300.0,
+        "heat_capacity_j_kg_k": 140.0
+      },
+      "rms_current_a": 51.27133702177075,
+      "single_rod_resistance_ohm": 0.006684507609859605,
+      "pair_average_joule_power_w": 35.143798758836866,
+      "pair_peak_voltage_v": 2.0053522829578814,
+      "single_pulse_adiabatic_temperature_rise_k": 15.771905936331333,
+      "steady_peak_rise_above_equal_fixed_end_temperatures_k": 783.0633008093987,
+      "limits": [
+        "Uniform full current in each dry rod; excludes immersed-section current distribution and contact losses.",
+        "Constant-property engineering assumptions; large predicted rises invalidate the approximation rather than qualify an operating temperature.",
+        "Steady estimate solves k*T''+q=0 for equal fixed end temperatures; liquid and clamp cooling must actually maintain those boundaries. No radiation, gas convection or transient heat transfer.",
+        "Identical repeated current pulses assumed; no demonstrated droplet repetition rate."
+      ]
+    },
+    {
+      "inputs": {
+        "driver": "artifacts/hardware-research/v6-pins-150A-600us-head-driver-budget.json",
+        "diameter_mm": 1.0,
+        "dry_length_mm": 10.5,
+        "resistivity_ohm_m": 1.25e-07,
+        "thermal_conductivity_w_m_k": 150.0,
+        "density_kg_m3": 19300.0,
+        "heat_capacity_j_kg_k": 140.0
+      },
+      "rms_current_a": 51.27133702177075,
+      "single_rod_resistance_ohm": 0.0016711269024649012,
+      "pair_average_joule_power_w": 8.785949689709216,
+      "pair_peak_voltage_v": 0.5013380707394703,
+      "single_pulse_adiabatic_temperature_rise_k": 0.9857441210207083,
+      "steady_peak_rise_above_equal_fixed_end_temperatures_k": 48.94145630058742,
+      "limits": [
+        "Uniform full current in each dry rod; excludes immersed-section current distribution and contact losses.",
+        "Constant-property engineering assumptions; large predicted rises invalidate the approximation rather than qualify an operating temperature.",
+        "Steady estimate solves k*T''+q=0 for equal fixed end temperatures; liquid and clamp cooling must actually maintain those boundaries. No radiation, gas convection or transient heat transfer.",
+        "Identical repeated current pulses assumed; no demonstrated droplet repetition rate."
+      ]
+    }
+  ],
+  "tungsten_reference": "See sources.json nist-tungsten-hot. Historical budget assumptions are retained explicitly; no silent property replacement."
+}

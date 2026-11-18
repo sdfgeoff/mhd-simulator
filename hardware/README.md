@@ -324,3 +324,50 @@ screen. The prefix circuit fit gives approximately 10.8 µF series capacitance,
 16 V drive and 60 V internal AC under the stated low-frequency inductance,
 resistance and lead assumptions. AC wire losses, source-core sensitivity,
 complete-tail voltage and fluid response remain open checks.
+
+
+### Practical electrodes, heater and pole refinement
+
+The [dry-rod budget](electrode-rod-screening.json) separates electrode losses
+from the ideal-terminal field calculation. At the trial 150 A / 600 µs pulse
+pair repeated at 200 Hz, two 10.5 mm dry lengths of 0.5 mm tungsten dissipate
+about 35 W under the stated resistivity assumption. Increasing diameter to
+1 mm reduces this to about 8.8 W. The constant-property, equal-fixed-temperature
+end model estimates approximately 49 K maximum rise for 1 mm rods; actual clamp
+and liquid cooling must maintain those boundary temperatures. The very large
+0.5 mm steady estimate invalidates its constant-property approximation and
+makes that geometry unattractive for continuous operation.
+
+Pin controls `--pin-diameter-mm`, `--pin-spacing-mm`, `--pin-tip-mm` reject
+intersecting pins and pin tips that touch the conical nozzle wall. A 1 mm
+variant uses 1.3 mm centre spacing and tips at z=2.4 mm. These dimensions fit
+the **3.2 mm inlet / 2.85 mm filament V6 geometry**, not the 2 mm inlet version.
+[E3D lists the separate inlet variants](https://e3d-online.com/pages/e3d-classics-support-v6-nozzle).
+Actual bore dimensions and electrode clearance must be measured.
+
+`--heater` adds the simplified conductive bulk aluminium block used in earlier
+coil screening. `--heater-sigma` is an explicit hot conductivity assumption
+(default 13 MS/m). Its bores, sensor, clamps and thread contact resistance are
+absent. Compare electrical shunting before assuming a normal block works.
+Clipping a heater across the whole fluid domain can block the external air
+return: such a domain cannot be reused for fluid validation without checking
+its air connectivity/boundaries.
+
+[Tip-field records](tip-magnet-field-screening.json) sample the accepted GPU
+magnetic field in a small window, with the complete magnet CAD as its source.
+Their **cropped current/force outputs are not hardware predictions**. Two
+10 × 5 mm discs per pole give nearly the original tip field with much smaller
+pole diameter. Longer stacks increase field but source-quadrature convergence
+must be checked. `--magnet disc`, `--magnet-disc-diameter-mm`,
+`--magnet-stack-mm` and `--magnet-subdivisions` expose these controls. Stack
+thickness must correspond to available abutting discs. The default tip pole
+top remains z=1.8 mm to clear the nozzle shoulder; mounting tolerances remain
+separate from nominal CAD clearance.
+
+Carrier postprocessing now also reports the discrete reciprocal-source energy
+balance and reaction backward-Euler numerical loss. In the z=6 mm, 0.5 µs cold
+run the work defect is below 1e-6, but numerical loss is 7.1% of metal heat.
+The first complete 80–100 µs cycle at 0.25 µs changes mean axial force by about
+29% relative to 0.5 µs. Smaller timesteps are required before accepting its
+force estimate. The circuit postprocessor also passes an independent analytic
+unloaded R/L/C fit check; that does not validate the loaded field discretization.
