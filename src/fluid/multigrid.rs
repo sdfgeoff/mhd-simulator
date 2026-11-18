@@ -297,6 +297,18 @@ fn encode_fluid(state: &FluidState, pass: &mut wgpu::ComputePass<'_>, stages: &[
     }
 }
 impl Multigrid {
+    #[cfg(test)]
+    pub(super) fn calibrate_floating_gauge(&self, state: &FluidState) {
+        let cells = groups(state.params.dims[3]);
+        state.dispatch(&[("floating_constant_rhs", cells)]);
+        self.apply(&state.context);
+        state.dispatch(&[
+            ("floating_constant_collect", cells),
+            ("floating_constant_reduce", [1, 1, 1]),
+            ("pressure_refresh", cells),
+            ("initial_reduce", [1, 1, 1]),
+        ]);
+    }
     pub(super) fn initialize(&self, state: &FluidState) {
         self.apply(&state.context);
         self.dispatch(&state.context, &[(0, "initial_direction")]);

@@ -1,6 +1,6 @@
 # Floating pressure gauge research
 
-This is an uncommitted, test-only experiment in a separate checkout. Production
+This is a test-only experiment preserved on a separate research branch. Production
 on main is unchanged. No performance or general-correctness claim has been made.
 
 The physical closed/periodic pressure graph is a Neumann Laplacian with one
@@ -19,8 +19,8 @@ original physical pressure equation, including the former anchor row. The
 reported pressure is shifted to the original reference cell afterwards.
 
 GPU reductions compute vector means and the gauge scale, reusing existing scalar
-and partial buffers. No volume-sized field is added. Jacobi is used for this
-initial experiment; existing multigrid is disabled. Multiple connected regions
+and partial buffers. No volume-sized field is added. Both Jacobi and a Neumann aggregation V-cycle are being tested; the latter
+includes the former anchor in every level and removes anchor reactions. Multiple connected regions
 are explicitly rejected by the experimental setter. No CPU field solver is added.
 
 The first numerical check projects an analytic periodic pressure-gradient
@@ -44,3 +44,31 @@ not eligible for production. A likely conditioning issue is that the gauge
 scale was matched to Jacobi while the V-cycle has a much larger constant-mode
 response. This remains a hypothesis to test, rather than a reason to relax the
 physical acceptance criterion.
+
+## Preconditioner-aware gauge calibration
+
+The next candidate retains the same physical operator and acceptance tests but
+sets `gamma = N / (1^T M 1)` for the fixed multigrid preconditioner `M`.
+The rank-one part of the symmetrically preconditioned matrix then has its sole
+nonzero eigenvalue equal to one. This matches that artificial gauge scale to the
+actual V-cycle instead of its fine-grid Jacobi diagonal. It does not imply that
+the full preconditioned matrix has condition number one.
+
+A GPU application of the existing V-cycle to the constant vector obtains the
+scalar denominator once per projection. The physical residual and initial
+search vector are then rebuilt. The gauge is fixed during each CG solve and its
+restarts; no volume buffer or CPU field solve is added.
+
+The periodic analytic test still passes, and the 120-step nozzle prefix that
+failed in the original multigrid experiment now passes at unchanged tolerances.
+Twelve manufactured projections pass across a 7000:1 density contrast in both
+orientations, using odd periodic, closed and thin connected domains; disconnected
+setups are rejected. The calibrated prefix has endpoint fraction relative L1
+difference 4.19e-9 and velocity relative L2 difference 7.33e-7 from anchored
+multigrid.
+
+However, the full stronger-pulse release experiment fails after its 100-step
+snapshot and before its 120-step snapshot: the surface-update projection reaches
+10,000 iterations with physical relative residual 4.858e-5 against the unchanged
+1e-5 target. Thus the short-prefix result did not establish robustness. Neither
+rank-one variant is eligible for production. No speedup is claimed.

@@ -377,6 +377,55 @@ fn manufactured_pressure_projection_keeps_physical_acceptance() {
     }
 }
 #[test]
+fn floating_pressure_contrast_and_disconnected_controls() {
+    let _lock = crate::gpu_test_lock();
+    for (dims, periodic, walls) in [
+        ([17, 13, 9], [true; 3], false),
+        ([16, 12, 8], [false; 3], false),
+        ([13, 1, 3], [true; 3], true),
+        ([16, 12, 8], [false; 3], true),
+    ] {
+        for reverse in [false, true] {
+            for multigrid in [false, true] {
+                let (mut state, mask) = fixture(dims, periodic, walls, reverse);
+                let mut topology: Vec<_> = mask.iter().map(|&m| u32::from(m != 0)).collect();
+                state.components = anchors(&mut topology, dims, periodic);
+                state.force_multigrid = Some(multigrid);
+                if state.components != 1 {
+                    assert!(state.enable_floating_pressure().is_err());
+                    assert!(!state.floating_pressure);
+                    continue;
+                }
+                state.enable_floating_pressure().unwrap();
+                state.config.max_iterations = 20000;
+                let candidate = manufactured_gradient(&state, &mask, false);
+                state.context.queue.write_buffer(
+                    &state.scratch,
+                    0,
+                    bytemuck::cast_slice(&candidate),
+                );
+                let result = state.project(false);
+                eprintln!(
+                    "Floating contrast {dims:?} periodic={periodic:?} walls={walls} reverse={reverse} MG={multigrid}: {result:?}"
+                );
+                assert!(result.is_ok());
+                let output = packets(&state.context, &state.velocity);
+                let norm: f64 = candidate
+                    .iter()
+                    .flat_map(|v| &v[..3])
+                    .map(|&v| (v as f64).powi(2))
+                    .sum();
+                let error: f64 = output
+                    .iter()
+                    .flat_map(|v| &v[..3])
+                    .map(|&v| (v as f64).powi(2))
+                    .sum();
+                assert!((error / norm).sqrt() < 2e-4);
+            }
+        }
+    }
+}
+#[test]
 #[ignore = "GPU pressure preconditioner timing study"]
 fn pressure_projection_timing() {
     let _lock = crate::gpu_test_lock();

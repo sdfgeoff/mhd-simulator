@@ -982,6 +982,7 @@ impl FluidState {
             self.context
                 .queue
                 .write_buffer(&self._uniform, 0, bytemuck::bytes_of(&self.params));
+            self.context.queue.write_buffer(&self.scalars, 32, &[0; 4]);
         }
         let _stage = self.context.profiler.stage(crate::profile::Stage::Pressure);
         let cells = groups(self.params.dims[3]);
@@ -1032,6 +1033,10 @@ impl FluidState {
             && let Some(mg) = mg
         {
             mg.build(&self.context);
+            #[cfg(test)]
+            if self.floating_pressure {
+                mg.calibrate_floating_gauge(self);
+            }
             mg.initialize(self);
         }
         while !residual.1 && iterations < self.config.max_iterations {

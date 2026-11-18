@@ -77,6 +77,9 @@ impl FluidState {
             "floating_prepare",
             "floating_direction_collect",
             "floating_search_reduce",
+            "floating_constant_rhs",
+            "floating_constant_collect",
+            "floating_constant_reduce",
         ] {
             let pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
                 label: Some(entry),
