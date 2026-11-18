@@ -83,8 +83,8 @@ The kernels use at most eight storage bindings and 16 KiB workgroup storage. Fie
 
 1. Production runs set the tangential **reaction** potential to zero at the finite outer box. The prescribed source field is still evaluated analytically there; its normal component is not forced to zero. This is a truncated-air-domain approximation. Increase air padding and compare outputs at fixed h. Conductors touching the outer boundary are rejected.
 2. Occupancy and material interfaces are still voxelized. Very thin conductors and skin layers require spatial refinement. Current conservation and a small algebraic residual do not guarantee that those features are resolved. Backward Euler is stable but first-order in time: decrease Δt and compare pulse response.
-3. The reported mechanical quantity is **Lorentz J×B**. It includes the total magnetic field acting on induced conduction current. It is not a full magnetization/Maxwell-stress force on permanent magnets or ferromagnetic solids. No nozzle pressure, free-surface motion, droplet breakup or thermal evolution is predicted yet.
-4. The pool will later have a free upper surface exposed to air, replenished by dipped feedstock. For stationary electromagnetics, its current CAD shape simply defines the initial conductor/air interface. The geometry does not imply a sealed liquid chamber.
+3. The reported mechanical quantity is **Lorentz J×B**. It includes the total magnetic field acting on induced conduction current. It is not a full magnetization/Maxwell-stress force on permanent magnets or ferromagnetic solids. In the [combined run](RUNS.md), this force drives the fluid/interface solve; pressure, free-surface transport, capillarity and optional thermal evolution share the common clock. The standalone EM check holds geometry fixed.
+4. The pool may have a free upper surface exposed to air. The combined moving-interface solve evolves its initial CAD occupancy; the standalone EM check keeps it fixed. Feedstock replenishment is not implemented. The geometry does not imply a sealed liquid chamber.
 
 ## Verification
 

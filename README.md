@@ -4,6 +4,8 @@ A native Rust/wgpu workbench for preparing a 3D molten-metal jetting simulation.
 
 **Applied magnetic fields and transient induction are implemented.** Inspect B, induced J, Lorentz force and Joule heating on the movable section plane. Fixed-geometry fluid velocity and pressure are also implemented, with shared animated vector overlays and two-way EM/velocity coupling on one clock. Thermal conduction, Joule heating, latent heat and phase-driven fluid mobility are implemented; moving liquid/air surfaces and capillarity are available as the first conservative interface stage. [Moving-surface workflow and limits](docs/SURFACES.md). [Thermal guide](docs/THERMAL.md). [Setup and unified-run workflow](docs/RUNS.md). [Fluid guide and validation](docs/FLUIDS.md). [Electromagnetics guide, equations and validation](docs/ELECTROMAGNETICS.md).
 
+[Validated baseline, reproducible runs and hardware-transition limits](docs/BASELINE.md).
+
 ## Run and inspect
 
 ```sh
