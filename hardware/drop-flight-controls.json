@@ -1,5 +1,5 @@
 {
-  "status": "Controlsrunning; no resultyet",
+  "status": "Coarse controls complete; combined space/time refinement underway",
   "generator": "scripts/make_drop_flight_control.py",
   "cases": "artifacts/hardware-research/cases/drop-flight-h010-v1",
   "physics": "NormalnativeRunState, fluid+surface, noEMorheat.0.6mmSnCudropin4x4x6mmdomain,100umcells,2ussteps,6msrequested.",
@@ -49,7 +49,7 @@
       "COM_travel_error_um_vs_exact_uniform": -1.5497924608553482
     }
   },
-  "interpretation": "Nearzero-sigma control retainsuniformtranslation whilephysical-sigma case loses~9%liquidspeedby600us. Investigate capillary/momentum coupling under interface advection; do not attribute allvelocitybehavior to hardwaregeometry.",
+  "interpretation": "Capillary-associated translation error is severe at six cells across the drop and decreases strongly at twelve cells over the first 600 us. A 24-cell control and longer refined controls remain necessary. Tighter pressure tolerance does not cure the coarse error. Do not use coarse hardware trajectories as qualified predictions.",
   "pressure_tolerance_control": {
     "status": "Complete600us; alpha-weightedvelocity unchanged at-.182385236m/s",
     "output": "artifacts/hardware-research/drop-flight-translation-pressure-tight-h010-prefix",
@@ -92,6 +92,107 @@
       1,
       0.5
     ],
-    "scope": "Periodicuniformtranslation. Combinedspace/timerefinement; smallerdomainthaninitial4x4x6mmcontrol, butuniformtranslation remains anexact continuum symmetry inany periodicbox. ActualinitialnativeVOFmass/COMmustbemeasured."
-  }
+    "scope": "Periodicuniformtranslation. Combinedspace/timerefinement; smallerdomainthaninitial4x4x6mmcontrol, butuniformtranslation remains anexact continuum symmetry inany periodicbox. ActualinitialnativeVOFmass/COMmustbemeasured.",
+    "completed": [
+      {
+        "grid": "h010",
+        "initial_equivalent_diameter_mm": 0.5997642419008213,
+        "final": {
+          "time_s": 0.0006000000000000016,
+          "step": 300,
+          "volume_m3": 1.129640663613336e-10,
+          "COM_z_m": -0.00011242470670209184,
+          "liquid_vz_m_s": -0.18238531181856096,
+          "boundary_max_alpha": 0.0,
+          "reference_z_m": -0.00012000007557522307,
+          "reference_vz_m_s": -0.20000000298023224,
+          "position_error_m": 7.575368873131226e-06,
+          "velocity_error_m_s": 0.017614691161671275,
+          "relative_volume_drift": -3.0819480523192055e-08
+        }
+      },
+      {
+        "grid": "h0050",
+        "initial_equivalent_diameter_mm": 0.5997396114538134,
+        "final": {
+          "time_s": 0.0006000000000000081,
+          "step": 600,
+          "volume_m3": 1.129501367810315e-10,
+          "COM_z_m": -0.00012042581489970414,
+          "liquid_vz_m_s": -0.19967945304561935,
+          "boundary_max_alpha": 0.0,
+          "reference_z_m": -0.00012000008090329757,
+          "reference_vz_m_s": -0.20000000298023224,
+          "position_error_m": -4.2573399640656573e-07,
+          "velocity_error_m_s": 0.0003205499346128904,
+          "relative_volume_drift": -1.450829367755091e-07
+        }
+      }
+    ],
+    "followup": "Queued after 25 um prefix: 50 um gravity and periodic translation, each 3 ms at 1 us, saved every 300 steps. Manager artifacts/hardware-research/refined_flight_followup.py checks live budget before each job."
+  },
+  "static_zero_gravity": {
+    "measurement": "drop-flight-zeroG-h010-motion.json",
+    "initial_equivalent_diameter_mm": 0.5997644835122207,
+    "final": {
+      "time_s": 0.006000000000000148,
+      "step": 3000,
+      "volume_m3": 1.1296417225421519e-10,
+      "COM_z_m": -1.3517778237972738e-10,
+      "liquid_vz_m_s": -4.3999700968251625e-07,
+      "boundary_max_alpha": 0.0,
+      "reference_z_m": -1.4585901139804187e-10,
+      "reference_vz_m_s": 0.0,
+      "position_error_m": 1.068122901831449e-11,
+      "velocity_error_m_s": -4.3999700968251625e-07,
+      "relative_volume_drift": -3.0194825839657824e-07
+    },
+    "max_relative_volume_drift": 3.1378308340546113e-07
+  },
+  "gravity": {
+    "measurement": "drop-flight-gravity-h010-motion.json",
+    "initial_equivalent_diameter_mm": 0.5997644835122207,
+    "final": {
+      "time_s": 0.006000000000000148,
+      "step": 3000,
+      "volume_m3": 1.1296419726522812e-10,
+      "COM_z_m": -1.702992196653951e-06,
+      "liquid_vz_m_s": 0.0020700716258928286,
+      "boundary_max_alpha": 0.0,
+      "reference_z_m": -0.00017658015341212065,
+      "reference_vz_m_s": -0.05886000251770164,
+      "position_error_m": 0.0001748771612154667,
+      "velocity_error_m_s": 0.06093007414359447,
+      "relative_volume_drift": -8.054172850879837e-08
+    },
+    "max_relative_volume_drift": 1.8511969424039876e-07
+  },
+  "translation_6ms": {
+    "measurement": "drop-flight-translation-periodic-h010-v1-motion.json",
+    "initial_equivalent_diameter_mm": 0.5997644835122207,
+    "final": {
+      "time_s": 0.006000000000000148,
+      "step": 3000,
+      "volume_m3": 1.1296408673881866e-10,
+      "COM_z_m": -0.00039174933789923083,
+      "liquid_vz_m_s": 0.00023697347266126884,
+      "boundary_max_alpha": 0.0,
+      "reference_z_m": -0.0012000001637404345,
+      "reference_vz_m_s": -0.20000000298023224,
+      "position_error_m": 0.0008082508258412037,
+      "velocity_error_m_s": 0.2002369764528935,
+      "relative_volume_drift": -1.0589614689582305e-06
+    },
+    "max_relative_volume_drift": 1.0589614689582305e-06,
+    "cell_estimated_initial_mixture_momentum_z_kg_m_s": -1.8116278439646749e-07,
+    "cell_estimated_final_mixture_momentum_z_kg_m_s": -2.2329297064554267e-08,
+    "net_CSF_diagnostic": "Read-only integration of exported alpha/curvature with production face weighting shows nonzero net surface force during translation. Cell-centred momentum estimate is not exact staggered-face momentum. No correction applied."
+  },
+  "references": [
+    {
+      "title": "Popinet (2009), An accurate adaptive solver for surface-tension-driven interfacial flows",
+      "url": "https://doi.org/10.1016/j.jcp.2009.04.042",
+      "relevance": "Balanced force and height-function curvature; uniform translating-drop benchmark checks the moving-interface coupling."
+    }
+  ]
 }

@@ -1,0 +1,42 @@
+{
+  "status": "Complete 3.6 ms startup only",
+  "run": "v6-tip-flat08-shortbar-gravity-dc30-startup3600us-h010",
+  "current_A": 30,
+  "geometry": "Near-flush machined-flat tip and stacked SmCo bars",
+  "final": {
+    "step": 1200,
+    "time_us": 3599.999999999965,
+    "first_nonnegative_cell_plane_z_mm": 0.04999988595955074,
+    "exit_plane_alpha_area_mm2": 0.11999998889052735,
+    "exit_plane_mean_uz_m_s": -1.2311397516030758,
+    "exit_plane_mean_pressure_pa": 935.6128769094179,
+    "exit_plane_downward_flux_proxy_nl_s": 147736.7565150557,
+    "liquid_volume_nl": 11348.001189914807,
+    "minimum_liquid_fraction": 0.0,
+    "maximum_liquid_fraction": 1.0,
+    "below_tip_maximum_liquid_fraction_at_cell_centres": 1.0,
+    "boundary_maximum_liquid_fraction": {
+      "z_min": 0.0,
+      "z_max": 0.0,
+      "y_min": 0.0,
+      "y_max": 0.0,
+      "x_min": 0.0,
+      "x_max": 0.0
+    },
+    "liquid_touches_domain_boundary_alpha01": false,
+    "below_tip_nl": 417.3377920974231,
+    "below_one_cell_guard_nl": 403.0199621450761,
+    "front_z_mm_alpha_half": -1.6500001947861165,
+    "detached_below_tip": [],
+    "connectivity_thresholds": {
+      "0.01": [],
+      "0.25": [],
+      "0.5": [],
+      "0.75": []
+    },
+    "below_tip_change_nl": 417.3377661023431,
+    "relative_liquid_volume_change": 3.140901827514142e-08
+  },
+  "scope": "Native moving-interface/current solve; no thermal evolution, feeding, steady-state or convergence claim. Physical capillary motion is under refinement investigation; speed provisional.",
+  "head_cold_resistive_power_W_approx": 0.9
+}

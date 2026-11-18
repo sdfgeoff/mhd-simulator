@@ -273,19 +273,28 @@ Boolean shoulder construction does not silently update the old completed
 immersed-pin inputs. Field matching still requires cold-current and fluid tests
 before claiming comparable jetting.
 
-## Work still in progress
+## Current qualification work
 
-1. Wider-contact 50 µm, fixed-step flow refinement.
-2. Gravity-on full-height two-pulse tests with and without the retract pulse;
-   the matched 200 A / 250 µs single-pulse gravity pair is complete.
-3. The shorter gravity-on 250 A / 150 µs control has completed without a
-   detached component by 3.6 ms; further waveform changes are unproven.
-4. The first flat-contact/compact-disc 150 A trial completes 3.6 ms without
-   detachment. The near-flush short-pole150A case separates a component by3.6ms, but it
-   moves UPWARD at0.056m/s (alpha0.01), so is not a usable jet. The175A control now gives a leading0.595mm component moving down0.355m/s
-   at3.6ms, but tail classification and refinement remain open.
-5. The exploratory two-phase unified fluid trial at 200 A per coil, explicitly
-   zero gravity and 200 µm resolution.
+1. Isolated-drop controls reveal severe coarse-grid capillary translation error.
+   At 100 µm, a uniformly translating 0.6 mm drop loses 8.8% of liquid speed
+   over 0.6 ms and nearly stops by 6 ms. At 50 µm, the 0.6 ms speed loss falls
+   to 0.16%. The 25 µm prefix and longer refined controls remain outstanding.
+   See [drop-flight-controls.json](drop-flight-controls.json). Hardware departure
+   speeds and long-time repetition trajectories remain provisional.
+2. The wider-contact 50 µm zero-gravity trial completes 3.6 ms with a separated
+   component, but speed differs substantially from its coarse counterpart.
+3. The near-flush 175 A case gives a leading 0.595 mm component moving down
+   0.355 m/s at 3.6 ms. Tail classification, fluid refinement, real contact
+   heating and repetition remain open. The 150 A and delayed-retract cases
+   separate components moving upward.
+4. Maintained 30 A produces continued connected outflow through 3.6 ms in the
+   coarse near-flush model. This is startup only; no feeding, steady flow,
+   thermal evolution or qualified speed. See
+   [maintained-current-startup.json](maintained-current-startup.json).
+5. The gravity-on two-pulse test with retraction completes without a second
+   separated component in saved frames and reaches a side boundary after
+   8.1 ms. Its no-retraction counterpart is still running. The coarse two-phase
+   induction trial completes without resolved ejection.
 
 [research-notes.md](research-notes.md) preserves the earlier detailed notes and
 commands as history. It contains interim statements; this README and the
