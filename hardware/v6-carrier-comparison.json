@@ -1,0 +1,38 @@
+{
+  "source": "artifacts/hardware-research/cases/foil-carrier-z6-50k250A-flow-fit-sncu-dt0125-h020.mhd.json",
+  "source_sha256": "7bc8f49f9cf1dfb715a00911ff3f6ad2fc19978720d0f2519dee2f03b86e9339",
+  "projects": {
+    "v6": "artifacts/hardware-research/cases/v6-carrier-matched-v1/v6-cold.mhd.json",
+    "custom": "artifacts/hardware-research/cases/v6-carrier-matched-v1/custom-cold.mhd.json"
+  },
+  "matched": [
+    "Current table250A50kHz300us40us ramps",
+    "CAD centreline including return",
+    "Material table",
+    "Domain and resolution",
+    "EM timestep/tolerances",
+    "Fixed feed wire .8mm diameter,tip5.5mm",
+    "Free level9mm"
+  ],
+  "differences": [
+    "V6 drawing-based nozzle versus custom6mm chamber/feed neck",
+    "Outlet land .9mm versus .15mm",
+    "Chamber/liquid volume and internal flow path"
+  ],
+  "scope": "Cold native EM comparison, not pure wall-shielding isolation, fluid ejection or circuit qualification. No conventional aluminium heater: it clashes with this encircling winding. Alternate heating is unresolved.",
+  "v6_dimensions_mm": {
+    "inlet": 3.2,
+    "outlet": 0.5,
+    "length": 12.5,
+    "land": 0.9
+  },
+  "coil_clearance_lower_bound_mm": 0.3065481156726211,
+  "geometry_source": "https://e3d-online.com/pages/e3d-classics-support-v6-nozzle",
+  "limitations": [
+    "Thread helix/fillets omitted; material conductivity and near-unit permeability uncalibrated at temperature.",
+    "200um grid under-resolves the outlet.",
+    "Same free level is not equal liquid mass; geometry is intentionally different."
+  ],
+  "status": "Queued native cold pair through120us; no results yet",
+  "stock_scope": "V6 dimension approximation with0.5mm outlet, not an assertion of a catalogued E3D stainless0.5mm SKU. E3D support table lists stainless0.25/0.4/0.8mm. Reaming or another supplier may be needed."
+}

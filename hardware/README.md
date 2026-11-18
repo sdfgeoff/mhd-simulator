@@ -48,6 +48,12 @@ the completed flat-tip 150 A case repeats with a 500 µs zero-current gap instea
 of 25 µs. Geometry, pulse amplitudes/durations and gravity remain fixed. It is
 queued behind the first near-flush trial; no result is assumed.
 
+A [matched-waveform V6/custom cold carrier pair](v6-carrier-comparison.json) is
+queued to compare the single-coil layouts with the same current table, winding,
+materials and domain. Internal geometry/land/liquid volume differ. This V6-like
+0.5 mm model is not a claim of a catalogued stainless SKU, and its standard heater
+is omitted because it clashes with the coil. No new ejection claim.
+
 ## Physical scope and limits
 
 1. **Gravity and domain boundaries.** Earlier generated flow cases use
