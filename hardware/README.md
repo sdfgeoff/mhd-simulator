@@ -6,6 +6,9 @@ Research branch: `research/hardware-design-20261118`. Frozen application baselin
 manufacture.** The target remains 0.4–0.6 mm solder drops, 24/48 V supply and
 actuator currents below a few hundred amps, using accessible parts.
 
+The circuit-design handoff is [pulse-generator-handoff.md](pulse-generator-handoff.md):
+a proposed ±300 A peak / 100 A RMS bipolar current driver on 24/48 V.
+
 ## Leading candidates and completed controls
 
 Completed moving-fluid results use **zero gravity** unless explicitly marked
@@ -180,8 +183,8 @@ The user has authorized custom V6-like machining. Two opposed external flats,
 minimum steel wall. In matched 100 µm cold screens, this increases outlet-land
 force by 73% while decreasing total liquid force by 26%. With the compact
 magnets at 150 A, its cold outlet-land force is about 8% above the unmodified
-large-pole case at 200 A. This motivates a gravity-on fluid trial; it does not
-establish equivalent jetting. Clamping, cutter radii and tolerances remain open.
+large-pole case at 200 A. The first gravity-on 150 A trial has now completed without detachment by
+3.6 ms. The cold metric did not establish equivalent jetting. Clamping, cutter radii and tolerances remain open.
 [custom-tip-flat-screening.json](custom-tip-flat-screening.json) retains geometry,
 fields, validation and electrical budgets.
 
@@ -220,9 +223,10 @@ before claiming comparable jetting.
 1. Wider-contact 50 µm, fixed-step flow refinement.
 2. Gravity-on full-height two-pulse tests with and without the retract pulse;
    the matched 200 A / 250 µs single-pulse gravity pair is complete.
-3. A shorter gravity-on 250 A / 150 µs pulse with smaller retract amplitude,
-   testing stronger initial forcing at lower total I²dt. No improvement assumed.
-4. The custom flat-contact/compact-pole 150 A gravity-on flow trial.
+3. The shorter gravity-on 250 A / 150 µs control has completed without a
+   detached component by 3.6 ms; further waveform changes are unproven.
+4. The first flat-contact/compact-disc 150 A trial completes 3.6 ms without
+   detachment. A near-flush short-pole trial now tests the same 150 A waveform.
 5. The exploratory two-phase unified fluid trial at 200 A per coil, explicitly
    zero gravity and 200 µm resolution.
 
