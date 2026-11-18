@@ -46,5 +46,42 @@
     "Starts at rest, not settled hydrostatic/wetting equilibrium.",
     "Full-height zero-G control is needed to separate domain changes from gravity.",
     "No added gravity solver or reduced-pressure approximation."
-  ]
+  ],
+  "queued_repetition_followup": {
+    "status": "Waits for matched single-pulse gravity/domain pair; bounded by live weekly stop",
+    "project": "artifacts/hardware-research/cases/v6-tip-wide-fullheight-flight8-gravity-fit-sncu-h010.mhd.json",
+    "acceleration_m_s2": [
+      0,
+      0,
+      -9.81
+    ],
+    "periodic": [
+      false,
+      false,
+      false
+    ],
+    "domain_mm": {
+      "min": [
+        -3.8,
+        -3.8,
+        -8.0
+      ],
+      "max": [
+        3.8,
+        3.8,
+        14.5
+      ],
+      "cell": 0.1
+    },
+    "waveform": "200 A,250us,200Hz,two pulses through9.999ms atfixed3us",
+    "retract_ratios": [
+      0.25,
+      0.0
+    ],
+    "question": "Separate gravity/domain effects from the negative-pulse refill tradeoff; no result yet.",
+    "limits": [
+      "No settled initial wetting equilibrium, feeding, thermal evolution or current self-field feedback.",
+      "Larger domain is not itself domain convergence."
+    ]
+  }
 }
