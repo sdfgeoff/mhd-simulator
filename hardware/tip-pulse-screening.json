@@ -1,0 +1,624 @@
+{
+  "status": "Completed coarse pulse comparisons; separated component count/size alone is not departing-jet or repetition qualification",
+  "cases": [
+    {
+      "artifacts": "artifacts/hardware-research/v6-tip-wide-flow-200A-250us-h010",
+      "run": {
+        "accepted_steps": 1200,
+        "contact_resistivity_ohm_m2": 0.0,
+        "error": null,
+        "field_every": 150,
+        "fluid_mechanical_work_J": 1.2790511461131414e-06,
+        "frequency_hz": 0.0,
+        "grid": {
+          "cell_m": 0.00010000000474974513,
+          "dims": [
+            49,
+            52,
+            95
+          ]
+        },
+        "joule_generated_J": 0.009650634693494201,
+        "lagged_electrical_work_J": 0.009650689770251514,
+        "lagged_mechanical_work_J": 1.2600306954036852e-06,
+        "limitations": [
+          "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+          "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+          "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+          "New research client; not a GUI electrode feature or frozen-baseline claim."
+        ],
+        "max_terminal_voltage_V": 0.21290448307991028,
+        "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+        "peak_A": 200.0,
+        "positive_duration_s": 0.00025,
+        "project": "artifacts/hardware-research/cases/v6-tip-wide-pool35-medium-fit-sncu-h010.mhd.json",
+        "released_static_workspace_bytes": 55093784,
+        "retract_fraction": 0.25,
+        "rise_s": 2e-05,
+        "status": "complete",
+        "tail_timestep_s": 3e-06,
+        "tail_transition_not_before_s": 0.00035833333333333333,
+        "time_s": 0.0035999999999999648,
+        "timestep_s": 3e-06
+      },
+      "final": {
+        "step": 1200,
+        "time_us": 3599.999999999965,
+        "first_nonnegative_cell_plane_z_mm": 0.04999988595955074,
+        "exit_plane_alpha_area_mm2": 0.11319418432731738,
+        "exit_plane_mean_uz_m_s": 0.4006797214403098,
+        "exit_plane_mean_pressure_pa": 4720.40341135151,
+        "exit_plane_downward_flux_proxy_nl_s": -45354.61424493261,
+        "liquid_volume_nl": 11348.000795742948,
+        "below_tip_nl": 138.17650717199265,
+        "below_one_cell_guard_nl": 120.70307131068185,
+        "front_z_mm_alpha_half": -1.7500001995358616,
+        "detached_below_tip": [
+          {
+            "volume_nl": 84.6354260642258,
+            "equivalent_diameter_mm": 0.5447340475266496,
+            "cells": 100,
+            "centre_mm": [
+              2.1245167700217076e-06,
+              -7.85099792547093e-06,
+              -1.4349376636521074
+            ],
+            "velocity_m_s": [
+              2.061785380647052e-05,
+              -3.112344347755425e-05,
+              -0.16614201664924622
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "connectivity_thresholds": {
+          "0.01": [
+            {
+              "volume_nl": 110.10857044030881,
+              "equivalent_diameter_mm": 0.5946674498341507,
+              "cells": 230,
+              "centre_mm": [
+                1.1705562428494465e-06,
+                -5.2145273958531165e-06,
+                -1.4307963781304829
+              ],
+              "velocity_m_s": [
+                4.4881494432047475e-06,
+                -1.756504934746772e-05,
+                -0.16081929206848145
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.25": [
+            {
+              "volume_nl": 102.88520771026171,
+              "equivalent_diameter_mm": 0.5813684222027251,
+              "cells": 150,
+              "centre_mm": [
+                -1.0303702898558923e-06,
+                -8.97156012817983e-06,
+                -1.4284793668727702
+              ],
+              "velocity_m_s": [
+                1.006230650091311e-05,
+                -2.6654481189325452e-05,
+                -0.1608521193265915
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.5": [
+            {
+              "volume_nl": 84.6354260642258,
+              "equivalent_diameter_mm": 0.5447340475266496,
+              "cells": 100,
+              "centre_mm": [
+                2.1245167700217076e-06,
+                -7.85099792547093e-06,
+                -1.4349376636521074
+              ],
+              "velocity_m_s": [
+                2.061785380647052e-05,
+                -3.112344347755425e-05,
+                -0.16614201664924622
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.75": [
+            {
+              "volume_nl": 63.908116208334306,
+              "equivalent_diameter_mm": 0.4960427783231937,
+              "cells": 66,
+              "centre_mm": [
+                2.280497877480568e-06,
+                -9.862925502777194e-06,
+                -1.4272858842240106
+              ],
+              "velocity_m_s": [
+                1.3766261872660834e-05,
+                -2.5162862584693357e-05,
+                -0.1868356466293335
+              ],
+              "touches_domain_boundary": false
+            }
+          ]
+        },
+        "below_tip_change_nl": 138.17648117691266
+      }
+    },
+    {
+      "artifacts": "artifacts/hardware-research/v6-tip-wide-flow-200A-230us-h010",
+      "run": {
+        "accepted_steps": 1200,
+        "contact_resistivity_ohm_m2": 0.0,
+        "error": null,
+        "field_every": 150,
+        "fluid_mechanical_work_J": 1.0766895500361308e-06,
+        "frequency_hz": 0.0,
+        "grid": {
+          "cell_m": 0.00010000000474974513,
+          "dims": [
+            49,
+            52,
+            95
+          ]
+        },
+        "joule_generated_J": 0.008781375376726524,
+        "lagged_electrical_work_J": 0.008781339740542975,
+        "lagged_mechanical_work_J": 1.0592925448675028e-06,
+        "limitations": [
+          "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+          "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+          "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+          "New research client; not a GUI electrode feature or frozen-baseline claim."
+        ],
+        "max_terminal_voltage_V": 0.21290448307991028,
+        "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+        "peak_A": 200.0,
+        "positive_duration_s": 0.00022999999999999998,
+        "project": "artifacts/hardware-research/cases/v6-tip-wide-pool35-medium-fit-sncu-h010.mhd.json",
+        "released_static_workspace_bytes": 55093784,
+        "retract_fraction": 0.25,
+        "rise_s": 2e-05,
+        "status": "complete",
+        "tail_timestep_s": 3e-06,
+        "tail_transition_not_before_s": 0.00033166666666666663,
+        "time_s": 0.0035999999999999648,
+        "timestep_s": 3e-06
+      },
+      "final": {
+        "step": 1200,
+        "time_us": 3599.999999999965,
+        "first_nonnegative_cell_plane_z_mm": 0.04999988595955074,
+        "exit_plane_alpha_area_mm2": 0.09828220585806693,
+        "exit_plane_mean_uz_m_s": 0.47646607956554643,
+        "exit_plane_mean_pressure_pa": -140.34381276981446,
+        "exit_plane_downward_flux_proxy_nl_s": -46828.137316247135,
+        "liquid_volume_nl": 11348.000881554486,
+        "boundary_maximum_liquid_fraction": {
+          "z_min": 0.0,
+          "z_max": 0.0,
+          "y_min": 0.0,
+          "y_max": 0.0,
+          "x_min": 0.0,
+          "x_max": 0.0
+        },
+        "liquid_touches_domain_boundary_alpha01": false,
+        "below_tip_nl": 117.2415647778511,
+        "below_one_cell_guard_nl": 116.1312843979488,
+        "front_z_mm_alpha_half": -1.1500001710373908,
+        "detached_below_tip": [
+          {
+            "volume_nl": 82.89265597851495,
+            "equivalent_diameter_mm": 0.5409691231439153,
+            "cells": 98,
+            "centre_mm": [
+              -1.0763585030719488e-05,
+              3.5237454128031687e-06,
+              -0.8765812242812393
+            ],
+            "velocity_m_s": [
+              -3.291076063760556e-05,
+              4.7372035623993725e-05,
+              0.06389248371124268
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "connectivity_thresholds": {
+          "0.01": [
+            {
+              "volume_nl": 115.7067251309075,
+              "equivalent_diameter_mm": 0.6045793739005689,
+              "cells": 224,
+              "centre_mm": [
+                2.4376081261911403e-05,
+                -1.022132539223576e-05,
+                -0.8848387187705641
+              ],
+              "velocity_m_s": [
+                6.339721494441619e-06,
+                5.1646489737322554e-05,
+                0.07148753851652145
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.25": [
+            {
+              "volume_nl": 105.30405129447422,
+              "equivalent_diameter_mm": 0.585889191010711,
+              "cells": 158,
+              "centre_mm": [
+                7.540477551085697e-06,
+                -3.87367438738231e-06,
+                -0.8772280706485207
+              ],
+              "velocity_m_s": [
+                -7.876706149545498e-06,
+                4.734799949801527e-05,
+                0.07324805855751038
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.5": [
+            {
+              "volume_nl": 82.89265597851495,
+              "equivalent_diameter_mm": 0.5409691231439153,
+              "cells": 98,
+              "centre_mm": [
+                -1.0763585030719488e-05,
+                3.5237454128031687e-06,
+                -0.8765812242812393
+              ],
+              "velocity_m_s": [
+                -3.291076063760556e-05,
+                4.7372035623993725e-05,
+                0.06389248371124268
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.75": [
+            {
+              "volume_nl": 64.49396068935752,
+              "equivalent_diameter_mm": 0.4975539084122678,
+              "cells": 68,
+              "centre_mm": [
+                3.689042026788771e-06,
+                -5.8940065231554634e-06,
+                -0.9036921261117588
+              ],
+              "velocity_m_s": [
+                -3.758021193789318e-05,
+                7.644735887879506e-05,
+                0.0626116394996643
+              ],
+              "touches_domain_boundary": false
+            }
+          ]
+        },
+        "below_tip_change_nl": 117.24153878277109,
+        "relative_liquid_volume_change": 4.183397628310104e-09
+      }
+    },
+    {
+      "artifacts": "artifacts/hardware-research/v6-tip-wide-disc10x5-flow-250A-250us-h010",
+      "run": {
+        "accepted_steps": 1200,
+        "contact_resistivity_ohm_m2": 0.0,
+        "error": null,
+        "field_every": 150,
+        "fluid_mechanical_work_J": 1.357311064802667e-06,
+        "frequency_hz": 0.0,
+        "grid": {
+          "cell_m": 0.00010000000474974513,
+          "dims": [
+            49,
+            52,
+            95
+          ]
+        },
+        "joule_generated_J": 0.015078647775583213,
+        "lagged_electrical_work_J": 0.015078109456948943,
+        "lagged_mechanical_work_J": 1.3371722531672965e-06,
+        "limitations": [
+          "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+          "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+          "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+          "New research client; not a GUI electrode feature or frozen-baseline claim."
+        ],
+        "max_terminal_voltage_V": 0.26612910628318787,
+        "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+        "peak_A": 250.0,
+        "positive_duration_s": 0.00025,
+        "project": "artifacts/hardware-research/cases/v6-tip-wide-disc10x5-s2-medium-fit-sncu-h010.mhd.json",
+        "released_static_workspace_bytes": 55093784,
+        "retract_fraction": 0.25,
+        "rise_s": 2e-05,
+        "status": "complete",
+        "tail_timestep_s": 3e-06,
+        "tail_transition_not_before_s": 0.00035833333333333333,
+        "time_s": 0.0035999999999999648,
+        "timestep_s": 3e-06
+      },
+      "final": {
+        "step": 1200,
+        "time_us": 3599.999999999965,
+        "first_nonnegative_cell_plane_z_mm": 0.04999988595955074,
+        "exit_plane_alpha_area_mm2": 0.10869156499071968,
+        "exit_plane_mean_uz_m_s": 0.4205434508053009,
+        "exit_plane_mean_pressure_pa": 5285.232226085868,
+        "exit_plane_downward_flux_proxy_nl_s": -45709.52581462589,
+        "liquid_volume_nl": 11348.000959509965,
+        "boundary_maximum_liquid_fraction": {
+          "z_min": 0.0,
+          "z_max": 0.0,
+          "y_min": 0.0,
+          "y_max": 0.0,
+          "x_min": 0.0,
+          "x_max": 0.0
+        },
+        "liquid_touches_domain_boundary_alpha01": false,
+        "below_tip_nl": 144.2679890556669,
+        "below_one_cell_guard_nl": 120.53980479912329,
+        "front_z_mm_alpha_half": -1.8500002042856067,
+        "detached_below_tip": [
+          {
+            "volume_nl": 87.25487164221154,
+            "equivalent_diameter_mm": 0.5502968420410468,
+            "cells": 102,
+            "centre_mm": [
+              -3.895502135419657e-06,
+              1.1565183632458527e-06,
+              -1.59459360289207
+            ],
+            "velocity_m_s": [
+              -1.0694339835026767e-05,
+              -2.360400458201184e-06,
+              -0.21873144805431366
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "connectivity_thresholds": {
+          "0.01": [
+            {
+              "volume_nl": 110.95807523148495,
+              "equivalent_diameter_mm": 0.5961928510005645,
+              "cells": 218,
+              "centre_mm": [
+                -6.272135605081311e-06,
+                5.611242145111618e-06,
+                -1.6013041548367706
+              ],
+              "velocity_m_s": [
+                -1.1903091944986954e-05,
+                -3.5758805552177364e-06,
+                -0.2115629017353058
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.25": [
+            {
+              "volume_nl": 103.80214659285444,
+              "equivalent_diameter_mm": 0.5830904172698729,
+              "cells": 142,
+              "centre_mm": [
+                -6.400003268765712e-06,
+                2.4768226855199065e-06,
+                -1.6019131674952736
+              ],
+              "velocity_m_s": [
+                -1.1255277058808133e-05,
+                -3.8264906834228896e-06,
+                -0.21384601294994354
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.5": [
+            {
+              "volume_nl": 87.25487164221154,
+              "equivalent_diameter_mm": 0.5502968420410468,
+              "cells": 102,
+              "centre_mm": [
+                -3.895502135419657e-06,
+                1.1565183632458527e-06,
+                -1.59459360289207
+              ],
+              "velocity_m_s": [
+                -1.0694339835026767e-05,
+                -2.360400458201184e-06,
+                -0.21873144805431366
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.75": [
+            {
+              "volume_nl": 67.78367501767472,
+              "equivalent_diameter_mm": 0.5058737717805736,
+              "cells": 72,
+              "centre_mm": [
+                -8.490433644612265e-07,
+                2.2672284591238753e-06,
+                -1.5995903566599272
+              ],
+              "velocity_m_s": [
+                -1.2443023479136173e-05,
+                -3.042284333787393e-06,
+                -0.227002814412117
+              ],
+              "touches_domain_boundary": false
+            }
+          ]
+        },
+        "below_tip_change_nl": 144.2679630605869,
+        "relative_liquid_volume_change": 1.1052931681021505e-08
+      }
+    },
+    {
+      "artifacts": "artifacts/hardware-research/v6-tip-wide-disc10x5-flow-250A-230us-h010",
+      "run": {
+        "accepted_steps": 1200,
+        "contact_resistivity_ohm_m2": 0.0,
+        "error": null,
+        "field_every": 150,
+        "fluid_mechanical_work_J": 1.1428649623003353e-06,
+        "frequency_hz": 0.0,
+        "grid": {
+          "cell_m": 0.00010000000474974513,
+          "dims": [
+            49,
+            52,
+            95
+          ]
+        },
+        "joule_generated_J": 0.013720516442788695,
+        "lagged_electrical_work_J": 0.01371993324860686,
+        "lagged_mechanical_work_J": 1.1244498550615857e-06,
+        "limitations": [
+          "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+          "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+          "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+          "New research client; not a GUI electrode feature or frozen-baseline claim."
+        ],
+        "max_terminal_voltage_V": 0.26612910628318787,
+        "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+        "peak_A": 250.0,
+        "positive_duration_s": 0.00022999999999999998,
+        "project": "artifacts/hardware-research/cases/v6-tip-wide-disc10x5-s2-medium-fit-sncu-h010.mhd.json",
+        "released_static_workspace_bytes": 55093784,
+        "retract_fraction": 0.25,
+        "rise_s": 2e-05,
+        "status": "complete",
+        "tail_timestep_s": 3e-06,
+        "tail_transition_not_before_s": 0.00033166666666666663,
+        "time_s": 0.0035999999999999648,
+        "timestep_s": 3e-06
+      },
+      "final": {
+        "step": 1200,
+        "time_us": 3599.999999999965,
+        "first_nonnegative_cell_plane_z_mm": 0.04999988595955074,
+        "exit_plane_alpha_area_mm2": 0.11640199157688981,
+        "exit_plane_mean_uz_m_s": 0.48654396064497213,
+        "exit_plane_mean_pressure_pa": 1520.6926773462887,
+        "exit_plane_downward_flux_proxy_nl_s": -56634.68600878265,
+        "liquid_volume_nl": 11348.000836133968,
+        "boundary_maximum_liquid_fraction": {
+          "z_min": 0.0,
+          "z_max": 0.0,
+          "y_min": 0.0,
+          "y_max": 0.0,
+          "x_min": 0.0,
+          "x_max": 0.0
+        },
+        "liquid_touches_domain_boundary_alpha01": false,
+        "below_tip_nl": 121.67085590393738,
+        "below_one_cell_guard_nl": 113.51434434874334,
+        "front_z_mm_alpha_half": -1.350000180536881,
+        "detached_below_tip": [
+          {
+            "volume_nl": 85.496327900269,
+            "equivalent_diameter_mm": 0.5465748109469569,
+            "cells": 103,
+            "centre_mm": [
+              0.00155275565375681,
+              -0.0002775761082805657,
+              -1.0873524242970303
+            ],
+            "velocity_m_s": [
+              0.0001426171511411667,
+              -0.0006303343689069152,
+              -0.012640330940485
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "connectivity_thresholds": {
+          "0.01": [
+            {
+              "volume_nl": 112.7647299049441,
+              "equivalent_diameter_mm": 0.599411246591273,
+              "cells": 232,
+              "centre_mm": [
+                4.40923508646613e-05,
+                5.456189354633817e-05,
+                -1.078294181087733
+              ],
+              "velocity_m_s": [
+                0.0002765697136055678,
+                -0.0001066260228981264,
+                -0.007600848563015461
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.25": [
+            {
+              "volume_nl": 101.88001358848119,
+              "equivalent_diameter_mm": 0.5794688887342085,
+              "cells": 146,
+              "centre_mm": [
+                0.00010622113142871573,
+                1.4167663295484908e-05,
+                -1.0849414856005903
+              ],
+              "velocity_m_s": [
+                0.00030873739160597324,
+                -0.00011013486073352396,
+                -0.009625554084777832
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.5": [
+            {
+              "volume_nl": 85.496327900269,
+              "equivalent_diameter_mm": 0.5465748109469569,
+              "cells": 103,
+              "centre_mm": [
+                0.00155275565375681,
+                -0.0002775761082805657,
+                -1.0873524242970303
+              ],
+              "velocity_m_s": [
+                0.0001426171511411667,
+                -0.0006303343689069152,
+                -0.012640330940485
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.75": [
+            {
+              "volume_nl": 60.739299965195364,
+              "equivalent_diameter_mm": 0.48770482624492995,
+              "cells": 62,
+              "centre_mm": [
+                9.465218439704765e-06,
+                5.641538112550306e-06,
+                -1.0870686532604632
+              ],
+              "velocity_m_s": [
+                0.00023063126718625426,
+                -7.020493649179116e-05,
+                -0.022704903036355972
+              ],
+              "touches_domain_boundary": false
+            }
+          ]
+        },
+        "below_tip_change_nl": 121.67082990885737,
+        "relative_liquid_volume_change": 1.8088486264389303e-10
+      }
+    }
+  ],
+  "interpretation": "At3.6ms, larger poles200A230us have a roughly0.605mm component moving upward0.0715m/s; compact poles250A230us give roughly0.599mm moving downward only0.0076m/s. Longer250us controls depart faster. No mesh or steady repetition qualification follows."
+}

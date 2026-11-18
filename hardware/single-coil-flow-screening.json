@@ -1,0 +1,88 @@
+{
+  "status": "Completed native unified single-coil run through3.597125ms; no resolved liquid below exit or separated component in saved frames",
+  "artifacts": "artifacts/hardware-research/foil-carrier-z6-50k250A-flow-dt0125-tail3-h020",
+  "geometry": {
+    "custom_chamber_id_mm": 6,
+    "chamber_radial_wall_mm": 0.5,
+    "exit_diameter_mm": 0.5,
+    "exit_land_mm": 0.15,
+    "main_chamber_top_z_mm": 6,
+    "feed_neck_id_mm": 1.2,
+    "solid_feed_wire_diameter_mm": 0.8,
+    "wire_tip_z_mm": 5.5,
+    "initial_free_level_z_mm": 9
+  },
+  "waveform": {
+    "peak_A": 250,
+    "carrier_hz": 50000,
+    "burst_us": 300,
+    "envelope_ramp_us": 40
+  },
+  "run": {
+    "accepted_steps": 3500,
+    "electromagnetics": true,
+    "error": null,
+    "field_every": 200,
+    "final_timestep_s": 3e-06,
+    "fluids": true,
+    "initial_timestep_s": 1.25e-07,
+    "meaning": "Normal unified RunState; an explicit timestep schedule does not replace or freeze any physics subsystem.",
+    "project": "artifacts/hardware-research/cases/foil-carrier-z6-50k250A-flow-fit-sncu-dt0125-h020.mhd.json",
+    "requested_steps": 3500,
+    "status": "complete",
+    "tail_schedule_s": [
+      0.0003,
+      3e-06
+    ],
+    "thermal": false,
+    "time_s": 0.0035971249999999636
+  },
+  "initial_aperture_proxy": {
+    "plane_z_mm": 0.10000000474974513,
+    "alpha_area_mm2": 0.16000001519918478,
+    "meaning": "Initial liquid-fraction area at the first cell-centre plane at or above the nominal exit; a voxel-aperture proxy, not the CAD area."
+  },
+  "final": {
+    "step": 3500,
+    "time_us": 3597.1249999999636,
+    "first_nonnegative_cell_plane_z_mm": 0.10000000474974513,
+    "exit_plane_alpha_area_mm2": 0.003266829562575176,
+    "exit_plane_mean_uz_m_s": -0.12526462118876155,
+    "exit_plane_mean_pressure_pa": -0.0993374556465444,
+    "exit_plane_downward_flux_proxy_nl_s": 409.21816764422704,
+    "liquid_volume_nl": 168352.02410099946,
+    "minimum_liquid_fraction": -3.639408996392035e-09,
+    "maximum_liquid_fraction": 1.0,
+    "below_tip_maximum_liquid_fraction_at_cell_centres": 0.0,
+    "boundary_maximum_liquid_fraction": {
+      "z_min": 0.0,
+      "z_max": 0.0,
+      "y_min": 0.0,
+      "y_max": 0.0,
+      "x_min": 0.0,
+      "x_max": 0.0
+    },
+    "liquid_touches_domain_boundary_alpha01": false,
+    "below_tip_nl": -5.452571410840036e-08,
+    "below_one_cell_guard_nl": -2.113170828561959e-09,
+    "front_z_mm_alpha_half": 0.3000000142492354,
+    "detached_below_tip": [],
+    "connectivity_thresholds": {
+      "0.01": [],
+      "0.25": [],
+      "0.5": [],
+      "0.75": []
+    },
+    "below_tip_change_nl": -5.452571410840036e-08,
+    "relative_liquid_volume_change": 3.883604327015178e-09
+  },
+  "maximum_below_tip_nl_signed": 0.0,
+  "maximum_below_tip_alpha_at_cell_centres": 0.0,
+  "maximum_absolute_volume_change": 4.058473113133232e-09,
+  "limits": [
+    "0.2mm cells give only2.5cells across the0.5mm exit and do not resolve a0.15mm land with a full cell. This is screening, not a converged rejection of induction jetting.",
+    "No frozen force: native EM, moving conductivity, fluid/interface share the common clock; thermal evolution disabled.",
+    "Matched zero-current control with identical grid/timestep schedule is running.",
+    "Signed below-tip alpha volume contains less than1e-7nL roundoff; use resolved fraction/geometry diagnostics, not a negative physical-volume interpretation."
+  ]
+}

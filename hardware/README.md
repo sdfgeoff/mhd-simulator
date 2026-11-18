@@ -10,7 +10,8 @@ manufacturable solder jetter or qualified repetitive droplet production**.
 | --- | --- | --- |
 | Stock stainless V6, opposing tip contacts, permanent magnets | Wider 0.8 × 0.4 mm contacts: one approximately 0.595 mm component at 3.6 ms on the 100 µm grid, 200 A / 250 µs. Lumped drive requirement about 11 V. | Wider-contact grid refinement and repeated pulses; contact fabrication, wetting, heater shunts and cooling. |
 | V6 with two milled collar flats and immersed tungsten pins | Cold 200 A model puts approximately 171 A through liquid, with 0.46 T mean liquid field. | Full-domain moving-fluid trial is running. Mounts, rod heat, feedstock clearance and electrode compatibility remain unqualified. |
-| Custom thin-wall chamber with one resonant coil | Refined cold 50 kHz force and circuit estimates; normal unified EM/fluid trial is running at 250 A. | No demonstrated droplet. Approximately 62 W electrical heat at 200 Hz in the scaled cold estimate; source/spatial refinement and actual driver remain open. |
+| Same V6, smaller single-disc poles | 250 A / 250 µs coarse trial: one approximately 0.596 mm component, downward 0.212 m/s. Nominal magnet span 14.2 mm. | Mesh/repetition, stronger omitted local self-field, attachment and wetting remain unresolved. |
+| Custom chamber with one resonant coil | Native 250 A / 50 kHz EM/fluid trial completes 3.597 ms without resolved ejection on the 200 µm grid. | Coarse negative screen; zero-current control, geometry/source refinement and actual driver remain open. Approximately 62 W electrical heat at 200 Hz in the scaled cold estimate. |
 
 These are research candidates. The contact-driven trials use the normal fluid
 and interface engine with a research GPU charge solver; they are not a new GUI
@@ -632,7 +633,8 @@ predictions or whole-volume force convergence.
 A 250 A / 250 µs coarse fluid trial completes 3.6 ms with one detached
 approximately 0.596 mm alpha 0.01 component moving downward 0.212 m/s.
 It has no boundary contact; this is not a mesh or repeated-pulse qualification.
-A shorter 230 µs comparison is running. Under the same driver assumptions,
+A shorter 230 µs comparison also completes, but its component is almost stalled
+at 3.6 ms. Under the same driver assumptions,
 the lumped peak requirement is approximately 14.1 V from 24 V, with about
 15 W head/series electrical heat at 200 Hz. Initial-field tip heating scales
 up by 56%. Actual hot magnet grade, mounting temperature, wetting and contacts
@@ -699,3 +701,26 @@ single-coil reaction observer does not provide per-coil voltages for this case.
 is a saved native frame, with its actual simulation timestamp; no synthetic
 intermediate droplet motion is added. The original 50 µm reference gives 25
 frames from 0 to 3.6 ms, with a visible playback-time disclaimer.
+
+### Completed native single-coil trial and pulse endpoints
+
+[The native single-coil trial](single-coil-flow-screening.json) completes 3500
+accepted steps, reaching 3.597125 ms. EM and moving fluid/interface remain
+coupled through the common clock; thermal evolution is disabled. No resolved
+liquid crosses below the exit in saved frames. Signed alpha-volume roundoff
+below 1e-7 nL is not a negative physical volume. The 200 µm grid gives only
+2.5 cells across the 0.5 mm hole, so this is not a converged rejection of
+single-coil jetting. A matched zero-current control is running.
+
+Its actual custom chamber has 6 mm ID, 7 mm OD, a 0.15 mm exit land, and a
+large reservoir ending at z=6 mm. A 1.2 mm feed neck above contains 0.8 mm wire,
+with the free level at z=9 mm. The 0.15 mm exit land is not its radial wall
+thickness. This distinction matters when comparing to the cylinder limit.
+
+[Pulse endpoint comparisons](tip-pulse-screening.json) show why simply
+shortening the push is insufficient: with larger poles at 200 A / 230 µs,
+the roughly 0.605 mm component moves upward 0.0715 m/s at 3.6 ms. With compact
+poles at 250 A / 230 µs, the roughly 0.599 mm component moves downward only
+0.0076 m/s. These observations are not claims of inevitable recontact or
+failed free flight; they are weaker departing trajectories than the 250 µs
+controls and need repetition checks.

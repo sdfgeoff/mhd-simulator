@@ -131,6 +131,9 @@ def main():
                 -exit_uz * exit_weight * h**2 * 1e12 if exit_uz is not None else None
             ),
             "liquid_volume_nl": float(alpha.sum(dtype=np.float64) * h**3 * 1e12),
+            "minimum_liquid_fraction": float(alpha.min()),
+            "maximum_liquid_fraction": float(alpha.max()),
+            "below_tip_maximum_liquid_fraction_at_cell_centres": float(alpha[z < 0].max()) if np.any(z < 0) else None,
             "boundary_maximum_liquid_fraction": boundary_maxima,
             "liquid_touches_domain_boundary_alpha01": any(v >= .01 for v in boundary_maxima.values()),
             "below_tip_nl": float(
@@ -161,6 +164,8 @@ def main():
             {
                 "method": "Accepted native exports; six-neighbour components at several alpha thresholds. Component volumes include alpha only above that threshold. Below-tip volume includes all alpha. Exit flux is a cell-centred proxy, not a native MAC-face flux. No convergence or wetting claim.",
                 "initial_aperture_proxy": initial_aperture,
+                "component_minimum_alpha_weighted_cells": 1,
+                "component_minimum_volume_nl": sections[0][0]["cell_m"]**3*1e12,
                 "frames": rows,
             },
             indent=2,
