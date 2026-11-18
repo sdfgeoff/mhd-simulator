@@ -533,3 +533,13 @@ candidate at 150 A the same land diagnostic is approximately 0.4%, and the
 whole-liquid force L2 ratio approximately 1.1%. External return leads are absent
 from both estimates; their routing needs checking. Neither correction has been
 fed back into the recorded fluid trajectories.
+
+### Sn60Pb40 material control
+
+[The Sn60Pb40 control](snpb-tip-screening.json) uses its separate sourced liquid
+property fit in the original 0.4 × 0.4 mm tip-contact geometry. At 200 A / 250 µs
+with a 25% reverse pulse, the 100 µm trial completes 3.6 ms with one detached
+component: approximately 0.600 mm at alpha 0.01 or 0.549 mm at alpha 0.5, moving
+downward about 0.14 m/s. It has no domain-boundary contact. This is a coarse
+single-pulse control, not confirmation that the wider-contact geometry or
+repeated operation works with both alloys.

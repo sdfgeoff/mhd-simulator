@@ -1,0 +1,147 @@
+{
+  "status": "Completed coarse single-pulse Sn60Pb40 trial; no refinement or repeated-pulse qualification",
+  "run": {
+    "accepted_steps": 1200,
+    "contact_resistivity_ohm_m2": 0.0,
+    "error": null,
+    "field_every": 150,
+    "fluid_mechanical_work_J": 1.0599274418347337e-06,
+    "frequency_hz": 0.0,
+    "grid": {
+      "cell_m": 0.00010000000474974513,
+      "dims": [
+        49,
+        52,
+        95
+      ]
+    },
+    "joule_generated_J": 0.014980221780748627,
+    "lagged_electrical_work_J": 0.014979432136505839,
+    "lagged_mechanical_work_J": 1.0442035743770204e-06,
+    "limitations": [
+      "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+      "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+      "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+      "New research client; not a GUI electrode feature or frozen-baseline claim."
+    ],
+    "max_terminal_voltage_V": 0.33033251762390137,
+    "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+    "peak_A": 200.0,
+    "positive_duration_s": 0.00025,
+    "project": "artifacts/hardware-research/cases/v6-tip-pool35-medium-fit-snpb-h010.mhd.json",
+    "released_static_workspace_bytes": 55093784,
+    "retract_fraction": 0.25,
+    "rise_s": 2e-05,
+    "status": "complete",
+    "tail_timestep_s": 3e-06,
+    "tail_transition_not_before_s": 0.00035833333333333333,
+    "time_s": 0.0035999999999999648,
+    "timestep_s": 3e-06
+  },
+  "final": {
+    "step": 1200,
+    "time_us": 3599.999999999965,
+    "first_nonnegative_cell_plane_z_mm": 0.04999988595955074,
+    "exit_plane_alpha_area_mm2": 0.11706024864701974,
+    "exit_plane_mean_uz_m_s": 0.2653317120318992,
+    "exit_plane_mean_pressure_pa": 5002.056473794435,
+    "exit_plane_downward_flux_proxy_nl_s": -31059.796184393555,
+    "liquid_volume_nl": 11348.00090784523,
+    "below_tip_nl": 142.0124838611641,
+    "below_one_cell_guard_nl": 123.7575408415677,
+    "front_z_mm_alpha_half": -1.350000180536881,
+    "detached_below_tip": [
+      {
+        "volume_nl": 86.6001568453598,
+        "equivalent_diameter_mm": 0.5489170054396473,
+        "cells": 98,
+        "centre_mm": [
+          -1.1653859373314309e-06,
+          -1.917228563473763e-06,
+          -1.154274957594064
+        ],
+        "velocity_m_s": [
+          2.2674048523185775e-05,
+          9.224504537996836e-06,
+          -0.13613612949848175
+        ],
+        "touches_domain_boundary": false
+      }
+    ],
+    "connectivity_thresholds": {
+      "0.01": [
+        {
+          "volume_nl": 113.19037683692387,
+          "equivalent_diameter_mm": 0.6001644880579087,
+          "cells": 228,
+          "centre_mm": [
+            -3.5757770650134266e-06,
+            1.7218634444388005e-06,
+            -1.1631164896410044
+          ],
+          "velocity_m_s": [
+            1.3430159924610052e-05,
+            1.839545461734815e-06,
+            -0.14008893072605133
+          ],
+          "touches_domain_boundary": false
+        }
+      ],
+      "0.25": [
+        {
+          "volume_nl": 105.51409898666255,
+          "equivalent_diameter_mm": 0.5862784857456147,
+          "cells": 148,
+          "centre_mm": [
+            -3.874787651517086e-06,
+            8.215628128335087e-07,
+            -1.1725874897978024
+          ],
+          "velocity_m_s": [
+            1.7381376892444678e-05,
+            5.694361334462883e-06,
+            -0.14351102709770203
+          ],
+          "touches_domain_boundary": false
+        }
+      ],
+      "0.5": [
+        {
+          "volume_nl": 86.6001568453598,
+          "equivalent_diameter_mm": 0.5489170054396473,
+          "cells": 98,
+          "centre_mm": [
+            -1.1653859373314309e-06,
+            -1.917228563473763e-06,
+            -1.154274957594064
+          ],
+          "velocity_m_s": [
+            2.2674048523185775e-05,
+            9.224504537996836e-06,
+            -0.13613612949848175
+          ],
+          "touches_domain_boundary": false
+        }
+      ],
+      "0.75": [
+        {
+          "volume_nl": 74.32767890033664,
+          "equivalent_diameter_mm": 0.5216557308600007,
+          "cells": 80,
+          "centre_mm": [
+            -3.6695738960827924e-07,
+            4.3293211039192196e-07,
+            -1.153251773570222
+          ],
+          "velocity_m_s": [
+            2.406931707810145e-05,
+            8.571905709686689e-06,
+            -0.14483928680419922
+          ],
+          "touches_domain_boundary": false
+        }
+      ]
+    },
+    "below_tip_change_nl": 142.0124578660841
+  }
+}
