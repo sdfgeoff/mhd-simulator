@@ -17,6 +17,10 @@ from make_hardware import lathe
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--name", default="v6-direct-dc-h010")
+    p.add_argument("--domain-x-mm", type=float, default=5.5)
+    p.add_argument("--domain-y-mm", type=float, default=4.5)
+    p.add_argument("--domain-top-mm", type=float, default=14.0)
+    p.add_argument("--flight-mm", type=float, default=5.0)
     p.add_argument("--cell", type=float, default=0.1)
     p.add_argument("--wall-sigma", type=float, default=1.3e6)
     p.add_argument("--remanence", type=float, default=0.95)
@@ -26,8 +30,6 @@ def main():
         "--output", type=Path, default=Path("artifacts/hardware-research/cases")
     )
     args = p.parse_args()
-    args.domain_x_mm, args.domain_y_mm = 5.5, 4.5
-    args.domain_top_mm, args.flight_mm = 14.0, 5.0
     args.output.mkdir(parents=True, exist_ok=True)
     rin, ro, length = 1.6, args.orifice / 2, 12.5
     land = {0.4: 0.6, 0.5: 0.9, 0.6: 1.2}[args.orifice]

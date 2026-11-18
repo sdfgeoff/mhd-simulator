@@ -221,4 +221,11 @@ fn contact_resistance_and_motional_emf_preserve_power_balance() {
         ((voltage * s[0] - s[2] - s[3]) / (voltage * s[0])).abs() < 5e-5,
         "DC source/Joule/mechanical balance {s:?}"
     );
+    // Contact edits must invalidate coefficients even with accepted potentials cached.
+    let changed_contact = 4e-9;
+    solver.set_contact_resistivity(changed_contact).unwrap();
+    let (voltage, s) = solver.solve_current(100.).unwrap();
+    let changed_resistance = length / (1e6 * area) + 2. * changed_contact / area;
+    assert!((voltage / (100. * changed_resistance + 0.5 * length) - 1.).abs() < 1e-4);
+    assert!((s[0] / 100. - 1.).abs() < 5e-5);
 }

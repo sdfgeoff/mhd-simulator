@@ -72,7 +72,16 @@ fn main() -> Result<(), Box<dyn Error>> {
         &cells,
         em.result_buffer(),
     )?;
+    // Conduction owns a clone of the static B buffer; release unused EM workspaces.
+    let released_static_workspace_bytes = em.bytes - em.result_buffer().size();
+    drop(em);
     solver.set_contact_resistivity(contact)?;
+    gpu.context.profiler.set_enabled(true);
+    gpu.context.profiler.begin_step(0, 0.);
+    let timing = gpu
+        .context
+        .profiler
+        .stage(mhd_workbench::profile::Stage::EmSolve);
     solver.solve()?;
     let unit = solver.fields(1.)?;
     if unit[0] <= 0. {
@@ -80,6 +89,15 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
     let voltage = current / unit[0];
     let stats = solver.fields(voltage)?;
+    drop(timing);
+    gpu.context.profiler.end_step(true);
+    let mut timing_csv = String::from(
+        "step,time_s,accepted,stage,cpu_wall_ms,gpu_pass_ms,recorded_passes,total_passes\n",
+    );
+    for record in gpu.context.profiler.take_completed(true) {
+        timing_csv.push_str(&record.csv_rows());
+    }
+    std::fs::write(output.join("conduction-performance.csv"), timing_csv)?;
     let fields = solver.read_fields()?;
     let h = f64::from(grid.cell_m);
     let cell = h.powi(3);
@@ -118,7 +136,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
         }
     }
-    let report = serde_json::json!({"project":a[1],"contact_resistivity_ohm_m2":contact,"status":"cold DC conduction and applied permanent-magnet field only; no ejection simulation","iterations":solver.iterations,"true_relative_residual":solver.relative_residual,"current_A":stats[0],"return_current_A":stats[1],"terminal_voltage_V":voltage,"joule_power_W":stats[2],"source_power_W":voltage*stats[0],"power_relative_defect":stats[2]/(voltage*stats[0])-1.,"liquid_force_N":force,"liquid_joule_power_W":liquid_power,"liquid_mean_By_T":mean_by/count as f64,"midplane_adjacent_cell_liquid_current_A":midplane_liquid,"midplane_adjacent_cell_wall_current_A":midplane_wall,"mean_liquid_current_over_x_plus_minus_2mm_A":liquid_current_integral/0.004,"mean_wall_current_over_x_plus_minus_2mm_A":wall_current_integral/0.004,"limitations":["Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.","Ideal electrical contact; material and oxide/contact resistance require bracketing.","Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.","Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."]});
+    let report = serde_json::json!({"project":a[1],"released_static_workspace_bytes":released_static_workspace_bytes,"contact_resistivity_ohm_m2":contact,"status":"cold DC conduction and applied permanent-magnet field only; no ejection simulation","iterations":solver.iterations,"true_relative_residual":solver.relative_residual,"current_A":stats[0],"return_current_A":stats[1],"terminal_voltage_V":voltage,"joule_power_W":stats[2],"source_power_W":voltage*stats[0],"power_relative_defect":stats[2]/(voltage*stats[0])-1.,"liquid_force_N":force,"liquid_joule_power_W":liquid_power,"liquid_mean_By_T":mean_by/count as f64,"midplane_adjacent_cell_liquid_current_A":midplane_liquid,"midplane_adjacent_cell_wall_current_A":midplane_wall,"mean_liquid_current_over_x_plus_minus_2mm_A":liquid_current_integral/0.004,"mean_wall_current_over_x_plus_minus_2mm_A":wall_current_integral/0.004,"limitations":["Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.","Ideal electrical contact; material and oxide/contact resistance require bracketing.","Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.","Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."]});
     std::fs::write(
         output.join("report.json"),
         serde_json::to_vec_pretty(&report)?,

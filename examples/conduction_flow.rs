@@ -108,6 +108,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         &cells,
         bias.result_buffer(),
     )?;
+    // Conduction owns a clone of the static B buffer; release unused EM workspaces.
+    let released_static_workspace_bytes = bias.bytes - bias.result_buffer().size();
+    drop(bias);
     current.set_contact_resistivity(contact)?;
     p.run.fluid_enabled = true;
     p.run.thermal_enabled = false;
@@ -142,6 +145,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut lagged_mechanical = 0.;
     let mut max_voltage = 0_f32;
     let mut error: Option<String> = None;
+    let mut costs = String::from("step,charge_wall_ms,fluid_wall_ms\n");
     for step in 1..=steps {
         let t = run.time_s + 0.5 * p.run.dt_s;
         let pulse_time = if frequency_hz > 0. {
@@ -152,6 +156,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         let command = peak
             * (trapezoid(pulse_time, 0., duration, rise)
                 - retract * trapezoid(pulse_time, duration + 25e-6, duration / 3., rise));
+        let charge_start = std::time::Instant::now();
         let (voltage, s) = match current.solve_current(command) {
             Ok(v) => v,
             Err(e) => {
@@ -159,10 +164,16 @@ fn main() -> Result<(), Box<dyn Error>> {
                 break;
             }
         };
+        let charge_ms = charge_start.elapsed().as_secs_f64() * 1000.;
+        let fluid_start = std::time::Instant::now();
         if let Err(e) = run.step(&p.model, &volume) {
             error = Some(e);
             break;
         }
+        costs.push_str(&format!(
+            "{step},{charge_ms},{}\n",
+            fluid_start.elapsed().as_secs_f64() * 1000.
+        ));
         joule += f64::from(s[2]) * p.run.dt_s;
         electrical += f64::from(voltage * s[0]) * p.run.dt_s;
         lagged_mechanical += f64::from(s[3]) * p.run.dt_s;
@@ -195,9 +206,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         if step % field_every == 0 || step == steps {
             run.export_fields(&volume, &p.model, &out.join(format!("frame-{step:08}")))?;
             std::fs::write(out.join("current-diagnostics.csv"), &csv)?;
+            std::fs::write(out.join("iteration-costs.csv"), &costs)?;
         }
     }
     std::fs::write(out.join("current-diagnostics.csv"), &csv)?;
+    std::fs::write(out.join("iteration-costs.csv"), &costs)?;
     let mut performance = String::from(
         "step,time_s,accepted,stage,cpu_wall_ms,gpu_pass_ms,recorded_passes,total_passes\n",
     );
@@ -205,7 +218,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         performance.push_str(&report.csv_rows());
     }
     std::fs::write(out.join("performance.csv"), performance)?;
-    let report = serde_json::json!({"project":a[1],"status":if error.is_some(){"failed"}else{"complete"},"error":error,"accepted_steps":run.steps,"time_s":run.time_s,"peak_A":peak,"timestep_s":dt_s,"frequency_hz":frequency_hz,"field_every":field_every,"grid":{"dims":grid.dims,"cell_m":grid.cell_m},"positive_duration_s":duration,"rise_s":rise,"retract_fraction":retract,"contact_resistivity_ohm_m2":contact,"max_terminal_voltage_V":max_voltage,"joule_generated_J":joule,"lagged_electrical_work_J":electrical,"lagged_mechanical_work_J":lagged_mechanical,"fluid_mechanical_work_J":run.energy.external_work_j,"method":"GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.","limitations":["Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.","Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.","Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.","New research client; not a GUI electrode feature or frozen-baseline claim."]});
+    let report = serde_json::json!({"project":a[1],"released_static_workspace_bytes":released_static_workspace_bytes,"status":if error.is_some(){"failed"}else{"complete"},"error":error,"accepted_steps":run.steps,"time_s":run.time_s,"peak_A":peak,"timestep_s":dt_s,"frequency_hz":frequency_hz,"field_every":field_every,"grid":{"dims":grid.dims,"cell_m":grid.cell_m},"positive_duration_s":duration,"rise_s":rise,"retract_fraction":retract,"contact_resistivity_ohm_m2":contact,"max_terminal_voltage_V":max_voltage,"joule_generated_J":joule,"lagged_electrical_work_J":electrical,"lagged_mechanical_work_J":lagged_mechanical,"fluid_mechanical_work_J":run.energy.external_work_j,"method":"GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.","limitations":["Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.","Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.","Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.","New research client; not a GUI electrode feature or frozen-baseline claim."]});
     std::fs::write(
         out.join("run-status.json"),
         serde_json::to_vec_pretty(&report)?,

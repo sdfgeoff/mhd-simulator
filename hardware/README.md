@@ -206,3 +206,12 @@ reduce downward liquid force from the ideal 0.101 N to 0.077, 0.025 and
 0.00325 N. Bare oxidized steel cannot be assumed electrically wetted.
 Indium recommends appropriate stainless flux or nickel plating for soldering
 stainless; any residue and hot contact resistance need physical qualification.
+
+The direct-current clients release the applied-field EmState after retaining
+its static field buffer. This removes unused source/reaction/checkpoint
+workspaces before fluid allocation; the report records logical bytes freed.
+Conduction profiling is separate from RunState profiling: cold probes write
+`conduction-performance.csv`, and moving trials write `iteration-costs.csv`
+with charge and fluid wall times. A tested diagonal cache was rejected: the
+first layout slowed three alternating cold solves, and the packed version
+showed no reliable gain above concurrent-GPU timing variation.
