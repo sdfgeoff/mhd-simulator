@@ -167,21 +167,14 @@ def main():
         )
     )
     with (args.directory / "flow-analysis.csv").open("w") as out:
+        scalar_fields = [k for k, v in rows[0].items() if not isinstance(v, (list, dict))]
         writer = csv.DictWriter(
             out,
-            fieldnames=[
-                k
-                for k in rows[0]
-                if k not in ["detached_below_tip", "connectivity_thresholds", "boundary_maximum_liquid_fraction"]
-            ],
+            fieldnames=scalar_fields,
         )
         writer.writeheader()
         writer.writerows(
-            {
-                k: v
-                for k, v in row.items()
-                if k not in ["detached_below_tip", "connectivity_thresholds"]
-            }
+            {k: row[k] for k in scalar_fields}
             for row in rows
         )
     print(json.dumps(rows[-1], indent=2))

@@ -520,6 +520,16 @@ approximately 0.618 mm alpha 0.01 component at 2.4 ms, moving about 0.51 m/s.
 This is slightly above the target size and not a completed grid-convergence
 study. Shorter-pulse tuning and the wider-contact refinement are queued.
 
+[The completed 50 µm reference](tip-grid-screening.json) reaches 3.6 ms with
+one detached component: 123.727 nL, approximately 0.61824 mm at alpha 0.01,
+moving downward 0.50386 m/s. Alpha 0.5 gives 0.60613 mm. No liquid reaches
+a domain boundary; maximum relative total-volume change over saved frames is
+below 4e-8. The coarse leading diameter is 4.5% smaller and its departing speed
+74% lower relative to that coarse value. Speed and pinch-off timing are not
+mesh-converged. Initial aperture proxies are 0.120 versus 0.130 mm², around the
+0.12566 mm² CAD circle; this is one geometry contribution to the grid effect,
+not a complete explanation. The wider-contact 50 µm run has now started.
+
 ### Omitted applied-current self-field
 
 [Self-field diagnostics](conduction-self-field-screening.json) postprocess the
