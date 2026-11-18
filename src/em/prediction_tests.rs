@@ -226,3 +226,86 @@ fn predicted_em_failure_restores_fields_and_retry_uses_valid_history() {
     assert_eq!(original.time_s, predicted.time_s);
     compare_fields(&gpu, &original, &predicted);
 }
+
+#[test]
+fn em_weak_drive_preserves_linear_fields_and_quadratic_force_heat() {
+    let _lock = crate::gpu_test_lock();
+    let (gpu, volume, model) = super::tests::setup(16);
+    let mut states = Vec::new();
+    for amplitude in [1., 1e-8] {
+        let config = EmConfig {
+            dt_s: 1e-5,
+            relative_tolerance: 1e-4,
+            max_iterations: 4000,
+            uniform: vec![UniformField {
+                tesla: [0., 0., 0.001],
+                scale: Waveform::Sine {
+                    amplitude,
+                    frequency_hz: 2000.,
+                    phase_rad: 0.,
+                },
+            }],
+            ..Default::default()
+        };
+        let mut state = EmState::new(
+            gpu.context.clone(),
+            &volume,
+            &model,
+            config,
+            Mode::Induction,
+        )
+        .unwrap();
+        for tick in 1..=4 {
+            state
+                .step(&model, &volume)
+                .unwrap_or_else(|error| panic!("amplitude {amplitude}, tick {tick}: {error}"));
+            let status = state.read_f32(&state.scalars, 0, 4).unwrap();
+            let scale = state.read_f32(&state.scalars, 96, 1).unwrap()[0] as f64;
+            let r2 = status[1] as f64 * scale.powi(2);
+            let b2 = status[2] as f64 * scale.powi(2);
+            let threshold = b2 * (state.config.relative_tolerance as f64).powi(2) + 1e-38;
+            assert!(
+                r2 <= threshold * 1.00001,
+                "physical r²={r2}, b²={b2}, bound={threshold}"
+            );
+            eprintln!(
+                "amplitude={amplitude}, tick={tick}, relative={}, physical r²={r2}, bound={threshold}",
+                state.diagnostics.relative_residual
+            );
+        }
+        states.push(fields(&gpu, &state));
+    }
+    let reference = bytemuck::cast_slice::<u8, CellField>(&states[0]);
+    let weak = bytemuck::cast_slice::<u8, CellField>(&states[1]);
+    for (channel, name) in ["B", "J", "force", "heat", "applied B"]
+        .into_iter()
+        .enumerate()
+    {
+        let amplitude_scale = if channel == 2 || channel == 3 {
+            1e-16
+        } else {
+            1e-8
+        };
+        let mut squared_error = 0.;
+        let mut squared_norm = 0.;
+        for (a, b) in reference.iter().zip(weak) {
+            let (a, b) = match channel {
+                0 => (a.b, b.b),
+                1 => (a.j, b.j),
+                2 | 3 => (a.force_heat, b.force_heat),
+                _ => (a.applied, b.applied),
+            };
+            // Keep force density and heating power density in separate norms.
+            let components = if channel == 3 { 3..4 } else { 0..3 };
+            for k in components {
+                let x = a[k] as f64;
+                let y = b[k] as f64 / amplitude_scale;
+                squared_error += (x - y).powi(2);
+                squared_norm += x * x;
+            }
+        }
+        let relative = (squared_error / squared_norm.max(1e-300)).sqrt();
+        eprintln!("weak-drive {name}: relative L2={relative}");
+        assert!(relative < 2e-4, "{name}: relative error {relative}");
+    }
+}

@@ -807,6 +807,13 @@ impl EmState {
             ("initial_reduce", [1, 1, 1]),
         ]);
         let mut status = self.read_f32(&self.scalars, 0, 8)?;
+        if status[4] != 0. {
+            // initial_reduce selected an exact power-of-two normalization.
+            // Rebuild from physical b and x; original RHS-relative acceptance
+            // and its existing absolute numeric floor transform together.
+            self.dispatch(&[("prepare", eg), ("initial_reduce", [1, 1, 1])]);
+            status = self.read_f32(&self.scalars, 0, 8)?;
+        }
         #[cfg(test)]
         {
             self.prediction_diagnostic = [

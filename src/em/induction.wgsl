@@ -71,6 +71,9 @@ fn gauge(e:vec4<u32>,kind:u32)->f32 {
 }
 fn mass(i:u32)->f32 {if scene.control.y==1u{return 0.0;}return scene.physical.y*source[i].z*scene.physical.z*scene.physical.z/scene.physical.x;}
 fn diagonal(i:u32)->f32 {return max(source[i].w+mass(i),1e-30);}
+// Residual/search vectors may be normalized while the increment stays in SI.
+// Slot six is unused by field/energy reductions; zero initialization means unity.
+fn residual_scale()->f32 {return select(1.0,scalars[6].x,scalars[6].x>0.0);}
 fn group_id(w:vec3<u32>)->u32{return w.x+w.y*65535u;}
 fn sum_group(local:u32)->vec4<f32>{
     workgroupBarrier();for(var s=128u;s>0u;s/=2u){if local<s {reduction[local]+=reduction[local+s];}workgroupBarrier();}return reduction[0];
@@ -113,14 +116,30 @@ fn prepare(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invocatio
         var r=b;
         if scene.origin.w>0. {r-=adjoint(e,0u,false)+gauge(e,0u)+mass(i)*work[i].x;}
         if boundary(e){r=0.0;b=0.0;}
-        let z=r/diagonal(i);work[i].y=r;work[i].z=z;work[i].w=0.0;v=vec4<f32>(r*z,r*r,b*b,0.0);
+        let physical_l1=abs(b);let scale=residual_scale();b/=scale;r/=scale;
+        let z=r/diagonal(i);work[i].y=r;work[i].z=z;work[i].w=0.0;v=vec4<f32>(r*z,r*r,b*b,physical_l1);
     }
     reduction[l]=v;let sum=sum_group(l);if l==0u && group_id(group)<(scene.edges.w+255u)/256u{partials[group_id(group)]=sum;}
 }
 @compute @workgroup_size(256)
 fn initial_reduce(@builtin(local_invocation_index) l:u32){
     var v=vec4<f32>(0.0);let n=(scene.edges.w+255u)/256u;for(var i=l;i<n;i+=256u){v+=partials[i];}reduction[l]=v;let sum=sum_group(l);
-    if l==0u {let threshold=sum.z*scene.physical.w+1e-38;scalars[0]=vec4<f32>(sum.x,sum.y,sum.z,threshold);scalars[1]=vec4<f32>(0.0,0.0,0.0,select(0.0,1.0,sum.y<=threshold));}
+    if l==0u {
+        let scale=residual_scale();var next_scale=scale;
+        if scale==1.0 && sum.w>0.0 && (sum.w<1e-8 || sum.w>1e8) {
+            // Exact power-of-two scaling avoids tiny per-edge dot products
+            // flushing to zero before the global reduction. No field is cut off.
+            let exponent=clamp(i32((bitcast<u32>(sum.w)>>23u)&255u)-127,-100,100);
+            next_scale=bitcast<f32>(u32(exponent+127)<<23u);
+        }
+        var absolute_floor=1e-38;
+        if scale!=1.0 {let floor_norm=1e-19/scale;absolute_floor=floor_norm*floor_norm;}
+        let threshold=sum.z*scene.physical.w+absolute_floor;
+        scalars[6].x=next_scale;
+        scalars[0]=vec4<f32>(sum.x,sum.y,sum.z,threshold);
+        // The host repeats prepare once if the first reduction changed scale.
+        scalars[1]=vec4<f32>(select(0.0,next_scale,next_scale!=scale),0.0,0.0,select(0.0,1.0,sum.y<=threshold));
+    }
 }
 // Strict scalar-air eligibility proves all six same-component neighbors are
 // inside this edge lattice, and excludes constrained boundary edges. Preserve
@@ -156,7 +175,7 @@ fn update_residual(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_i
         let old=work[i];let r=old.y-scalars[1].x*old.w;let d=diagonal(i);
         // The operator product is dead after this update. Carry the diagonal
         // to search in the same record, avoiding another full coefficient read.
-        work[i]=vec4<f32>(old.x+scalars[1].x*old.z,r,old.z,d);
+        work[i]=vec4<f32>(old.x+residual_scale()*(scalars[1].x*old.z),r,old.z,d);
         v=vec4<f32>(r*r/d,r*r,0.0,0.0);
     }
     reduction[l]=v;let sum=sum_group(l);if l==0u && group_id(group)<(scene.edges.w+255u)/256u{partials[group_id(group)]=sum;}
@@ -214,6 +233,7 @@ fn true_residual(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_inv
         let e=edge_decode(i);
         var r=mass(i)*scene.physical.x*source[i+scene.edges.w].x-mass(i)*(work[i].x+(source[i].x-source[i].y))+adjoint(e,2u,true)-adjoint(e,4u,false)-gauge(e,4u)-adjoint(e,0u,false)-gauge(e,0u);
         if boundary(e){r=0.0;}
+        r/=residual_scale();
         work[i].y=r;work[i].z=r/diagonal(i);v=vec4<f32>(r*r/diagonal(i),r*r,0.0,0.0);
     }
     reduction[l]=v;let sum=sum_group(l);if l==0u && group_id(group)<(scene.edges.w+255u)/256u{partials[group_id(group)]=sum;}
@@ -229,6 +249,7 @@ fn set_boundary(@builtin(global_invocation_id) gid:vec3<u32>){let i=flat_id(gid)
 
 @compute @workgroup_size(256)
 fn begin_step(@builtin(global_invocation_id) gid:vec3<u32>){let i=flat_id(gid);if i<scene.edges.w {
+ if i==0u {scalars[6].x=1.0;}
  let accepted=work[i].x;var guess=0.;
  if scene.origin.w>0. && !boundary(edge_decode(i)){guess=scene.origin.w*(accepted-previous[i]);}
  previous[i]=accepted;work[i].x=guess;
