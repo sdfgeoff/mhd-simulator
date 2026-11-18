@@ -3,6 +3,7 @@ use bytemuck::{Pod, Zeroable};
 #[repr(C)]
 #[derive(Clone, Copy, Pod, Zeroable)]
 pub(crate) struct Params {
+    // Grid origin xyz; guarded increment-prediction scale w.
     pub origin: [f32; 4],
     pub dims: [u32; 4],
     pub edges: [u32; 4],

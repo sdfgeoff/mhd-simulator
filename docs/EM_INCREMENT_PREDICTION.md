@@ -1,8 +1,6 @@
-# EM increment prediction research
+# EM increment prediction
 
-This branch tests an initial-guess improvement. Prediction is enabled only in
-test builds; it has not been integrated into the main application. No speedup
-claim is based on the overlapping validation runtimes.
+The normal application predicts the next reaction-potential increment from accepted history, without allocating another field buffer. This changes the initial guess, not the physical operator or acceptance tolerance.
 
 ## Method
 
@@ -40,9 +38,16 @@ iterations, the prediction candidate completes ten coupled V6 ticks. Zero-guess
 EM fails at tick five under that cap; a separate diagnostic needs 1,057 iterations
 for that tick at the same tolerance.
 
-The candidate needs 858/554/384/381/**368** iterations for ticks one through five.
+The candidate needs 858/554/384/381/**369** iterations for ticks one through five.
 At tick six the drive stops rising: the guessed residual is 3.415 times the
 zero-guess residual, so the safeguard rejects it. Later predictions are useful
-again. Working-buffer bytes remain unchanged. Full-field comparison against a
-zero-guess, larger-work diagnostic is pending; timings must be measured with the
-other GPU jobs idle before considering adoption.
+again. Working-buffer bytes remain unchanged. A full-field comparison against the zero-guess, larger-work diagnostic gives
+relative L2 differences 1.24e-5 for B, 9.84e-5 for J, 5.57e-5 for force and
+6.74e-5 for heating. All predicted solves satisfy the original 1e-4 operator
+tolerance, with maximum reported residual 7.29e-5. Liquid volume is identical at every compared tick; the fraction-field relative L1 difference is 1.26e-9. These checks use the production connected-pressure solver. The reference alone raises the EM work cap to 4,000 to obtain a converged comparison; the candidate retains 1,000. Geometry, material properties and tolerances are unchanged.
+
+## Application timing and acceptance
+
+Three alternating warmed pairs of the actual headless application (`--run-check`, three coupled V6 ticks) give median process time **24.2494 → 18.3170 s (24.5% shorter)** and EM GPU time **20,292.66 → 14,173.15 ms (30.2% lower)**. Pressure time is essentially unchanged. All GPU passes are recorded. Warmups are excluded; the cold candidate took 55.23 s. No other numerical GPU job ran during this final timing comparison. These figures describe this project/hardware, not a universal speedup.
+
+The final application also completes ten ticks with the original 1,000-iteration cap. The full headless suite passes 157 tests, with strict Clippy clean. Zero-RHS steps disable prediction until useful history exists; failed solves also clear its validity. This avoids extrapolating stale or overwritten history on a later retry.

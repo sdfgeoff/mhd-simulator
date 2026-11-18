@@ -74,8 +74,8 @@ pub struct EmState {
     cad_curves: Vec<crate::model::CurvePath>,
     pub mode: Mode,
     pub time_s: f64,
-    #[cfg(test)]
     last_step_dt_s: f64,
+    can_predict_increment: bool,
     #[cfg(test)]
     pub(crate) predict_increments: bool,
     #[cfg(test)]
@@ -515,8 +515,8 @@ impl EmState {
             cad_curves: model.curves.clone(),
             mode,
             time_s: 0.,
-            #[cfg(test)]
             last_step_dt_s: 0.,
+            can_predict_increment: false,
             #[cfg(test)]
             predict_increments: true,
             #[cfg(test)]
@@ -775,10 +775,17 @@ impl EmState {
     fn advance_to(&mut self, model: &Model, time: f64, initial: bool) -> Result<(), String> {
         let started = std::time::Instant::now();
         self.params.control[1] = u32::from(initial);
-        // Research only: reuse the two accepted reaction potentials already stored.
-        let prediction_factor = 0f32;
+        // Reuse two accepted potentials to predict the next increment. The
+        // physical RHS norm below remains independent of this initial guess.
+        #[cfg(not(test))]
+        let predict_increments = true;
         #[cfg(test)]
-        let prediction_factor = if self.predict_increments && !initial && self.last_step_dt_s > 0. {
+        let predict_increments = self.predict_increments;
+        let prediction_factor = if predict_increments
+            && !initial
+            && self.can_predict_increment
+            && self.last_step_dt_s > 0.
+        {
             let ratio = ((time - self.time_s) / self.last_step_dt_s) as f32;
             if ratio.is_finite() && ratio > 0. {
                 ratio
@@ -786,7 +793,7 @@ impl EmState {
                 0.
             }
         } else {
-            prediction_factor
+            0.
         };
         self.params.origin[3] = prediction_factor;
         self.params.physical[0] = self.config.dt_s as f32;
@@ -861,6 +868,7 @@ impl EmState {
         }
         if status[7] != 1. || status.iter().any(|v| !v.is_finite()) {
             self.dispatch(&[("rollback", eg)]);
+            self.can_predict_increment = false;
             return Err(format!(
                 "EM solve did not converge: {} iterations, true relative residual {:.3e} (requested {:.3e}); conducting-edge σ range {:.3e}…{:.3e} S/m; state restored",
                 status[6],
@@ -901,6 +909,7 @@ impl EmState {
         let stats = self.read_f32(&self.scalars, 32, 16)?;
         if stats.iter().chain(&totals).any(|v| !v.is_finite()) {
             self.dispatch(&[("rollback", eg)]);
+            self.can_predict_increment = false;
             let mut encoder = self
                 .context
                 .device
@@ -913,10 +922,10 @@ impl EmState {
             body.force_n.copy_from_slice(&totals[i * 4..i * 4 + 3]);
             body.power_w = totals[i * 4 + 3];
         }
-        #[cfg(test)]
-        {
-            self.last_step_dt_s = if initial { 0. } else { time - self.time_s };
-        }
+        self.last_step_dt_s = if initial { 0. } else { time - self.time_s };
+        // A zero RHS has no useful nonzero increment to extrapolate. A failed
+        // trial also overwrites the older history, so rollback clears this flag.
+        self.can_predict_increment = !initial && status[2] > 0.;
         self.time_s = time;
         self.diagnostics = Diagnostics {
             maxima: stats[0..4].try_into().unwrap(),

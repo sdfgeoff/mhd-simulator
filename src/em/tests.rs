@@ -38,7 +38,9 @@ fn uniform_field_and_zero_dc_induction() {
     for (i, expected) in [0.003, -0.004, 0.005].iter().enumerate() {
         assert!((p.b[i] - expected).abs() < 1e-7, "{:?}", p.b);
     }
-    state.step(&model, &volume).unwrap();
+    for _ in 0..3 {
+        state.step(&model, &volume).unwrap();
+    }
     assert!(
         state.diagnostics.maxima[1] < 1e-3,
         "{:?}",
