@@ -357,6 +357,16 @@ impl Conduction {
         ]);
         Ok(self.scalar_values()?[2])
     }
+    /// Read the unscaled scalar solution for static research diagnostics.
+    /// This does not modify PCG state or the exported current/force fields.
+    pub fn read_scalar_solution(&self) -> Result<Vec<f32>, String> {
+        let work = &self.buffers[2];
+        let bytes = read_bytes(&self.context, work, 0, work.size())?;
+        Ok(bytemuck::cast_slice::<u8, [f32; 4]>(&bytes)
+            .iter()
+            .map(|v| v[0])
+            .collect())
+    }
     pub fn read_fields(&self) -> Result<Vec<CellField>, String> {
         let bytes = read_bytes(&self.context, &self.result, 0, self.result.size())?;
         Ok(bytemuck::cast_slice(&bytes).to_vec())

@@ -1,0 +1,49 @@
+{
+  "status": "Completed native full-conductor charge and native tiny-field composition; no moving-liquid result",
+  "cases": [
+    {
+      "source": "artifacts/hardware-research/m6-stub-drilled-current30-h010",
+      "outlet_force_N_at30A": 0.002375057258224376,
+      "R_ohm": 0.002324759415173633,
+      "requested_relative_tolerance": 9.999999974752427e-07,
+      "true_relative_residual": 8.159885851455329e-07,
+      "power_relative_defect": 5.960464477539062e-07,
+      "return_current_relative_error": 4.1325992141703645e-06
+    },
+    {
+      "source": "artifacts/hardware-research/m6-hot-contact-wide-current30-tol4e6-h010",
+      "outlet_force_N_at30A": 0.0023772284423399436,
+      "R_ohm": 0.007072390720296984,
+      "requested_relative_tolerance": 3.999999989900971e-06,
+      "true_relative_residual": 3.465613190201111e-06,
+      "power_relative_defect": 6.556510925292969e-06,
+      "return_current_relative_error": 1.1443982658551612e-06
+    },
+    {
+      "source": "artifacts/hardware-research/m6-hot-contact-wide-current30-tol8e6-h010",
+      "outlet_force_N_at30A": 0.0023775579941567766,
+      "R_ohm": 0.007072812175037377,
+      "requested_relative_tolerance": 7.999999979801942e-06,
+      "true_relative_residual": 7.935425855976064e-06,
+      "power_relative_defect": 6.67572021484375e-05,
+      "return_current_relative_error": 2.4795387193322386e-06
+    }
+  ],
+  "force_ratio_hot_anchor_to_straight_contact": 1.000914160746251,
+  "tolerance8e6_to4e6_force_relative_change": 0.0001386285856939118,
+  "tolerance8e6_to4e6_R_relative_change": 5.959155214418921e-05,
+  "scope": "100um conductor geometry for both cases; fixed source quadratureq3; allzero-velocity current paths retained. B computed from full magnet CAD at a small matching native window because full-domain N*M direct summation exceeded work budget. JxB postprocessing is not another PDE solver. Real joints, temperature feedback, driver and fluid motion omitted.",
+  "rejected_charge_requests": [
+    {
+      "tolerance": 1e-06,
+      "iterations": 4000,
+      "true_relative_residual": 1.8074712e-06
+    },
+    {
+      "tolerance": 2e-06,
+      "iterations": 4000,
+      "true_relative_residual": 2.0390498e-06
+    }
+  ],
+  "note": "Long thin Cu extensions expose f32/conditioning limits; tighter failures are not accepted results. Coarse current composition checked using closure and4e-6/8e-6 sensitivity, not represented as a fine-grid qualification."
+}

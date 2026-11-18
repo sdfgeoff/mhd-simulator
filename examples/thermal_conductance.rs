@@ -1,4 +1,4 @@
-//! Steady heater-to-isothermal-pool conductance using the existing GPU FV operator.
+//! Steady heater-to-pool or copper-lead cooling using the existing GPU FV operator.
 //! No transient, latent heat, air loss, thread-contact resistance or CPU PDE solver.
 #[path = "conduction/gpu.rs"]
 pub mod conduction;
@@ -15,7 +15,7 @@ fn solve(
     h: f32,
     cells: &[[f32; 2]],
     tol: f32,
-) -> Result<[f32; 4], String> {
+) -> Result<([f32; 4], Vec<f32>, f32, u32), String> {
     let zero = context.device.create_buffer(&wgpu::BufferDescriptor {
         label: Some("No magnetic or flow field in thermal conduction analogy"),
         size: cells.len() as u64 * 64,
@@ -25,7 +25,13 @@ fn solve(
     let mut solver = conduction::Conduction::new(context, dims, h, cells, &zero)?;
     solver.set_relative_tolerance(tol)?;
     solver.solve()?;
-    solver.fields(1.)
+    let stats = solver.fields(1.)?;
+    Ok((
+        stats,
+        solver.read_scalar_solution()?,
+        solver.relative_residual,
+        solver.iterations,
+    ))
 }
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<_> = std::env::args().collect();
@@ -46,7 +52,11 @@ fn main() -> Result<(), Box<dyn Error>> {
                     ]
                 })
                 .collect();
-            let stats = solve(gpu.context.clone(), [16, 1, 1], 0.001, &cells, 1e-6)?;
+            let (stats, potential, _, _) =
+                solve(gpu.context.clone(), [16, 1, 1], 0.001, &cells, 1e-6)?;
+            for (i, v) in potential.iter().enumerate() {
+                assert!((v - (0.5 - i as f32 / 15.)).abs() < 2e-5);
+            }
             let reference = k * 1e-6 / 0.015;
             assert!((stats[0] / reference - 1.).abs() < 2e-5, "{stats:?}");
             assert!((stats[2] / stats[0] - 1.).abs() < 2e-5);
@@ -55,18 +65,82 @@ fn main() -> Result<(), Box<dyn Error>> {
                 stats[0]
             );
         }
+        // A one-cell mica layer between metals exercises both half-cell
+        // resistances. Analytic series resistors are a verification identity,
+        // not a duplicate field solver.
+        let k: Vec<f32> = (0..16)
+            .map(|i| {
+                if i < 8 {
+                    167.
+                } else if i == 8 {
+                    0.528
+                } else {
+                    394.
+                }
+            })
+            .collect();
+        let cells: Vec<_> = k
+            .iter()
+            .enumerate()
+            .map(|(i, k)| {
+                [
+                    k / 1e6,
+                    if i == 0 {
+                        0.5
+                    } else if i == 15 {
+                        -0.5
+                    } else {
+                        2.
+                    },
+                ]
+            })
+            .collect();
+        let resistances: Vec<_> = k
+            .windows(2)
+            .map(|w| 0.001 / (2. * w[0]) + 0.001 / (2. * w[1]))
+            .collect();
+        let total: f32 = resistances.iter().sum();
+        let (stats, potential, _, _) = solve(gpu.context.clone(), [16, 1, 1], 0.001, &cells, 1e-6)?;
+        println!(
+            "Layer check stats={stats:?}, analytic={}, relative flux error={}",
+            1e-6 / total,
+            stats[0] / (1e-6 / total) - 1.
+        );
+        // Boundary flux subtracts nearly equal f32 potentials in the high-k metal.
+        // The dissipation identity avoids that cancellation and gets a tighter check.
+        assert!((stats[0] / (1e-6 / total) - 1.).abs() < 5e-5);
+        assert!((stats[2] / (1e-6 / total) - 1.).abs() < 2e-5);
+        let mut used = 0.;
+        for (i, v) in potential.iter().enumerate() {
+            if i > 0 {
+                used += resistances[i - 1];
+            }
+            assert!((v - (0.5 - used / total)).abs() < 2e-5);
+        }
+        println!(
+            "Metal/mica/metal GPU conductance={} W/K; analytic={}",
+            stats[0],
+            1e-6 / total
+        );
         return Ok(());
     }
-    let p = project::load(Path::new(
-        args.get(1)
-            .ok_or("PROJECT HEATER_START_MM OUTPUT [STEEL_K] [TOLERANCE]")?,
-    ))?;
+    let p = project::load(Path::new(args.get(1).ok_or(
+        "PROJECT HEATER_START_MM OUTPUT [STEEL_K] [TOLERANCE] [pool|leads|anchors] [MICA_K]",
+    )?))?;
     let heater_start: f32 = args.get(2).ok_or("Heater start")?.parse()?;
     let output = Path::new(args.get(3).ok_or("Output")?);
     let steel_k: f32 = args.get(4).map(|x| x.parse()).transpose()?.unwrap_or(15.);
     let tolerance: f32 = args.get(5).map(|x| x.parse()).transpose()?.unwrap_or(1e-6);
     if !heater_start.is_finite() || !steel_k.is_finite() || steel_k <= 0. {
         return Err("Invalid thermal controls".into());
+    }
+    let mode = args.get(6).map(String::as_str).unwrap_or("pool");
+    if !["pool", "leads", "anchors"].contains(&mode) {
+        return Err("Mode must be pool, leads or anchors".into());
+    }
+    let mica_k: f32 = args.get(7).map(|x| x.parse()).transpose()?.unwrap_or(0.528);
+    if !mica_k.is_finite() || mica_k < 0. {
+        return Err("Invalid mica k".into());
     }
     let volume = gpu.build(&p.model, &p.settings, &p.materials)?;
     if volume.overlaps > 0 {
@@ -88,6 +162,14 @@ fn main() -> Result<(), Box<dyn Error>> {
         .thermal
         .conductivity_w_m_k
         .ok_or("Liquid k missing")?;
+    let mut copper_outer_x = [u32::MAX, 0];
+    for (i, &id) in ids.iter().enumerate() {
+        if id == 16 || id == 17 {
+            let x = i as u32 % grid.dims[0];
+            copper_outer_x[0] = copper_outer_x[0].min(x);
+            copper_outer_x[1] = copper_outer_x[1].max(x);
+        }
+    }
     let mut hot = 0;
     let mut cold = 0;
     let cells: Vec<_> = ids
@@ -105,7 +187,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                 + 0.5 * grid.cell_m;
             match id {
                 14 => {
-                    let heated = z >= heater_start * 0.001
+                    let heated = mode != "anchors"
+                        && z >= heater_start * 0.001
                         && z <= (heater_start + 5.4) * 0.001
                         && (x * x + y * y).sqrt() >= (3e-3 - grid.cell_m);
                     if heated {
@@ -114,8 +197,23 @@ fn main() -> Result<(), Box<dyn Error>> {
                     [steel_k / 1e6, if heated { 0.5 } else { 2. }]
                 }
                 4 => {
-                    cold += 1;
-                    [liquid_k / 1e6, -0.5]
+                    if mode == "pool" {
+                        cold += 1;
+                    }
+                    [liquid_k / 1e6, if mode == "pool" { -0.5 } else { 2. }]
+                }
+                16 | 17 if mode != "pool" => {
+                    let x = i as u32 % grid.dims[0];
+                    let terminal = x == copper_outer_x[0] || x == copper_outer_x[1];
+                    if terminal {
+                        cold += 1;
+                    }
+                    [394. / 1e6, if terminal { -0.5 } else { 2. }]
+                }
+                19 if mode == "anchors" => [mica_k / 1e6, 2.],
+                8 if mode == "anchors" => {
+                    hot += 1;
+                    [167. / 1e6, 0.5]
                 }
                 _ => [0., 2.],
             }
@@ -124,14 +222,45 @@ fn main() -> Result<(), Box<dyn Error>> {
     if hot == 0 || cold == 0 {
         return Err("Missing heater or pool boundary".into());
     }
-    let stats = solve(
+    let (stats, potential, true_relative_residual, iterations) = solve(
         gpu.context.clone(),
         grid.dims,
         grid.cell_m,
         &cells,
         tolerance,
     )?;
-    let record = serde_json::json!({"project":args[1],"heater_start_mm":heater_start,"steel_k_W_m_K":steel_k,"liquid_k_W_m_K":liquid_k,"hot_boundary_cells":hot,"isothermal_pool_cells":cold,"temperature_difference_K":1.,"conductance_W_K":stats[0],"thermal_resistance_K_W":1./stats[0],"cold_return_W":stats[1],"unit_energy_identity_value":stats[2],"power_identity_relative_error":stats[2]/stats[0]-1.,"heat_return_relative_error":(stats[0]+stats[1]).abs()/stats[0],"requested_relative_tolerance":tolerance,"grid":{"dims":grid.dims,"origin_m":grid.origin_m,"cell_m":grid.cell_m},"method":"Existing native GPU scalar finite-volume operator with conductivity k. Outer cylindrical heated barrel at +0.5 K; whole pool at -0.5 K. No new CPU or GPU PDE implementation.","limits":["Steady metal-to-isothermal-pool conduction screen; fixed k, perfect contact to outer M6 cylindrical envelope. Thread helix/root/contact resistance unresolved.","Air, copper contacts and magnets thermally omitted to isolate the nozzle path. No feed advection, wire melting, latent heat, transient heat capacity, cooling or radiation.","An isothermal pool is a mixing idealization, not a prediction of local liquid temperature."]});
+    let liquid_min = ids
+        .iter()
+        .zip(&potential)
+        .filter(|(id, _)| **id == 4)
+        .map(|(_, v)| *v)
+        .fold(f32::INFINITY, f32::min);
+    let liquid_min_index = ids
+        .iter()
+        .zip(&potential)
+        .enumerate()
+        .filter(|(_, (id, _))| **id == 4)
+        .min_by(|(_, (_, a)), (_, (_, b))| a.total_cmp(b))
+        .map(|(i, _)| i)
+        .ok_or("No liquid cells")?;
+    let q = liquid_min_index as u32;
+    let liquid_min_xyz_m = [
+        q % grid.dims[0],
+        (q / grid.dims[0]) % grid.dims[1],
+        q / (grid.dims[0] * grid.dims[1]),
+    ]
+    .map(|v| v as f32);
+    let liquid_min_xyz_m: [f32; 3] =
+        std::array::from_fn(|i| grid.origin_m[i] + (liquid_min_xyz_m[i] + 0.5) * grid.cell_m);
+    let temperature_cases: Vec<_> = [25_f32, 100., 150., 200., 220., 230., 240.]
+        .into_iter()
+        .map(|cold_c| {
+            serde_json::json!({"heater_C":250.,"cold_boundary_C":cold_c,
+            "liquid_min_C":cold_c+(250.-cold_c)*(liquid_min+0.5),
+            "heat_draw_W":(250.-cold_c)*stats[0]})
+        })
+        .collect();
+    let record = serde_json::json!({"true_relative_residual":true_relative_residual,"iterations":iterations,"mica_effective_k_W_m_K":mica_k,"liquid_min_location_m":liquid_min_xyz_m,"mode":mode,"cold_boundary_cells":cold,"liquid_min_unit_potential":liquid_min,"temperature_cases":temperature_cases,"copper_k_W_m_K_if_used":394.,"project":args[1],"heater_start_mm":heater_start,"steel_k_W_m_K":steel_k,"liquid_k_W_m_K":liquid_k,"hot_boundary_cells":hot,"isothermal_pool_cells":if mode=="pool" {cold} else {0},"temperature_difference_K":1.,"conductance_W_K":stats[0],"thermal_resistance_K_W":1./stats[0],"cold_return_W":stats[1],"unit_energy_identity_value":stats[2],"power_identity_relative_error":stats[2]/stats[0]-1.,"heat_return_relative_error":(stats[0]+stats[1]).abs()/stats[0],"requested_relative_tolerance":tolerance,"grid":{"dims":grid.dims,"origin_m":grid.origin_m,"cell_m":grid.cell_m},"method":if mode=="anchors" {"Existing native GPU scalar finite-volume operator with conductivity k. Entire aluminium heater (ID8) fixed at +0.5 K; outer copper planes fixed at -0.5 K; mica/steel/liquid/copper unknown. No new PDE solver."} else {"Existing native GPU scalar finite-volume operator with conductivity k. Outer cylindrical heated barrel at +0.5 K; selected pool or outer copper-plane boundary at -0.5 K. No new PDE solver."},"limits":["Steady conduction screen; fixed k, ideal interfaces. Pool/leads modes fix outer M6 skin; anchors mode fixes whole aluminium heater. Thread helix/root/contact resistance unresolved.","Air and magnets thermally omitted. Copper omitted in pool mode; included in leads/anchors modes. Anchors mode adds fixed167W/mK heater and requested effective-k mica with ideal interfaces; reducing k can represent extra sheet/interface resistance. No feed advection, wire melting, latent heat, transient heat capacity, Joule heating, external convection or radiation.","Pool mode assumes isothermal liquid. Leads mode instead solves stationary liquid/steel/copper temperature with fixed cold outer copper planes; it omits Joule heat, external losses and feeding, and uses fixed liquid k even if temperatures indicate freezing. Neither is a complete operation model."]});
     use std::io::Write;
     if let Some(parent) = output.parent() {
         std::fs::create_dir_all(parent)?;

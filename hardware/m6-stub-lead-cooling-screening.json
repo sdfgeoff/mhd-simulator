@@ -1,0 +1,195 @@
+{
+  "status": "Completed native stationary lead-cooling screen; freezing flag, not a phase-change operation model",
+  "native_cases": [
+    {
+      "cold_boundary_cells": 56,
+      "cold_return_W": -0.013461239635944366,
+      "conductance_W_K": 0.013460701331496239,
+      "copper_k_W_m_K_if_used": 394.0,
+      "grid": {
+        "cell_m": 0.00010000000474974513,
+        "dims": [
+          76,
+          76,
+          145
+        ],
+        "origin_m": [
+          -0.003800000064074993,
+          -0.003800000064074993,
+          -0.004000000189989805
+        ]
+      },
+      "heat_return_relative_error": 3.999081673100591e-05,
+      "heater_start_mm": 4.0,
+      "hot_boundary_cells": 9936,
+      "isothermal_pool_cells": 0,
+      "limits": [
+        "Steady conduction screen; fixed k, perfect contact to outer M6 cylindrical envelope. Thread helix/root/contact resistance unresolved.",
+        "Air and magnets thermally omitted. Copper omitted in pool mode; included in leads mode. No feed advection, wire melting, latent heat, transient heat capacity, Joule heating, external convection or radiation.",
+        "Pool mode assumes isothermal liquid. Leads mode instead solves stationary liquid/steel/copper temperature with fixed cold outer copper planes; it omits Joule heat, external losses and feeding, and uses fixed liquid k even if temperatures indicate freezing. Neither is a complete operation model."
+      ],
+      "liquid_k_W_m_K": 60.5,
+      "liquid_min_location_m": [
+        0.0001500002108514309,
+        -4.9999915063381195e-05,
+        4.9999915063381195e-05
+      ],
+      "liquid_min_unit_potential": -0.1389600783586502,
+      "method": "Existing native GPU scalar finite-volume operator with conductivity k. Outer cylindrical heated barrel at +0.5 K; selected pool or outer copper-plane boundary at -0.5 K. No new CPU or GPU PDE implementation.",
+      "mode": "leads",
+      "power_identity_relative_error": 2.384185791015625e-05,
+      "project": "artifacts/hardware-research/cases/m6-stub-drilled-v1/stub4-thermal-h010.mhd.json",
+      "requested_relative_tolerance": 9.999999974752427e-07,
+      "steel_k_W_m_K": 15.0,
+      "temperature_cases": [
+        {
+          "cold_boundary_C": 25.0,
+          "heat_draw_W": 3.028657913208008,
+          "heater_C": 250.0,
+          "liquid_min_C": 106.2339859008789
+        },
+        {
+          "cold_boundary_C": 100.0,
+          "heat_draw_W": 2.0191051959991455,
+          "heater_C": 250.0,
+          "liquid_min_C": 154.15599060058594
+        },
+        {
+          "cold_boundary_C": 150.0,
+          "heat_draw_W": 1.3460701704025269,
+          "heater_C": 250.0,
+          "liquid_min_C": 186.10398864746094
+        },
+        {
+          "cold_boundary_C": 200.0,
+          "heat_draw_W": 0.6730350852012634,
+          "heater_C": 250.0,
+          "liquid_min_C": 218.052001953125
+        },
+        {
+          "cold_boundary_C": 220.0,
+          "heat_draw_W": 0.40382105112075806,
+          "heater_C": 250.0,
+          "liquid_min_C": 230.83119201660156
+        },
+        {
+          "cold_boundary_C": 230.0,
+          "heat_draw_W": 0.26921403408050537,
+          "heater_C": 250.0,
+          "liquid_min_C": 237.22079467773438
+        },
+        {
+          "cold_boundary_C": 240.0,
+          "heat_draw_W": 0.13460701704025269,
+          "heater_C": 250.0,
+          "liquid_min_C": 243.6103973388672
+        }
+      ],
+      "temperature_difference_K": 1.0,
+      "thermal_resistance_K_W": 74.29033660888672,
+      "unit_energy_identity_value": 0.013461021706461906
+    },
+    {
+      "cold_boundary_cells": 224,
+      "cold_return_W": -0.014018811285495758,
+      "conductance_W_K": 0.014017842710018158,
+      "copper_k_W_m_K_if_used": 394.0,
+      "grid": {
+        "cell_m": 5.0000002374872565e-05,
+        "dims": [
+          152,
+          152,
+          290
+        ],
+        "origin_m": [
+          -0.003800000064074993,
+          -0.003800000064074993,
+          -0.004000000189989805
+        ]
+      },
+      "heat_return_relative_error": 6.909589865244925e-05,
+      "heater_start_mm": 4.0,
+      "hot_boundary_cells": 37152,
+      "isothermal_pool_cells": 0,
+      "limits": [
+        "Steady conduction screen; fixed k, perfect contact to outer M6 cylindrical envelope. Thread helix/root/contact resistance unresolved.",
+        "Air and magnets thermally omitted. Copper omitted in pool mode; included in leads mode. No feed advection, wire melting, latent heat, transient heat capacity, Joule heating, external convection or radiation.",
+        "Pool mode assumes isothermal liquid. Leads mode instead solves stationary liquid/steel/copper temperature with fixed cold outer copper planes; it omits Joule heat, external losses and feeding, and uses fixed liquid k even if temperatures indicate freezing. Neither is a complete operation model."
+      ],
+      "liquid_k_W_m_K": 60.5,
+      "liquid_min_location_m": [
+        0.0001750001683831215,
+        -7.499987259507179e-05,
+        2.4999957531690598e-05
+      ],
+      "liquid_min_unit_potential": -0.13657985627651215,
+      "method": "Existing native GPU scalar finite-volume operator with conductivity k. Outer cylindrical heated barrel at +0.5 K; selected pool or outer copper-plane boundary at -0.5 K. No new CPU or GPU PDE implementation.",
+      "mode": "leads",
+      "power_identity_relative_error": 3.218650817871094e-05,
+      "project": "artifacts/hardware-research/cases/m6-stub-drilled-v1/stub4.mhd.json",
+      "requested_relative_tolerance": 9.999999974752427e-07,
+      "steel_k_W_m_K": 15.0,
+      "temperature_cases": [
+        {
+          "cold_boundary_C": 25.0,
+          "heat_draw_W": 3.1540145874023438,
+          "heater_C": 250.0,
+          "liquid_min_C": 106.76953125
+        },
+        {
+          "cold_boundary_C": 100.0,
+          "heat_draw_W": 2.1026763916015625,
+          "heater_C": 250.0,
+          "liquid_min_C": 154.5130157470703
+        },
+        {
+          "cold_boundary_C": 150.0,
+          "heat_draw_W": 1.4017843008041382,
+          "heater_C": 250.0,
+          "liquid_min_C": 186.34201049804688
+        },
+        {
+          "cold_boundary_C": 200.0,
+          "heat_draw_W": 0.7008921504020691,
+          "heater_C": 250.0,
+          "liquid_min_C": 218.17100524902344
+        },
+        {
+          "cold_boundary_C": 220.0,
+          "heat_draw_W": 0.42053526639938354,
+          "heater_C": 250.0,
+          "liquid_min_C": 230.90260314941406
+        },
+        {
+          "cold_boundary_C": 230.0,
+          "heat_draw_W": 0.28035685420036316,
+          "heater_C": 250.0,
+          "liquid_min_C": 237.26840209960938
+        },
+        {
+          "cold_boundary_C": 240.0,
+          "heat_draw_W": 0.14017842710018158,
+          "heater_C": 250.0,
+          "liquid_min_C": 243.6342010498047
+        }
+      ],
+      "temperature_difference_K": 1.0,
+      "thermal_resistance_K_W": 71.33765411376953,
+      "unit_energy_identity_value": 0.014018293470144272
+    }
+  ],
+  "unit_rod_check": "k15/30 WmK conductance and all16 scalar cell values agree with analytical linear rod within2e-5 relative/absolute. No CPU PDE solver.",
+  "grid_check": {
+    "minimum_liquid_C_at25C_leads_change100_to50um": 0.5355453491210938,
+    "conductance_relative_change100_to50um": 0.041390219187040556
+  },
+  "rejected_tighter_solve": {
+    "requested_relative_tolerance": 2e-07,
+    "iterations": 4000,
+    "reported_true_relative_residual": 7.2169394e-07,
+    "accepted": false,
+    "note": "No result file accepted; original1e-6 rerun reproduced scalar minimum and flux exactly. Single-precision residual floor limits this tighter request."
+  },
+  "interpretation": "Raised pool alone does not keep the thin outlet hot if outer copper planes are held cold. For250C heater and25/200/230C copper boundaries, minimum liquid temperatures are107/218/237C. Below227C values flag SnCu freezing; fixed liquid k is retained for this conduction diagnostic. Heat contacts thermally from the heater through an electrical insulator, rather than cold-clamping them near the tip.",
+  "limits": "No pulse-average Joule heat, feeding, cooling gas, phase-dependent k or real contact thermal resistance. Imposed copper boundary temperatures are hypotheses, not measured cable or contact temperatures."
+}

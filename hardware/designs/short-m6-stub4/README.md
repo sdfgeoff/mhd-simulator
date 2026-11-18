@@ -1,5 +1,11 @@
 # Short M6 nozzle: raised melt pool
 
+**Thermal lead design is unresolved.** A later stationary native check finds that
+cold-clamping the copper near this tip can freeze the outlet despite a 250 °C
+heater and raised pool. See `hardware/m6-stub-lead-cooling-screening.json`.
+The next concept heats the contact fingers from the heater through an electrical
+insulator; the published one-shot pulse replay does not establish this heat path.
+
 1. This replaces the long low-pool waist as the preferred **geometry concept**.
    The thread envelope remains M6×1 with 6 mm engagement, but the overall nozzle
    is 10 mm long, with only 4 mm below the heater. The flat-sided lower body is

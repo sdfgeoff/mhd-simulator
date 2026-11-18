@@ -475,3 +475,35 @@ back into the flow; small net-force cancellation does not qualify breakup.
 Finally, the completed 25 µm gravity control falls 39 µm instead of the dragless
 44 µm over 3 ms and remains downward, with about 14% speed error. This is a marked
 improvement over coarser pinning, but still not a converged jetting prediction.
+
+## Short heated-contact concept
+
+1. The shorter M6 body moves the pool into the heated barrel and avoids the long,
+   thin relieved section. The first pool-isothermal heat-path result does **not**
+   prove the outlet remains molten: a later native stationary check finds cold
+   nearby copper ends can pull the outlet below the SnCu melting point. See
+   `m6-stub-lead-cooling-screening.json`.
+2. `designs/hot-contact-m6` adds folded copper fingers and electrically insulated
+   hot anchor plates. The 100 µm fixture gives 237 °C minimum liquid with a 250 °C
+   heater and 25 °C far wire ends using a deliberately reduced effective sheet/
+   interface conductivity. This requires a real clamp/contact heat-transfer check.
+   Native matched controls are in `m6-hot-contact-thermal-screening.json`; they
+   omit feeding, exterior losses, Joule heat and magnet temperatures.
+3. The 3.4 mm pole gap and 1 mm heater gap improve nominal assembly clearance,
+   at a small static-force cost. Nominal magnet projection becomes 2 mm. The
+   added hot copper plates create another magnet heat path, so the earlier bare
+   gap estimate is not a thermal qualification of the complete assembly.
+4. The static terminal-current fixture includes both 50 mm, 1 mm² copper supply
+   extensions: approximately 7.1 mΩ total at fixed hot copper conductivity. Its
+   added copper changes matched coarse outlet force by only 0.1%; see
+   `m6-hot-contact-current-screening.json`. No final drop or rate is qualified.
+
+Run the research GPU analytic checks serially on this machine:
+
+```sh
+TMPDIR="$PWD/artifacts/build-temp" cargo test --offline -j2 --example conduction_probe -- --test-threads=1
+```
+
+Concurrent device creation in the example tests stalled in the local Vulkan
+driver; the serial run passes all four checks. The native thermal rod checks
+are `target/debug/examples/thermal_conductance --check`.

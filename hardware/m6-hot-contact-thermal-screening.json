@@ -1,0 +1,493 @@
+{
+  "status": "Completed stationary heated-contact thermal experiment; not a qualified operating head",
+  "cases": [
+    {
+      "source": "artifacts/hardware-research/thermal-hot-contact-v2-no-anchor-h010.json",
+      "native_report": {
+        "cold_boundary_cells": 200,
+        "cold_return_W": -0.006650954484939575,
+        "conductance_W_K": 0.00665124598890543,
+        "copper_k_W_m_K_if_used": 394.0,
+        "grid": {
+          "cell_m": 0.00010000000474974513,
+          "dims": [
+            1210,
+            76,
+            107
+          ],
+          "origin_m": [
+            -0.06050000339746475,
+            -0.003800000064074993,
+            -0.00020000000949949026
+          ]
+        },
+        "heat_return_relative_error": 4.3826970795635134e-05,
+        "heater_start_mm": 4.0,
+        "hot_boundary_cells": 952380,
+        "isothermal_pool_cells": 0,
+        "limits": [
+          "Steady conduction screen; fixed k, perfect contact to outer M6 cylindrical envelope. Thread helix/root/contact resistance unresolved.",
+          "Air and magnets thermally omitted. Copper omitted in pool mode; included in leads/anchors modes. Anchors mode adds fixed167W/mK heater and requested effective-k mica with ideal interfaces; reducing k can represent extra sheet/interface resistance. No feed advection, wire melting, latent heat, transient heat capacity, Joule heating, external convection or radiation.",
+          "Pool mode assumes isothermal liquid. Leads mode instead solves stationary liquid/steel/copper temperature with fixed cold outer copper planes; it omits Joule heat, external losses and feeding, and uses fixed liquid k even if temperatures indicate freezing. Neither is a complete operation model."
+        ],
+        "liquid_k_W_m_K": 60.5,
+        "liquid_min_location_m": [
+          0.00014999881386756897,
+          -4.9999915063381195e-05,
+          5.0000002374872565e-05
+        ],
+        "liquid_min_unit_potential": 0.18468114733695984,
+        "method": "Existing native GPU scalar FV operator with conductivity k; entire aluminium heater ID8 fixed+0.5K, outermost copper planes fixed-0.5K; steel/liquid/copper/mica unknown. No new field solver.",
+        "mica_effective_k_W_m_K": 0.0,
+        "mode": "anchors",
+        "power_identity_relative_error": -1.8894672393798828e-05,
+        "project": "artifacts/hardware-research/cases/m6-hot-contact-v2/hot-contact.mhd.json",
+        "requested_relative_tolerance": 1.9999999949504854e-06,
+        "steel_k_W_m_K": 15.0,
+        "temperature_cases": [
+          {
+            "cold_boundary_C": 25.0,
+            "heat_draw_W": 1.496530294418335,
+            "heater_C": 250.0,
+            "liquid_min_C": 179.0532684326172
+          },
+          {
+            "cold_boundary_C": 100.0,
+            "heat_draw_W": 0.9976869225502014,
+            "heater_C": 250.0,
+            "liquid_min_C": 202.70217895507812
+          },
+          {
+            "cold_boundary_C": 150.0,
+            "heat_draw_W": 0.6651245951652527,
+            "heater_C": 250.0,
+            "liquid_min_C": 218.46810913085938
+          },
+          {
+            "cold_boundary_C": 200.0,
+            "heat_draw_W": 0.33256229758262634,
+            "heater_C": 250.0,
+            "liquid_min_C": 234.2340545654297
+          },
+          {
+            "cold_boundary_C": 220.0,
+            "heat_draw_W": 0.19953738152980804,
+            "heater_C": 250.0,
+            "liquid_min_C": 240.54043579101562
+          },
+          {
+            "cold_boundary_C": 230.0,
+            "heat_draw_W": 0.1330249160528183,
+            "heater_C": 250.0,
+            "liquid_min_C": 243.69361877441406
+          },
+          {
+            "cold_boundary_C": 240.0,
+            "heat_draw_W": 0.06651245802640915,
+            "heater_C": 250.0,
+            "liquid_min_C": 246.84681701660156
+          }
+        ],
+        "temperature_difference_K": 1.0,
+        "thermal_resistance_K_W": 150.34776306152344,
+        "unit_energy_identity_value": 0.006651120260357857
+      }
+    },
+    {
+      "source": "artifacts/hardware-research/thermal-hot-contact-v2-weak-anchor-h010.json",
+      "native_report": {
+        "cold_boundary_cells": 200,
+        "cold_return_W": -0.012633783742785454,
+        "conductance_W_K": 0.012633608654141426,
+        "copper_k_W_m_K_if_used": 394.0,
+        "grid": {
+          "cell_m": 0.00010000000474974513,
+          "dims": [
+            1210,
+            76,
+            107
+          ],
+          "origin_m": [
+            -0.06050000339746475,
+            -0.003800000064074993,
+            -0.00020000000949949026
+          ]
+        },
+        "heat_return_relative_error": 1.3858957572665531e-05,
+        "heater_start_mm": 4.0,
+        "hot_boundary_cells": 952380,
+        "isothermal_pool_cells": 0,
+        "limits": [
+          "Steady conduction screen; fixed k, perfect contact to outer M6 cylindrical envelope. Thread helix/root/contact resistance unresolved.",
+          "Air and magnets thermally omitted. Copper omitted in pool mode; included in leads/anchors modes. Anchors mode adds fixed167W/mK heater and requested effective-k mica with ideal interfaces; reducing k can represent extra sheet/interface resistance. No feed advection, wire melting, latent heat, transient heat capacity, Joule heating, external convection or radiation.",
+          "Pool mode assumes isothermal liquid. Leads mode instead solves stationary liquid/steel/copper temperature with fixed cold outer copper planes; it omits Joule heat, external losses and feeding, and uses fixed liquid k even if temperatures indicate freezing. Neither is a complete operation model."
+        ],
+        "liquid_k_W_m_K": 60.5,
+        "liquid_min_location_m": [
+          0.00014999881386756897,
+          -4.9999915063381195e-05,
+          5.0000002374872565e-05
+        ],
+        "liquid_min_unit_potential": 0.4042263329029083,
+        "method": "Existing native GPU scalar FV operator with conductivity k; entire aluminium heater ID8 fixed+0.5K, outermost copper planes fixed-0.5K; steel/liquid/copper/mica unknown. No new field solver.",
+        "mica_effective_k_W_m_K": 0.10000000149011612,
+        "mode": "anchors",
+        "power_identity_relative_error": 8.58306884765625e-06,
+        "project": "artifacts/hardware-research/cases/m6-hot-contact-v2/hot-contact.mhd.json",
+        "requested_relative_tolerance": 1.9999999949504854e-06,
+        "steel_k_W_m_K": 15.0,
+        "temperature_cases": [
+          {
+            "cold_boundary_C": 25.0,
+            "heat_draw_W": 2.842561960220337,
+            "heater_C": 250.0,
+            "liquid_min_C": 228.45091247558594
+          },
+          {
+            "cold_boundary_C": 100.0,
+            "heat_draw_W": 1.8950413465499878,
+            "heater_C": 250.0,
+            "liquid_min_C": 235.63394165039062
+          },
+          {
+            "cold_boundary_C": 150.0,
+            "heat_draw_W": 1.263360857963562,
+            "heater_C": 250.0,
+            "liquid_min_C": 240.42263793945312
+          },
+          {
+            "cold_boundary_C": 200.0,
+            "heat_draw_W": 0.631680428981781,
+            "heater_C": 250.0,
+            "liquid_min_C": 245.21131896972656
+          },
+          {
+            "cold_boundary_C": 220.0,
+            "heat_draw_W": 0.3790082633495331,
+            "heater_C": 250.0,
+            "liquid_min_C": 247.1267852783203
+          },
+          {
+            "cold_boundary_C": 230.0,
+            "heat_draw_W": 0.2526721656322479,
+            "heater_C": 250.0,
+            "liquid_min_C": 248.08453369140625
+          },
+          {
+            "cold_boundary_C": 240.0,
+            "heat_draw_W": 0.12633608281612396,
+            "heater_C": 250.0,
+            "liquid_min_C": 249.04226684570312
+          }
+        ],
+        "temperature_difference_K": 1.0,
+        "thermal_resistance_K_W": 79.15394592285156,
+        "unit_energy_identity_value": 0.012633716687560081
+      }
+    },
+    {
+      "source": "artifacts/hardware-research/thermal-hot-contact-v2-medium-anchor-h010.json",
+      "native_report": {
+        "cold_boundary_cells": 200,
+        "cold_return_W": -0.013751097023487091,
+        "conductance_W_K": 0.013752876780927181,
+        "copper_k_W_m_K_if_used": 394.0,
+        "grid": {
+          "cell_m": 0.00010000000474974513,
+          "dims": [
+            1210,
+            76,
+            107
+          ],
+          "origin_m": [
+            -0.06050000339746475,
+            -0.003800000064074993,
+            -0.00020000000949949026
+          ]
+        },
+        "heat_return_relative_error": 0.00012940983287990093,
+        "heater_start_mm": 4.0,
+        "hot_boundary_cells": 952380,
+        "isothermal_pool_cells": 0,
+        "iterations": 1632,
+        "limits": [
+          "Steady conduction screen; fixed k, perfect contact to outer M6 cylindrical envelope. Thread helix/root/contact resistance unresolved.",
+          "Air and magnets thermally omitted. Copper omitted in pool mode; included in leads/anchors modes. Anchors mode adds fixed167W/mK heater and requested effective-k mica with ideal interfaces; reducing k can represent extra sheet/interface resistance. No feed advection, wire melting, latent heat, transient heat capacity, Joule heating, external convection or radiation.",
+          "Pool mode assumes isothermal liquid. Leads mode instead solves stationary liquid/steel/copper temperature with fixed cold outer copper planes; it omits Joule heat, external losses and feeding, and uses fixed liquid k even if temperatures indicate freezing. Neither is a complete operation model."
+        ],
+        "liquid_k_W_m_K": 60.5,
+        "liquid_min_location_m": [
+          0.00014999881386756897,
+          -4.9999915063381195e-05,
+          5.0000002374872565e-05
+        ],
+        "liquid_min_unit_potential": 0.44510164856910706,
+        "method": "Existing native GPU scalar FV operator with conductivity k; entire aluminium heater ID8 fixed+0.5K, outermost copper planes fixed-0.5K; steel/liquid/copper/mica unknown. No new field solver.",
+        "mica_effective_k_W_m_K": 0.20000000298023224,
+        "mode": "anchors",
+        "power_identity_relative_error": -6.431341171264648e-05,
+        "project": "artifacts/hardware-research/cases/m6-hot-contact-v2/hot-contact.mhd.json",
+        "requested_relative_tolerance": 1.9999999949504854e-06,
+        "steel_k_W_m_K": 15.0,
+        "temperature_cases": [
+          {
+            "cold_boundary_C": 25.0,
+            "heat_draw_W": 3.0943973064422607,
+            "heater_C": 250.0,
+            "liquid_min_C": 237.64785766601562
+          },
+          {
+            "cold_boundary_C": 100.0,
+            "heat_draw_W": 2.062931537628174,
+            "heater_C": 250.0,
+            "liquid_min_C": 241.76524353027344
+          },
+          {
+            "cold_boundary_C": 150.0,
+            "heat_draw_W": 1.375287652015686,
+            "heater_C": 250.0,
+            "liquid_min_C": 244.51016235351562
+          },
+          {
+            "cold_boundary_C": 200.0,
+            "heat_draw_W": 0.687643826007843,
+            "heater_C": 250.0,
+            "liquid_min_C": 247.2550811767578
+          },
+          {
+            "cold_boundary_C": 220.0,
+            "heat_draw_W": 0.4125863015651703,
+            "heater_C": 250.0,
+            "liquid_min_C": 248.35304260253906
+          },
+          {
+            "cold_boundary_C": 230.0,
+            "heat_draw_W": 0.27505752444267273,
+            "heater_C": 250.0,
+            "liquid_min_C": 248.90203857421875
+          },
+          {
+            "cold_boundary_C": 240.0,
+            "heat_draw_W": 0.13752876222133636,
+            "heater_C": 250.0,
+            "liquid_min_C": 249.45101928710938
+          }
+        ],
+        "temperature_difference_K": 1.0,
+        "thermal_resistance_K_W": 72.7120590209961,
+        "true_relative_residual": 1.8656223801372107e-06,
+        "unit_energy_identity_value": 0.013751992024481297
+      }
+    },
+    {
+      "source": "artifacts/hardware-research/thermal-hot-contact-v2-tol2e6-h010.json",
+      "native_report": {
+        "cold_boundary_cells": 200,
+        "cold_return_W": -0.014693491160869598,
+        "conductance_W_K": 0.014693878591060638,
+        "copper_k_W_m_K_if_used": 394.0,
+        "grid": {
+          "cell_m": 0.00010000000474974513,
+          "dims": [
+            1210,
+            76,
+            107
+          ],
+          "origin_m": [
+            -0.06050000339746475,
+            -0.003800000064074993,
+            -0.00020000000949949026
+          ]
+        },
+        "heat_return_relative_error": 2.636677527334541e-05,
+        "heater_start_mm": 4.0,
+        "hot_boundary_cells": 952380,
+        "isothermal_pool_cells": 0,
+        "limits": [
+          "Steady conduction screen; fixed k, perfect contact to outer M6 cylindrical envelope. Thread helix/root/contact resistance unresolved.",
+          "Air and magnets thermally omitted. Copper omitted in pool mode; included in leads/anchors modes. Anchors mode adds fixed167W/mK heater and0.528W/mK mica with ideal interfaces. No feed advection, wire melting, latent heat, transient heat capacity, Joule heating, external convection or radiation.",
+          "Pool mode assumes isothermal liquid. Leads mode instead solves stationary liquid/steel/copper temperature with fixed cold outer copper planes; it omits Joule heat, external losses and feeding, and uses fixed liquid k even if temperatures indicate freezing. Neither is a complete operation model."
+        ],
+        "liquid_k_W_m_K": 60.5,
+        "liquid_min_location_m": [
+          0.00014999881386756897,
+          -4.9999915063381195e-05,
+          5.0000002374872565e-05
+        ],
+        "liquid_min_unit_potential": 0.4789130687713623,
+        "method": "Existing native GPU scalar FV operator with conductivity k; entire aluminium heater ID8 fixed+0.5K, outermost copper planes fixed-0.5K; steel/liquid/copper/mica unknown. No new field solver.",
+        "mode": "anchors",
+        "power_identity_relative_error": -1.5914440155029297e-05,
+        "project": "artifacts/hardware-research/cases/m6-hot-contact-v2/hot-contact.mhd.json",
+        "requested_relative_tolerance": 1.9999999949504854e-06,
+        "steel_k_W_m_K": 15.0,
+        "temperature_cases": [
+          {
+            "cold_boundary_C": 25.0,
+            "heat_draw_W": 3.3061227798461914,
+            "heater_C": 250.0,
+            "liquid_min_C": 245.2554473876953
+          },
+          {
+            "cold_boundary_C": 100.0,
+            "heat_draw_W": 2.2040817737579346,
+            "heater_C": 250.0,
+            "liquid_min_C": 246.8369598388672
+          },
+          {
+            "cold_boundary_C": 150.0,
+            "heat_draw_W": 1.4693878889083862,
+            "heater_C": 250.0,
+            "liquid_min_C": 247.89129638671875
+          },
+          {
+            "cold_boundary_C": 200.0,
+            "heat_draw_W": 0.7346939444541931,
+            "heater_C": 250.0,
+            "liquid_min_C": 248.94564819335938
+          },
+          {
+            "cold_boundary_C": 220.0,
+            "heat_draw_W": 0.44081634283065796,
+            "heater_C": 250.0,
+            "liquid_min_C": 249.3673858642578
+          },
+          {
+            "cold_boundary_C": 230.0,
+            "heat_draw_W": 0.29387757182121277,
+            "heater_C": 250.0,
+            "liquid_min_C": 249.57826232910156
+          },
+          {
+            "cold_boundary_C": 240.0,
+            "heat_draw_W": 0.14693878591060638,
+            "heater_C": 250.0,
+            "liquid_min_C": 249.78912353515625
+          }
+        ],
+        "temperature_difference_K": 1.0,
+        "thermal_resistance_K_W": 68.05554962158203,
+        "unit_energy_identity_value": 0.01469364482909441
+      }
+    },
+    {
+      "source": "artifacts/hardware-research/thermal-hot-contact-wide-v1-weak-anchor-h010.json",
+      "native_report": {
+        "cold_boundary_cells": 200,
+        "cold_return_W": -0.013758751563727856,
+        "conductance_W_K": 0.013758493587374687,
+        "copper_k_W_m_K_if_used": 394.0,
+        "grid": {
+          "cell_m": 0.00010000000474974513,
+          "dims": [
+            1210,
+            110,
+            107
+          ],
+          "origin_m": [
+            -0.06050000339746475,
+            -0.005500000435858965,
+            -0.00020000000949949026
+          ]
+        },
+        "heat_return_relative_error": 1.875033376563806e-05,
+        "heater_start_mm": 4.0,
+        "hot_boundary_cells": 1460680,
+        "isothermal_pool_cells": 0,
+        "iterations": 1664,
+        "limits": [
+          "Steady conduction screen; fixed k, perfect contact to outer M6 cylindrical envelope. Thread helix/root/contact resistance unresolved.",
+          "Air and magnets thermally omitted. Copper omitted in pool mode; included in leads/anchors modes. Anchors mode adds fixed167W/mK heater and requested effective-k mica with ideal interfaces; reducing k can represent extra sheet/interface resistance. No feed advection, wire melting, latent heat, transient heat capacity, Joule heating, external convection or radiation.",
+          "Pool mode assumes isothermal liquid. Leads mode instead solves stationary liquid/steel/copper temperature with fixed cold outer copper planes; it omits Joule heat, external losses and feeding, and uses fixed liquid k even if temperatures indicate freezing. Neither is a complete operation model."
+        ],
+        "liquid_k_W_m_K": 60.5,
+        "liquid_min_location_m": [
+          0.00014999881386756897,
+          -5.00003807246685e-05,
+          5.0000002374872565e-05
+        ],
+        "liquid_min_unit_potential": 0.44286495447158813,
+        "method": "Existing native GPU scalar FV operator with conductivity k; entire aluminium heater ID8 fixed+0.5K, outermost copper planes fixed-0.5K; steel/liquid/copper/mica unknown. No new field solver.",
+        "mica_effective_k_W_m_K": 0.10000000149011612,
+        "mode": "anchors",
+        "power_identity_relative_error": 8.821487426757812e-06,
+        "project": "artifacts/hardware-research/cases/m6-hot-contact-wide-v1/hot-contact.mhd.json",
+        "requested_relative_tolerance": 1.9999999949504854e-06,
+        "steel_k_W_m_K": 15.0,
+        "temperature_cases": [
+          {
+            "cold_boundary_C": 25.0,
+            "heat_draw_W": 3.095661163330078,
+            "heater_C": 250.0,
+            "liquid_min_C": 237.1446075439453
+          },
+          {
+            "cold_boundary_C": 100.0,
+            "heat_draw_W": 2.0637741088867188,
+            "heater_C": 250.0,
+            "liquid_min_C": 241.42974853515625
+          },
+          {
+            "cold_boundary_C": 150.0,
+            "heat_draw_W": 1.3758493661880493,
+            "heater_C": 250.0,
+            "liquid_min_C": 244.2864990234375
+          },
+          {
+            "cold_boundary_C": 200.0,
+            "heat_draw_W": 0.6879246830940247,
+            "heater_C": 250.0,
+            "liquid_min_C": 247.14324951171875
+          },
+          {
+            "cold_boundary_C": 220.0,
+            "heat_draw_W": 0.4127548038959503,
+            "heater_C": 250.0,
+            "liquid_min_C": 248.28594970703125
+          },
+          {
+            "cold_boundary_C": 230.0,
+            "heat_draw_W": 0.27516987919807434,
+            "heater_C": 250.0,
+            "liquid_min_C": 248.8572998046875
+          },
+          {
+            "cold_boundary_C": 240.0,
+            "heat_draw_W": 0.13758493959903717,
+            "heater_C": 250.0,
+            "liquid_min_C": 249.42864990234375
+          }
+        ],
+        "temperature_difference_K": 1.0,
+        "thermal_resistance_K_W": 72.682373046875,
+        "true_relative_residual": 1.965919182111975e-06,
+        "unit_energy_identity_value": 0.013758614659309387
+      }
+    }
+  ],
+  "interpretation": "At250C heater/25C outer wire ends, narrow plates without mica coupling give179C outlet; nominal mica gives245C. Effective k0.1 (sheet plus interface resistance) gives228C for30mm\u00b2 plates and237C for60mm\u00b2 plates. Wider heated anchors improve thermal margin in this model.",
+  "geometry": "Two folded copper fingers and6x10x0.4mm anchor plates for preferred thermal fixture;0.1mm insulation; each50mm,1mm\u00b2 straight Cu supply extension ends at imposed25C. FullCADcollisionchecked; source accepts fixed-k heat reservoir.",
+  "metadata_correction": "Earlier raw anchor reports had a pool/leads method sentence; canonical copied method text corrected above. Actual code fixed ID8 heater, confirmed by hot_boundary_cells and input source. Accepted scalar/flux numbers are unchanged.",
+  "rejected_solve": {
+    "case": "narrow anchors k0.528",
+    "requested_relative_tolerance": 1e-06,
+    "iterations": 4000,
+    "reported_true_relative_residual": 1.3808963e-06,
+    "accepted": false,
+    "accepted_request": 2e-06,
+    "note": "A single-precision long-wire system; accepted cases separately satisfy flux/energy closure2e-4. This does not establish mesh convergence."
+  },
+  "unit_checks": "Uniform k15/30 rod conductance/linear potentials; layered167/0.528/394WmK rod checks analytic harmonic-face series resistance. Boundary flux error23.8ppm, dissipation error0.3ppm; scalar potentials within2e-5. Initial flux tolerance20ppm was unrealistically below measured f32 boundary-cancellation error; final boundary50ppm with separate tighter energy check.",
+  "limits": [
+    "100um thermal grid; 0.1mm mica is one cell with harmonic-face series resistance verified analytically. No mesh-converged whole fixture result.",
+    "Effective insulation conductivity0.1 is an imposed contact-quality sensitivity, not a measured clamp. Real clamping pressure, sheet integrity and electrical isolation must be qualified.",
+    "No feeding, exterior losses, pulse-average Joule heat, phase change, temperature-dependent properties or magnet temperature. The heater has unlimited modeled power.",
+    "Larger hot anchors add heat paths to magnets; bare-body gas-gap estimate is not a thermal qualification of this fixture."
+  ],
+  "source": {
+    "url": "https://info.boydcorp.com/hubfs/Thermal/Air-Cooling/Boyd-Board-Level-Heatsinks-Catalog.pdf",
+    "page_index": 100,
+    "verified": "2026-11-19",
+    "facts": "Maker mica table gives k0.528WmK at25C and maximum operating temperature550C. Hot conductivity and clamped-contact resistance not established by that table."
+  }
+}

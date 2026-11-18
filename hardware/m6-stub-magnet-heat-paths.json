@@ -1,0 +1,53 @@
+{
+  "status": "Analytical heat-path sensitivity only; not a magnet operating-temperature prediction",
+  "cases": [
+    {
+      "case": "m6-stub-v1",
+      "pole_gap_mm": 3.0,
+      "heater_gap_mm": 0.45,
+      "heater_projected_overlap_mm2": 287.9446727125212,
+      "nozzle_flat_face_overlap_mm2": 30.146440505981445,
+      "gas_k_assumed_W_m_K": 0.04,
+      "heater_gap_G_W_K": 0.02559508201889077,
+      "nozzle_gap_G_W_K": 0.012058576202392568,
+      "total_parallel_gap_G_W_K": 0.03765365822128334,
+      "conduction_W_if_head250C_magnets100C": 5.648048733192501,
+      "blackbody_radiation_upper_envelope_W_same_temperatures": 2.360971656670676,
+      "cold_mount_G_needed_W_K_to_hold100C_at25C_ambient_if_it_removes_all_of_estimated_heat": 0.10678693853150904
+    },
+    {
+      "case": "m6-stub-clearance-v1",
+      "pole_gap_mm": 3.4,
+      "heater_gap_mm": 1.0,
+      "heater_projected_overlap_mm2": 280.7741103427513,
+      "nozzle_flat_face_overlap_mm2": 25.31053352355957,
+      "gas_k_assumed_W_m_K": 0.04,
+      "heater_gap_G_W_K": 0.011230964413710052,
+      "nozzle_gap_G_W_K": 0.0033747378031412758,
+      "total_parallel_gap_G_W_K": 0.014605702216851327,
+      "conduction_W_if_head250C_magnets100C": 2.190855332527699,
+      "blackbody_radiation_upper_envelope_W_same_temperatures": 2.360971656670676,
+      "cold_mount_G_needed_W_K_to_hold100C_at25C_ambient_if_it_removes_all_of_estimated_heat": 0.060691026522645
+    }
+  ],
+  "conductance_ratio_clearance_to_original": 0.3878959683284002,
+  "method": "Gas-gap conduction k*A/g, actual CAD flat-side area clipped to magnet height and analytic projected heater underside overlap. Assumed constant gas k=0.04W/mK. Radiation blackbody envelope treats all magnet top/inward faces as facing the hot source with unit view factor/emissivity.",
+  "limits": [
+    "Gas conduction is a parallel-plate approximation: no fringing, natural/forced convection, transient or full CAD radiation view factors. The blackbody term is an illustrative radiation upper envelope for those faces, not a full heat-load bound.",
+    "Cooling required at an assumed magnet100C/head250C; these are imposed comparison temperatures. No claim that a passive mount reaches100C or that all real heat paths are included.",
+    "Current-induced magnet/metal-mount eddy losses, contact bridges, electrical insulation, changing nozzle temperature and assembly tolerances are absent.",
+    "Gas conductivity0.025\u20130.05W/mK would scale conductive heat to0.625\u20131.25 times these values. Vacuum is not assumed."
+  ],
+  "magnet_sources": [
+    {
+      "url": "https://www.first4magnets.com/product/25-x-5-x-5mm-thick-samarium-cobalt-magnet-32kg-pull-19663",
+      "verified": "2026-11-19",
+      "facts": "Stock25x5x5mm Sm2Co17; listed\u00b10.1mm tolerance and300C maximum operating temperature. No exact grade hot demagnetization curve obtained."
+    },
+    {
+      "url": "https://www.arnoldmagnetics.com/products/recoma-samarium-cobalt-magnets/",
+      "verified": "2026-11-19",
+      "facts": "Manufacturer grade table shows different maximum temperatures and reversible Br coefficients; generic SmCo label does not establish the stock product hot load line."
+    }
+  ]
+}

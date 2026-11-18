@@ -1,0 +1,27 @@
+{
+  "status": "Completed source-field-only assembly-clearance comparison",
+  "charge_source": "artifacts/hardware-research/m6-stub-v1-stub4-cold30-h0050",
+  "conductive_meshes_bit_identical": true,
+  "cases": [
+    {
+      "observation": "artifacts/hardware-research/m6-stub4-q4-observer",
+      "mean_outlet_By_T": -0.5018823146820068,
+      "outlet_force_N_at30A": 0.002662034478223009
+    },
+    {
+      "observation": "artifacts/hardware-research/m6-stub4-clearance-q4-observer",
+      "mean_outlet_By_T": -0.4857368469238281,
+      "outlet_force_N_at30A": 0.0025806870807656406
+    }
+  ],
+  "clearanced_geometry": {
+    "pole_gap_mm": 3.4,
+    "nozzle_face_clearance_mm": 0.3,
+    "heater_top_clearance_mm": 1.0,
+    "magnet_projection_mm": 2.0
+  },
+  "clearance_force_ratio": 0.9694416439295442,
+  "peak_A_matching_original90A_cold_force": 92.83694440357763,
+  "RMS_A_at_assumed200Hz_for_match": 19.775576677331202,
+  "scope": "Accepted fixed static J is unchanged by source positions at zero velocity and unit permeability. q4 applied-source windows aligned to accepted full charge grid. No contact, thermal, mount-eddy, demagnetization or moving-fluid solve."
+}

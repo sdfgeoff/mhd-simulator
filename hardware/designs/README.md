@@ -82,3 +82,7 @@ They do not substitute for the separate fine-grid and full-domain gravity checks
    2 mm lower bore, raised pool inside heater and 1.45 mm nominal magnet projection.
    Static electrical and separate thermal screens are promising; no qualified
    drop or repetition result. See its README and the short-nozzle screening records.
+
+7. `hot-contact-m6`: thermal research fixture for folded, electrically insulated
+   heated contact fingers. It addresses the cold-copper outlet-freezing flag.
+   Actual clamp hardware, magnet heat paths and jetting remain unqualified.

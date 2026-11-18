@@ -1,0 +1,14 @@
+{
+  "status": "Completed full native cold solve for118deg lower drill and larger assembly gaps",
+  "project": "artifacts/hardware-research/cases/m6-stub-drilled-v1/stub4.mhd.json",
+  "output": "artifacts/hardware-research/m6-stub4-drilled-cold30-h0050",
+  "cell_um": 50.000002374872565,
+  "outlet_mean_By_T": -0.48320340799788636,
+  "outlet_force_N_at30A": 0.00254614240530579,
+  "terminal_R_ohm": 0.0022552814396059628,
+  "true_relative_residual": 9.379976404488843e-07,
+  "power_relative_defect": -2.205371856689453e-06,
+  "outlet_force_ratio_to_90deg_drill_clearanced_q4": 0.9866141556962413,
+  "comparison_note": "Drilled full solve uses q3, clearanced reference q4; source quadrature sensitivity is0.73% for originalstub4. Do not attribute subpercent differences solely to drill shape.",
+  "scope": "No moving interface, thermal feedback, real contacts or machining tolerances."
+}

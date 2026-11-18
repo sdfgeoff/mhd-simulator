@@ -26,11 +26,14 @@ COLORS = {
     "magnet": "#9cbbd3",
     "heater": "#abb1b8",
     "wire": "#586575",
+    "mica": "#e6cd7b",
 }
 
 
 def category(name):
     name = name.lower()
+    if "mica" in name:
+        return "mica"
     if "liquid" in name:
         return "liquid"
     if "copper" in name or "coil" in name:
