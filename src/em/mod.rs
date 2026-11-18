@@ -74,6 +74,12 @@ pub struct EmState {
     cad_curves: Vec<crate::model::CurvePath>,
     pub mode: Mode,
     pub time_s: f64,
+    #[cfg(test)]
+    last_step_dt_s: f64,
+    #[cfg(test)]
+    pub(crate) predict_increments: bool,
+    #[cfg(test)]
+    pub(crate) prediction_diagnostic: [f32; 3],
     pub diagnostics: Diagnostics,
     conductivity_range: [f32; 2],
     params: Params,
@@ -331,6 +337,7 @@ impl EmState {
             "coefficients",
             "coefficient_check",
             "prepare",
+            "zero_guess",
             "initial_reduce",
             "apply_operator",
             "alpha_reduce",
@@ -508,6 +515,12 @@ impl EmState {
             cad_curves: model.curves.clone(),
             mode,
             time_s: 0.,
+            #[cfg(test)]
+            last_step_dt_s: 0.,
+            #[cfg(test)]
+            predict_increments: true,
+            #[cfg(test)]
+            prediction_diagnostic: [0.; 3],
             diagnostics: Diagnostics::default(),
             conductivity_range: [0.; 2],
             params,
@@ -762,6 +775,20 @@ impl EmState {
     fn advance_to(&mut self, model: &Model, time: f64, initial: bool) -> Result<(), String> {
         let started = std::time::Instant::now();
         self.params.control[1] = u32::from(initial);
+        // Research only: reuse the two accepted reaction potentials already stored.
+        let prediction_factor = 0f32;
+        #[cfg(test)]
+        let prediction_factor = if self.predict_increments && !initial && self.last_step_dt_s > 0. {
+            let ratio = ((time - self.time_s) / self.last_step_dt_s) as f32;
+            if ratio.is_finite() && ratio > 0. {
+                ratio
+            } else {
+                0.
+            }
+        } else {
+            prediction_factor
+        };
+        self.params.origin[3] = prediction_factor;
         self.params.physical[0] = self.config.dt_s as f32;
         self.params.physical[3] = self.config.relative_tolerance.powi(2);
         self.update_sources(model, time)?;
@@ -773,6 +800,31 @@ impl EmState {
             ("initial_reduce", [1, 1, 1]),
         ]);
         let mut status = self.read_f32(&self.scalars, 0, 8)?;
+        #[cfg(test)]
+        {
+            self.prediction_diagnostic = [
+                prediction_factor,
+                (status[1] / status[2].max(1e-38)).sqrt(),
+                0.,
+            ];
+        }
+        // A bad extrapolation must not start farther from the same physical RHS.
+        if prediction_factor > 0.
+            && (status.iter().any(|v| !v.is_finite()) || status[1] > status[2])
+        {
+            #[cfg(test)]
+            {
+                self.prediction_diagnostic[2] = 1.;
+            }
+            self.params.origin[3] = 0.;
+            self.write_params();
+            self.dispatch(&[
+                ("zero_guess", eg),
+                ("prepare", eg),
+                ("initial_reduce", [1, 1, 1]),
+            ]);
+            status = self.read_f32(&self.scalars, 0, 8)?;
+        }
         loop {
             while status[7] == 0.
                 && status.iter().all(|v| v.is_finite())
@@ -860,6 +912,10 @@ impl EmState {
         for (i, body) in self.bodies.iter_mut().enumerate() {
             body.force_n.copy_from_slice(&totals[i * 4..i * 4 + 3]);
             body.power_w = totals[i * 4 + 3];
+        }
+        #[cfg(test)]
+        {
+            self.last_step_dt_s = if initial { 0. } else { time - self.time_s };
         }
         self.time_s = time;
         self.diagnostics = Diagnostics {
@@ -1031,3 +1087,6 @@ fn validate_model_inputs(volume: &Volume, model: &Model) -> Result<(), String> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod prediction_tests;

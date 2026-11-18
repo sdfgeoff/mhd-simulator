@@ -109,16 +109,18 @@ fn prepare(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invocatio
     let i=flat_id(gid);var v=vec4<f32>(0.0);
     if i<scene.edges.w {
         let e=edge_decode(i);
-        var r=mass(i)*scene.physical.x*source[i+scene.edges.w].x-mass(i)*(source[i].x-source[i].y)+adjoint(e,2u,true)-adjoint(e,4u,false)-gauge(e,4u);
-        if boundary(e){r=0.0;}
-        let z=r/diagonal(i);work[i].y=r;work[i].z=z;work[i].w=0.0;v=vec4<f32>(r*z,r*r,0.0,0.0);
+        var b=mass(i)*scene.physical.x*source[i+scene.edges.w].x-mass(i)*(source[i].x-source[i].y)+adjoint(e,2u,true)-adjoint(e,4u,false)-gauge(e,4u);
+        var r=b;
+        if scene.origin.w>0. {r-=adjoint(e,0u,false)+gauge(e,0u)+mass(i)*work[i].x;}
+        if boundary(e){r=0.0;b=0.0;}
+        let z=r/diagonal(i);work[i].y=r;work[i].z=z;work[i].w=0.0;v=vec4<f32>(r*z,r*r,b*b,0.0);
     }
     reduction[l]=v;let sum=sum_group(l);if l==0u && group_id(group)<(scene.edges.w+255u)/256u{partials[group_id(group)]=sum;}
 }
 @compute @workgroup_size(256)
 fn initial_reduce(@builtin(local_invocation_index) l:u32){
     var v=vec4<f32>(0.0);let n=(scene.edges.w+255u)/256u;for(var i=l;i<n;i+=256u){v+=partials[i];}reduction[l]=v;let sum=sum_group(l);
-    if l==0u {let threshold=sum.y*scene.physical.w+1e-38;scalars[0]=vec4<f32>(sum.x,sum.y,sum.y,threshold);scalars[1]=vec4<f32>(0.0,0.0,0.0,select(0.0,1.0,sum.y<=threshold));}
+    if l==0u {let threshold=sum.z*scene.physical.w+1e-38;scalars[0]=vec4<f32>(sum.x,sum.y,sum.z,threshold);scalars[1]=vec4<f32>(0.0,0.0,0.0,select(0.0,1.0,sum.y<=threshold));}
 }
 // Strict scalar-air eligibility proves all six same-component neighbors are
 // inside this edge lattice, and excludes constrained boundary edges. Preserve
@@ -226,6 +228,12 @@ fn restart_reduce(@builtin(local_invocation_index) l:u32){
 fn set_boundary(@builtin(global_invocation_id) gid:vec3<u32>){let i=flat_id(gid);if i<scene.edges.w && boundary(edge_decode(i)){work[i].x=previous[i];}}
 
 @compute @workgroup_size(256)
-fn begin_step(@builtin(global_invocation_id) gid:vec3<u32>){let i=flat_id(gid);if i<scene.edges.w {previous[i]=work[i].x;work[i].x=0.0;}}
+fn begin_step(@builtin(global_invocation_id) gid:vec3<u32>){let i=flat_id(gid);if i<scene.edges.w {
+ let accepted=work[i].x;var guess=0.;
+ if scene.origin.w>0. && !boundary(edge_decode(i)){guess=scene.origin.w*(accepted-previous[i]);}
+ previous[i]=accepted;work[i].x=guess;
+}}
+@compute @workgroup_size(256)
+fn zero_guess(@builtin(global_invocation_id) gid:vec3<u32>){let i=flat_id(gid);if i<scene.edges.w {work[i].x=0.;}}
 @compute @workgroup_size(256)
 fn commit_step(@builtin(global_invocation_id) gid:vec3<u32>){let i=flat_id(gid);if i<scene.edges.w {work[i].x+=previous[i];}}

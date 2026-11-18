@@ -3,7 +3,7 @@ use crate::{
     domain::GpuDomain,
     simulation::{DomainSettings, default_materials},
 };
-fn setup(n: u32) -> (GpuDomain, Volume, Model) {
+pub(super) fn setup(n: u32) -> (GpuDomain, Volume, Model) {
     let gpu = GpuDomain::new().unwrap();
     let mut model = Model::load(std::path::Path::new("assets/annulus.gltf")).unwrap();
     model.bodies[0].simulation.material_id = 6;
