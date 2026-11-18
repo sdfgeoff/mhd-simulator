@@ -1,0 +1,102 @@
+{
+  "status": "Completed native applied-field comparison on a validated shared J observation window",
+  "full_charge_source": "artifacts/hardware-research/m6-waist-v1-ch12-w02-cold30-h0050",
+  "cases": [
+    {
+      "stack_per_pole": 2,
+      "magnets_total": 4,
+      "source_subdivision": 3,
+      "observation": "artifacts/hardware-research/m6-magstack2-q3-observer",
+      "mean_outlet_By_T": -0.3730715555735888,
+      "outlet_land_force_N_at30A": [
+        3.7782596155523006e-11,
+        -3.5811293315147494e-10,
+        -0.0019543871030336677
+      ],
+      "outlet_downward_force_N_at30A": 0.001954387103033668,
+      "liquid_cells": 624,
+      "integer_source_offset": [
+        71,
+        71,
+        100
+      ],
+      "baseline_B_max_difference_T": 1.280568540096283e-05,
+      "baseline_force_relative_difference": -2.8561457632303444e-07,
+      "force_ratio_to_two_stack_q4": 0.9833917028621163,
+      "peak_A_matching_two_stack110A": 111.85776703204843,
+      "matching_RMS_A_at_assumed200Hz": 23.827279787248994
+    },
+    {
+      "stack_per_pole": 1,
+      "magnets_total": 2,
+      "source_subdivision": 4,
+      "observation": "artifacts/hardware-research/m6-magstack1-q4-observer",
+      "mean_outlet_By_T": -0.28543052464150465,
+      "outlet_land_force_N_at30A": [
+        -1.0688080313989084e-11,
+        3.6003447536628294e-10,
+        -0.0014857753600515356
+      ],
+      "outlet_downward_force_N_at30A": 0.0014857753600515365,
+      "liquid_cells": 624,
+      "integer_source_offset": [
+        71,
+        71,
+        100
+      ],
+      "force_ratio_to_two_stack_q4": 0.7475996741503692,
+      "peak_A_matching_two_stack110A": 147.13757081958684,
+      "matching_RMS_A_at_assumed200Hz": 31.34237487621208
+    },
+    {
+      "stack_per_pole": 2,
+      "magnets_total": 4,
+      "source_subdivision": 4,
+      "observation": "artifacts/hardware-research/m6-magstack2-q4-observer",
+      "mean_outlet_By_T": -0.3799615897811376,
+      "outlet_land_force_N_at30A": [
+        1.6071139749066576e-10,
+        9.017449816833544e-10,
+        -0.0019873943387416384
+      ],
+      "outlet_downward_force_N_at30A": 0.001987394338741637,
+      "liquid_cells": 624,
+      "integer_source_offset": [
+        71,
+        71,
+        100
+      ],
+      "force_ratio_to_two_stack_q4": 1.0,
+      "peak_A_matching_two_stack110A": 110.0,
+      "matching_RMS_A_at_assumed200Hz": 23.431549244554873
+    },
+    {
+      "stack_per_pole": 3,
+      "magnets_total": 6,
+      "source_subdivision": 4,
+      "observation": "artifacts/hardware-research/m6-magstack3-q4-observer",
+      "mean_outlet_By_T": -0.4194894169385617,
+      "outlet_land_force_N_at30A": [
+        -2.2333149529606152e-10,
+        6.720181569951697e-10,
+        -0.002198065342783472
+      ],
+      "outlet_downward_force_N_at30A": 0.002198065342783473,
+      "liquid_cells": 624,
+      "integer_source_offset": [
+        71,
+        71,
+        100
+      ],
+      "force_ratio_to_two_stack_q4": 1.1060036249148355,
+      "peak_A_matching_two_stack110A": 99.45717854990775,
+      "matching_RMS_A_at_assumed200Hz": 21.185779790151365
+    }
+  ],
+  "scope": "Reuses full-domain stationary current because changing B does not alter J at zero velocity with fixed nonmagnetic material properties. Every field observation samples the full magnet CAD; no cropped charge solve. Native grids and phase IDs checked. Cross-products are field postprocessing, not a new PDE solver.",
+  "limits": [
+    "Equal fixed source magnetization and abutting stacks; actual hot grade, demagnetization and mount tolerances unqualified.",
+    "No moving liquid, u-cross-B, self-field, thermal feedback or droplet/repetition outcome.",
+    "Matched-force amplitudes are comparisons only, not physical-head commands."
+  ]
+}

@@ -1,0 +1,158 @@
+{
+  "status": "Completed native steady-conduction comparison; not full thermal operation",
+  "cases": [
+    {
+      "cold_return_W": -0.026808831840753555,
+      "conductance_W_K": 0.026806645095348358,
+      "grid": {
+        "cell_m": 5.0000002374872565e-05,
+        "dims": [
+          152,
+          152,
+          390
+        ],
+        "origin_m": [
+          -0.003800000064074993,
+          -0.003800000064074993,
+          -0.005000000353902578
+        ]
+      },
+      "heat_return_relative_error": 8.157474803738296e-05,
+      "heater_start_mm": 6.5,
+      "hot_boundary_cells": 37152,
+      "isothermal_pool_cells": 24700,
+      "limits": [
+        "Steady metal-to-isothermal-pool conduction screen; fixed k, perfect contact to outer M6 cylindrical envelope. Thread helix/root/contact resistance unresolved.",
+        "Air, copper contacts and magnets thermally omitted to isolate the nozzle path. No feed advection, wire melting, latent heat, transient heat capacity, cooling or radiation.",
+        "An isothermal pool is a mixing idealization, not a prediction of local liquid temperature."
+      ],
+      "liquid_k_W_m_K": 60.5,
+      "method": "Existing native GPU scalar finite-volume operator with conductivity k. Outer cylindrical heated barrel at +0.5 K; whole pool at -0.5 K. No new CPU or GPU PDE implementation.",
+      "power_identity_relative_error": 4.303455352783203e-05,
+      "project": "artifacts/hardware-research/cases/m6-prototype-v2/ch12-w02.mhd.json",
+      "requested_relative_tolerance": 9.999999974752427e-07,
+      "steel_k_W_m_K": 15.0,
+      "temperature_difference_K": 1.0,
+      "thermal_resistance_K_W": 37.30418395996094,
+      "unit_energy_identity_value": 0.02680779993534088
+    },
+    {
+      "cold_return_W": -0.41018787026405334,
+      "conductance_W_K": 0.410183310508728,
+      "grid": {
+        "cell_m": 5.0000002374872565e-05,
+        "dims": [
+          152,
+          152,
+          390
+        ],
+        "origin_m": [
+          -0.003800000064074993,
+          -0.003800000064074993,
+          -0.005000000353902578
+        ]
+      },
+      "heat_return_relative_error": 1.1116384484921582e-05,
+      "heater_start_mm": 6.5,
+      "hot_boundary_cells": 37152,
+      "isothermal_pool_cells": 194800,
+      "limits": [
+        "Steady metal-to-isothermal-pool conduction screen; fixed k, perfect contact to outer M6 cylindrical envelope. Thread helix/root/contact resistance unresolved.",
+        "Air, copper contacts and magnets thermally omitted to isolate the nozzle path. No feed advection, wire melting, latent heat, transient heat capacity, cooling or radiation.",
+        "An isothermal pool is a mixing idealization, not a prediction of local liquid temperature."
+      ],
+      "liquid_k_W_m_K": 60.5,
+      "method": "Existing native GPU scalar finite-volume operator with conductivity k. Outer cylindrical heated barrel at +0.5 K; whole pool at -0.5 K. No new CPU or GPU PDE implementation.",
+      "power_identity_relative_error": 5.9604644775390625e-06,
+      "project": "artifacts/hardware-research/cases/m6-long-highpool-v1/ch12-w02.mhd.json",
+      "requested_relative_tolerance": 9.999999974752427e-07,
+      "steel_k_W_m_K": 15.0,
+      "temperature_difference_K": 1.0,
+      "thermal_resistance_K_W": 2.437934398651123,
+      "unit_energy_identity_value": 0.4101857542991638
+    },
+    {
+      "cold_return_W": -0.40397965908050537,
+      "conductance_W_K": 0.4039819538593292,
+      "grid": {
+        "cell_m": 5.0000002374872565e-05,
+        "dims": [
+          152,
+          152,
+          280
+        ],
+        "origin_m": [
+          -0.003800000064074993,
+          -0.003800000064074993,
+          -0.004000000189989805
+        ]
+      },
+      "heat_return_relative_error": 5.680399226548616e-06,
+      "heater_start_mm": 3.5,
+      "hot_boundary_cells": 37152,
+      "isothermal_pool_cells": 197408,
+      "limits": [
+        "Steady metal-to-isothermal-pool conduction screen; fixed k, perfect contact to outer M6 cylindrical envelope. Thread helix/root/contact resistance unresolved.",
+        "Air, copper contacts and magnets thermally omitted to isolate the nozzle path. No feed advection, wire melting, latent heat, transient heat capacity, cooling or radiation.",
+        "An isothermal pool is a mixing idealization, not a prediction of local liquid temperature."
+      ],
+      "liquid_k_W_m_K": 60.5,
+      "method": "Existing native GPU scalar finite-volume operator with conductivity k. Outer cylindrical heated barrel at +0.5 K; whole pool at -0.5 K. No new CPU or GPU PDE implementation.",
+      "power_identity_relative_error": -2.5033950805664062e-06,
+      "project": "artifacts/hardware-research/cases/m6-stub-v1/stub3p5.mhd.json",
+      "requested_relative_tolerance": 9.999999974752427e-07,
+      "steel_k_W_m_K": 15.0,
+      "temperature_difference_K": 1.0,
+      "thermal_resistance_K_W": 2.475358009338379,
+      "unit_energy_identity_value": 0.40398094058036804
+    },
+    {
+      "cold_return_W": -0.4040917754173279,
+      "conductance_W_K": 0.4040905833244324,
+      "grid": {
+        "cell_m": 5.0000002374872565e-05,
+        "dims": [
+          152,
+          152,
+          290
+        ],
+        "origin_m": [
+          -0.003800000064074993,
+          -0.003800000064074993,
+          -0.004000000189989805
+        ]
+      },
+      "heat_return_relative_error": 2.950063617390697e-06,
+      "heater_start_mm": 4.0,
+      "hot_boundary_cells": 37152,
+      "isothermal_pool_cells": 210048,
+      "limits": [
+        "Steady metal-to-isothermal-pool conduction screen; fixed k, perfect contact to outer M6 cylindrical envelope. Thread helix/root/contact resistance unresolved.",
+        "Air, copper contacts and magnets thermally omitted to isolate the nozzle path. No feed advection, wire melting, latent heat, transient heat capacity, cooling or radiation.",
+        "An isothermal pool is a mixing idealization, not a prediction of local liquid temperature."
+      ],
+      "liquid_k_W_m_K": 60.5,
+      "method": "Existing native GPU scalar finite-volume operator with conductivity k. Outer cylindrical heated barrel at +0.5 K; whole pool at -0.5 K. No new CPU or GPU PDE implementation.",
+      "power_identity_relative_error": 1.9073486328125e-06,
+      "project": "artifacts/hardware-research/cases/m6-stub-v1/stub4.mhd.json",
+      "requested_relative_tolerance": 9.999999974752427e-07,
+      "steel_k_W_m_K": 15.0,
+      "temperature_difference_K": 1.0,
+      "thermal_resistance_K_W": 2.4746925830841064,
+      "unit_energy_identity_value": 0.40409135818481445
+    }
+  ],
+  "unit_rod_check": "k15/30WmK GPU G0.0009999996/0.0019999992W/K vs analytic0.001/0.002; no CPU PDE solver.",
+  "feed_energy_estimate": {
+    "diameter_mm": 0.5,
+    "rate_Hz": 200,
+    "feed_start_C": 20,
+    "liquid_target_C": 250,
+    "density_kg_m3": 7000,
+    "constant_cp_J_kg_K": 214.0,
+    "latent_heat_J_kg": 59000.0,
+    "power_W": 9.916175411668384,
+    "scope": "Constant-cp sensible heat plus latent heat, inherited SnCu research properties; excludes losses, liquid feed advection, mixing and actuator heat."
+  },
+  "interpretation": "Moving the melt surface into the heated barrel reduces the simplified heater-to-isothermal-pool resistance by about15x. Do not select the earlier low-pool long-waist concept from field strength alone. Thread heat transfer, local liquid temperature and actual feeding remain unresolved."
+}

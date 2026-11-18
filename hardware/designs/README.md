@@ -77,3 +77,8 @@ python scripts/hardware_flow_report.py artifacts/hardware-research/NEW_WIDE_REPR
 
 These commands reproduce the recorded screens, including their limitations.
 They do not substitute for the separate fine-grid and full-domain gravity checks.
+
+6. `short-m6-stub4`: revised short-body concept with 6 mm M6×1 engagement,
+   2 mm lower bore, raised pool inside heater and 1.45 mm nominal magnet projection.
+   Static electrical and separate thermal screens are promising; no qualified
+   drop or repetition result. See its README and the short-nozzle screening records.

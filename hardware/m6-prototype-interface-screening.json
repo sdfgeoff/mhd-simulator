@@ -1,0 +1,38 @@
+{
+  "status": "Completed revised-interface/wrench-collar cold screen",
+  "source": "artifacts/hardware-research/m6-waist-v1-ch12-w02-cold30-h0050",
+  "prototype": "artifacts/hardware-research/m6-prototype-v2-cold30-h0050",
+  "outer_interface": {
+    "thread": "M6x1 envelope; helix omitted",
+    "thread_z_mm": [
+      6.5,
+      12.5
+    ],
+    "neck_diameter_mm": 5,
+    "external_top_chamfer_mm": 0.6,
+    "inlet_bore_mm": 3.2,
+    "inlet_mouth_mm": 3.9,
+    "inlet_chamfer_included_angle_deg": 60
+  },
+  "wrench_collar": {
+    "AF_mm": 6,
+    "z_mm": [
+      5.35,
+      6.2
+    ],
+    "nominal_heater_gap_mm": 0.3,
+    "nominal_magnet_top_gap_mm": 0.25,
+    "note": "Prototype geometry, not a torque qualification. Threads/fillets/tolerances require machining detail."
+  },
+  "released_interface_source": "https://robu-prod-media.s3.ap-south-1.amazonaws.com/uploads/2019/03/Schematic.pdf",
+  "native_liquid_mask_identical": true,
+  "land_force_relative_change": -1.1490813028314228e-05,
+  "R_ohm": [
+    0.002260548347779791,
+    0.0022605413674594683
+  ],
+  "power_relative_defect": -1.9669532775878906e-06,
+  "true_relative_residual": 9.112360999097291e-07,
+  "requested_relative_tolerance": 9.999999974752427e-07,
+  "scope": "Same lower chamber, outlet, contacts, magnets and grid. Upper chamfers and collar changed; cold current/force comparison only. Old run had looser tolerance, so tiny differences are not isolated geometry effects."
+}

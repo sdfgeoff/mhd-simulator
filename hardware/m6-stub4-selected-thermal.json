@@ -1,0 +1,88 @@
+{
+  "status": "Completed separate fixed-path one-shot thermal screen; not a jetting or repetition result",
+  "case": "stub4",
+  "waveform": {
+    "peak_A": 90,
+    "positive_us": 250,
+    "ramp_us": 20,
+    "reverse_ratio": 0.25,
+    "reverse_us": 83.33333333333333,
+    "gap_us": 25,
+    "I2dt_A2s": 1.8376875,
+    "RMS_A_at_assumed200Hz": 19.171267563726712
+  },
+  "nozzle_and_modeled_copper_average_W_at200Hz": 0.8305324317124992,
+  "outer_copper_estimate_average_W_at200Hz": 0.12601285714285712,
+  "native_thermal_report": {
+    "I2dt_A2s": 1.8376875000000001,
+    "adiabatic_control": false,
+    "cold": "artifacts/hardware-research/m6-stub-v1-stub4-cold30-h0050",
+    "dt_us": 1.0,
+    "expected_joule_J": 0.0029569606744234067,
+    "grid": {
+      "cell_m": 5.0000002374872565e-05,
+      "dims": [
+        60,
+        40,
+        24
+      ],
+      "origin_m": [
+        -0.001500000013038516,
+        -0.0010000000474974513,
+        0.0
+      ]
+    },
+    "initial_temperature_C": 250.0,
+    "joule_J": 0.0029569603054194673,
+    "limits": [
+      "Fixed current path/material properties; no temperature-dependent conductivity, moving interface, electrical contact heating or heater/clamp cooling.",
+      "Closed insulated retained conductors initially250C; magnet/air heat transfer omitted, no repetition equilibrium or qualified melting margin.",
+      "TIP_ROI when enabled uses insulated cuts and exact native-cell source mapping from the full-head electrical solution; validate thermal cut sensitivity before use, and do not extrapolate it to steady heating.",
+      "Sharp contact geometry and finite grid do not resolve real microscopic contact areas or establish peak convergence."
+    ],
+    "method": "Native ThermalState diffusion/enthalpy with exact per-interval I\u00b2dt scaling of accepted cold Joule field. Isolated zero-Joule magnet bodies omitted from thermal domain; all retained material IDs/grid match.",
+    "peak_A": 90.0,
+    "peak_temperature_C": 257.7270812988281,
+    "peak_time_s": 0.00023399999999999945,
+    "per_material_at_global_peak": [
+      {
+        "id": 4,
+        "index": 13233,
+        "maximum_C_at_global_peak_frame": 253.60079956054688,
+        "name": "Sn99.3Cu0.7 molten research properties"
+      },
+      {
+        "id": 14,
+        "index": 22836,
+        "maximum_C_at_global_peak_frame": 257.7270812988281,
+        "name": "Thin-wall stainless screening"
+      },
+      {
+        "id": 16,
+        "index": 22822,
+        "maximum_C_at_global_peak_frame": 251.02951049804688,
+        "name": "Positive copper terminal"
+      },
+      {
+        "id": 17,
+        "index": 22837,
+        "maximum_C_at_global_peak_frame": 251.02951049804688,
+        "name": "Negative copper terminal"
+      }
+    ],
+    "positive_us": 250.0,
+    "project": "artifacts/hardware-research/cases/m6-stub-v1/stub4.mhd.json",
+    "source_energy_relative_error": -1.2479162897746665e-07,
+    "source_offset_cells": [
+      46,
+      56,
+      80
+    ],
+    "status": "complete",
+    "steps": 400,
+    "summed_step_energy_error_J": 1.1019708236192916e-10,
+    "time_s": 0.0004000000000000032,
+    "tip_roi": true
+  },
+  "scope": "90 A gives about 10.6% more cold outlet force than the earlier narrow-chamber 110 A case. It is a comparison amplitude, not a qualified physical waveform. Native thermal tip window has ideal joints and insulated cuts; no contact flash heating, magnet temperature or repetitive equilibrium."
+}

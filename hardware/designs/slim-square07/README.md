@@ -1,4 +1,7 @@
-# Slim square outlet: 0.7 mm prototype candidate
+# Slim square outlet: earlier 0.7 mm prototype candidate
+
+The later short M6 concept in `../short-m6-stub4` is preferred for its shorter
+body and raised pool. This older package is retained as a reproducible comparison.
 
 1. This is a research CAD/material input for inspection. The main GUI does not
    implement the terminal-current research client. Loading this project does not

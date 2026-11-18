@@ -1,0 +1,249 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "MHD hardware study; E3D dimension-based simplified CAD"
+  },
+  "buffers": [
+    {
+      "uri": "stub4.bin",
+      "byteLength": 138096
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 94896
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 94896,
+      "byteLength": 41472
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 136368,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 136800,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 137232,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 137664,
+      "byteLength": 432
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 7908,
+      "type": "VEC3",
+      "min": [
+        -0.0035,
+        -0.003,
+        0.0
+      ],
+      "max": [
+        0.0035,
+        0.003,
+        0.01
+      ]
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 3456,
+      "type": "VEC3",
+      "min": [
+        -0.0016,
+        -0.0016,
+        0.0
+      ],
+      "max": [
+        0.0016,
+        0.0016,
+        0.006
+      ]
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.005,
+        -0.0003499999940395355,
+        0.00010000000149011613
+      ],
+      "max": [
+        -0.0003499999940395355,
+        0.0003499999940395355,
+        0.0005
+      ]
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        0.0003499999940395355,
+        -0.0003499999940395355,
+        0.00010000000149011613
+      ],
+      "max": [
+        0.005,
+        0.0003499999940395355,
+        0.0005
+      ]
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.0125,
+        -0.0115,
+        -0.0014500000476837158
+      ],
+      "max": [
+        0.0125,
+        -0.0015,
+        0.0035499999523162843
+      ]
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.0125,
+        0.0015,
+        -0.0014500000476837158
+      ],
+      "max": [
+        0.0125,
+        0.0115,
+        0.0035499999523162843
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Short M6 nozzle stub4",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Liquid solder",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Positive copper contact",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 2
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Negative copper contact",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 3
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Bias magnet 1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 4
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Bias magnet 2",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 5
+          },
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "Short M6 nozzle stub4"
+    },
+    {
+      "mesh": 1,
+      "name": "Liquid solder"
+    },
+    {
+      "mesh": 2,
+      "name": "Positive copper contact"
+    },
+    {
+      "mesh": 3,
+      "name": "Negative copper contact"
+    },
+    {
+      "mesh": 4,
+      "name": "Bias magnet 1"
+    },
+    {
+      "mesh": 5,
+      "name": "Bias magnet 2"
+    }
+  ],
+  "scenes": [
+    {
+      "nodes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    }
+  ],
+  "scene": 0
+}

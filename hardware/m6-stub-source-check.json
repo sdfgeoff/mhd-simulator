@@ -1,0 +1,23 @@
+{
+  "case": "stub4",
+  "status": "Completed applied-source quadrature check with fixed accepted static J",
+  "cases": [
+    {
+      "subdivisions": 3,
+      "mean_By_T": -0.49827253818511963,
+      "outlet_force_N_at30A": 0.0026426339519094316,
+      "liquid_cells": 624,
+      "observation": "artifacts/hardware-research/m6-stub4-q3-observer",
+      "relative_force_difference_from_full": -2.878834405306563e-07
+    },
+    {
+      "subdivisions": 4,
+      "mean_By_T": -0.5018823146820068,
+      "outlet_force_N_at30A": 0.002662034478223009,
+      "liquid_cells": 624,
+      "observation": "artifacts/hardware-research/m6-stub4-q4-observer"
+    }
+  ],
+  "q4_relative_force_change": 0.007341359668659342,
+  "limits": "Source quadrature sensitivity only; fixed magnetization, static liquid and ideal joints; not mesh-converged jetting."
+}
