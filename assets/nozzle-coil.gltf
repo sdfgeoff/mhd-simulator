@@ -1,0 +1,291 @@
+{
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 3456,
+      "max": [
+        0.000750000006519258,
+        0.000750000006519258,
+        0.0001500000071246177
+      ],
+      "min": [
+        -0.000750000006519258,
+        -0.000750000006519258,
+        -0.0010000000474974513
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 2304,
+      "max": [
+        0.0006000000284984708,
+        0.0006000000284984708,
+        0.0001500000071246177
+      ],
+      "min": [
+        -0.0006000000284984708,
+        -0.0006000000284984708,
+        -0.000750000006519258
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 65,
+      "max": [
+        0.0009500000160187483,
+        0.0009500000160187483,
+        -0.0009000000427477062
+      ],
+      "min": [
+        -0.0009500000160187483,
+        -0.0009500000160187483,
+        -0.0009000000427477062
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 65,
+      "max": [
+        0.0009500000160187483,
+        0.0009500000160187483,
+        -0.0007000000332482159
+      ],
+      "min": [
+        -0.0009500000160187483,
+        -0.0009500000160187483,
+        -0.0007000000332482159
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 65,
+      "max": [
+        0.0009500000160187483,
+        0.0009500000160187483,
+        -0.0004999999655410647
+      ],
+      "min": [
+        -0.0009500000160187483,
+        -0.0009500000160187483,
+        -0.0004999999655410647
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 65,
+      "max": [
+        0.0009500000160187483,
+        0.0009500000160187483,
+        -0.0002999999560415745
+      ],
+      "min": [
+        -0.0009500000160187483,
+        -0.0009500000160187483,
+        -0.0002999999560415745
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5126,
+      "count": 65,
+      "max": [
+        0.0009500000160187483,
+        0.0009500000160187483,
+        -0.00009999996836995706
+      ],
+      "min": [
+        -0.0009500000160187483,
+        -0.0009500000160187483,
+        -0.00009999996836995706
+      ],
+      "type": "VEC3"
+    }
+  ],
+  "asset": {
+    "generator": "make_nozzle (mm geometry, metres in glTF)",
+    "version": "2.0"
+  },
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 41472,
+      "byteOffset": 0,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 27648,
+      "byteOffset": 41472,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 780,
+      "byteOffset": 69120,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 780,
+      "byteOffset": 69900,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 780,
+      "byteOffset": 70680,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 780,
+      "byteOffset": 71460,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 780,
+      "byteOffset": 72240,
+      "target": 34962
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 73020,
+      "uri": "nozzle-coil.bin"
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Nozzle wall",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Liquid pool",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ideal closed current loop 1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 2
+          },
+          "mode": 3
+        }
+      ]
+    },
+    {
+      "name": "Ideal closed current loop 2",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 3
+          },
+          "mode": 3
+        }
+      ]
+    },
+    {
+      "name": "Ideal closed current loop 3",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 4
+          },
+          "mode": 3
+        }
+      ]
+    },
+    {
+      "name": "Ideal closed current loop 4",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 5
+          },
+          "mode": 3
+        }
+      ]
+    },
+    {
+      "name": "Ideal closed current loop 5",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 6
+          },
+          "mode": 3
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "Nozzle wall"
+    },
+    {
+      "mesh": 1,
+      "name": "Liquid pool"
+    },
+    {
+      "mesh": 2,
+      "name": "Ideal closed current loop 1"
+    },
+    {
+      "mesh": 3,
+      "name": "Ideal closed current loop 2"
+    },
+    {
+      "mesh": 4,
+      "name": "Ideal closed current loop 3"
+    },
+    {
+      "mesh": 5,
+      "name": "Ideal closed current loop 4"
+    },
+    {
+      "mesh": 6,
+      "name": "Ideal closed current loop 5"
+    }
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    }
+  ]
+}

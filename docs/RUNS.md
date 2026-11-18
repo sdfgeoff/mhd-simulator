@@ -70,3 +70,5 @@ Moving-interface runs initialize fractional CAD occupancy and matching thermal e
 ## Nozzle benchmark
 
 [The loadable nozzle pulse project](JET_EXPERIMENT.md#run-this-case-in-the-application) runs the droplet regression through the normal combined timeline and section views. It explicitly prescribes a force pulse; it is not a computed coil-driven jet.
+
+[The coupled coil/nozzle project](NOZZLE_COIL.md) uses five imported CAD current loops and computed EM forces, with the prescribed pulse disabled. Both examples use the same combined run engine and timeline.

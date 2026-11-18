@@ -29,6 +29,8 @@ To regenerate the example project:
 cargo run --example make_multi_source
 ```
 
+For a compact computed-force example with an open liquid pool and nozzle, see [the coupled coil/nozzle project](NOZZLE_COIL.md). It includes five independently editable CAD current loops and moving-interface feedback, without a prescribed fluid force.
+
 ## CAD centreline import
 
 1. Export winding **centrelines in the main CAD assembly** as glTF/GLB `LINE_STRIP`, `LINE_LOOP`, or unbranched connected `LINES`, alongside triangle solids. Node/assembly transforms and glTF metre units are applied as for solids. All curves appear as geometry even before current is assigned. Curves remain separate CAD items; selecting them does not create conducting solid voxels.
