@@ -262,6 +262,9 @@ fn em_weak_drive_preserves_linear_fields_and_quadratic_force_heat() {
             Mode::Induction,
         )
         .unwrap();
+        // Exercise power-of-two normalization with the gradient correction,
+        // even though this small case would finish before the fallback limit.
+        state.nodal_switch_after = 0;
         for tick in 1..=4 {
             state
                 .step(&model, &volume)

@@ -1,7 +1,7 @@
 # Gradient correction for long induction solves
 
-This research branch adds a matrix-free GPU preconditioner for the existing
-edge-vector-potential equation. It does not change conductivity, the curl/gauge
+Long induction solves use a matrix-free GPU gradient preconditioner for the
+existing edge-vector-potential equation. It does not change conductivity, the curl/gauge
 operator, the physical right-hand side or the true-residual acceptance criterion.
 Induction steps first use the original Jacobi preconditioner. If a solve remains
 unfinished after 1,024 iterations, it restarts from the true residual with this
@@ -17,7 +17,7 @@ time unchanged.
 
 Let `A` be the existing edge operator, `D_A` its diagonal, and `G` the oriented
 node-to-edge incidence gradient with zero scalar values on the outer boundary.
-The candidate applies
+The fallback applies
 
 ```
 B r = D_A^-1 r + G diag(G^T A G)^-1 G^T r.
@@ -48,8 +48,8 @@ For a reproducible coupled investigation, run the ignored project probe with
 `MHD_RESEARCH_PROJECT`, `MHD_RESEARCH_TICKS`, `MHD_RESEARCH_OUTPUT`,
 `MHD_EM_PREDICT=1` and `MHD_EM_NODAL=1`. Omit the last variable for the original
 preconditioner. `MHD_EM_NODAL_AFTER` overrides the research switch threshold;
-production uses 1,024 iterations. The probe writes per-step diagnostics and final fields and uses
-the normal combined run engine. These controls are test-only, not GUI options.
+production uses 1,024 iterations. The probe writes per-step diagnostics and final
+fields and uses the normal combined run engine. These controls are test-only, not GUI options.
 
 ## Recreate the stronger-drive control
 
@@ -72,9 +72,56 @@ out.write_text(json.dumps(p, indent=2))
 PY
 ```
 
-Use this project path with the coupled probe. The original production solver
-accepts through 60.5 µs and rejects 61 µs at its unchanged 4,000-iteration cap.
+Run the production application headlessly, or use this project path with the
+coupled probe:
+
+```sh
+./target/debug/mhd-workbench --run-check artifacts/strong-coil.mhd.json 150 \
+  --output artifacts/strong-coil-output --field-every 50
+```
+
+The original production solver accepts through 60.5 µs and rejects 61 µs at its unchanged 4,000-iteration cap.
 The target remains true relative residual 10⁻⁴. This is a solver stress case with
 ideal current sources and uncalibrated liquid properties, not a proposed drive
 circuit or a validated jetting threshold.
 
+## Strong-drive control
+
+The fallback completes **150 ticks to 75 µs**, with the same 0.5 µs common
+timestep and 4,000-iteration cap. Maximum EM iterations are **2,820**; maximum
+relative material-volume drift is **6.52×10⁻⁸**. The accepted fields come from the
+normal combined run engine.
+
+At the original failed **61 µs** step, the fallback uses **2,410 total
+iterations**, including the first 1,024 Jacobi iterations, and reaches true
+relative residual **9.59×10⁻⁵** against the unchanged **10⁻⁴** target. Extra
+working storage is **3,005,556 bytes** (751,389 scalar nodes).
+
+Over the shared accepted prefix to 60.5 µs, maximum B, maximum speed and kinetic
+energy differ from the original run by respectively **6.18×10⁻⁷**, **2.60×10⁻⁷**
+and **1.66×10⁻⁷**, each normalized by that diagnostic's original peak. Material
+volume diagnostics are identical. The small-grid field-agreement check compares
+B, J, force and heating separately; maximum relative L2 difference is below
+**6×10⁻⁶**.
+
+The test remains a solver stress case. It does not establish convergence through
+the full 1.5 ms current hold, later breakup, or a coil-driven droplet. Iteration
+counts are still high; the diagonal gradient correction does not replace a
+stronger multilevel preconditioner for general cases. No wall-time speedup is
+asserted from this stress run.
+
+## Ordinary-case and failure checks
+
+The local V6 ten-tick control remains **byte-identical** to original Jacobi in
+final EM, fluid and interface buffers and every recorded diagnostic. It uses at
+most **858 iterations** under its original 1,000-iteration cap; the fallback does
+not allocate, so working-buffer bytes are unchanged. No runtime improvement is
+claimed from this comparison.
+
+The full suite passes **167 regular headless tests** (20 longer checks remain
+explicitly ignored), with strict Clippy clean. Tests force an early switch to
+check changed-timestep field agreement, rejection/rollback of an unindexable
+workspace, capped-step failure and successful retry. A short-solve control checks
+byte-identical results without workspace allocation. The weak-drive test forces
+the gradient correction at both original and 10⁻⁸ source amplitude, checks the
+physical residual inequality and linear/quadratic field scaling.
