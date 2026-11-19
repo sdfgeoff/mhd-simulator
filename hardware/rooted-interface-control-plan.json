@@ -1,0 +1,15 @@
+{
+  "status": "Prepared one matched moving-interface sensitivity control; no native result",
+  "reference": "artifacts/hardware-research/m6-rooted08-flow110-r50-motionabs1e-06A-h010-dt1p5",
+  "specific_resistivity_ohm_m2": 1e-09,
+  "scope": "Applied at all liquid/solid conducting faces, including the fixed feed wire. It is not copper/steel dry joint resistance, oxide kinetics or a measured material property.",
+  "unchanged": "Rooted geometry,250us forward110A pulse,55A reverse,25us delay,h100/1.5us,3.6ms; same local residual and unit/motional conservation criteria.",
+  "rationale": "Earlier wider-contact static sensitivity cannot quantify robustness of the current rooted tip. Compare initial paths, terminal voltage, Joule energy and actual breakup rather than scaling the old force loss.",
+  "queue": "After the already queued no-gap retrieval study; retains ideal-contact25us baseline as reference, not the no-gap waveform.",
+  "limits": [
+    "One resistance value does not calibrate wetting or an operating range.",
+    "The dynamic interface-area model is voxel based and unrefined; no microscopic contact flash-temperature bound.",
+    "Fixed electrical contact law and bulk material properties omit changing oxide/contact chemistry.",
+    "No new native run or prototype qualification is claimed by preparation."
+  ]
+}

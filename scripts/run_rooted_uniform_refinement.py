@@ -27,6 +27,7 @@ parser.add_argument("--motion-absolute-tolerance-a", type=float, default=0.,
                     help="Explicit dimensional floor for the motional basis; unit-current gate remains strict")
 parser.add_argument("--single-retract", type=float, help="One explicit reverse/forward amplitude ratio at fixed100um/1.5us")
 parser.add_argument("--single-delay-us", type=float, default=25., help="Explicit counterpulse delay for a single reversal case")
+parser.add_argument("--single-interface-ohm-m2", type=float, default=0., help="Specific liquid/solid face resistivity for one matched case")
 args = parser.parse_args()
 if not math.isfinite(args.motion_absolute_tolerance_a) or args.motion_absolute_tolerance_a < 0:
     parser.error("Choose a finite nonnegative motional current tolerance")
@@ -36,6 +37,8 @@ if args.single_retract is not None and (args.study != "precision-temporal-retrac
     parser.error("Single reversal requires precision study, explicit motion tolerance, and ratio0..2.5")
 if not math.isfinite(args.single_delay_us) or args.single_delay_us < 0 or (args.single_retract is None and args.single_delay_us != 25):
     parser.error("A finite nonnegative custom delay requires a single reversal case")
+if not math.isfinite(args.single_interface_ohm_m2) or args.single_interface_ohm_m2 < 0 or (args.single_retract is None and args.single_interface_ohm_m2 != 0):
+    parser.error("A finite nonnegative custom interface resistance requires a single case")
 if (args.after_state is None) != (args.after_pid is None):
     parser.error("Supply both predecessor state and controller PID")
 state = args.state or root / {"uniform": "rooted-uniform-refinement-state.json",
@@ -64,7 +67,8 @@ if args.single_retract is not None:
     ratio = args.single_retract
     specs = [("h010", "1.5", "2400", "600", str(ratio),
               f"m6-rooted08-flow110-r{ratio*100:g}-precisionv2-h010-dt1p5"
-              + (f"-delay{args.single_delay_us:g}us" if args.single_delay_us != 25 else ""))]
+              + (f"-delay{args.single_delay_us:g}us" if args.single_delay_us != 25 else "")
+              + (f"-interface{args.single_interface_ohm_m2:g}ohmm2" if args.single_interface_ohm_m2 != 0 else ""))]
 for grid, dt, steps, every, retract, name in specs:
     if args.motion_absolute_tolerance_a > 0:
         name = name.replace("precisionv2", f"motionabs{args.motion_absolute_tolerance_a:g}A")
@@ -80,7 +84,7 @@ for grid, dt, steps, every, retract, name in specs:
                 "250",
                 steps,
                 str(output),
-                "0",
+                str(args.single_interface_ohm_m2) if args.single_retract is not None else "0",
                 retract,
                 dt,
                 "0",
@@ -123,6 +127,7 @@ def record(**values):
                 "study": args.study,
                 "single_retract_fraction": args.single_retract,
                 "single_retract_delay_us": args.single_delay_us,
+                "single_interface_resistivity_ohm_m2": args.single_interface_ohm_m2,
                 "jobs": jobs,
                 "predecessor_state": str(args.after_state),
                 "predecessor_pid": args.after_pid,
