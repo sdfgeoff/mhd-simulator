@@ -21,3 +21,15 @@ Regenerate the diagrams from the repository root:
 ```sh
 TMPDIR="$PWD/artifacts/build-temp" uv run --offline --with matplotlib python scripts/draw_actuator_families.py
 ```
+
+## Selected completed coil run
+
+![Actual CAD, accepted fluid sections and pulse history](selected-coil-run.png)
+
+This lower-fill custom chamber showed the clearest final phase redistribution among the three matched single-pulse coil comparisons. That selection does not establish the best possible coil geometry or successful jetting. Neither driven nor unpowered control produced a detached region. Some motion also occurs in the unpowered startup; the pictured speed is total simulated speed, not the difference caused by the coil.
+
+The CAD comes from the exact geometry referenced by `artifacts/hardware-research/cases/coil-low-fill-flow-v1/low-fill-250A-flow-h020.mhd.json`. Fluid panels use that run's accepted steps 300 and 1800 (150 µs and 2.1 ms). The pulse ends at 110 µs; no full fluid export was saved during the active pulse. The chart shows the prescribed current table and computed whole-domain maximum magnetic field from the same run's diagnostics. It does not substitute a stationary high-fill case's spatial fields.
+
+The velocity colour scale is shared by both fluid panels. Solid mask, velocity and liquid fraction are averaged over the two central y-cell layers. Liquid speed is shown only above liquid fraction 0.5 and open fraction 0.5. Geometry lines and coil envelopes are in the CAD panel; the simulation panels preserve the coarse native grid. [Matched-control assessment](../coil-low-fill-flow-comparison.json).
+
+Regenerate with `TMPDIR="$PWD/artifacts/build-temp" uv run --offline --with manifold3d --with matplotlib python scripts/plot_coil_selected_run.py`. This reads saved data and performs no new simulation.
