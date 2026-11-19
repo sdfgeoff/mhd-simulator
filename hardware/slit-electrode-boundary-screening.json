@@ -1,0 +1,66 @@
+{
+  "scope": "Stationary body-vs-xends control on identical fine geometry/domain; no flow validation",
+  "body_source": "artifacts/hardware-research/split-slit-chargefix-v1-steel-body-h0050",
+  "whole_liquid_force_N": 0.003403488648884556,
+  "outlet_force_N": 0.001917612761298605,
+  "whole_force_relative_difference_from_xends": -0.037906664052809624,
+  "outlet_force_relative_difference_from_xends": 0.05538653146922834,
+  "limits": [
+    "Same imposedB/source geometry; both are static, ideal-joint material screens.",
+    "Electrode equipotential approximation changes the spatial current path as well as omitting lead resistance.",
+    "Flow domain/omitted-heater changes are not included in this control."
+  ],
+  "flow_setup_xends_control": {
+    "source": "artifacts/hardware-research/split-slit-steel-flowsetup-xends-h0050",
+    "report": {
+      "boundary_current_defect": 3.006037161412678e-07,
+      "contact_resistivity_ohm_m2": 0.0,
+      "current_A": 30.0,
+      "iterations": 544,
+      "joule_power_W": 0.3006551265716553,
+      "limitations": [
+        "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+        "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+        "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+        "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+        "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+      ],
+      "liquid_force_N": [
+        1.5303556803208346e-10,
+        1.3894770253843598e-10,
+        -0.003545183079213389
+      ],
+      "liquid_joule_power_W": 0.08302473828582582,
+      "liquid_mean_By_T": -0.2560187632787116,
+      "mean_liquid_current_over_x_plus_minus_2mm_A": 1.8627954292379436,
+      "mean_wall_current_over_x_plus_minus_2mm_A": 1.0639707645316085,
+      "midplane_adjacent_cell_liquid_current_A": 25.653224614361903,
+      "midplane_adjacent_cell_wall_current_A": 4.346785755605877,
+      "potential_representation": "split f32 high/low",
+      "power_definition": "sum terminal phi*I on both ports",
+      "power_relative_defect": -1.7881393432617188e-06,
+      "project": "artifacts/hardware-research/cases/split-slit-steel-flow-h0050.mhd.json",
+      "released_static_workspace_bytes": 1700838920,
+      "requested_relative_tolerance": 9.999999974752427e-07,
+      "return_current_A": -29.999980926513672,
+      "source_power_W": 0.30065566301345825,
+      "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+      "terminal_boundary": "x-ends",
+      "terminal_voltage_V": 0.010021858848631382,
+      "terminal_x_cell_indices": [
+        0,
+        151
+      ],
+      "true_relative_residual": 9.866902246358222e-07
+    },
+    "outlet_force_N_q3": 0.0018074648555498974,
+    "reference_full_domain_outlet_force_N_q3": 0.0018072789474411744,
+    "outlet_force_relative_difference": 0.00010286630571676447,
+    "whole_liquid_force_relative_difference": 0.002147316207968153,
+    "scope": "Combined crop and omitted-heater test, finite-conductivity electrodes supplied atxends. Same initial geometry and appliedq3B; not a moving-interface domain test.",
+    "limits": [
+      "Reduced-domain voltage excludes outside copper resistance. Add missing leads and real contacts for a drive budget.",
+      "Initial force agreement does not establish moving-flow domain or wetting accuracy."
+    ]
+  }
+}

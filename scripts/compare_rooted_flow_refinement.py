@@ -6,8 +6,8 @@ import json
 from pathlib import Path
 
 root = Path("artifacts/hardware-research")
-coarse = root / "m6-rooted08-flow110-r25-compactgas-h010"
-fine = root / "m6-rooted08-flow110-r25-compactgas-h0050"
+coarse = root / "m6-rooted08-flow110-r25-chargefix-h010"
+fine = root / "m6-rooted08-flow110-r25-chargefix-h0050"
 required = [
     p / f for p in [coarse, fine] for f in ["run-status.json", "flow-analysis.json"]
 ]
@@ -23,8 +23,16 @@ cs, fs = [read(p / "run-status.json") for p in [coarse, fine]]
 ca, fa = [read(p / "flow-analysis.json") for p in [coarse, fine]]
 if cs["status"] != "complete" or fs["status"] != "complete":
     raise SystemExit("Native run incomplete; no comparison written")
-if cs["accepted_steps"] != 1200 or fs["accepted_steps"] != 1320:
+if cs["accepted_steps"] != 1200 or fs["accepted_steps"] != 2400:
     raise ValueError("Unexpected step counts")
+for status in [cs, fs]:
+    if (
+        status["accepted_steps"] != status["requested_steps"]
+        or status["charge_solver"] != "conservative-split-f32-v1"
+    ):
+        raise ValueError("Expected completed conservative-charge runs")
+    if status["max_charge_boundary_current_defect"] > 1e-5:
+        raise ValueError("Charge conservation gate failed")
 cp, fp = [read(Path(s["project"])) for s in [cs, fs]]
 cp_check, fp_check = copy.deepcopy(cp), copy.deepcopy(fp)
 del cp_check["domain"]["cell_mm"], fp_check["domain"]["cell_mm"]
@@ -40,7 +48,7 @@ for key in [
     "frequency_hz",
     "uniform_acceleration_m_s2",
     "periodic_fluid_axes",
-    "tail_timestep_s",
+    "terminal_boundary",
 ]:
     if cs[key] != fs[key]:
         raise ValueError("Drive/physics mismatch: " + key)
@@ -48,6 +56,11 @@ if abs(fs["grid"]["cell_m"] / cs["grid"]["cell_m"] - 0.5) > 1e-5:
     raise ValueError("Unexpected cell spacing ratio")
 if abs(fs["timestep_s"] / cs["timestep_s"] - 0.5) > 1e-5:
     raise ValueError("Unexpected forced-step ratio")
+if (
+    fs["tail_timestep_s"] != fs["timestep_s"]
+    or cs["tail_timestep_s"] != cs["timestep_s"]
+):
+    raise ValueError("Expected uniform common timesteps")
 if abs(fs["time_s"] - cs["time_s"]) > max(cs["tail_timestep_s"], fs["tail_timestep_s"]):
     raise ValueError("Final times differ by more than one tail step")
 summaries = []
@@ -132,7 +145,7 @@ record = {
     - 1,
     "final_time_difference_us": (fs["time_s"] - cs["time_s"]) * 1e6,
     "limits": [
-        "Space and forced-pulse timestep change together. Tail timestep is unchanged. Their separate effects are not isolated.",
+        "Space and the uniform common timestep change together by a factor of two. Their separate effects are not isolated.",
         "Discrete aperture and initial pool volume change with voxelization. This pair includes geometry-resolution effects.",
         "Largest detached component is selected independently at each threshold/run. All final components are preserved; this selection alone does not establish corresponding droplets or clean single-drop release.",
         "Saved component thresholds and a finite number of exports do not certify pinch-off or absence of satellites between frames.",

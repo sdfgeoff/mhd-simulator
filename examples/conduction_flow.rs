@@ -25,7 +25,7 @@ fn pulse_current(t: f64, duration: f64, rise: f64, peak: f32, retract: f32, dela
 fn main() -> Result<(), Box<dyn Error>> {
     let a: Vec<_> = std::env::args().collect();
     let mut p = project::load(Path::new(a.get(1).ok_or(
-        "Expected PROJECT PEAK_A POSITIVE_US STEPS OUTPUT [CONTACT] [RETRACT_FRACTION] [DT_US] [REPEAT_HZ] [FIELD_EVERY] [TAIL_DT_US] [RETRACT_DELAY_US]",
+        "Expected PROJECT PEAK_A POSITIVE_US STEPS OUTPUT [CONTACT] [RETRACT_FRACTION] [DT_US] [REPEAT_HZ] [FIELD_EVERY] [TAIL_DT_US] [RETRACT_DELAY_US] [body|x-ends]",
     )?))?;
     let peak: f32 = a.get(2).ok_or("Missing current")?.parse()?;
     let duration: f64 = a.get(3).ok_or("Missing duration")?.parse::<f64>()? * 1e-6;
@@ -55,6 +55,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         .map(|s| s.parse::<f64>().map(|v| v * 1e-6))
         .transpose()?
         .unwrap_or(25e-6);
+    let terminal_boundary = a.get(13).map(String::as_str).unwrap_or("body");
+    if !matches!(terminal_boundary, "body" | "x-ends") {
+        return Err("Choose body or x-ends terminal boundary".into());
+    }
     if !peak.is_finite()
         || peak < 0.
         || !duration.is_finite()
@@ -96,6 +100,20 @@ fn main() -> Result<(), Box<dyn Error>> {
         volume.material_ids().size(),
     )?;
     let ids = bytemuck::cast_slice::<u8, u32>(&bytes);
+    let terminal_x = [
+        ids.iter()
+            .enumerate()
+            .filter(|(_, id)| **id == 16)
+            .map(|(i, _)| i % grid.dims[0] as usize)
+            .min()
+            .ok_or("No positive electrode")?,
+        ids.iter()
+            .enumerate()
+            .filter(|(_, id)| **id == 17)
+            .map(|(i, _)| i % grid.dims[0] as usize)
+            .max()
+            .ok_or("No negative electrode")?,
+    ];
     let mut table = [0.; 256];
     for m in &p.materials {
         if m.id < 256 {
@@ -104,12 +122,21 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
     let cells: Vec<_> = ids
         .iter()
-        .map(|&id| {
+        .enumerate()
+        .map(|(i, &id)| {
             [
                 table[id as usize],
                 match id {
-                    16 => 0.5,
-                    17 => -0.5,
+                    16 if terminal_boundary == "body"
+                        || i % grid.dims[0] as usize == terminal_x[0] =>
+                    {
+                        0.5
+                    }
+                    17 if terminal_boundary == "body"
+                        || i % grid.dims[0] as usize == terminal_x[1] =>
+                    {
+                        -0.5
+                    }
                     0 | 4 => 3.,
                     _ => 2.,
                 },
@@ -257,7 +284,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         performance.push_str(&report.csv_rows());
     }
     std::fs::write(out.join("performance.csv"), performance)?;
-    let report = serde_json::json!({"project":a[1],"uniform_acceleration_m_s2":p.fluid.acceleration_m_s2,"periodic_fluid_axes":p.fluid.periodic,"released_static_workspace_bytes":released_static_workspace_bytes,"status":if error.is_some(){"failed"}else{"complete"},"error":error,"accepted_steps":run.steps,"requested_steps":steps,"charge_solver":"conservative-split-f32-v1","time_s":run.time_s,"peak_A":peak,"timestep_s":dt_s,"tail_timestep_s":tail_dt_s,"tail_transition_not_before_s":duration*4./3.+retract_delay_s,"frequency_hz":frequency_hz,"field_every":field_every,"grid":{"dims":grid.dims,"cell_m":grid.cell_m},"positive_duration_s":duration,"rise_s":rise,"retract_fraction":retract,"retract_delay_s":retract_delay_s,"contact_resistivity_ohm_m2":contact,"max_terminal_voltage_V":max_voltage,"max_charge_boundary_current_defect":max_boundary_defect,"charge_potential_representation":"split f32 high/low","electrical_work_definition":"sum terminal phi*I on both ports","joule_generated_J":joule,"lagged_electrical_work_J":electrical,"lagged_mechanical_work_J":lagged_mechanical,"fluid_mechanical_work_J":run.energy.external_work_j,"method":"GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.","limitations":["Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.","Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.","Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.","New research client; not a GUI electrode feature or frozen-baseline claim."]});
+    let report = serde_json::json!({"project":a[1],"terminal_boundary":terminal_boundary,"terminal_x_cell_indices":terminal_x,"uniform_acceleration_m_s2":p.fluid.acceleration_m_s2,"periodic_fluid_axes":p.fluid.periodic,"released_static_workspace_bytes":released_static_workspace_bytes,"status":if error.is_some(){"failed"}else{"complete"},"error":error,"accepted_steps":run.steps,"requested_steps":steps,"charge_solver":"conservative-split-f32-v1","charge_requested_relative_tolerance":current.relative_tolerance(),"time_s":run.time_s,"peak_A":peak,"timestep_s":dt_s,"tail_timestep_s":tail_dt_s,"tail_transition_not_before_s":duration*4./3.+retract_delay_s,"frequency_hz":frequency_hz,"field_every":field_every,"grid":{"dims":grid.dims,"cell_m":grid.cell_m},"positive_duration_s":duration,"rise_s":rise,"retract_fraction":retract,"retract_delay_s":retract_delay_s,"contact_resistivity_ohm_m2":contact,"max_terminal_voltage_V":max_voltage,"max_charge_boundary_current_defect":max_boundary_defect,"charge_potential_representation":"split f32 high/low","electrical_work_definition":"sum terminal phi*I on both ports","joule_generated_J":joule,"lagged_electrical_work_J":electrical,"lagged_mechanical_work_J":lagged_mechanical,"fluid_mechanical_work_J":run.energy.external_work_j,"method":"GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.","limitations":["Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.","Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.","Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.","New research client; not a GUI electrode feature or frozen-baseline claim."]});
     std::fs::write(
         out.join("run-status.json"),
         serde_json::to_vec_pretty(&report)?,

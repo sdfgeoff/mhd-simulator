@@ -316,6 +316,9 @@ impl Conduction {
         self.write_params();
         Ok(())
     }
+    pub fn relative_tolerance(&self) -> f32 {
+        self.params.physical[2]
+    }
     pub fn set_contact_resistivity(&mut self, resistance_ohm_m2: f32) -> Result<(), String> {
         if !resistance_ohm_m2.is_finite() || resistance_ohm_m2 < 0. {
             return Err("Invalid contact resistivity".into());

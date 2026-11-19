@@ -1,12 +1,20 @@
 """Prepare open-slit native flow inputs; does not launch or qualify a run."""
 
+import argparse
 import copy
 import json
 from pathlib import Path
 
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument(
+    "--case",
+    choices=["alumina", "steel", "steel_touch", "alumina_touch"],
+    default="alumina",
+)
+args = parser.parse_args()
 source = Path("hardware/designs/split-slit-review")
 output = Path("artifacts/hardware-research/cases")
-base = json.loads((source / "alumina-observer.mhd.json").read_text())
+base = json.loads((source / (args.case + "-observer.mhd.json")).read_text())
 if not base["bodies"][9]["name"].startswith("Heated aluminium block"):
     raise ValueError("Unexpected body order; identify the heater before omitting it")
 base["geometry"] = str((source / base["geometry"]).resolve())
@@ -22,7 +30,7 @@ for cell, label in [(0.1, "h010"), (0.05, "h0050")]:
     project["bodies"][9]["simulation"]["included"] = False
     for magnet in project["electromagnetics"]["magnets"]:
         magnet["subdivisions"] = 3
-    path = output / ("split-slit-alumina-flow-" + label + ".mhd.json")
+    path = output / ("split-slit-" + args.case + "-flow-" + label + ".mhd.json")
     if path.exists():
         if json.loads(path.read_text()) != project:
             raise ValueError("Existing flow input differs: " + str(path))
@@ -38,6 +46,7 @@ for cell, label in [(0.1, "h010"), (0.05, "h0050")]:
     )
 record = {
     "status": "Prepared exploratory inputs only; no slit flow result",
+    "case": args.case,
     "cases": rows,
     "limits": [
         "The full gap between plates is open. No artificial end plugs constrain wetting to the initial1mm bore footprint.",
@@ -49,6 +58,6 @@ record = {
         "The initial liquid volume and hydraulic geometry differ from the circular nozzle. Its110A pulse is not transferred as a qualified operating point.",
     ],
 }
-path = output / "split-slit-flow-preparation.json"
+path = output / ("split-slit-" + args.case + "-flow-preparation.json")
 path.write_text(json.dumps(record, indent=2) + "\n")
 print(path)

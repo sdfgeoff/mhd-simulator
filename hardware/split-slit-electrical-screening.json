@@ -1,0 +1,914 @@
+{
+  "status": "Completed stationary electrical and outlet applied-field screens; no slit jetting result",
+  "plan": {
+    "scope": "Cold stationary current/bypass and imposed-PM-field comparisons only; no slit ejection, thermal, material-lifetime or seal qualification.",
+    "current_A": 30,
+    "contact_resistivity_ohm_m2": 0,
+    "terminal_boundary": "x-ends",
+    "relative_tolerance": 1e-06,
+    "boundary_current_defect_limit": 1e-05,
+    "tag": "chargefix-v1",
+    "solver_sources_sha256": {
+      "examples/conduction/gpu.rs": "25bf4a605bb7d6e48f6b813438ec7d065e22eeed9a98738eef25a38c3e3d76f8",
+      "examples/conduction/solver.wgsl": "491ca5a8eca57005a843b6a1b4c60b60b441616ec9a4fcbf0dda1d877e1c8eb4",
+      "examples/conduction_probe.rs": "9edb76785323164ac0532c26b05d2713c1f577b96e7dbed3bfa6c32157257b90"
+    },
+    "probe_binary_sha256": "7cacbd7a6e7cc6e23fd0ec3878861b243ff4ee1d41dfd9e021244344a8ba9f83",
+    "jobs": [
+      {
+        "label": "alumina",
+        "kind": "wide-h010",
+        "output": "artifacts/hardware-research/split-slit-chargefix-v1-alumina-wide-h010",
+        "command": [
+          "target/debug/examples/conduction_probe",
+          "hardware/designs/split-slit-review/alumina-charge-h010.mhd.json",
+          "30",
+          "artifacts/hardware-research/split-slit-chargefix-v1-alumina-wide-h010",
+          "0",
+          "x-ends",
+          "1e-06"
+        ]
+      },
+      {
+        "label": "alumina",
+        "kind": "narrow-h010",
+        "output": "artifacts/hardware-research/split-slit-chargefix-v1-alumina-narrow-h010",
+        "command": [
+          "target/debug/examples/conduction_probe",
+          "artifacts/hardware-research/cases/split-slit-chargefix-v1-alumina-narrow-h010.mhd.json",
+          "30",
+          "artifacts/hardware-research/split-slit-chargefix-v1-alumina-narrow-h010",
+          "0",
+          "x-ends",
+          "1e-06"
+        ]
+      },
+      {
+        "label": "steel",
+        "kind": "wide-h010",
+        "output": "artifacts/hardware-research/split-slit-chargefix-v1-steel-wide-h010",
+        "command": [
+          "target/debug/examples/conduction_probe",
+          "hardware/designs/split-slit-review/steel-charge-h010.mhd.json",
+          "30",
+          "artifacts/hardware-research/split-slit-chargefix-v1-steel-wide-h010",
+          "0",
+          "x-ends",
+          "1e-06"
+        ]
+      },
+      {
+        "label": "steel",
+        "kind": "narrow-h010",
+        "output": "artifacts/hardware-research/split-slit-chargefix-v1-steel-narrow-h010",
+        "command": [
+          "target/debug/examples/conduction_probe",
+          "artifacts/hardware-research/cases/split-slit-chargefix-v1-steel-narrow-h010.mhd.json",
+          "30",
+          "artifacts/hardware-research/split-slit-chargefix-v1-steel-narrow-h010",
+          "0",
+          "x-ends",
+          "1e-06"
+        ]
+      },
+      {
+        "label": "steel_touch",
+        "kind": "wide-h010",
+        "output": "artifacts/hardware-research/split-slit-chargefix-v1-steel_touch-wide-h010",
+        "command": [
+          "target/debug/examples/conduction_probe",
+          "hardware/designs/split-slit-review/steel_touch-charge-h010.mhd.json",
+          "30",
+          "artifacts/hardware-research/split-slit-chargefix-v1-steel_touch-wide-h010",
+          "0",
+          "x-ends",
+          "1e-06"
+        ]
+      },
+      {
+        "label": "steel_touch",
+        "kind": "narrow-h010",
+        "output": "artifacts/hardware-research/split-slit-chargefix-v1-steel_touch-narrow-h010",
+        "command": [
+          "target/debug/examples/conduction_probe",
+          "artifacts/hardware-research/cases/split-slit-chargefix-v1-steel_touch-narrow-h010.mhd.json",
+          "30",
+          "artifacts/hardware-research/split-slit-chargefix-v1-steel_touch-narrow-h010",
+          "0",
+          "x-ends",
+          "1e-06"
+        ]
+      },
+      {
+        "label": "alumina_touch",
+        "kind": "wide-h010",
+        "output": "artifacts/hardware-research/split-slit-chargefix-v1-alumina_touch-wide-h010",
+        "command": [
+          "target/debug/examples/conduction_probe",
+          "hardware/designs/split-slit-review/alumina_touch-charge-h010.mhd.json",
+          "30",
+          "artifacts/hardware-research/split-slit-chargefix-v1-alumina_touch-wide-h010",
+          "0",
+          "x-ends",
+          "1e-06"
+        ]
+      },
+      {
+        "label": "alumina_touch",
+        "kind": "narrow-h010",
+        "output": "artifacts/hardware-research/split-slit-chargefix-v1-alumina_touch-narrow-h010",
+        "command": [
+          "target/debug/examples/conduction_probe",
+          "artifacts/hardware-research/cases/split-slit-chargefix-v1-alumina_touch-narrow-h010.mhd.json",
+          "30",
+          "artifacts/hardware-research/split-slit-chargefix-v1-alumina_touch-narrow-h010",
+          "0",
+          "x-ends",
+          "1e-06"
+        ]
+      },
+      {
+        "label": "common",
+        "kind": "field-h0050",
+        "output": "artifacts/hardware-research/split-slit-chargefix-v1-field-h0050",
+        "command": [
+          "target/debug/examples/applied_probe",
+          "hardware/designs/split-slit-review/alumina-observer.mhd.json",
+          "artifacts/hardware-research/split-slit-chargefix-v1-field-h0050"
+        ]
+      },
+      {
+        "label": "alumina",
+        "kind": "narrow-h0050",
+        "output": "artifacts/hardware-research/split-slit-chargefix-v1-alumina-narrow-h0050",
+        "command": [
+          "target/debug/examples/conduction_probe",
+          "hardware/designs/split-slit-review/alumina-charge.mhd.json",
+          "30",
+          "artifacts/hardware-research/split-slit-chargefix-v1-alumina-narrow-h0050",
+          "0",
+          "x-ends",
+          "1e-06"
+        ]
+      },
+      {
+        "label": "steel",
+        "kind": "narrow-h0050",
+        "output": "artifacts/hardware-research/split-slit-chargefix-v1-steel-narrow-h0050",
+        "command": [
+          "target/debug/examples/conduction_probe",
+          "hardware/designs/split-slit-review/steel-charge.mhd.json",
+          "30",
+          "artifacts/hardware-research/split-slit-chargefix-v1-steel-narrow-h0050",
+          "0",
+          "x-ends",
+          "1e-06"
+        ]
+      },
+      {
+        "label": "steel_touch",
+        "kind": "narrow-h0050",
+        "output": "artifacts/hardware-research/split-slit-chargefix-v1-steel_touch-narrow-h0050",
+        "command": [
+          "target/debug/examples/conduction_probe",
+          "hardware/designs/split-slit-review/steel_touch-charge.mhd.json",
+          "30",
+          "artifacts/hardware-research/split-slit-chargefix-v1-steel_touch-narrow-h0050",
+          "0",
+          "x-ends",
+          "1e-06"
+        ]
+      },
+      {
+        "label": "alumina_touch",
+        "kind": "narrow-h0050",
+        "output": "artifacts/hardware-research/split-slit-chargefix-v1-alumina_touch-narrow-h0050",
+        "command": [
+          "target/debug/examples/conduction_probe",
+          "hardware/designs/split-slit-review/alumina_touch-charge.mhd.json",
+          "30",
+          "artifacts/hardware-research/split-slit-chargefix-v1-alumina_touch-narrow-h0050",
+          "0",
+          "x-ends",
+          "1e-06"
+        ]
+      }
+    ],
+    "controls": [
+      "Compare full/narrow anchor width at the same100um spacing before interpreting50um results.",
+      "Compare conducting/insulating chamber and deliberate electrode-to-holder bridges.",
+      "Field observer is common: all cases have identical PM source geometry and identical liquid/Cu occupancy in the observation region; unit permeability, no field reaction.",
+      "Fixed conductivity assumptions do not constitute a hot aluminium/copper comparison."
+    ]
+  },
+  "cases": [
+    {
+      "label": "alumina",
+      "cases": {
+        "wide-h010": {
+          "source": "artifacts/hardware-research/split-slit-chargefix-v1-alumina-wide-h010",
+          "report": {
+            "boundary_current_defect": 6.997735795266635e-07,
+            "contact_resistivity_ohm_m2": 0.0,
+            "current_A": 29.999996185302734,
+            "iterations": 608,
+            "joule_power_W": 1.1035270690917969,
+            "limitations": [
+              "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+              "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+              "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+              "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+              "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+            ],
+            "liquid_force_N": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "liquid_joule_power_W": 0.13077089798055674,
+            "liquid_mean_By_T": 0.0,
+            "mean_liquid_current_over_x_plus_minus_2mm_A": 1.9330998374313435,
+            "mean_wall_current_over_x_plus_minus_2mm_A": 0.0,
+            "midplane_adjacent_cell_liquid_current_A": 30.000396871941632,
+            "midplane_adjacent_cell_wall_current_A": 0.0,
+            "potential_representation": "split f32 high/low",
+            "power_definition": "sum terminal phi*I on both ports",
+            "power_relative_defect": 5.9604644775390625e-06,
+            "project": "hardware/designs/split-slit-review/alumina-charge-h010.mhd.json",
+            "released_static_workspace_bytes": 0,
+            "requested_relative_tolerance": 9.999999974752427e-07,
+            "return_current_A": -29.999954223632812,
+            "source_power_W": 1.1035205125808716,
+            "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+            "terminal_boundary": "x-ends",
+            "terminal_voltage_V": 0.03678404912352562,
+            "terminal_x_cell_indices": [
+              0,
+              249
+            ],
+            "true_relative_residual": 9.620672472010483e-07
+          },
+          "R_ohm_cropped": 0.0012261351266953313,
+          "liquid_Joule_fraction": 0.11850266445043459
+        },
+        "narrow-h010": {
+          "source": "artifacts/hardware-research/split-slit-chargefix-v1-alumina-narrow-h010",
+          "report": {
+            "boundary_current_defect": 2.568170202721376e-06,
+            "contact_resistivity_ohm_m2": 0.0,
+            "current_A": 30.000003814697266,
+            "iterations": 512,
+            "joule_power_W": 1.118337869644165,
+            "limitations": [
+              "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+              "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+              "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+              "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+              "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+            ],
+            "liquid_force_N": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "liquid_joule_power_W": 0.13076789176818207,
+            "liquid_mean_By_T": 0.0,
+            "mean_liquid_current_over_x_plus_minus_2mm_A": 1.9330729100436386,
+            "mean_wall_current_over_x_plus_minus_2mm_A": 0.0,
+            "midplane_adjacent_cell_liquid_current_A": 30.000020085623852,
+            "midplane_adjacent_cell_wall_current_A": 0.0,
+            "potential_representation": "split f32 high/low",
+            "power_definition": "sum terminal phi*I on both ports",
+            "power_relative_defect": 2.384185791015625e-06,
+            "project": "artifacts/hardware-research/cases/split-slit-chargefix-v1-alumina-narrow-h010.mhd.json",
+            "released_static_workspace_bytes": 0,
+            "requested_relative_tolerance": 9.999999974752427e-07,
+            "return_current_A": -30.00015640258789,
+            "source_power_W": 1.118335247039795,
+            "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+            "terminal_boundary": "x-ends",
+            "terminal_voltage_V": 0.037277743220329285,
+            "terminal_x_cell_indices": [
+              0,
+              249
+            ],
+            "true_relative_residual": 9.960266424968722e-07
+          },
+          "R_ohm_cropped": 0.0012425912826739905,
+          "liquid_Joule_fraction": 0.11693057645431434
+        },
+        "narrow-h0050": {
+          "source": "artifacts/hardware-research/split-slit-chargefix-v1-alumina-narrow-h0050",
+          "report": {
+            "boundary_current_defect": 5.247380158834858e-06,
+            "contact_resistivity_ohm_m2": 0.0,
+            "current_A": 30.0,
+            "iterations": 896,
+            "joule_power_W": 1.1146948337554932,
+            "limitations": [
+              "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+              "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+              "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+              "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+              "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+            ],
+            "liquid_force_N": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "liquid_joule_power_W": 0.1289158698687834,
+            "liquid_mean_By_T": 0.0,
+            "mean_liquid_current_over_x_plus_minus_2mm_A": 1.917938675850942,
+            "mean_wall_current_over_x_plus_minus_2mm_A": 0.0,
+            "midplane_adjacent_cell_liquid_current_A": 29.99951174111097,
+            "midplane_adjacent_cell_wall_current_A": 0.0,
+            "potential_representation": "split f32 high/low",
+            "power_definition": "sum terminal phi*I on both ports",
+            "power_relative_defect": 2.6226043701171875e-06,
+            "project": "hardware/designs/split-slit-review/alumina-charge.mhd.json",
+            "released_static_workspace_bytes": 0,
+            "requested_relative_tolerance": 9.999999974752427e-07,
+            "return_current_A": -29.99968719482422,
+            "source_power_W": 1.114691972732544,
+            "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+            "terminal_boundary": "x-ends",
+            "terminal_voltage_V": 0.037156593054533005,
+            "terminal_x_cell_indices": [
+              0,
+              499
+            ],
+            "true_relative_residual": 9.8337511644786e-07
+          },
+          "R_ohm_cropped": 0.0012385531018177668,
+          "liquid_Joule_fraction": 0.11565126702386863,
+          "outlet_region_downward_force_N": 0.002277125108636978,
+          "outlet_region_force_N_per_terminal_A": 7.590417028789927e-05,
+          "outlet_liquid_volume_mm3": 0.10000001424923606,
+          "outlet_liquid_By_mean_T": -0.4875501384958625,
+          "outlet_liquid_By_range_T": [
+            -0.4942361116409302,
+            -0.48069629073143005
+          ],
+          "cell_centred_midplane_current_by_material_A": {
+            "4": 29.999511741110965,
+            "7": 0.0,
+            "8": 0.0,
+            "14": 0.0,
+            "18": 0.0
+          },
+          "cell_centred_midplane_sum_over_terminal_current": 0.9999837247036988,
+          "cell_centred_midplane_liquid_fraction": 1.0,
+          "whole_initial_liquid_downward_force_N_reused_q3": 0.003712553779647767,
+          "whole_initial_liquid_force_N_per_terminal_A_reused_q3": 0.00012375179265492557,
+          "whole_initial_liquid_volume_mm3": 4.445000633378543
+        }
+      },
+      "narrow_minus_wide_relative_R_at100um": 0.013421160213402894,
+      "fine_minus_coarse_relative_R_narrow": -0.003249806201387262
+    },
+    {
+      "label": "steel",
+      "cases": {
+        "wide-h010": {
+          "source": "artifacts/hardware-research/split-slit-chargefix-v1-steel-wide-h010",
+          "report": {
+            "boundary_current_defect": 1.3830587874963385e-07,
+            "contact_resistivity_ohm_m2": 0.0,
+            "current_A": 29.999998092651367,
+            "iterations": 896,
+            "joule_power_W": 1.0675262212753296,
+            "limitations": [
+              "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+              "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+              "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+              "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+              "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+            ],
+            "liquid_force_N": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "liquid_joule_power_W": 0.0850802576440574,
+            "liquid_mean_By_T": 0.0,
+            "mean_liquid_current_over_x_plus_minus_2mm_A": 1.8811073724763798,
+            "mean_wall_current_over_x_plus_minus_2mm_A": 0.8872160821299799,
+            "midplane_adjacent_cell_liquid_current_A": 25.728161786812606,
+            "midplane_adjacent_cell_wall_current_A": 4.075933574314467,
+            "potential_representation": "split f32 high/low",
+            "power_definition": "sum terminal phi*I on both ports",
+            "power_relative_defect": -3.5762786865234375e-07,
+            "project": "hardware/designs/split-slit-review/steel-charge-h010.mhd.json",
+            "released_static_workspace_bytes": 0,
+            "requested_relative_tolerance": 9.999999974752427e-07,
+            "return_current_A": -30.0000057220459,
+            "source_power_W": 1.0675265789031982,
+            "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+            "terminal_boundary": "x-ends",
+            "terminal_voltage_V": 0.0355842188000679,
+            "terminal_x_cell_indices": [
+              0,
+              249
+            ],
+            "true_relative_residual": 9.528726252483466e-08
+          },
+          "R_ohm_cropped": 0.001186140702081725,
+          "liquid_Joule_fraction": 0.07969851788972032
+        },
+        "narrow-h010": {
+          "source": "artifacts/hardware-research/split-slit-chargefix-v1-steel-narrow-h010",
+          "report": {
+            "boundary_current_defect": 2.6602413072396303e-06,
+            "contact_resistivity_ohm_m2": 0.0,
+            "current_A": 30.0,
+            "iterations": 768,
+            "joule_power_W": 1.0823445320129395,
+            "limitations": [
+              "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+              "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+              "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+              "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+              "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+            ],
+            "liquid_force_N": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "liquid_joule_power_W": 0.08508227287131793,
+            "liquid_mean_By_T": 0.0,
+            "mean_liquid_current_over_x_plus_minus_2mm_A": 1.8821362846222562,
+            "mean_wall_current_over_x_plus_minus_2mm_A": 0.9276741353968746,
+            "midplane_adjacent_cell_liquid_current_A": 25.7334849947548,
+            "midplane_adjacent_cell_wall_current_A": 4.122842548085767,
+            "potential_representation": "split f32 high/low",
+            "power_definition": "sum terminal phi*I on both ports",
+            "power_relative_defect": 0.0,
+            "project": "artifacts/hardware-research/cases/split-slit-chargefix-v1-steel-narrow-h010.mhd.json",
+            "released_static_workspace_bytes": 0,
+            "requested_relative_tolerance": 9.999999974752427e-07,
+            "return_current_A": -30.000160217285156,
+            "source_power_W": 1.0823445320129395,
+            "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+            "terminal_boundary": "x-ends",
+            "terminal_voltage_V": 0.03607805445790291,
+            "terminal_x_cell_indices": [
+              0,
+              249
+            ],
+            "true_relative_residual": 9.96828816823836e-07
+          },
+          "R_ohm_cropped": 0.0012026018152634303,
+          "liquid_Joule_fraction": 0.07860923241611643
+        },
+        "narrow-h0050": {
+          "source": "artifacts/hardware-research/split-slit-chargefix-v1-steel-narrow-h0050",
+          "report": {
+            "boundary_current_defect": 5.218567821430042e-06,
+            "contact_resistivity_ohm_m2": 0.0,
+            "current_A": 30.0,
+            "iterations": 1440,
+            "joule_power_W": 1.0785077810287476,
+            "limitations": [
+              "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+              "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+              "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+              "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+              "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+            ],
+            "liquid_force_N": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "liquid_joule_power_W": 0.08300201281332435,
+            "liquid_mean_By_T": 0.0,
+            "mean_liquid_current_over_x_plus_minus_2mm_A": 1.8541208066316546,
+            "mean_wall_current_over_x_plus_minus_2mm_A": 0.923087020768783,
+            "midplane_adjacent_cell_liquid_current_A": 25.60763017334244,
+            "midplane_adjacent_cell_wall_current_A": 4.248491870039173,
+            "potential_representation": "split f32 high/low",
+            "power_definition": "sum terminal phi*I on both ports",
+            "power_relative_defect": -1.5497207641601562e-06,
+            "project": "hardware/designs/split-slit-review/steel-charge.mhd.json",
+            "released_static_workspace_bytes": 0,
+            "requested_relative_tolerance": 9.999999974752427e-07,
+            "return_current_A": -29.99968910217285,
+            "source_power_W": 1.0785094499588013,
+            "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+            "terminal_boundary": "x-ends",
+            "terminal_voltage_V": 0.03595050051808357,
+            "terminal_x_cell_indices": [
+              0,
+              499
+            ],
+            "true_relative_residual": 9.981990842788946e-07
+          },
+          "R_ohm_cropped": 0.0011983500172694525,
+          "liquid_Joule_fraction": 0.07696005005559801,
+          "outlet_region_downward_force_N": 0.0018169767228591134,
+          "outlet_region_force_N_per_terminal_A": 6.0565890761970444e-05,
+          "outlet_liquid_volume_mm3": 0.10000001424923606,
+          "outlet_liquid_By_mean_T": -0.4875501384958625,
+          "outlet_liquid_By_range_T": [
+            -0.4942361116409302,
+            -0.48069629073143005
+          ],
+          "cell_centred_midplane_current_by_material_A": {
+            "4": 25.607630173342454,
+            "8": 0.1433196183314291,
+            "14": 4.248491870039206,
+            "18": 0.0
+          },
+          "cell_centred_midplane_sum_over_terminal_current": 0.9999813887237696,
+          "cell_centred_midplane_liquid_fraction": 0.853603559096378,
+          "whole_initial_liquid_downward_force_N_reused_q3": 0.0035375867618226333,
+          "whole_initial_liquid_force_N_per_terminal_A_reused_q3": 0.00011791955872742111,
+          "whole_initial_liquid_volume_mm3": 4.445000633378543
+        }
+      },
+      "narrow_minus_wide_relative_R_at100um": 0.013877875662487105,
+      "fine_minus_coarse_relative_R_narrow": -0.0035354993980667437
+    },
+    {
+      "label": "steel_touch",
+      "cases": {
+        "wide-h010": {
+          "source": "artifacts/hardware-research/split-slit-chargefix-v1-steel_touch-wide-h010",
+          "report": {
+            "boundary_current_defect": 9.009877430798952e-07,
+            "contact_resistivity_ohm_m2": 0.0,
+            "current_A": 30.0,
+            "iterations": 2048,
+            "joule_power_W": 0.9765456914901733,
+            "limitations": [
+              "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+              "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+              "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+              "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+              "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+            ],
+            "liquid_force_N": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "liquid_joule_power_W": 0.04579704158947546,
+            "liquid_mean_By_T": 0.0,
+            "mean_liquid_current_over_x_plus_minus_2mm_A": 1.9470584851059587,
+            "mean_wall_current_over_x_plus_minus_2mm_A": 5.658631491350299,
+            "midplane_adjacent_cell_liquid_current_A": 21.408679413988743,
+            "midplane_adjacent_cell_wall_current_A": 6.611653501984473,
+            "potential_representation": "split f32 high/low",
+            "power_definition": "sum terminal phi*I on both ports",
+            "power_relative_defect": 1.5497207641601562e-06,
+            "project": "hardware/designs/split-slit-review/steel_touch-charge-h010.mhd.json",
+            "released_static_workspace_bytes": 0,
+            "requested_relative_tolerance": 9.999999974752427e-07,
+            "return_current_A": -30.00005340576172,
+            "source_power_W": 0.976544201374054,
+            "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+            "terminal_boundary": "x-ends",
+            "terminal_voltage_V": 0.032551445066928864,
+            "terminal_x_cell_indices": [
+              0,
+              249
+            ],
+            "true_relative_residual": 9.981942383774367e-08
+          },
+          "R_ohm_cropped": 0.0010850481688976289,
+          "liquid_Joule_fraction": 0.04689697777437411
+        },
+        "narrow-h010": {
+          "source": "artifacts/hardware-research/split-slit-chargefix-v1-steel_touch-narrow-h010",
+          "report": {
+            "boundary_current_defect": 3.7426561902975664e-06,
+            "contact_resistivity_ohm_m2": 0.0,
+            "current_A": 30.0,
+            "iterations": 1376,
+            "joule_power_W": 0.9914175868034363,
+            "limitations": [
+              "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+              "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+              "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+              "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+              "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+            ],
+            "liquid_force_N": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "liquid_joule_power_W": 0.0458829722494764,
+            "liquid_mean_By_T": 0.0,
+            "mean_liquid_current_over_x_plus_minus_2mm_A": 1.9575331487684393,
+            "mean_wall_current_over_x_plus_minus_2mm_A": 6.0598463967785205,
+            "midplane_adjacent_cell_liquid_current_A": 21.471002476510638,
+            "midplane_adjacent_cell_wall_current_A": 7.0838698316423985,
+            "potential_representation": "split f32 high/low",
+            "power_definition": "sum terminal phi*I on both ports",
+            "power_relative_defect": -1.7344951629638672e-05,
+            "project": "artifacts/hardware-research/cases/split-slit-chargefix-v1-steel_touch-narrow-h010.mhd.json",
+            "released_static_workspace_bytes": 0,
+            "requested_relative_tolerance": 9.999999974752427e-07,
+            "return_current_A": -29.999774932861328,
+            "source_power_W": 0.9914348125457764,
+            "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+            "terminal_boundary": "x-ends",
+            "terminal_voltage_V": 0.03304795175790787,
+            "terminal_x_cell_indices": [
+              0,
+              249
+            ],
+            "true_relative_residual": 9.936094329532352e-07
+          },
+          "R_ohm_cropped": 0.0011015983919302622,
+          "liquid_Joule_fraction": 0.04628016777210288
+        },
+        "narrow-h0050": {
+          "source": "artifacts/hardware-research/split-slit-chargefix-v1-steel_touch-narrow-h0050",
+          "report": {
+            "boundary_current_defect": 4.5958804548718035e-06,
+            "contact_resistivity_ohm_m2": 0.0,
+            "current_A": 30.0,
+            "iterations": 1472,
+            "joule_power_W": 0.9885765314102173,
+            "limitations": [
+              "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+              "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+              "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+              "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+              "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+            ],
+            "liquid_force_N": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "liquid_joule_power_W": 0.0450492922810539,
+            "liquid_mean_By_T": 0.0,
+            "mean_liquid_current_over_x_plus_minus_2mm_A": 1.9227656735660434,
+            "mean_wall_current_over_x_plus_minus_2mm_A": 5.981823899384946,
+            "midplane_adjacent_cell_liquid_current_A": 21.405059523156563,
+            "midplane_adjacent_cell_wall_current_A": 7.1422487627618665,
+            "potential_representation": "split f32 high/low",
+            "power_definition": "sum terminal phi*I on both ports",
+            "power_relative_defect": 2.2649765014648438e-06,
+            "project": "hardware/designs/split-slit-review/steel_touch-charge.mhd.json",
+            "released_static_workspace_bytes": 0,
+            "requested_relative_tolerance": 9.999999974752427e-07,
+            "return_current_A": -29.999723434448242,
+            "source_power_W": 0.9885743260383606,
+            "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+            "terminal_boundary": "x-ends",
+            "terminal_voltage_V": 0.032952629029750824,
+            "terminal_x_cell_indices": [
+              0,
+              499
+            ],
+            "true_relative_residual": 9.923879815687542e-07
+          },
+          "R_ohm_cropped": 0.001098420967658361,
+          "liquid_Joule_fraction": 0.045569858123973975,
+          "outlet_region_downward_force_N": 0.0013111518171643045,
+          "outlet_region_force_N_per_terminal_A": 4.370506057214348e-05,
+          "outlet_liquid_volume_mm3": 0.10000001424923606,
+          "outlet_liquid_By_mean_T": -0.4875501384958625,
+          "outlet_liquid_By_range_T": [
+            -0.4942361116409302,
+            -0.48069629073143005
+          ],
+          "cell_centred_midplane_current_by_material_A": {
+            "4": 21.405059523156556,
+            "8": 1.4520439173898858,
+            "14": 7.142248762761846,
+            "18": 0.0
+          },
+          "cell_centred_midplane_sum_over_terminal_current": 0.9999784067769429,
+          "cell_centred_midplane_liquid_fraction": 0.7135173912454028,
+          "whole_initial_liquid_downward_force_N_reused_q3": 0.003403957327336121,
+          "whole_initial_liquid_force_N_per_terminal_A_reused_q3": 0.00011346524424453737,
+          "whole_initial_liquid_volume_mm3": 4.445000633378543
+        }
+      },
+      "narrow_minus_wide_relative_R_at100um": 0.015252984620441001,
+      "fine_minus_coarse_relative_R_narrow": -0.002884376280119394
+    },
+    {
+      "label": "alumina_touch",
+      "cases": {
+        "wide-h010": {
+          "source": "artifacts/hardware-research/split-slit-chargefix-v1-alumina_touch-wide-h010",
+          "report": {
+            "boundary_current_defect": 1.3136101983945991e-07,
+            "contact_resistivity_ohm_m2": 0.0,
+            "current_A": 29.999996185302734,
+            "iterations": 2048,
+            "joule_power_W": 1.0074822902679443,
+            "limitations": [
+              "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+              "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+              "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+              "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+              "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+            ],
+            "liquid_force_N": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "liquid_joule_power_W": 0.07041412947461971,
+            "liquid_mean_By_T": 0.0,
+            "mean_liquid_current_over_x_plus_minus_2mm_A": 1.418695256588027,
+            "mean_wall_current_over_x_plus_minus_2mm_A": 3.4374785730937285,
+            "midplane_adjacent_cell_liquid_current_A": 22.014208647966715,
+            "midplane_adjacent_cell_wall_current_A": 4.498912984063248,
+            "potential_representation": "split f32 high/low",
+            "power_definition": "sum terminal phi*I on both ports",
+            "power_relative_defect": -1.5497207641601562e-06,
+            "project": "hardware/designs/split-slit-review/alumina_touch-charge-h010.mhd.json",
+            "released_static_workspace_bytes": 0,
+            "requested_relative_tolerance": 9.999999974752427e-07,
+            "return_current_A": -29.999988555908203,
+            "source_power_W": 1.0074838399887085,
+            "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+            "terminal_boundary": "x-ends",
+            "terminal_voltage_V": 0.03358280286192894,
+            "terminal_x_cell_indices": [
+              0,
+              249
+            ],
+            "true_relative_residual": 1.0036012554337503e-07
+          },
+          "R_ohm_cropped": 0.0011194269044067897,
+          "liquid_Joule_fraction": 0.06989118335359797
+        },
+        "narrow-h010": {
+          "source": "artifacts/hardware-research/split-slit-chargefix-v1-alumina_touch-narrow-h010",
+          "report": {
+            "boundary_current_defect": 8.338903967342048e-08,
+            "contact_resistivity_ohm_m2": 0.0,
+            "current_A": 30.000001907348633,
+            "iterations": 2176,
+            "joule_power_W": 1.0226540565490723,
+            "limitations": [
+              "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+              "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+              "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+              "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+              "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+            ],
+            "liquid_force_N": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "liquid_joule_power_W": 0.0706890893935646,
+            "liquid_mean_By_T": 0.0,
+            "mean_liquid_current_over_x_plus_minus_2mm_A": 1.4214627740482577,
+            "mean_wall_current_over_x_plus_minus_2mm_A": 4.050034534710203,
+            "midplane_adjacent_cell_liquid_current_A": 22.057148480152772,
+            "midplane_adjacent_cell_wall_current_A": 5.295643576340354,
+            "potential_representation": "split f32 high/low",
+            "power_definition": "sum terminal phi*I on both ports",
+            "power_relative_defect": 8.106231689453125e-06,
+            "project": "artifacts/hardware-research/cases/split-slit-chargefix-v1-alumina_touch-narrow-h010.mhd.json",
+            "released_static_workspace_bytes": 0,
+            "requested_relative_tolerance": 9.999999974752427e-07,
+            "return_current_A": -30.00000762939453,
+            "source_power_W": 1.0226457118988037,
+            "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+            "terminal_boundary": "x-ends",
+            "terminal_voltage_V": 0.03408818691968918,
+            "terminal_x_cell_indices": [
+              0,
+              249
+            ],
+            "true_relative_residual": 9.783991572476225e-08
+          },
+          "R_ohm_cropped": 0.001136272825080692,
+          "liquid_Joule_fraction": 0.06912316920944278
+        },
+        "narrow-h0050": {
+          "source": "artifacts/hardware-research/split-slit-chargefix-v1-alumina_touch-narrow-h0050",
+          "report": {
+            "boundary_current_defect": 4.785794317285763e-06,
+            "contact_resistivity_ohm_m2": 0.0,
+            "current_A": 30.0,
+            "iterations": 1536,
+            "joule_power_W": 1.019017219543457,
+            "limitations": [
+              "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+              "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+              "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+              "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+              "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+            ],
+            "liquid_force_N": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "liquid_joule_power_W": 0.06963560870635079,
+            "liquid_mean_By_T": 0.0,
+            "mean_liquid_current_over_x_plus_minus_2mm_A": 1.4098242356887374,
+            "mean_wall_current_over_x_plus_minus_2mm_A": 4.052461167263797,
+            "midplane_adjacent_cell_liquid_current_A": 22.048527121242152,
+            "midplane_adjacent_cell_wall_current_A": 5.3262444730460885,
+            "potential_representation": "split f32 high/low",
+            "power_definition": "sum terminal phi*I on both ports",
+            "power_relative_defect": 3.6954879760742188e-06,
+            "project": "hardware/designs/split-slit-review/alumina_touch-charge.mhd.json",
+            "released_static_workspace_bytes": 0,
+            "requested_relative_tolerance": 9.999999974752427e-07,
+            "return_current_A": -29.999713897705078,
+            "source_power_W": 1.0190134048461914,
+            "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+            "terminal_boundary": "x-ends",
+            "terminal_voltage_V": 0.033967275172472,
+            "terminal_x_cell_indices": [
+              0,
+              499
+            ],
+            "true_relative_residual": 9.943080385710346e-07
+          },
+          "R_ohm_cropped": 0.0011322425057490666,
+          "liquid_Joule_fraction": 0.06833604709599424,
+          "outlet_region_downward_force_N": 0.0016735028960050474,
+          "outlet_region_force_N_per_terminal_A": 5.5783429866834915e-05,
+          "outlet_liquid_volume_mm3": 0.10000001424923606,
+          "outlet_liquid_By_mean_T": -0.4875501384958625,
+          "outlet_liquid_By_range_T": [
+            -0.4942361116409302,
+            -0.48069629073143005
+          ],
+          "cell_centred_midplane_current_by_material_A": {
+            "4": 22.048527121242238,
+            "7": 0.0,
+            "8": 2.6256794844261493,
+            "14": 5.326244473046117,
+            "18": 0.0
+          },
+          "cell_centred_midplane_sum_over_terminal_current": 1.0000150359571502,
+          "cell_centred_midplane_liquid_fraction": 0.7349398535172624,
+          "whole_initial_liquid_downward_force_N_reused_q3": 0.002728992006521829,
+          "whole_initial_liquid_force_N_per_terminal_A_reused_q3": 9.09664002173943e-05,
+          "whole_initial_liquid_volume_mm3": 4.445000633378543
+        }
+      },
+      "narrow_minus_wide_relative_R_at100um": 0.015048700908997015,
+      "fine_minus_coarse_relative_R_narrow": -0.0035469644636965114
+    }
+  ],
+  "reused_whole_pool_field": {
+    "status": "Reused existing native applied field; sources checked identical apart from quadrature",
+    "source_run": "artifacts/hardware-research/m6-rooted08-cold30-h0050",
+    "source_project_sha256": "33010fe31550005c299e733b2bf6fa4c57971c041e534c4f4d010e9094e52bb8",
+    "target_project_sha256": "2561663107001e1ccbe1b7b47f006e62df463f18892554e9d706110511f2d7b9",
+    "magnet_triangle_sha256": [
+      "44a2ed72f9fa7ba9ceb9c865f97ee32252ebe3aec4d8139c45ae5fc8f0aa1669",
+      "4de8396a7909fe1621b28898c9b7b323a6bdfca89e2d4736637673dd9b490a9e"
+    ],
+    "field_file_sha256": "a3a06d51c5bc357db29680bd04a2f0c287d37dec821969475fc1911c56128d83",
+    "dims": [
+      24,
+      24,
+      120
+    ],
+    "origin_m": [
+      -0.000599999912083149,
+      -0.000599999912083149,
+      0.0
+    ],
+    "cell_m": 5.0000002374872565e-05,
+    "source_subdivisions": [
+      3,
+      3
+    ],
+    "queued_outlet_observer_subdivisions": [
+      4,
+      4
+    ],
+    "By_range_T_over_crop": [
+      -0.49565252661705017,
+      -0.010537659749388695
+    ],
+    "limits": [
+      "This reuses the native prescribed-magnetization, unit-permeability applied-field model. It includes no eddy-current reaction, temperature feedback or nonlinear magnetic material.",
+      "Source uses3subdivisions and queued outlet observer4. Compare overlapping samples before combining results; that overlap check alone does not prove whole-pool quadrature convergence.",
+      "No material IDs or current field are reused: these must come from the new slit charge solution.",
+      "Crop covers the initial liquid bore/slot region only, not a future spreading or moving meniscus."
+    ]
+  },
+  "q3_vs_q4_outlet_liquid_B_relative_L2": 0.005336433612694715,
+  "limits": [
+    "The outlet_region force integrates only z=0..0.5mm. It is not total pool force, outlet pressure or a droplet prediction.",
+    "The separate whole-initial-liquid force uses the existingq3appliedB after identical-source checks; outletq4force remains separate. Outlet quadrature agreement does not prove whole-pool convergence. Neither force is outlet pressure or a droplet prediction.",
+    "Midplane currents integrate cell-centred J and are approximate phase shares, not exact FV face currents. Their sum/terminal-current ratio is included.",
+    "Resistance includes only conductor lengths inside the cropped electrical box. Outside leads, real contacts and driver losses must be added separately.",
+    "Ideal joints and fixed material conductivities; no hot aluminium/copper comparison, thermal evolution, wetting, oxide, feed or lifetime qualification.",
+    "Only the initially filled bore/slot intersection is conducting liquid. A moving meniscus can wet more of the long slit and change the current path.",
+    "Wide/narrow and100/50um comparisons concern the electrical screen. They do not establish fluid breakup convergence."
+  ]
+}
