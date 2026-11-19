@@ -1,0 +1,140 @@
+{
+  "status": "Partial native stationary unipolar coil results; no jetting claim",
+  "expected_cases": 4,
+  "completed_cases": 1,
+  "other_case_status": [
+    {
+      "output": "artifacts/hardware-research/unipolar-coil-v2-custom-fast50-slow250-cold-h020",
+      "native_status": {
+        "status": "pending"
+      }
+    },
+    {
+      "output": "artifacts/hardware-research/unipolar-coil-v2-v6-symmetric100-cold-h020",
+      "native_status": {
+        "status": "pending"
+      }
+    },
+    {
+      "output": "artifacts/hardware-research/unipolar-coil-v2-v6-fast50-slow250-cold-h020",
+      "native_status": {
+        "status": "pending"
+      }
+    }
+  ],
+  "plan_sha256": "b5286e411bec186f9bca21c7d42c3f21838a36e2dd70bd8d4fbbae433f221fdc",
+  "air_inductance": {
+    "project": "hardware/designs/single-coil-250A/case.mhd.json",
+    "method": "Independent thin round-wire Neumann energy estimate for generated CAD coils.\n\nThis is a lumped circuit parameter estimate, not a volumetric EM solver.\nThe softened filament uses a*exp(-1/4), matching low-frequency internal\ninductance of a round, uniform-current wire. Skin/proximity corrections and\nfinite cross-section errors are not resolved. Compare discretizations and\nthe thin circular-loop asymptote before using circuit voltage estimates.\n",
+    "winding": [
+      {
+        "maximum_segment_m": 0.0006,
+        "segments": 747,
+        "inductance_h": 8.271661909705144e-07
+      },
+      {
+        "maximum_segment_m": 0.0003,
+        "segments": 1369,
+        "inductance_h": 8.264120028191149e-07
+      },
+      {
+        "maximum_segment_m": 0.00015,
+        "segments": 2495,
+        "inductance_h": 8.262724870232199e-07
+      }
+    ],
+    "circle_check": {
+      "computed_h": 6.201111455725317e-08,
+      "thin_loop_asymptote_h": 6.201015980783838e-08,
+      "relative_error": 1.5396661091404695e-05
+    },
+    "warning": "Discretization agreement does not bound cross-section, skin, proximity, lead routing or conductor-reaction errors."
+  },
+  "method": "Interval V=R*meanI+(L_air+L_series)*deltaI/dt+delta(native reaction linkage)/dt. Exact linear-interval I2dt. Separate backward-Euler metal source-work identity from midpoint lumped-circuit net work.",
+  "cases": [
+    {
+      "geometry": "custom",
+      "shape": "symmetric100",
+      "source": "artifacts/hardware-research/unipolar-coil-v2-custom-symmetric100-cold-h020",
+      "diagnostics_sha256": "e5bd66349f010344a7bb0e018f1b03e12c0a5058130c2e962d4ef159b40e3100",
+      "I2dt_A2s": 4.1666666666666785,
+      "rms_A_at_assumed200Hz": 28.86751345948133,
+      "round_wire_assumption": {
+        "radius_m": 0.0006,
+        "length_m_including_CAD_return": 0.36473449376361033,
+        "conductivity_S_m": 25000000.0,
+        "resistance_ohm": 0.012899843910799706
+      },
+      "series_assumption": {
+        "resistance_ohm": 0.002,
+        "inductance_H": 2e-07
+      },
+      "loaded_terminal_interval_mean_voltage_range_V": [
+        -2.5563688151137374,
+        6.2813222894824445
+      ],
+      "winding_heat_J": 0.05374934962833229,
+      "metal_heat_J": 0.0007095050471069093,
+      "winding_plus_metal_heat_W_at_assumed200Hz": 10.89177093508784,
+      "midpoint_terminal_net_work_J": 0.06279154933166528,
+      "backward_Euler_metal_source_work_J": 0.00071206022389525,
+      "metal_work_balance_relative_defect": -9.67398131148953e-08,
+      "metal_work_balance_gate_1e_minus3_passed": true,
+      "reaction_backward_Euler_loss_J": 2.5552456729203494e-06,
+      "final_reaction_field_energy_J": 7.475833635396838e-28,
+      "radial_force_moment_over_ROI_volume_Pa_range": [
+        -1569.0051195494036,
+        1851.437548605617
+      ],
+      "liquid_axial_force_N_range": [
+        -0.018364270873747066,
+        0.015774898747520614
+      ],
+      "stationary_current_projections": {
+        "at_200A_working_target": {
+          "peak_A": 200.0,
+          "rms_A_at_assumed200Hz": 23.094010767585065,
+          "loaded_terminal_interval_mean_voltage_range_V": [
+            -2.04509505209099,
+            5.025057831585956
+          ],
+          "winding_metal_and_series_resistive_heat_W_at_assumed200Hz": 8.037400065122888,
+          "radial_force_moment_over_ROI_volume_Pa_range": [
+            -1004.1632765116185,
+            1184.9200311075952
+          ],
+          "liquid_axial_force_N_range": [
+            -0.011753133359198125,
+            0.010095935198413194
+          ]
+        },
+        "capped_at_tested_peak_and30Arms200Hz": {
+          "peak_A": 250.0,
+          "rms_A_at_assumed200Hz": 28.86751345948133,
+          "loaded_terminal_interval_mean_voltage_range_V": [
+            -2.5563688151137374,
+            6.2813222894824445
+          ],
+          "winding_metal_and_series_resistive_heat_W_at_assumed200Hz": 12.55843760175451,
+          "radial_force_moment_over_ROI_volume_Pa_range": [
+            -1569.0051195494036,
+            1851.437548605617
+          ],
+          "liquid_axial_force_N_range": [
+            -0.018364270873747066,
+            0.015774898747520614
+          ]
+        },
+        "scope": "Same waveform, geometry and fixed conductivity/permeability: field/linkage/voltage scale with I; force/Joule heat with I\u00b2. Reuses the native stationary solution, not another field solver. No thermal, moving-interface or droplet scaling is inferred."
+      },
+      "scope": "Static liquid force moment is not nozzle pressure or a droplet criterion. Rate200Hz is arithmetic only, not demonstrated repetition."
+    }
+  ],
+  "limits": [
+    "Prescribed current; no switching, current-loop control, PWM ripple, capacitor or loaded circuit simulation.",
+    "AirL retains softened round-wire assumptions. Core radius used for circuit area is an explicit wire assumption; actual winding cross-section, hot resistance and lead routing need specification.",
+    "Interval voltages exclude switch-node overshoot. Negative voltage at positive current requires controlled recovery or a suitable clamp.",
+    "Metal reaction uses stationary initial conductivity, no thermal/motional evolution. No equality of fields/pressure in the moving meniscus is established.",
+    "200um cold screen is not spatial convergence. Inspect work-balance and numerical-loss sensitivity before selecting a flow waveform."
+  ]
+}

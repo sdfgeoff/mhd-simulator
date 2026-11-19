@@ -34,11 +34,33 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--plan", type=Path)
     parser.add_argument("--output", type=Path)
+    parser.add_argument(
+        "--available",
+        action="store_true",
+        help="Explicitly analyze completed cases while the batch continues",
+    )
     args = parser.parse_args()
     root = Path("artifacts/hardware-research")
     plan_path = args.plan or root / "unipolar-coil-v2-plan.json"
     plan = json.loads(plan_path.read_text())
-    for job in plan["jobs"]:
+    jobs = plan["jobs"]
+    other_status = []
+    if args.available:
+        jobs = []
+        for job in plan["jobs"]:
+            status_path = Path(job["output"]) / "run-status.json"
+            status = (
+                json.loads(status_path.read_text())
+                if status_path.exists()
+                else {"status": "pending"}
+            )
+            if status["status"] == "complete":
+                jobs.append(job)
+            else:
+                other_status.append({"output": job["output"], "native_status": status})
+        if not jobs:
+            raise SystemExit("No completed native cases; no comparison written")
+    for job in jobs:
         if not (Path(job["output"]) / "run-status.json").exists():
             raise SystemExit("Pending native coil run; no comparison written")
     inductance_path = root / "unipolar-coil-v1-air-inductance.json"
@@ -50,7 +72,7 @@ def main():
     if air["circle_check"]["relative_error"] > 0.005:
         raise ValueError("Independent air-inductance check failed")
     results = []
-    for job in plan["jobs"]:
+    for job in jobs:
         directory = Path(job["output"])
         status = json.loads((directory / "run-status.json").read_text())
         if (
@@ -191,7 +213,14 @@ def main():
             }
         )
     record = {
-        "status": "Completed native stationary unipolar coil comparisons; no jetting claim",
+        "status": (
+            "Partial native stationary unipolar coil results; no jetting claim"
+            if len(jobs) < len(plan["jobs"])
+            else "Completed native stationary unipolar coil comparisons; no jetting claim"
+        ),
+        "expected_cases": len(plan["jobs"]),
+        "completed_cases": len(jobs),
+        "other_case_status": other_status,
         "plan_sha256": digest(plan_path),
         "air_inductance": air,
         "method": "Interval V=R*meanI+(L_air+L_series)*deltaI/dt+delta(native reaction linkage)/dt. Exact linear-interval I2dt. Separate backward-Euler metal source-work identity from midpoint lumped-circuit net work.",
@@ -205,7 +234,8 @@ def main():
         ],
     }
     output = args.output or root / (
-        plan_path.stem.removesuffix("-plan") + "-comparison.json"
+        plan_path.stem.removesuffix("-plan")
+        + ("-comparison-partial.json" if args.available else "-comparison.json")
     )
     output.write_text(json.dumps(record, indent=2) + "\n")
     print(output)
