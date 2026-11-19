@@ -20,7 +20,7 @@ cases = [
     ("m6-rooted08-flow110-r25-chargefix-h0050", "50 µm · 1.5 µs", "earlier v1, relative-only gate"),
 ]
 fig, axes = plt.subplots(1, 3, figsize=(10, 7.8))
-fig.subplots_adjust(top=.84, bottom=.20, left=.07, right=.88, wspace=.32)
+fig.subplots_adjust(top=.84, bottom=.28, left=.07, right=.88, wspace=.32)
 for ax, (name, label, version) in zip(axes, cases):
     directory = root / name
     status = json.loads((directory / "run-status.json").read_text())
@@ -50,7 +50,7 @@ for ax, (name, label, version) in zip(axes, cases):
     regions = analysis["frames"][-1]["connectivity_thresholds"]["0.5"]
     description = "\n".join(f"D = {r['equivalent_diameter_mm']:.3f} mm; "
                             f"down = {-r['velocity_m_s'][2]:.2f} m/s" for r in regions)
-    ax.text(.5, -.10, description, transform=ax.transAxes, ha="center", va="top", fontsize=9)
+    ax.text(.5, -.17, description, transform=ax.transAxes, ha="center", va="top", fontsize=9)
     del f
 fig.suptitle("Same 110 A pulse at 3.6 ms — isolate timestep before grid refinement", fontsize=14)
 color = fig.add_axes([.91, .28, .018, .43])
