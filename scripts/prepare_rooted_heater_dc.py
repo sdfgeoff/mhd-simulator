@@ -35,11 +35,12 @@ record = {
     "source_project": str(source), "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
     "jobs": jobs,
     "gates": {"true_relative_residual": 1e-5, "boundary_current_defect": 1e-5, "power_relative_defect": 1e-4},
-    "scope": "Only heater inclusion differs. Same100um grid, geometry, fixed hot conductivities and30A command. Static zero-B DC current sharing only; no induction, motional force, droplet or thermal evolution.",
+    "scope": "Only heater inclusion differs. Same100um grid, geometry, fixed conductivity assumptions and30A command. Static zero-B DC current sharing only; no induction, motional force, droplet or thermal evolution.",
     "limits": [
         "Complete simplified heater envelope is included. Previous full-lead stationary DC screen includes heater material but crops y/z; it is not a full-heater control.",
         "Cu contact bodies held equipotential. This isolates head shunting; long-lead resistance, clamp contact resistance and current crowding in extended leads are excluded.",
         "Smooth ideal contacting M6 geometry, mica and material conductivities are model assumptions; thread contact resistance and real assembly bridges need measurement.",
+        "Inherited aluminium conductivity25MS/m is a fixed scenario, not a calibrated250C material curve.",
         "Existing frozen conduction_probe binary uses the earlier split-f32 implementation. Its hash and actual numerical gates must be recorded; do not attribute current source-v2 code to it.",
         "No PM field solve is needed for static current sharing at zero velocity with unit permeability; force changes require separate J cross B evaluation.",
     ],
