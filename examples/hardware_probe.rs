@@ -1,5 +1,6 @@
 //! Headless design diagnostics from the normal RunState; no separate physics.
 //! Static material labels are valid for the EM-only screening stage only.
+use mhd_workbench::em::Waveform;
 use mhd_workbench::{domain::GpuDomain, em::CellField, gpu::read_bytes, project, run::RunState};
 use std::{error::Error, path::Path};
 
@@ -20,7 +21,26 @@ pub(crate) fn run_with_expected_adapter(expected: Option<&str>) -> Result<(), Bo
     if steps == 0 || zlo >= zhi {
         return Err("Invalid probe range".into());
     }
+    let tail = match (args.get(6), args.get(7)) {
+        (None, None) => None,
+        (Some(after), Some(dt)) => {
+            let after = after.parse::<f64>()? * 1e-6;
+            let dt = dt.parse::<f64>()? * 1e-6;
+            if !after.is_finite() || after < 0. || !dt.is_finite() || dt <= 0. || !(dt as f32).is_normal() {
+                return Err("Invalid zero-current tail times".into());
+            }
+            Some((after, dt))
+        }
+        _ => return Err("Supply both TAIL_AFTER_US and TAIL_DT_US".into()),
+    };
     let p = project::load(input)?;
+    if let Some((after, _)) = tail {
+        if !p.electromagnetics.uniform.is_empty() || !p.electromagnetics.magnets.is_empty()
+            || p.electromagnetics.wires.is_empty()
+            || p.electromagnetics.wires.iter().any(|w| !zero_table_tail(&w.current, after)) {
+            return Err("Tail coarsening requires table-driven coils permanently zero after the transition".into());
+        }
+    }
     if p.run.fluid_enabled || p.run.thermal_enabled || p.fluid.surface.enabled {
         return Err(
             "Static-label screening requires fluid, thermal and moving-interface modes disabled"
@@ -63,6 +83,10 @@ pub(crate) fn run_with_expected_adapter(expected: Option<&str>) -> Result<(), Bo
         "step,time_s,roi_volume_m3,roi_mean_Bz_T,roi_mean_applied_Bz_T,radial_pressure_proxy_Pa,roi_force_z_N,liquid_joule_power_W,solid_joule_power_W,em_iterations,true_relative_residual,accumulated_joule_J,external_work_J,coil_current_A,reaction_linkage_Wb,reaction_magnetic_J,reaction_BE_J\n",
     );
     for step in 0..=steps {
+        if step > 0 && let Some((after, dt)) = tail
+            && run.time_s >= after && run.config.dt_s != dt {
+            run.set_timestep(&volume, dt)?;
+        }
         if step > 0
             && let Err(error) = run.step(&p.model, &volume)
         {
@@ -174,8 +198,32 @@ pub(crate) fn run_with_expected_adapter(expected: Option<&str>) -> Result<(), Bo
     std::fs::write(
         out.join("run-status.json"),
         serde_json::to_vec_pretty(
-            &serde_json::json!({"status":"complete","accepted_steps":run.steps,"time_s":run.time_s,"origin_m":grid.origin_m,"dims":grid.dims,"cell_m":grid.cell_m,"ROI_z_m":[zlo,zhi],"diagnostic":"radial force moment per ROI volume, not a pressure solution or ejection criterion","warnings":volume.warnings}),
+            &serde_json::json!({"status":"complete","accepted_steps":run.steps,"time_s":run.time_s,"origin_m":grid.origin_m,"dims":grid.dims,"cell_m":grid.cell_m,"ROI_z_m":[zlo,zhi],"zero_current_tail_schedule_s":tail,"diagnostic":"radial force moment per ROI volume, not a pressure solution or ejection criterion","warnings":volume.warnings}),
         )?,
     )?;
     Ok(())
+}
+
+// A zero value at one instant is insufficient: a later table pulse must also
+// prevent a larger decay timestep. The loader validates sample ordering.
+fn zero_table_tail(wave: &Waveform, after: f64) -> bool {
+    match wave {
+        Waveform::Table { samples } => wave.value(after) == 0.
+            && samples.iter().filter(|s| s[0] >= after).all(|s| s[1] == 0.)
+            && samples.last().is_some_and(|s| s[1] == 0.),
+        _ => false,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn tail_rejects_later_pulses_and_zero_crossings() {
+        let wave = |samples| Waveform::Table { samples };
+        assert!(zero_table_tail(&wave(vec![[0.,0.],[1.,2.],[2.,0.],[4.,0.]]), 3.));
+        assert!(!zero_table_tail(&wave(vec![[0.,0.],[1.,2.],[2.,0.],[4.,0.],[5.,2.],[6.,0.]]), 3.));
+        assert!(!zero_table_tail(&wave(vec![[0.,1.],[1.,0.],[2.,-1.],[3.,0.]]), 1.));
+        assert!(!zero_table_tail(&wave(vec![[0.,1.],[1.,0.],[2.,1.]]), 1.));
+    }
 }

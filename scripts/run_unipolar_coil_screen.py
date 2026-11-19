@@ -24,6 +24,7 @@ def main():
     parser.add_argument("--after-pid", type=int)
     parser.add_argument("--state", type=Path)
     parser.add_argument("--plan", type=Path)
+    parser.add_argument("--probe-binary", type=Path, help="Explicit prebuilt native probe variant; recorded and frozen")
     parser.add_argument("--adapter", choices=["default", "amd"], default="default")
     args = parser.parse_args()
     if (args.after_state is None) != (args.after_pid is None):
@@ -45,6 +46,8 @@ def main():
         if args.adapter == "amd"
         else original_binary
     )
+    if args.probe_binary is not None:
+        binary = args.probe_binary
     hashes = {str(plan_path): sha(plan_path), str(binary): sha(binary)}
     for job in plan["jobs"]:
         if sha(job["project"]) != job["project_sha256"] or job["command"][0] != str(
@@ -70,6 +73,8 @@ def main():
             for b in json.loads(geometry.read_text())["buffers"]
         ]
         hashes.update({str(path): sha(path) for path in inputs})
+    for path in plan.get("additional_frozen_inputs", []):
+        hashes[path] = sha(path)
     if args.adapter == "amd":
         manifest = Path(os.environ["VK_DRIVER_FILES"])
         driver = Path(json.loads(manifest.read_text())["ICD"]["library_path"])
@@ -141,9 +146,9 @@ def main():
                 ["ps", "-eo", "pid=,args="], capture_output=True, text=True, check=True
             ).stdout
             pattern = (
-                r"^\s*\d+\s+(?:\S*/)?target/(?:debug|release)/examples/amd_hardware_probe\s"
+                r"^\s*\d+\s+(?:\S*/)?target/(?:debug|release)/examples/amd_hardware_probe(?:_tail)?\s"
                 if args.adapter == "amd"
-                else r"^\s*\d+\s+(?:\S*/)?target/(?:debug|release)/(?:examples/(?:conduction_flow|conduction_probe|applied_probe|hardware_probe)\s|mhd-workbench\s+--run-check\s)"
+                else r"^\s*\d+\s+(?:\S*/)?target/(?:debug|release)/(?:examples/(?:conduction_flow(?:_precision|_current_tolerance)?|conduction_probe|applied_probe|hardware_probe)\s|mhd-workbench\s+--run-check\s)"
             )
             if any(
                 re.search(
@@ -198,6 +203,10 @@ def main():
                         "Native run did not use the isolated AMD adapter"
                     )
             record(stage="completed_job", index=index)
+        for command in plan.get("postprocess_commands", []):
+            if any(sha(path) != digest for path, digest in hashes.items()):
+                raise RuntimeError("Frozen validation inputs changed")
+            subprocess.run(command, check=True, env=env)
         record(stage="complete_needs_assessment", completed_jobs=len(jobs))
 
 

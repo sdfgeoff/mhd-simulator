@@ -1,0 +1,28 @@
+{
+  "status": "Prepared and CPU validated; queued validation must pass before new heater cases",
+  "reference_plan": "artifacts/hardware-research/coil-tail-reference-v1-plan.json",
+  "heater_plan": "artifacts/hardware-research/lowered-coil-cold-v1-plan.json",
+  "probe_binary": "target/debug/examples/amd_hardware_probe_tail",
+  "probe_binary_sha256": "3878b141319ca688a6b563e68b5822837141310f8170550aca5994d7487703d3",
+  "native_schedule": {
+    "initial_dt_us": 0.5,
+    "tail_not_before_us": 150,
+    "tail_dt_us": 3,
+    "reference_steps": 350,
+    "reference_end_us": 300,
+    "heater_steps": 1250,
+    "heater_end_us": 3000
+  },
+  "validation": [
+    "Zero-current tail guard rejects later pulses and instantaneous zero crossings; CPU test passed.",
+    "Existing four-case default analysis is unchanged.",
+    "New reference native run must preserve the entire driven-prefix diagnostics within1e-12 +1e-5 relative, and meet original work1e-3/final energy1e-8 gates.",
+    "New heater runs retain those same work and decay gates. No finite-window heat relabeled as cycle heat."
+  ],
+  "geometry_source": "hardware/designs/lowered-v6-coil-review",
+  "limits": [
+    "No loaded voltage, shielding, temperature or jetting result for the new package yet.",
+    "Larger tail steps preserve the normal RunState equations but still require native decay/numerical-loss checks.",
+    "Heater geometry and fixed15MS/m conductivity remain idealized sensitivity inputs."
+  ]
+}

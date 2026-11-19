@@ -4,7 +4,7 @@
 mod native_probe;
 use mhd_workbench::gpu::GpuContext;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+pub(crate) fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<_> = std::env::args().collect();
     let out = std::path::Path::new(args.get(3).ok_or("Expected PROJECT STEPS OUTPUT ZLO ZHI")?);
     if out.exists() {

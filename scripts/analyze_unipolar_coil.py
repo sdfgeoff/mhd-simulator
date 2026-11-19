@@ -34,6 +34,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--plan", type=Path)
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--air-inductance", type=Path, help="Independent record for this exact winding")
     parser.add_argument(
         "--available",
         action="store_true",
@@ -63,7 +64,7 @@ def main():
     for job in jobs:
         if not (Path(job["output"]) / "run-status.json").exists():
             raise SystemExit("Pending native coil run; no comparison written")
-    inductance_path = root / "unipolar-coil-v1-air-inductance.json"
+    inductance_path = args.air_inductance or Path(plan.get("air_inductance_path", root / "unipolar-coil-v1-air-inductance.json"))
     air = json.loads(inductance_path.read_text())
     air_project = json.loads(Path(air["project"]).read_text())
     air_wire = air_project["electromagnetics"]["wires"][0]
