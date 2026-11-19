@@ -556,3 +556,16 @@ are `target/debug/examples/thermal_conductance --check`.
 6. Earlier `fluid_mechanical_work_J` values included gravity. See the
    [work-ledger correction](flow-work-ledger-correction.json) before interpreting
    old comparisons with lagged EM work. New runs record those components separately.
+7. The [analytical pulse screen](cylinder-pulse-screening.json) Fourier-synthesizes
+   the existing closed-form conducting-cylinder solution. It isolates push/pull
+   timing and wall shielding at the same prescribed external field. Instantaneous
+   force identities, periodic Poynting/Joule balance and time/window controls pass.
+   Its radial pressure difference is an infinite-cylinder diagnostic; it supplies
+   no finite-nozzle pressure, current requirement or droplet result. Reproduce with:
+
+   ```sh
+   TMPDIR="$PWD/artifacts/build-temp" uv run --offline --with numpy --with scipy --with matplotlib \
+     python scripts/cylinder_pulse_screen.py --check-refinement \
+     --output hardware/cylinder-pulse-screening.json \
+     --plot-path artifacts/hardware-research/diagrams/cylinder-pulse-screen-v2.png
+   ```

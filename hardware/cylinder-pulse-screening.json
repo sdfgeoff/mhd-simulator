@@ -1,0 +1,250 @@
+{
+  "status": "Analytical infinite-cylinder pulse/shielding comparison only; no nozzle, circuit or jetting result",
+  "background": "https://web.mit.edu/6.013_book/www/chapter10/10.3.html",
+  "derivation": "Fourier synthesize exact Bessel transfer functions with exp(+i omega t). Jphi=-dBz/dr/mu. Integrate -Jphi*Bz over radius; verify instantaneous result=(Bwall\u00b2-Baxis\u00b2)/(2mu). Steady sinusoidal mean also matches the existing phasor solution.",
+  "parameters": {
+    "dt_s": 5e-07,
+    "periodic_synthesis_window_s": 0.002,
+    "pulse_onset_s": 0.00025,
+    "prescribed_external_peak_B_T": 0.25,
+    "liquid_sigma_S_m": 2200000.0,
+    "permeability_H_m": 1.2566370614359173e-06,
+    "radial_Gauss_nodes": 128
+  },
+  "results": [
+    {
+      "geometry_limit": "6 mm bore, 0.5 mm steel wall",
+      "liquid_radius_m": 0.003,
+      "wall_outer_radius_m": 0.0035,
+      "wall_sigma_S_m": 1300000.0,
+      "steady_AC_relative_error": 7.771561172376096e-15,
+      "analytical_mode_checks": {
+        "maximum_unit_boundary_B_error": 4.594889227755668e-16,
+        "maximum_interface_relative_error": 8.041097136815264e-16
+      },
+      "cases": [
+        {
+          "waveform": "100/100 \u00b5s triangle",
+          "inward_radial_pressure_difference_peak_Pa": 2975.743256352281,
+          "outward_radial_pressure_difference_peak_Pa": -2476.290815238887,
+          "positive_radial_pressure_impulse_Pa_s": 0.14796463470350474,
+          "negative_radial_pressure_impulse_Pa_s": -0.13909826043343992,
+          "liquid_heat_J_per_m": 0.08077688930747494,
+          "wall_heat_J_per_m": 0.04103222689456546,
+          "liquid_axis_abs_B_peak_T": 0.24072066841374115,
+          "force_field_identity_relative_error": 7.258858478800784e-15,
+          "periodic_Poynting_Joule_balance_relative_error": 2.5064735817104946e-15,
+          "pre_onset_axis_abs_B_peak_T_before_minus5us": 1.0339491958530144e-10
+        },
+        {
+          "waveform": "50/250 \u00b5s triangle",
+          "inward_radial_pressure_difference_peak_Pa": 5660.924417311979,
+          "outward_radial_pressure_difference_peak_Pa": -1086.6071806919613,
+          "positive_radial_pressure_impulse_Pa_s": 0.15179346930784093,
+          "negative_radial_pressure_impulse_Pa_s": -0.1414963432851959,
+          "liquid_heat_J_per_m": 0.09389704672183674,
+          "wall_heat_J_per_m": 0.047861275374212905,
+          "liquid_axis_abs_B_peak_T": 0.24059736841437637,
+          "force_field_identity_relative_error": 3.393981999864996e-15,
+          "periodic_Poynting_Joule_balance_relative_error": 3.5243106273705165e-15,
+          "pre_onset_axis_abs_B_peak_T_before_minus5us": 1.7647426179315227e-10
+        },
+        {
+          "waveform": "50 kHz, 300 \u00b5s burst",
+          "inward_radial_pressure_difference_peak_Pa": 18603.9046369531,
+          "outward_radial_pressure_difference_peak_Pa": -6147.852972761614,
+          "positive_radial_pressure_impulse_Pa_s": 1.8653180450566749,
+          "negative_radial_pressure_impulse_Pa_s": -0.32328817273758803,
+          "liquid_heat_J_per_m": 15.08337121426023,
+          "wall_heat_J_per_m": 9.61475506916512,
+          "liquid_axis_abs_B_peak_T": 0.12517885787955688,
+          "force_field_identity_relative_error": 9.484136560960463e-15,
+          "periodic_Poynting_Joule_balance_relative_error": 5.466128006844721e-15,
+          "pre_onset_axis_abs_B_peak_T_before_minus5us": 8.364217444256063e-12
+        }
+      ]
+    },
+    {
+      "geometry_limit": "3.2 mm bore, 1.9 mm steel wall",
+      "liquid_radius_m": 0.0016,
+      "wall_outer_radius_m": 0.0035,
+      "wall_sigma_S_m": 1300000.0,
+      "steady_AC_relative_error": 7.993605777301127e-15,
+      "analytical_mode_checks": {
+        "maximum_unit_boundary_B_error": 4.473357992829594e-16,
+        "maximum_interface_relative_error": 8.054012608657225e-16
+      },
+      "cases": [
+        {
+          "waveform": "100/100 \u00b5s triangle",
+          "inward_radial_pressure_difference_peak_Pa": 842.3531027271091,
+          "outward_radial_pressure_difference_peak_Pa": -747.4790055958404,
+          "positive_radial_pressure_impulse_Pa_s": 0.042025493836497646,
+          "negative_radial_pressure_impulse_Pa_s": -0.0412924546932189,
+          "liquid_heat_J_per_m": 0.0066654667022907664,
+          "wall_heat_J_per_m": 0.0867952714008788,
+          "liquid_axis_abs_B_peak_T": 0.24322571824331005,
+          "force_field_identity_relative_error": 1.538582746155414e-14,
+          "periodic_Poynting_Joule_balance_relative_error": 1.4848789009664166e-16,
+          "pre_onset_axis_abs_B_peak_T_before_minus5us": 8.209551200713838e-09
+        },
+        {
+          "waveform": "50/250 \u00b5s triangle",
+          "inward_radial_pressure_difference_peak_Pa": 1607.813002324403,
+          "outward_radial_pressure_difference_peak_Pa": -320.15817480179084,
+          "positive_radial_pressure_impulse_Pa_s": 0.04235310896441461,
+          "negative_radial_pressure_impulse_Pa_s": -0.041494076156314084,
+          "liquid_heat_J_per_m": 0.007811826984658243,
+          "wall_heat_J_per_m": 0.10198607684333902,
+          "liquid_axis_abs_B_peak_T": 0.24320328385327936,
+          "force_field_identity_relative_error": 1.0111385945186538e-14,
+          "periodic_Poynting_Joule_balance_relative_error": 1.1375453074768262e-15,
+          "pre_onset_axis_abs_B_peak_T_before_minus5us": 1.5769544541279896e-08
+        },
+        {
+          "waveform": "50 kHz, 300 \u00b5s burst",
+          "inward_radial_pressure_difference_peak_Pa": 6106.87548278695,
+          "outward_radial_pressure_difference_peak_Pa": -4658.39800181556,
+          "positive_radial_pressure_impulse_Pa_s": 0.5178250913809028,
+          "negative_radial_pressure_impulse_Pa_s": -0.33368614521463486,
+          "liquid_heat_J_per_m": 1.6847703016858142,
+          "wall_heat_J_per_m": 25.679690248764008,
+          "liquid_axis_abs_B_peak_T": 0.15645268467420306,
+          "force_field_identity_relative_error": 3.2857599462152438e-15,
+          "periodic_Poynting_Joule_balance_relative_error": 2.9860780358437693e-15,
+          "pre_onset_axis_abs_B_peak_T_before_minus5us": 1.5969060827081499e-10
+        }
+      ]
+    },
+    {
+      "geometry_limit": "6 mm bore, insulating wall",
+      "liquid_radius_m": 0.003,
+      "wall_outer_radius_m": 0.003,
+      "wall_sigma_S_m": 0.0,
+      "steady_AC_relative_error": 7.549516567451064e-15,
+      "analytical_mode_checks": {
+        "maximum_unit_boundary_B_error": 2.2887833992611187e-16,
+        "maximum_interface_relative_error": 0.0
+      },
+      "cases": [
+        {
+          "waveform": "100/100 \u00b5s triangle",
+          "inward_radial_pressure_difference_peak_Pa": 2997.504841668079,
+          "outward_radial_pressure_difference_peak_Pa": -2547.012870755064,
+          "positive_radial_pressure_impulse_Pa_s": 0.14992904141336644,
+          "negative_radial_pressure_impulse_Pa_s": -0.1409273562791427,
+          "liquid_heat_J_per_m": 0.0820483775759713,
+          "wall_heat_J_per_m": 0.0,
+          "liquid_axis_abs_B_peak_T": 0.24229223147060544,
+          "force_field_identity_relative_error": 6.0683451724922295e-15,
+          "periodic_Poynting_Joule_balance_relative_error": 5.750811891786585e-15,
+          "pre_onset_axis_abs_B_peak_T_before_minus5us": 9.019490429652061e-09
+        },
+        {
+          "waveform": "50/250 \u00b5s triangle",
+          "inward_radial_pressure_difference_peak_Pa": 5802.534520001253,
+          "outward_radial_pressure_difference_peak_Pa": -1106.452622643913,
+          "positive_radial_pressure_impulse_Pa_s": 0.15389688341206056,
+          "negative_radial_pressure_impulse_Pa_s": -0.14337611127514535,
+          "liquid_heat_J_per_m": 0.09599864164948516,
+          "wall_heat_J_per_m": 0.0,
+          "liquid_axis_abs_B_peak_T": 0.24218032644941645,
+          "force_field_identity_relative_error": 2.86052211324929e-15,
+          "periodic_Poynting_Joule_balance_relative_error": 6.2161804113321225e-15,
+          "pre_onset_axis_abs_B_peak_T_before_minus5us": 1.7308725980297873e-08
+        },
+        {
+          "waveform": "50 kHz, 300 \u00b5s burst",
+          "inward_radial_pressure_difference_peak_Pa": 24856.750904820823,
+          "outward_radial_pressure_difference_peak_Pa": -8267.106343815914,
+          "positive_radial_pressure_impulse_Pa_s": 2.4968955157248014,
+          "negative_radial_pressure_impulse_Pa_s": -0.43523953963199696,
+          "liquid_heat_J_per_m": 20.16726091367138,
+          "wall_heat_J_per_m": 0.0,
+          "liquid_axis_abs_B_peak_T": 0.14414404061542832,
+          "force_field_identity_relative_error": 9.513255508188739e-15,
+          "periodic_Poynting_Joule_balance_relative_error": 8.45579661573286e-15,
+          "pre_onset_axis_abs_B_peak_T_before_minus5us": 1.7192222977205993e-10
+        }
+      ]
+    }
+  ],
+  "time_window_refinement": [
+    {
+      "geometry_limit": "6 mm bore, 0.5 mm steel wall",
+      "checks": [
+        {
+          "waveform": "100/100 \u00b5s triangle",
+          "dt_halving_inward_peak_relative_change": -0.0042562074468983635,
+          "dt_halving_total_heat_relative_change": -0.00012879775143748162,
+          "window_doubling_pressure_max_relative_difference": 2.3036422913983054e-10
+        },
+        {
+          "waveform": "50/250 \u00b5s triangle",
+          "dt_halving_inward_peak_relative_change": -0.002668065142219289,
+          "dt_halving_total_heat_relative_change": -0.0001829700894346864,
+          "window_doubling_pressure_max_relative_difference": 4.662849282205059e-10
+        },
+        {
+          "waveform": "50 kHz, 300 \u00b5s burst",
+          "dt_halving_inward_peak_relative_change": 0.0018540882707291928,
+          "dt_halving_total_heat_relative_change": 4.471885661772035e-08,
+          "window_doubling_pressure_max_relative_difference": 1.3258236264600346e-13
+        }
+      ]
+    },
+    {
+      "geometry_limit": "3.2 mm bore, 1.9 mm steel wall",
+      "checks": [
+        {
+          "waveform": "100/100 \u00b5s triangle",
+          "dt_halving_inward_peak_relative_change": -0.0025369558496680655,
+          "dt_halving_total_heat_relative_change": -0.00016864347017586656,
+          "window_doubling_pressure_max_relative_difference": 5.183863169314244e-11
+        },
+        {
+          "waveform": "50/250 \u00b5s triangle",
+          "dt_halving_inward_peak_relative_change": -0.0015420430579858868,
+          "dt_halving_total_heat_relative_change": -0.00023733623436228424,
+          "window_doubling_pressure_max_relative_difference": 9.528319592011628e-11
+        },
+        {
+          "waveform": "50 kHz, 300 \u00b5s burst",
+          "dt_halving_inward_peak_relative_change": -3.395046976883975e-08,
+          "dt_halving_total_heat_relative_change": 4.511941043006118e-08,
+          "window_doubling_pressure_max_relative_difference": 1.8988527734501683e-14
+        }
+      ]
+    },
+    {
+      "geometry_limit": "6 mm bore, insulating wall",
+      "checks": [
+        {
+          "waveform": "100/100 \u00b5s triangle",
+          "dt_halving_inward_peak_relative_change": 8.108324460964766e-06,
+          "dt_halving_total_heat_relative_change": -0.00014315665356412488,
+          "window_doubling_pressure_max_relative_difference": 7.526265100183485e-13
+        },
+        {
+          "waveform": "50/250 \u00b5s triangle",
+          "dt_halving_inward_peak_relative_change": 4.746387248566464e-06,
+          "dt_halving_total_heat_relative_change": -0.00020228952483469786,
+          "window_doubling_pressure_max_relative_difference": 1.2477362346586834e-12
+        },
+        {
+          "waveform": "50 kHz, 300 \u00b5s burst",
+          "dt_halving_inward_peak_relative_change": 4.2817660528271517e-10,
+          "dt_halving_total_heat_relative_change": 4.41596526012944e-08,
+          "window_doubling_pressure_max_relative_difference": 7.317888852452853e-16
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "Field at the outer cylinder is prescribed. Equal0.25T here does not mean equal coil current or voltage in different geometries.",
+    "Infinite axial length, concentric geometry, constant conductivities, unit relative permeability. No finite coil, nozzle, free surface or axial force.",
+    "Radial pressure difference is an analytical interior diagnostic, not solved outlet pressure or an ejection threshold.",
+    "Joule heat is per metre of the uniform infinite cylinder; do not multiply by an arbitrary coil length to claim a finite nozzle heat result.",
+    "Fourier synthesis is periodic; finite sampling can produce small pre-ringing. Inspect time/window refinement before interpreting sharp-edge maxima."
+  ]
+}
