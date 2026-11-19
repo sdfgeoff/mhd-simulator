@@ -74,7 +74,7 @@ try:
             if any(digest(path) != value for path, value in common["input_and_binary_sha256"].items()):
                 raise RuntimeError("Frozen input or binary changed")
             processes = subprocess.check_output(["ps", "-eo", "pid=,args="], text=True)
-            pattern = r"^\s*\d+\s+(?:\S*/)?target/(?:debug|release)/(?:examples/(?:conduction_flow(?:_precision|_current_tolerance|_energy)?|conduction_probe|applied_probe|hardware_probe(?:_tail)?)\s|mhd-workbench\s+--run-check\s)"
+            pattern = r"^\s*\d+\s+(?:\S*/)?target/(?:debug|release)/(?:examples/(?:conduction_flow(?:_precision|_current_tolerance|_energy)?|conduction_probe|applied_probe|hardware_probe(?:_tail|_decay)?)\s|mhd-workbench\s+--run-check\s)"
             if any(re.search(pattern, line) and not isolated_amd_process(line, root / "radv-local-26.2.7/radeon-local.json") for line in processes.splitlines()):
                 raise RuntimeError("Another NVIDIA solver is active")
             quota = subprocess.check_output([sys.executable, "/home/geoffrey/bin/weekly_remaining.py"], text=True)

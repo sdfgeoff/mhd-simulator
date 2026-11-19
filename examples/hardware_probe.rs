@@ -9,6 +9,48 @@ pub(crate) fn main() -> Result<(), Box<dyn Error>> {
 }
 
 pub(crate) fn run_with_expected_adapter(expected: Option<&str>) -> Result<(), Box<dyn Error>> {
+    run_probe(expected, false)
+}
+
+pub(crate) fn run_with_stationary_decay(expected: Option<&str>) -> Result<(), Box<dyn Error>> {
+    run_probe(expected, true)
+}
+
+fn decay_gate(
+    time: f64,
+    transition: f64,
+    current: f64,
+    heat: f64,
+    reaction: f64,
+    source_work: f64,
+    numerical_loss: f64,
+) -> bool {
+    if ![
+        time,
+        transition,
+        current,
+        heat,
+        reaction,
+        source_work,
+        numerical_loss,
+    ]
+    .iter()
+    .all(|x| x.is_finite())
+        || time < transition
+        || current != 0.
+        || heat <= 0.
+        || reaction < 0.
+        || numerical_loss < 0.
+    {
+        return false;
+    }
+    let accounted = heat + numerical_loss + reaction;
+    let defect =
+        (source_work - accounted).abs() / source_work.abs().max(accounted.abs()).max(1e-15);
+    reaction / heat <= 1e-8 && defect <= 1e-3
+}
+
+fn run_probe(expected: Option<&str>, stationary_decay: bool) -> Result<(), Box<dyn Error>> {
     let args: Vec<_> = std::env::args().collect();
     let input = Path::new(
         args.get(1)
@@ -26,7 +68,12 @@ pub(crate) fn run_with_expected_adapter(expected: Option<&str>) -> Result<(), Bo
         (Some(after), Some(dt)) => {
             let after = after.parse::<f64>()? * 1e-6;
             let dt = dt.parse::<f64>()? * 1e-6;
-            if !after.is_finite() || after < 0. || !dt.is_finite() || dt <= 0. || !(dt as f32).is_normal() {
+            if !after.is_finite()
+                || after < 0.
+                || !dt.is_finite()
+                || dt <= 0.
+                || !(dt as f32).is_normal()
+            {
                 return Err("Invalid zero-current tail times".into());
             }
             Some((after, dt))
@@ -34,11 +81,26 @@ pub(crate) fn run_with_expected_adapter(expected: Option<&str>) -> Result<(), Bo
         _ => return Err("Supply both TAIL_AFTER_US and TAIL_DT_US".into()),
     };
     let p = project::load(input)?;
+    if stationary_decay
+        && (tail.is_none()
+            || p.electromagnetics.wires.len() != 1
+            || p.electromagnetics.wires[0].current.value(0.) != 0.)
+    {
+        return Err("Stationary decay completion requires one permanently-zero-tail coil and an explicit tail schedule".into());
+    }
     if let Some((after, _)) = tail {
-        if !p.electromagnetics.uniform.is_empty() || !p.electromagnetics.magnets.is_empty()
+        if !p.electromagnetics.uniform.is_empty()
+            || !p.electromagnetics.magnets.is_empty()
             || p.electromagnetics.wires.is_empty()
-            || p.electromagnetics.wires.iter().any(|w| !zero_table_tail(&w.current, after)) {
-            return Err("Tail coarsening requires table-driven coils permanently zero after the transition".into());
+            || p.electromagnetics
+                .wires
+                .iter()
+                .any(|w| !zero_table_tail(&w.current, after))
+        {
+            return Err(
+                "Tail coarsening requires table-driven coils permanently zero after the transition"
+                    .into(),
+            );
         }
     }
     if p.run.fluid_enabled || p.run.thermal_enabled || p.fluid.surface.enabled {
@@ -82,9 +144,22 @@ pub(crate) fn run_with_expected_adapter(expected: Option<&str>) -> Result<(), Bo
     let mut csv = String::from(
         "step,time_s,roi_volume_m3,roi_mean_Bz_T,roi_mean_applied_Bz_T,radial_pressure_proxy_Pa,roi_force_z_N,liquid_joule_power_W,solid_joule_power_W,em_iterations,true_relative_residual,accumulated_joule_J,external_work_J,coil_current_A,reaction_linkage_Wb,reaction_magnetic_J,reaction_BE_J\n",
     );
+    let mut reaction_source_work = 0_f64;
+    let mut reaction_loss_sum = 0_f64;
+    let mut previous_current = 0_f64;
+    let mut previous_linkage = 0_f64;
+    let mut decay_confirmations = 0_u32;
+    let mut decay_completed = false;
+    let mut last_reaction = 0_f64;
+    let mut performance = String::from(
+        "step,time_s,accepted,stage,cpu_wall_ms,gpu_pass_ms,recorded_passes,total_passes\n",
+    );
     for step in 0..=steps {
-        if step > 0 && let Some((after, dt)) = tail
-            && run.time_s >= after && run.config.dt_s != dt {
+        if step > 0
+            && let Some((after, dt)) = tail
+            && run.time_s >= after
+            && run.config.dt_s != dt
+        {
             run.set_timestep(&volume, dt)?;
         }
         if step > 0
@@ -165,6 +240,31 @@ pub(crate) fn run_with_expected_adapter(expected: Option<&str>) -> Result<(), Bo
         let reaction_be = response
             .as_ref()
             .map_or(0., |r| r.reaction_backward_euler_j);
+        if stationary_decay {
+            last_reaction = reaction;
+            let value = response
+                .as_ref()
+                .and_then(|r| r.reaction_linkage_wb)
+                .or_else(|| (step == 0 && current == 0. && reaction == 0.).then_some(0.))
+                .ok_or("Missing reaction linkage for stationary completion")?;
+            if step > 0 {
+                reaction_source_work -= value * (f64::from(current) - previous_current);
+            }
+            reaction_loss_sum += reaction_be;
+            previous_current = f64::from(current);
+            previous_linkage = value;
+            let passed = decay_gate(
+                run.time_s,
+                tail.unwrap().0,
+                f64::from(current),
+                run.energy.joule_j,
+                reaction,
+                reaction_source_work,
+                reaction_loss_sum,
+            );
+            decay_confirmations = if passed { decay_confirmations + 1 } else { 0 };
+            decay_completed = decay_confirmations >= 8;
+        }
         csv.push_str(&format!(
             "{step},{},{v},{},{},{},{fz},{liquid_heat},{solid_heat},{},{},{},{},{current},{linkage},{reaction},{reaction_be}\n",
             run.time_s,
@@ -177,7 +277,12 @@ pub(crate) fn run_with_expected_adapter(expected: Option<&str>) -> Result<(), Bo
             run.energy.external_work_j
         ));
         std::fs::write(out.join("diagnostics.csv"), &csv)?;
-        if step == 0 || step == 20 || step == steps {
+        if stationary_decay {
+            for report in gpu.context.profiler.take_completed(false) {
+                performance.push_str(&report.csv_rows());
+            }
+        }
+        if step == 0 || step == 20 || step == steps || decay_completed {
             run.export_fields(&volume, &p.model, &out.join(format!("frame-{step:08}")))?;
         }
         eprintln!(
@@ -187,18 +292,29 @@ pub(crate) fn run_with_expected_adapter(expected: Option<&str>) -> Result<(), Bo
             moment / v,
             em.diagnostics.iterations
         );
+        if decay_completed {
+            break;
+        }
     }
-    let mut performance = String::from(
-        "step,time_s,accepted,stage,cpu_wall_ms,gpu_pass_ms,recorded_passes,total_passes\n",
-    );
     for report in gpu.context.profiler.take_completed(true) {
         performance.push_str(&report.csv_rows());
     }
     std::fs::write(out.join("performance.csv"), performance)?;
+    if stationary_decay && !decay_completed {
+        std::fs::write(
+            out.join("run-status.json"),
+            serde_json::to_vec_pretty(
+                &serde_json::json!({"status":"failed","accepted_steps":run.steps,
+                "requested_max_steps":steps,"time_s":run.time_s,
+                "error":"Stationary decay criterion was not met within the maximum window"}),
+            )?,
+        )?;
+        return Err("Stationary decay criterion was not met".into());
+    }
     std::fs::write(
         out.join("run-status.json"),
         serde_json::to_vec_pretty(
-            &serde_json::json!({"status":"complete","accepted_steps":run.steps,"time_s":run.time_s,"origin_m":grid.origin_m,"dims":grid.dims,"cell_m":grid.cell_m,"ROI_z_m":[zlo,zhi],"zero_current_tail_schedule_s":tail,"diagnostic":"radial force moment per ROI volume, not a pressure solution or ejection criterion","warnings":volume.warnings}),
+            &serde_json::json!({"status":"complete","project":input,"accepted_steps":run.steps,"requested_max_steps":steps,"completion_criterion":if stationary_decay {"stationary_decay"} else {"fixed_steps"},"stationary_decay_witness":if stationary_decay {Some(serde_json::json!({"reaction_source_work_J":reaction_source_work,"reaction_numerical_loss_J":reaction_loss_sum,"final_reaction_energy_J":last_reaction,"generated_heat_J":run.energy.joule_j,"last_reaction_linkage_Wb":previous_linkage,"confirming_steps":decay_confirmations,"reaction_energy_over_heat_limit":1e-8,"relative_work_defect_limit":1e-3}))} else {None},"time_s":run.time_s,"origin_m":grid.origin_m,"dims":grid.dims,"cell_m":grid.cell_m,"ROI_z_m":[zlo,zhi],"zero_current_tail_schedule_s":tail,"diagnostic":"radial force moment per ROI volume, not a pressure solution or ejection criterion","warnings":volume.warnings}),
         )?,
     )?;
     Ok(())
@@ -208,9 +324,11 @@ pub(crate) fn run_with_expected_adapter(expected: Option<&str>) -> Result<(), Bo
 // prevent a larger decay timestep. The loader validates sample ordering.
 fn zero_table_tail(wave: &Waveform, after: f64) -> bool {
     match wave {
-        Waveform::Table { samples } => wave.value(after) == 0.
-            && samples.iter().filter(|s| s[0] >= after).all(|s| s[1] == 0.)
-            && samples.last().is_some_and(|s| s[1] == 0.),
+        Waveform::Table { samples } => {
+            wave.value(after) == 0.
+                && samples.iter().filter(|s| s[0] >= after).all(|s| s[1] == 0.)
+                && samples.last().is_some_and(|s| s[1] == 0.)
+        }
         _ => false,
     }
 }
@@ -221,9 +339,42 @@ mod tests {
     #[test]
     fn tail_rejects_later_pulses_and_zero_crossings() {
         let wave = |samples| Waveform::Table { samples };
-        assert!(zero_table_tail(&wave(vec![[0.,0.],[1.,2.],[2.,0.],[4.,0.]]), 3.));
-        assert!(!zero_table_tail(&wave(vec![[0.,0.],[1.,2.],[2.,0.],[4.,0.],[5.,2.],[6.,0.]]), 3.));
-        assert!(!zero_table_tail(&wave(vec![[0.,1.],[1.,0.],[2.,-1.],[3.,0.]]), 1.));
-        assert!(!zero_table_tail(&wave(vec![[0.,1.],[1.,0.],[2.,1.]]), 1.));
+        assert!(zero_table_tail(
+            &wave(vec![[0., 0.], [1., 2.], [2., 0.], [4., 0.]]),
+            3.
+        ));
+        assert!(!zero_table_tail(
+            &wave(vec![
+                [0., 0.],
+                [1., 2.],
+                [2., 0.],
+                [4., 0.],
+                [5., 2.],
+                [6., 0.]
+            ]),
+            3.
+        ));
+        assert!(!zero_table_tail(
+            &wave(vec![[0., 1.], [1., 0.], [2., -1.], [3., 0.]]),
+            1.
+        ));
+        assert!(!zero_table_tail(
+            &wave(vec![[0., 1.], [1., 0.], [2., 1.]]),
+            1.
+        ));
+    }
+    #[test]
+    fn stationary_endpoint_requires_both_energy_and_work_gates() {
+        assert!(decay_gate(1., 0.5, 0., 1., 1e-9, 1., 0.));
+        assert!(!decay_gate(1., 0.5, 0., 1., 1e-7, 1., 0.));
+        assert!(!decay_gate(1., 0.5, 0., 1., 1e-9, 2., 0.));
+    }
+    #[test]
+    fn stationary_endpoint_rejects_live_and_invalid_states() {
+        assert!(!decay_gate(0.4, 0.5, 0., 1., 0., 1., 0.));
+        assert!(!decay_gate(1., 0.5, 1., 1., 0., 1., 0.));
+        assert!(!decay_gate(1., 0.5, 0., 0., 0., 0., 0.));
+        assert!(!decay_gate(1., 0.5, 0., 1., -1e-9, 1., 0.));
+        assert!(!decay_gate(1., 0.5, 0., 1., 0., f64::NAN, 0.));
     }
 }

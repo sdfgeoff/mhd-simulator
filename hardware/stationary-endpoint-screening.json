@@ -1,0 +1,48 @@
+{
+  "status": "Retrospective endpoint check on completed native stationary datasets; no new GPU solve or measured runtime speedup",
+  "criterion": "After permanently-zero source transition150us, eight successive accepted records with reactionU/heat<=1e-8 and relative metalwork defect<=1e-3. Only fixed-property, one-coil, no-fluid/no-thermal cases eligible.",
+  "cases": [
+    {
+      "source": "artifacts/hardware-research/lowered-coil-cold-v2-nvidia-heater-off",
+      "diagnostics_sha256": "bfe213622778004ea91e58c5ab0f30fb2a8096e4a12497f1ae57d78df14b9daf",
+      "full_steps": 1917,
+      "would_stop_step": 307,
+      "would_stop_time_s": 0.00017100000000000033,
+      "fraction_of_steps_avoided": 0.8398539384454877,
+      "relative_generated_heat_change": 0.0,
+      "axial_impulse_tail_difference_N_s": 0.0,
+      "axial_impulse_tail_difference_over_full_abs_force_integral": 0.0,
+      "peak_ranges_identical": true
+    },
+    {
+      "source": "artifacts/hardware-research/lowered-coil-cold-v2-nvidia-heater-on",
+      "diagnostics_sha256": "861aca42971a6b59118b1f7da320d8c012e02ea6993a05237ece9ed8374f5f2e",
+      "full_steps": 1917,
+      "would_stop_step": 555,
+      "would_stop_time_s": 0.0009149999999999965,
+      "fraction_of_steps_avoided": 0.7104851330203443,
+      "relative_generated_heat_change": 6.405769524915961e-09,
+      "axial_impulse_tail_difference_N_s": 6.950103855568547e-18,
+      "axial_impulse_tail_difference_over_full_abs_force_integral": 6.229892442479082e-11,
+      "peak_ranges_identical": true
+    },
+    {
+      "source": "artifacts/hardware-research/coil-tail-reference-v2-nvidia-tail",
+      "diagnostics_sha256": "a4dff2f5221aa47732d7b597f4e38acf260ef2f02cb7f080f06548fbd80582ab",
+      "full_steps": 350,
+      "would_stop_step": 307,
+      "would_stop_time_s": 0.00017100000000000033,
+      "fraction_of_steps_avoided": 0.12285714285714289,
+      "relative_generated_heat_change": 0.0,
+      "axial_impulse_tail_difference_N_s": 0.0,
+      "axial_impulse_tail_difference_over_full_abs_force_integral": 0.0,
+      "peak_ranges_identical": true
+    }
+  ],
+  "limits": [
+    "Uses archived fixed-window samples to evaluate a stopping rule, not a CPU field solver.",
+    "New opt-in native entry point has CPU gate tests, but native adaptive completion has not been exercised.",
+    "It ends a stationary screen after decay; it does not zero fields, alter timesteps or skip physics during a moving-fluid simulation.",
+    "Step reduction is not a measured speedup. Existing running and queued native binaries/windows are unchanged."
+  ]
+}

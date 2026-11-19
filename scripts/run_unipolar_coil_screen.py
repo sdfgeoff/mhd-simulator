@@ -44,6 +44,8 @@ def main():
     root = Path("artifacts/hardware-research")
     plan_path = args.plan or root / "unipolar-coil-v2-plan.json"
     plan = json.loads(plan_path.read_text())
+    if any(j.get("completion") == "stationary_decay" for j in plan["jobs"]) and args.adapter != "default":
+        raise RuntimeError("This queue's adaptive completion path currently uses default-adapter provenance")
     state = args.state or root / (
         plan_path.stem.removesuffix("-plan") + "-" + args.adapter + "-state.json"
     )
@@ -61,6 +63,11 @@ def main():
     if args.probe_binary is not None:
         binary = args.probe_binary
     hashes = {str(plan_path): sha(plan_path), str(binary): sha(binary)}
+    if any(j.get("completion") == "stationary_decay" for j in plan["jobs"]):
+        if binary.name != "hardware_probe_decay":
+            raise RuntimeError("Adaptive plans require the explicit prebuilt hardware_probe_decay variant")
+        for support in ["scripts/verify_stationary_decay.py", "scripts/analyze_unipolar_coil.py"]:
+            hashes[support] = sha(support)
     if args.adapter == "default":
         inventory = Path("target/debug/examples/adapter_inventory")
         hashes[str(inventory)] = sha(inventory)
@@ -172,7 +179,7 @@ def main():
             pattern = (
                 r"^\s*\d+\s+(?:\S*/)?target/(?:debug|release)/examples/amd_hardware_probe(?:_tail)?\s"
                 if args.adapter == "amd"
-                else r"^\s*\d+\s+(?:\S*/)?target/(?:debug|release)/(?:examples/(?:conduction_flow(?:_precision|_current_tolerance|_energy)?|conduction_probe|applied_probe|hardware_probe(?:_tail)?)\s|mhd-workbench\s+--run-check\s)"
+                else r"^\s*\d+\s+(?:\S*/)?target/(?:debug|release)/(?:examples/(?:conduction_flow(?:_precision|_current_tolerance|_energy)?|conduction_probe|applied_probe|hardware_probe(?:_tail|_decay)?)\s|mhd-workbench\s+--run-check\s)"
             )
             if any(
                 re.search(
@@ -212,7 +219,17 @@ def main():
                 record(stage="failed", index=index, returncode=code)
                 raise SystemExit(code)
             status = json.loads((Path(job["output"]) / "run-status.json").read_text())
-            if not (
+            if job.get("completion") == "stationary_decay":
+                if not (status["status"] == "complete"
+                    and status.get("completion_criterion") == "stationary_decay"
+                    and status.get("requested_max_steps") == job["requested_steps"]
+                    and 0 < status["accepted_steps"] <= job["requested_steps"]
+                    and 0 < status["time_s"] <= job["end_time_s"] + 1e-10):
+                    record(stage="invalid_completed_report", index=index, status=status)
+                    raise RuntimeError("Adaptive stationary run did not meet its declared completion mode")
+                subprocess.run([sys.executable, "scripts/verify_stationary_decay.py", job["output"]],
+                               check=True, env=env)
+            elif not (
                 status["status"] == "complete"
                 and status["accepted_steps"] == job.get("requested_steps", 1200)
                 and abs(status["time_s"] - job.get("end_time_s", 600e-6)) < 1e-10
