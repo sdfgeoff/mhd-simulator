@@ -18,9 +18,11 @@ parser.add_argument("--output", type=Path, default=root / "diagrams/unipolar-nat
 args = parser.parse_args()
 record = json.loads(args.comparison.read_text())
 fig, axes = plt.subplots(3, 1, figsize=(10, 9), sharex=True, constrained_layout=True)
+end_us = 0.0
 for case in record["cases"]:
     rows = list(csv.DictReader((Path(case["source"]) / "diagnostics.csv").open()))
     t = np.array([float(r["time_s"]) for r in rows])
+    end_us = max(end_us, t[-1] * 1e6)
     current = np.array([float(r["coil_current_A"]) for r in rows])
     linkage = np.array([reaction_sample(r) for r in rows])
     resistance = case["round_wire_assumption"]["resistance_ohm"] + case["series_assumption"]["resistance_ohm"]
@@ -39,7 +41,7 @@ axes[0].legend()
 for ax in axes:
     ax.grid(alpha=.25)
     ax.axhline(0, color="black", linewidth=.6)
-    ax.set_xlim(0, 400)
+    ax.set_xlim(0, min(400, end_us))
 fig.suptitle(f"Single positive current pulse — {record['completed_cases']}/{record['expected_cases']} stationary cases complete\n200 µm native EM screen; fixed metal geometry and properties", fontsize=14)
 fig.supxlabel("Voltage includes assumed hot winding + 2 mΩ / 0.2 µH series path; excludes switching overshoot.\nRadial moment is not outlet pressure. No moving fluid or droplet prediction.", fontsize=10)
 output = args.output

@@ -130,12 +130,16 @@ def main():
         heat = float(final["accumulated_joule_J"])
         be = sum(float(row["reaction_BE_J"]) for row in rows)
         final_field = float(final["reaction_magnetic_J"])
+        if any(not math.isfinite(v) or v < 0 for v in [heat, be, final_field]):
+            raise ValueError("Invalid stationary heat/field/numerical-loss energy")
         decay_fraction = final_field / max(heat, 1e-30)
         if decay_fraction > 1e-8:
             raise ValueError("Stationary screen retains appreciable reaction energy; extend decay")
         defect = (work - heat - be - final_field) / max(
             abs(work), abs(heat + be + final_field), 1e-15
         )
+        if not math.isfinite(defect) or abs(defect) > 1e-3:
+            raise ValueError("Native stationary metal-work balance failed")
         expected_dose = (
             job["peak_A"] ** 2 * (job["rise_us"] + job["fall_us"]) * 1e-6 / 3
         )

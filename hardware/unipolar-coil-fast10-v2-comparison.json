@@ -1,0 +1,238 @@
+{
+  "status": "Completed native stationary unipolar coil comparisons; no jetting claim",
+  "expected_cases": 2,
+  "completed_cases": 2,
+  "other_case_status": [],
+  "plan_sha256": "6ca0215be32414919563b4c5ba2a0133aa1ad024026f65d6f50aed758bfff7a5",
+  "air_inductance": {
+    "project": "hardware/designs/single-coil-250A/case.mhd.json",
+    "method": "Independent thin round-wire Neumann energy estimate for generated CAD coils.\n\nThis is a lumped circuit parameter estimate, not a volumetric EM solver.\nThe softened filament uses a*exp(-1/4), matching low-frequency internal\ninductance of a round, uniform-current wire. Skin/proximity corrections and\nfinite cross-section errors are not resolved. Compare discretizations and\nthe thin circular-loop asymptote before using circuit voltage estimates.\n",
+    "winding": [
+      {
+        "maximum_segment_m": 0.0006,
+        "segments": 747,
+        "inductance_h": 8.271661909705144e-07
+      },
+      {
+        "maximum_segment_m": 0.0003,
+        "segments": 1369,
+        "inductance_h": 8.264120028191149e-07
+      },
+      {
+        "maximum_segment_m": 0.00015,
+        "segments": 2495,
+        "inductance_h": 8.262724870232199e-07
+      }
+    ],
+    "circle_check": {
+      "computed_h": 6.201111455725317e-08,
+      "thin_loop_asymptote_h": 6.201015980783838e-08,
+      "relative_error": 1.5396661091404695e-05
+    },
+    "warning": "Discretization agreement does not bound cross-section, skin, proximity, lead routing or conductor-reaction errors."
+  },
+  "method": "Interval V=R*meanI+(L_air+L_series)*deltaI/dt+delta(native reaction linkage)/dt. Exact linear-interval I2dt. Separate backward-Euler metal source-work identity from midpoint lumped-circuit net work.",
+  "cases": [
+    {
+      "geometry": "custom",
+      "shape": "fast10-slow100",
+      "source": "artifacts/hardware-research/unipolar-coil-fast10-v2-custom-fast10-slow100-cold-h020",
+      "diagnostics_sha256": "8128bdc31d7b76d8fb4c4b2da7ba9bf31d895c76c6b38974b9855b54097ac51f",
+      "I2dt_A2s": 2.2916666666666634,
+      "rms_A_at_assumed200Hz": 21.408720964441866,
+      "round_wire_assumption": {
+        "radius_m": 0.0006,
+        "length_m_including_CAD_return": 0.36473449376361033,
+        "conductivity_S_m": 25000000.0,
+        "resistance_ohm": 0.012899843910799706
+      },
+      "series_assumption": {
+        "resistance_ohm": 0.002,
+        "inductance_H": 2e-07
+      },
+      "loaded_terminal_interval_mean_voltage_range_V": [
+        -2.5563690424861676,
+        29.025357688632262
+      ],
+      "winding_heat_J": 0.02956214229558259,
+      "metal_heat_J": 0.0027826593757335973,
+      "winding_plus_metal_heat_W_at_assumed200Hz": 6.468960334263238,
+      "midpoint_terminal_net_work_J": 0.03691715006785593,
+      "backward_Euler_metal_source_work_J": 0.002871131402848448,
+      "metal_work_balance_relative_defect": -5.36618362311093e-07,
+      "metal_work_balance_gate_1e_minus3_passed": true,
+      "reaction_backward_Euler_loss_J": 8.84735678175089e-05,
+      "final_reaction_field_energy_J": 2.5817180267660316e-26,
+      "final_reaction_energy_over_generated_heat": 9.277880179227502e-24,
+      "final_reaction_energy_fraction_gate_1e_minus8_passed": true,
+      "radial_force_moment_over_ROI_volume_Pa_range": [
+        -1453.4792149530354,
+        13749.977847152952
+      ],
+      "liquid_axial_force_N_range": [
+        -0.12246112228379162,
+        0.014615280497076085
+      ],
+      "native_force_integrals": {
+        "phases": {
+          "rise": {
+            "axial_force_impulse_N_s_positive_up": -4.2958666558887715e-07,
+            "radial_moment_integral_Pa_s": 0.05217660640280771
+          },
+          "fall": {
+            "axial_force_impulse_N_s_positive_up": 2.672771309970321e-07,
+            "radial_moment_integral_Pa_s": -0.025201961626524168
+          },
+          "zero_current_decay": {
+            "axial_force_impulse_N_s_positive_up": 1.0666996234471877e-09,
+            "radial_moment_integral_Pa_s": -8.539562358421172e-05
+          }
+        },
+        "total_axial_impulse_N_s_positive_up": -1.6124283496839772e-07,
+        "scope": "Trapezoidal integration of stationary liquid ROI forces. Neither a wall-pressure solution nor the impulse delivered to an expelled drop. Rise/fall cancellation can change when the interface moves."
+      },
+      "stationary_current_projections": {
+        "at_200A_working_target": {
+          "peak_A": 200.0,
+          "rms_A_at_assumed200Hz": 17.126976771553494,
+          "loaded_terminal_interval_mean_voltage_range_V": [
+            -2.0450952339889343,
+            23.22028615090581
+          ],
+          "winding_metal_and_series_resistive_heat_W_at_assumed200Hz": 4.726801280595139,
+          "radial_force_moment_over_ROI_volume_Pa_range": [
+            -930.2266975699428,
+            8799.98582217789
+          ],
+          "liquid_axial_force_N_range": [
+            -0.07837511826162666,
+            0.009353779518128696
+          ]
+        },
+        "capped_at_tested_peak_and30Arms200Hz": {
+          "peak_A": 250.0,
+          "rms_A_at_assumed200Hz": 21.408720964441866,
+          "loaded_terminal_interval_mean_voltage_range_V": [
+            -2.5563690424861676,
+            29.025357688632262
+          ],
+          "winding_metal_and_series_resistive_heat_W_at_assumed200Hz": 7.385627000929904,
+          "radial_force_moment_over_ROI_volume_Pa_range": [
+            -1453.4792149530354,
+            13749.977847152952
+          ],
+          "liquid_axial_force_N_range": [
+            -0.12246112228379162,
+            0.014615280497076085
+          ]
+        },
+        "scope": "Same waveform, geometry and fixed conductivity/permeability: field/linkage/voltage scale with I; force/Joule heat with I\u00b2. Reuses the native stationary solution, not another field solver. No thermal, moving-interface or droplet scaling is inferred."
+      },
+      "scope": "Static liquid force moment is not nozzle pressure or a droplet criterion. Rate200Hz is arithmetic only, not demonstrated repetition."
+    },
+    {
+      "geometry": "v6",
+      "shape": "fast10-slow100",
+      "source": "artifacts/hardware-research/unipolar-coil-fast10-v2-v6-fast10-slow100-cold-h020",
+      "diagnostics_sha256": "e5005e5fb28c21e7d11c58372ab19c62fc55b5e94696c28979a1ca2ba2472e3e",
+      "I2dt_A2s": 2.2916666666666634,
+      "rms_A_at_assumed200Hz": 21.408720964441866,
+      "round_wire_assumption": {
+        "radius_m": 0.0006,
+        "length_m_including_CAD_return": 0.36473449376361033,
+        "conductivity_S_m": 25000000.0,
+        "resistance_ohm": 0.012899843910799706
+      },
+      "series_assumption": {
+        "resistance_ohm": 0.002,
+        "inductance_H": 2e-07
+      },
+      "loaded_terminal_interval_mean_voltage_range_V": [
+        -2.5563744994543782,
+        29.22088267860881
+      ],
+      "winding_heat_J": 0.02956214229558259,
+      "metal_heat_J": 0.001861634507513935,
+      "winding_plus_metal_heat_W_at_assumed200Hz": 6.284755360619306,
+      "midpoint_terminal_net_work_J": 0.03599740994535786,
+      "backward_Euler_metal_source_work_J": 0.001914043318045344,
+      "metal_work_balance_relative_defect": -3.230151446401732e-07,
+      "metal_work_balance_gate_1e_minus3_passed": true,
+      "reaction_backward_Euler_loss_J": 5.240942879658795e-05,
+      "final_reaction_field_energy_J": 1.0312284959590942e-25,
+      "final_reaction_energy_over_generated_heat": 5.539371406131798e-23,
+      "final_reaction_energy_fraction_gate_1e_minus8_passed": true,
+      "radial_force_moment_over_ROI_volume_Pa_range": [
+        -590.6638966474815,
+        5024.854767459248
+      ],
+      "liquid_axial_force_N_range": [
+        -0.0017576650626293434,
+        6.497954025332068e-05
+      ],
+      "native_force_integrals": {
+        "phases": {
+          "rise": {
+            "axial_force_impulse_N_s_positive_up": -7.71481470102232e-09,
+            "radial_moment_integral_Pa_s": 0.018050809463502005
+          },
+          "fall": {
+            "axial_force_impulse_N_s_positive_up": -4.19672945950793e-09,
+            "radial_moment_integral_Pa_s": -0.013535514541604454
+          },
+          "zero_current_decay": {
+            "axial_force_impulse_N_s_positive_up": -1.9974531728589273e-11,
+            "radial_moment_integral_Pa_s": -3.2802860100005895e-05
+          }
+        },
+        "total_axial_impulse_N_s_positive_up": -1.1931518692258846e-08,
+        "scope": "Trapezoidal integration of stationary liquid ROI forces. Neither a wall-pressure solution nor the impulse delivered to an expelled drop. Rise/fall cancellation can change when the interface moves."
+      },
+      "stationary_current_projections": {
+        "at_200A_working_target": {
+          "peak_A": 200.0,
+          "rms_A_at_assumed200Hz": 17.126976771553494,
+          "loaded_terminal_interval_mean_voltage_range_V": [
+            -2.045099599563503,
+            23.37670614288705
+          ],
+          "winding_metal_and_series_resistive_heat_W_at_assumed200Hz": 4.608910097463022,
+          "radial_force_moment_over_ROI_volume_Pa_range": [
+            -378.0248938543882,
+            3215.9070511739196
+          ],
+          "liquid_axial_force_N_range": [
+            -0.00112490564008278,
+            4.158690576212524e-05
+          ]
+        },
+        "capped_at_tested_peak_and30Arms200Hz": {
+          "peak_A": 250.0,
+          "rms_A_at_assumed200Hz": 21.408720964441866,
+          "loaded_terminal_interval_mean_voltage_range_V": [
+            -2.5563744994543782,
+            29.22088267860881
+          ],
+          "winding_metal_and_series_resistive_heat_W_at_assumed200Hz": 7.201422027285971,
+          "radial_force_moment_over_ROI_volume_Pa_range": [
+            -590.6638966474815,
+            5024.854767459248
+          ],
+          "liquid_axial_force_N_range": [
+            -0.0017576650626293434,
+            6.497954025332068e-05
+          ]
+        },
+        "scope": "Same waveform, geometry and fixed conductivity/permeability: field/linkage/voltage scale with I; force/Joule heat with I\u00b2. Reuses the native stationary solution, not another field solver. No thermal, moving-interface or droplet scaling is inferred."
+      },
+      "scope": "Static liquid force moment is not nozzle pressure or a droplet criterion. Rate200Hz is arithmetic only, not demonstrated repetition."
+    }
+  ],
+  "limits": [
+    "Prescribed current; no switching, current-loop control, PWM ripple, capacitor or loaded circuit simulation.",
+    "AirL retains softened round-wire assumptions. Core radius used for circuit area is an explicit wire assumption; actual winding cross-section, hot resistance and lead routing need specification.",
+    "Interval voltages exclude switch-node overshoot. Negative voltage at positive current requires controlled recovery or a suitable clamp.",
+    "Metal reaction uses stationary initial conductivity, no thermal/motional evolution. No equality of fields/pressure in the moving meniscus is established.",
+    "200um cold screen is not spatial convergence. Inspect work-balance and numerical-loss sensitivity before selecting a flow waveform."
+  ]
+}
