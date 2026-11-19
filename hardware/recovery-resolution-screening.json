@@ -1,0 +1,57 @@
+{
+  "status": "Recovery-resolution screening; no measured damping or repetition limit for our designs",
+  "material": {
+    "source": "hardware/solder-properties.json",
+    "alloy": "Sn99.3Cu0.7",
+    "density_kg_m3": 7000.0,
+    "dynamic_viscosity_Pa_s": 0.001894473372694133,
+    "kinematic_viscosity_m2_s": 2.70639053242019e-07,
+    "surface_tension_N_m": 0.53
+  },
+  "source": {
+    "paper": "Physics-Based Nozzle Design Rules for High-Frequency Liquid Metal Jetting",
+    "url": "https://arxiv.org/abs/2207.07023",
+    "published_doi": "https://doi.org/10.1063/5.0107566",
+    "relevant_scope": "Pinned-meniscus aluminum nozzle models; oscillatory wall layers and geometry-dependent recovery. Not our solder/free-level/slit/contact-line configuration."
+  },
+  "scaling": "delta~sqrt(nu/omega); frequencies here are exploratory rad/s values, not measured frequencies of our nozzle.",
+  "selected_scales": [
+    {
+      "angular_frequency_rad_s": 500.0,
+      "oscillatory_viscous_thickness_um": 23.26538429693432,
+      "uniform_50um_spacing_over_thickness": 2.149115585706809,
+      "uniform_100um_spacing_over_thickness": 4.298231171413618
+    },
+    {
+      "angular_frequency_rad_s": 1000.0,
+      "oscillatory_viscous_thickness_um": 16.451111003273276,
+      "uniform_50um_spacing_over_thickness": 3.039308408413967,
+      "uniform_100um_spacing_over_thickness": 6.078616816827934
+    },
+    {
+      "angular_frequency_rad_s": 2000.0,
+      "oscillatory_viscous_thickness_um": 11.63269214846716,
+      "uniform_50um_spacing_over_thickness": 4.298231171413618,
+      "uniform_100um_spacing_over_thickness": 8.596462342827236
+    },
+    {
+      "angular_frequency_rad_s": 5000.0,
+      "oscillatory_viscous_thickness_um": 7.3571605017427615,
+      "uniform_50um_spacing_over_thickness": 6.796100205800324,
+      "uniform_100um_spacing_over_thickness": 13.592200411600649
+    }
+  ],
+  "rest_to_rest_example": {
+    "rate_Hz": 200,
+    "inter_pulse_s": 0.005,
+    "chosen_remaining_amplitude_fraction": 0.01,
+    "required_exponential_decay_rate_s_inv": 921.0340371976182,
+    "scope": "An illustrative fully-settled-before-next-pulse criterion, not a user requirement or necessary bound. Phase-controlled periodic operation can use residual motion."
+  },
+  "implications": [
+    "The50umgrid can resolve a0.5mmdrop across10cells while still under-resolving a roughly7..23um viscous wall layer. Single-drop size checks therefore do not qualify recovery/damping/rate.",
+    "Five milliseconds of conditioning need not mean equilibrium. Compare common initial histories and record the phase/meniscus state at drive onset.",
+    "Maintain the distinction between a clean single pulse and stable periodic jetting. Measure meniscus recovery or simulate an adequately validated periodic state before claiming hundreds of drops per second.",
+    "Geometry changes that increase wetted area per active fluid volume may aid damping, at a cost in pressure loss and manufacture. No extra internal structures are adopted without a practical benefit."
+  ]
+}

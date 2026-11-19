@@ -569,3 +569,11 @@ are `target/debug/examples/thermal_conductance --check`.
      --output hardware/cylinder-pulse-screening.json \
      --plot-path artifacts/hardware-research/diagrams/cylinder-pulse-screen-v2.png
    ```
+8. [Recovery-resolution screening](recovery-resolution-screening.json) separates
+   drop-scale resolution from viscous damping resolution. For the recorded SnCu
+   properties and exploratory oscillation frequencies, the wall layer scale is
+   roughly 7–23 µm. A 50 µm grid can therefore show a detached drop while leaving
+   its recovery dynamics unresolved. Conditioning time is not equilibrium, and
+   single-pulse outcomes do not establish the target repetition rate. The cited
+   nozzle study assumes pinned contact lines; its fitted rates are not applied
+   to these free-level and slit geometries.
