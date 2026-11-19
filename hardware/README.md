@@ -665,7 +665,8 @@ are `target/debug/examples/thermal_conductance --check`.
     The [liquid/solid interface-resistivity sensitivity](rooted-interface-screening.json)
     is more consequential: at an assumed10⁻⁹Ωm² there are no detached regions
     in any saved frame through3.6ms, despite the same110A waveform. It applies
-    to every conducting liquid/solid face, including feedstock, and is not a
+    to conducting fluid/solid faces; no feed wire is modeled in this rooted
+    fixture. It is not a
     measured contact value or a Cu/SS dry-joint model. Current transfer and
     assembled-heater bypass need checking before choosing an ideal-contact
     pulse as a hardware operating point.

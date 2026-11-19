@@ -332,7 +332,7 @@
     }
   ],
   "limits": [
-    "The assumed interface resistivity applies to all conducting liquid/solid faces, including feedstock; it is not a measured Cu/SS dry-contact resistance.",
+    "The assumed interface resistivity applies to all conducting fluid/solid faces; this rooted fixture has no feed wire; it is not a measured Cu/SS dry-contact resistance.",
     "The grid is still100um; breakup, wetting and thin wall layers remain unresolved.",
     "One pulse, imposed permanent B, no thermal evolution or circuit switching.",
     "Matching recorded native configuration does not prove historical project-file identity; use frozen queue manifests for input provenance."
@@ -342,7 +342,24 @@
     "candidate_below_tip_nL_at_final": 1.2300650460810718,
     "candidate_EM_mechanical_work_over_reference": 0.15517895672106824,
     "candidate_peak_terminal_voltage_over_reference": 1.3361634383822316,
-    "meaning": "The ideal-interface110A ejection is not robust to this assumed liquid/solid interface resistivity. This is a sensitivity value, not a measurement of real solder/steel or solder/copper contact. It applies to all conducting liquid/solid faces, including fixed feedstock; no separate Cu/SS dry-joint resistance is modeled.",
+    "meaning": "The ideal-interface110A ejection is not robust to this assumed liquid/solid interface resistivity. This is a sensitivity value, not a measurement of real solder/steel or solder/copper contact. It applies to all conducting fluid/solid faces in this fixture, which contains no feed wire; no separate Cu/SS dry-joint resistance is modeled.",
     "next": "Prioritize practical current-transfer and assembled-heater bypass checks before treating ideal-contact pulse tuning as a hardware operating point."
+  },
+  "fixture_scope_correction": {
+    "project_sha256": "220616dc5c186c12d1ee8f0d063d72dbab6209de7988b409e11073d6683a6ccc",
+    "geometry_sha256": "736e8ea6980f7210e40099703110454fcd7e1ed73fa34cf58f1b6f60f009ffc7",
+    "body_names": [
+      "Short M6 nozzle stub4 / 0",
+      "Liquid solder / 0",
+      "Positive copper contact / 0",
+      "Negative copper contact / 0",
+      "Bias magnet 1 / 0",
+      "Bias magnet 2 / 0",
+      "Mica electrical insulator -1 / 0",
+      "Mica electrical insulator 1 / 0",
+      "Heated aluminium block / 0"
+    ],
+    "modeled_feed_wire": false,
+    "meaning": "The uniform interface parameter applies to conducting faces between fluid-tagged cells and solid-tagged cells. In this rooted fixture the principal initial wetted conductor is stainless. There is no feedstock body. Earlier prose incorrectly included a feed-wire interface; native inputs and numerical results are unchanged."
   }
 }

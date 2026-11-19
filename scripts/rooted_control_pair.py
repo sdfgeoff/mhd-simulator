@@ -62,5 +62,5 @@ DESCRIPTIONS = {
     "delay": ("Completed fixed-grid retrieval-delay comparison; not grid convergence",
               "Earlier retrieval changes pulse timing, not pulse widths or reverse amplitude; one pulse does not establish recovery or repeatability."),
     "interface": ("Completed fixed-grid liquid/solid interface-resistivity sensitivity",
-                  "The assumed interface resistivity applies to all conducting liquid/solid faces, including feedstock; it is not a measured Cu/SS dry-contact resistance."),
+                  "The assumed interface resistivity applies to all conducting fluid/solid faces; this rooted fixture has no feed wire; it is not a measured Cu/SS dry-contact resistance."),
 }

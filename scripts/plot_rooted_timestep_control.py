@@ -79,7 +79,7 @@ fig.colorbar(picture, cax=color, label="Liquid fraction")
 caption = {"timestep": "Left pair: only the timestep changes. Right: finer grid at matched timestep, with an earlier charge solver.\n",
            "retract": "Same geometry and forward pulse; reverse amplitude changes.\n",
            "delay": "Same geometry, currents and both pulse widths; only the 25 µs inter-pulse gap is removed.\n",
-           "interface": "Only liquid/solid interface resistivity changes, including feedstock contact; not Cu/SS dry-joint resistance.\n"}[args.study]
+           "interface": "Only fluid/solid interface resistivity changes; no feed wire is modeled. Cu/SS dry joints remain ideal.\n"}[args.study]
 fig.text(.5, .07, caption + "Two central XZ slices averaged; grey = solid, orange = exit. Diameters use 3D α ≥ 0.5 connectivity.\n"
          "One pulse only; no claim of converged breakup or repetitive hardware performance.", ha="center", fontsize=9)
 args.output.parent.mkdir(parents=True, exist_ok=True)
