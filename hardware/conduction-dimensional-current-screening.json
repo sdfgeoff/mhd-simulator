@@ -1,5 +1,5 @@
 {
-  "status": "Seven GPU analytic/scaling checks pass; full flow baseline pending.",
+  "status": "Same-grid/time native baseline complete and compared; smaller-timestep and stronger-pullback studies pending.",
   "reason": "Relative-only motional port conservation failed on 12.47571 nA net current and 183.76594 uA absolute face current at 2.574 ms; true local residual was 8.954429e-8.",
   "scope": "Research client option only. Default zero preserves strict behavior. Unit-voltage conservation remains 10 ppm; local CG residual limits are unchanged.",
   "selected_motion_absolute_tolerance_A": 1e-06,
@@ -19,5 +19,13 @@
     "Failed outputs preserved. New criterion is explicit.",
     "Baseline, timestep control and stronger reversal require native field and energy comparisons.",
     "No qualification of wetting, thermal behavior, driver or repetition."
-  ]
+  ],
+  "native_baseline_comparison": "hardware/rooted-motion-current-baseline-comparison.json",
+  "baseline_current_criteria": {
+    "max_combined_port_imbalance_A": 1.52587890625e-05,
+    "max_motional_imbalance_A": 2.3173926422259683e-07,
+    "max_unit_relative_imbalance": 4.326152520661708e-06,
+    "motional_absolute_tolerance_A": 9.999999974752427e-07,
+    "unit_relative_tolerance": 1e-05
+  }
 }
