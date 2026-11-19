@@ -21,11 +21,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--after-state", type=Path, required=True)
     parser.add_argument("--after-pid", type=int, required=True)
+    parser.add_argument("--state", type=Path)
     args = parser.parse_args()
     root = Path("artifacts/hardware-research")
     plan_path = root / "unipolar-coil-v1-plan.json"
     plan = json.loads(plan_path.read_text())
-    state = root / "unipolar-coil-v1-state.json"
+    state = args.state or root / "unipolar-coil-v1-state.json"
     if state.exists() or any(
         Path(j["output"]).exists() or Path(j["output"] + ".log").exists()
         for j in plan["jobs"]

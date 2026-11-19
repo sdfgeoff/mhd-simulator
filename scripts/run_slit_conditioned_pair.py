@@ -25,11 +25,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--after-state", type=Path)
     parser.add_argument("--after-pid", type=int)
+    parser.add_argument("--state", type=Path)
     args = parser.parse_args()
     if (args.after_state is None) != (args.after_pid is None):
         parser.error("Supply both predecessor state and controller PID")
     root = Path("artifacts/hardware-research")
-    state = root / "split-slit-conditioned-pair-state.json"
+    state = args.state or root / "split-slit-conditioned-pair-state.json"
     project = root / "cases/split-slit-steel-flow-h010.mhd.json"
     binary = Path("target/debug/examples/conduction_flow")
     outputs = [root / f"split-slit-steel-conditioned-{a}A-xends-h010" for a in [0, 40]]
