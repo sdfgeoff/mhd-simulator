@@ -1,0 +1,87 @@
+{
+  "status": "Completed coarse unpowered startup; stationary meniscus not established",
+  "source": "artifacts/hardware-research/coil-low-fill-flow-v1-0A-h020",
+  "analysis_sha256": "0410c281cd21a86b3d531ca4b95bec14df76cd30f58a46a8d3c8176347308d78",
+  "diagnostics_sha256": "27d8d2bb7a9d1181e362e2637b15bdb707f1a8b7d45b6b5fd022a6de266c470f",
+  "grid_cell_um": 200,
+  "end_time_ms": 2.1000000000000036,
+  "EM_zero_check": "Every saved diagnostics row has exactly zero maximum B and cumulative Joule heat. The observed startup motion is present without electromagnetic actuation.",
+  "frames": [
+    {
+      "step": 0,
+      "time_us": 0.0,
+      "first_nonnegative_cell_plane_z_mm": 0.10000000474974513,
+      "exit_plane_alpha_area_mm2": 0.16000000566244071,
+      "exit_plane_mean_uz_m_s": 0.0,
+      "below_tip_nl": 0.0,
+      "front_z_mm_alpha_half": 0.10000000474974513
+    },
+    {
+      "step": 300,
+      "time_us": 150.0000000000004,
+      "first_nonnegative_cell_plane_z_mm": 0.10000000474974513,
+      "exit_plane_alpha_area_mm2": 0.15890082915116419,
+      "exit_plane_mean_uz_m_s": 0.018177170883067886,
+      "below_tip_nl": 0.0,
+      "front_z_mm_alpha_half": 0.10000000474974513
+    },
+    {
+      "step": 600,
+      "time_us": 300.00000000000404,
+      "first_nonnegative_cell_plane_z_mm": 0.10000000474974513,
+      "exit_plane_alpha_area_mm2": 0.15565764236923157,
+      "exit_plane_mean_uz_m_s": 0.03570423566726154,
+      "below_tip_nl": 0.0,
+      "front_z_mm_alpha_half": 0.10000000474974513
+    },
+    {
+      "step": 900,
+      "time_us": 749.9999999999987,
+      "first_nonnegative_cell_plane_z_mm": 0.10000000474974513,
+      "exit_plane_alpha_area_mm2": 0.13399338564586302,
+      "exit_plane_mean_uz_m_s": 0.08261048080480712,
+      "below_tip_nl": 0.0,
+      "front_z_mm_alpha_half": 0.10000000474974513
+    },
+    {
+      "step": 1200,
+      "time_us": 1199.9999999999934,
+      "first_nonnegative_cell_plane_z_mm": 0.10000000474974513,
+      "exit_plane_alpha_area_mm2": 0.09814866998341272,
+      "exit_plane_mean_uz_m_s": 0.11273579287660179,
+      "below_tip_nl": 0.0,
+      "front_z_mm_alpha_half": 0.10000000474974513
+    },
+    {
+      "step": 1500,
+      "time_us": 1649.9999999999882,
+      "first_nonnegative_cell_plane_z_mm": 0.10000000474974513,
+      "exit_plane_alpha_area_mm2": 0.056330406056438576,
+      "exit_plane_mean_uz_m_s": 0.11372389035151254,
+      "below_tip_nl": 0.0,
+      "front_z_mm_alpha_half": 0.3000000142492354
+    },
+    {
+      "step": 1800,
+      "time_us": 2100.0000000000036,
+      "first_nonnegative_cell_plane_z_mm": 0.10000000474974513,
+      "exit_plane_alpha_area_mm2": 0.02106327376184405,
+      "exit_plane_mean_uz_m_s": 0.07559059459443246,
+      "below_tip_nl": 0.0,
+      "front_z_mm_alpha_half": 0.3000000142492354
+    }
+  ],
+  "final_over_initial_exit_plane_liquid_proxy": 0.13164545635255911,
+  "lowest_alpha_half_cell_plane_shift_mm": 0.20000000949949026,
+  "interpretation": [
+    "At2.1ms the first-positive-cell-plane liquid proxy is0.0211mm2 versus0.1600mm2 initially, with mean vertical velocity+0.0756m/s (upward).",
+    "The lowest alpha>=0.5 occupied cell plane changes0.1->0.3mm. At200um this is a one-cell diagnostic, not a resolved continuous contact-line displacement.",
+    "This unforced startup is still moving. A powered/no-power comparison from this initial state tests that startup, not a pulse from a settled experimental meniscus."
+  ],
+  "limits": [
+    "Only2.5cells across the0.5mm outlet;0.15mm land is subcell.",
+    "Cell-centered section proxies are not exact face fluxes or true CAD outlet areas.",
+    "No calibrated advancing/receding contact angles, edge pinning, hysteresis or oxide film.",
+    "Before treating a coarse negative ejection result as a hardware conclusion, assess spatial resolution, gas-domain influence and initial-meniscus conditioning."
+  ]
+}
