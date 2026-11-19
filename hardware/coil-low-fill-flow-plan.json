@@ -1,0 +1,61 @@
+{
+  "status": "Prepared zero/driven normal unified flow pair; no numerical result",
+  "source_sha256": {
+    "artifacts/hardware-research/cases/coil-fill-control-v1/low-symmetric100-flow-h010.mhd.json": "f4e595ff6c89396798071d680e693985430d269d2fd2e945a7f4e019e64bd47d",
+    "artifacts/hardware-research/unipolar-coil-fast10-v2-plan.json": "6ca0215be32414919563b4c5ba2a0133aa1ad024026f65d6f50aed758bfff7a5"
+  },
+  "jobs": [
+    {
+      "peak_A": 0,
+      "project": "artifacts/hardware-research/cases/coil-low-fill-flow-v1/low-fill-0A-flow-h020.mhd.json",
+      "project_sha256": "3dac5e658910fca7b6e9092b27520b685cc338f23b59b4fef83bc48adace7168",
+      "output": "artifacts/hardware-research/coil-low-fill-flow-v1-0A-h020",
+      "requested_steps": 1800,
+      "end_time_s": 0.0021,
+      "command": [
+        "target/debug/mhd-workbench",
+        "--run-check",
+        "artifacts/hardware-research/cases/coil-low-fill-flow-v1/low-fill-0A-flow-h020.mhd.json",
+        "1800",
+        "--output",
+        "artifacts/hardware-research/coil-low-fill-flow-v1-0A-h020",
+        "--field-every",
+        "300",
+        "--tail-after-us",
+        "300",
+        "--tail-dt-us",
+        "1.5"
+      ]
+    },
+    {
+      "peak_A": 250,
+      "project": "artifacts/hardware-research/cases/coil-low-fill-flow-v1/low-fill-250A-flow-h020.mhd.json",
+      "project_sha256": "f51471e0935343b32121bd4d8f5bebebdefc48aec9208f61b153ad314f3dd1d3",
+      "output": "artifacts/hardware-research/coil-low-fill-flow-v1-250A-h020",
+      "requested_steps": 1800,
+      "end_time_s": 0.0021,
+      "command": [
+        "target/debug/mhd-workbench",
+        "--run-check",
+        "artifacts/hardware-research/cases/coil-low-fill-flow-v1/low-fill-250A-flow-h020.mhd.json",
+        "1800",
+        "--output",
+        "artifacts/hardware-research/coil-low-fill-flow-v1-250A-h020",
+        "--field-every",
+        "300",
+        "--tail-after-us",
+        "300",
+        "--tail-dt-us",
+        "1.5"
+      ]
+    }
+  ],
+  "purpose": "Test moving interface under the original single unipolar coil mechanism, with a matched unpowered control. No prescribed pressure, jet or frozen force field.",
+  "limits": [
+    "200um exploratory mesh gives only2.5cells across0.5mm outlet; neither absence nor presence of a detached component certifies jetting.",
+    "Low free level5.6mm and fixed feed tip5.5mm leave0.1mm immersion, below coarse spacing. Inspect native voxelization and refine before conclusions.",
+    "Negative-z domain extends to\u22124mm versus\u22122mm in the cold screen; no assumption of identical native force is made.",
+    "Common clock0.5us through300us, then1.5us for both EM/fluid; changing timestep does not freeze EM coupling.",
+    "No thermal evolution, calibrated wetting, oxide, repetition or hardware qualification. Final duration2.1ms may require extension for breakup assessment."
+  ]
+}
