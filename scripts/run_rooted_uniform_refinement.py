@@ -9,6 +9,7 @@ import argparse
 import fcntl
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -22,7 +23,13 @@ parser.add_argument("--study", choices=["uniform", "temporal-retract", "precisio
 parser.add_argument("--after-state", type=Path)
 parser.add_argument("--after-pid", type=int)
 parser.add_argument("--state", type=Path, help="Fresh state path for an explicitly reviewed unstarted study")
+parser.add_argument("--motion-absolute-tolerance-a", type=float, default=0.,
+                    help="Explicit dimensional floor for the motional basis; unit-current gate remains strict")
 args = parser.parse_args()
+if not math.isfinite(args.motion_absolute_tolerance_a) or args.motion_absolute_tolerance_a < 0:
+    parser.error("Choose a finite nonnegative motional current tolerance")
+if args.motion_absolute_tolerance_a > 0 and args.study != "precision-temporal-retract":
+    parser.error("Dimensional tolerance requires the fresh precision-temporal-retract study")
 if (args.after_state is None) != (args.after_pid is None):
     parser.error("Supply both predecessor state and controller PID")
 state = args.state or root / {"uniform": "rooted-uniform-refinement-state.json",
@@ -31,6 +38,8 @@ state = args.state or root / {"uniform": "rooted-uniform-refinement-state.json",
 env = {**os.environ, "TMPDIR": str(Path.cwd() / "artifacts/build-temp")}
 binary = Path("target/debug/examples/conduction_flow_precision" if args.study == "precision-temporal-retract"
               else "target/debug/examples/conduction_flow")
+if args.motion_absolute_tolerance_a > 0:
+    binary = Path("target/debug/examples/conduction_flow_current_tolerance")
 jobs = []
 specs = ([
     ("h010", "3", "1200", "300", ".25", "m6-rooted08-flow110-r25-chargefix-h010"),
@@ -46,10 +55,13 @@ if args.study == "precision-temporal-retract":
         ("h010", "1.5", "2400", "600", ".5", "m6-rooted08-flow110-r50-precisionv2-h010-dt1p5"),
     ]
 for grid, dt, steps, every, retract, name in specs:
+    if args.motion_absolute_tolerance_a > 0:
+        name = name.replace("precisionv2", f"motionabs{args.motion_absolute_tolerance_a:g}A")
     output = root / name
     jobs.append(
         {
             "output": str(output),
+            "motional_boundary_absolute_tolerance_A": args.motion_absolute_tolerance_a,
             "command": [
                 str(binary),
                 str(root / ("cases/m6-rooted08-flow-compactgas-" + grid + ".mhd.json")),
@@ -68,6 +80,8 @@ for grid, dt, steps, every, retract, name in specs:
             ],
         }
     )
+    if args.motion_absolute_tolerance_a > 0:
+        jobs[-1]["command"] += ["0", str(args.motion_absolute_tolerance_a)]
 if state.exists() or any(Path(j["output"]).exists() or Path(j["output"] + ".log").exists() for j in jobs):
     raise RuntimeError(
         "Existing uniform refinement state/output; inspect before repeating"
@@ -125,7 +139,7 @@ while args.after_state:
 lease = (root / "native-flow-sequence.lock").open("a")
 fcntl.flock(lease, fcntl.LOCK_EX | fcntl.LOCK_NB)
 ps = subprocess.run(["ps", "-eo", "pid=,args="], capture_output=True, text=True, check=True)
-if any(re.search(r"^\s*\d+\s+(?:\S*/)?target/(?:debug|release)/examples/(?:conduction_flow(?:_precision)?|conduction_probe|applied_probe)\s", line)
+if any(re.search(r"^\s*\d+\s+(?:\S*/)?target/(?:debug|release)/examples/(?:conduction_flow(?:_precision|_current_tolerance)?|conduction_probe|applied_probe)\s", line)
        for line in ps.stdout.splitlines()):
     record(stage="unexpected_active_native_job")
     raise RuntimeError("Native current-driven GPU job active")

@@ -1,0 +1,23 @@
+{
+  "status": "Seven GPU analytic/scaling checks pass; full flow baseline pending.",
+  "reason": "Relative-only motional port conservation failed on 12.47571 nA net current and 183.76594 uA absolute face current at 2.574 ms; true local residual was 8.954429e-8.",
+  "scope": "Research client option only. Default zero preserves strict behavior. Unit-voltage conservation remains 10 ppm; local CG residual limits are unchanged.",
+  "selected_motion_absolute_tolerance_A": 1e-06,
+  "motional_gate": "abs(net terminalface flux A) <=1e-5*sum(abs(terminalface flux A))+1e-6 A",
+  "unit_gate": "Strict 10 ppm relative; dimensional allowance never applies to the unit-voltage basis.",
+  "rationale": "A dimensional allowance handles near-zero motional currents in ampere-scale studies. It does not bound local force error; native field, energy and trajectory comparisons remain required.",
+  "verification": {
+    "GPUtests": 7,
+    "GPUtest_seconds": 2.25,
+    "new_test": "Nonuniform shear with zero external current: scaling velocity by 1e-6 preserves current norm and Joule heat scaling within 5e-4; unit conservation <=1e-5 and true residual <=1e-6.",
+    "strict_tests": "Six existing tests retain the default zero dimensional allowance."
+  },
+  "metadata": "CSV records unit relative defect, motional imbalance in amperes, and return current. Run status records criteria and maximum combined port imbalance.",
+  "old_failed_run": "artifacts/hardware-research/m6-rooted08-flow110-r25-precisionv2-h010-dt3",
+  "fresh_study_state": "artifacts/hardware-research/rooted-motion-current-temporal-retract-state.json",
+  "limits": [
+    "Failed outputs preserved. New criterion is explicit.",
+    "Baseline, timestep control and stronger reversal require native field and energy comparisons.",
+    "No qualification of wetting, thermal behavior, driver or repetition."
+  ]
+}

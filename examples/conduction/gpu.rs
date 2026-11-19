@@ -31,6 +31,10 @@ pub struct Conduction {
     pub iterations: u32,
     pub relative_residual: f32,
     pub boundary_current_defect: f32,
+    boundary_current_imbalance_a: f32,
+    pub unit_boundary_current_defect: f32,
+    pub motional_boundary_current_imbalance_a: f32,
+    motion_boundary_absolute_tolerance_a: f32,
 }
 impl Conduction {
     pub fn new(
@@ -202,6 +206,10 @@ impl Conduction {
             iterations: 0,
             relative_residual: f32::INFINITY,
             boundary_current_defect: f32::INFINITY,
+            boundary_current_imbalance_a: f32::INFINITY,
+            unit_boundary_current_defect: f32::INFINITY,
+            motional_boundary_current_imbalance_a: f32::INFINITY,
+            motion_boundary_absolute_tolerance_a: 0.,
         })
     }
     fn dispatch(&self, commands: &[(&str, u32)]) {
@@ -242,6 +250,7 @@ impl Conduction {
             self.dispatch(&[("clear_solution", groups)]);
             self.relative_residual = 0.;
             self.boundary_current_defect = 0.;
+            self.boundary_current_imbalance_a = 0.;
             return Ok(());
         }
         self.relative_residual = (initial[1] / initial[2]).sqrt();
@@ -312,10 +321,29 @@ impl Conduction {
         ]);
         let values = self.scalar_values()?[3];
         self.boundary_current_defect = values[0].abs() / values[1].max(1e-30);
+        self.boundary_current_imbalance_a = values[0].abs() * self.params.physical[0] * 1e6;
         // A local L2 residual alone can hide a coherent current leak in a large
         // conductor. Normalize by absolute terminal-face flux, including when
         // the motional solve has opposing currents at a zero-net-current port.
-        Ok(self.boundary_current_defect.is_finite() && self.boundary_current_defect <= 1e-5)
+        let mixed = self.params.control[0] == 1
+            && self.motion_boundary_absolute_tolerance_a > 0.
+            && values[0].abs()
+                <= 1e-5 * values[1]
+                    + self.motion_boundary_absolute_tolerance_a / (self.params.physical[0] * 1e6);
+        Ok(self.boundary_current_defect.is_finite()
+            && (self.boundary_current_defect <= 1e-5 || mixed))
+    }
+    /// Optional dimensional floor for the zero-terminal-voltage motional basis.
+    /// Unit-voltage current conservation and local true-residual limits stay strict.
+    pub fn set_motional_boundary_absolute_tolerance_a(&mut self, value: f32) -> Result<(), String> {
+        if !value.is_finite() || value < 0. {
+            return Err("Motional boundary tolerance must be finite and nonnegative".into());
+        }
+        self.motion_boundary_absolute_tolerance_a = value;
+        Ok(())
+    }
+    pub fn motional_boundary_absolute_tolerance_a(&self) -> f32 {
+        self.motion_boundary_absolute_tolerance_a
     }
     pub fn set_relative_tolerance(&mut self, tolerance: f32) -> Result<(), String> {
         if !tolerance.is_finite() || tolerance <= 0. || tolerance >= 1. {
@@ -379,6 +407,7 @@ impl Conduction {
         let unit_iterations = self.iterations;
         let unit_residual = self.relative_residual;
         let unit_boundary_defect = self.boundary_current_defect;
+        self.unit_boundary_current_defect = unit_boundary_defect;
         let unit = self.fields(1.)?;
         if !unit[0].is_finite() || unit[0] <= 0. {
             return Err("No conducting path between terminals".into());
@@ -388,6 +417,7 @@ impl Conduction {
         self.params.physical[1] = 0.;
         self.write_params();
         self.solve()?;
+        self.motional_boundary_current_imbalance_a = self.boundary_current_imbalance_a;
         let motion = self.fields(0.)?;
         self.dispatch(&[("save_motion", self.params.dims[3].div_ceil(256))]);
         let voltage = (current_a - motion[0]) / unit[0];

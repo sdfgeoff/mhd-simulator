@@ -3,6 +3,85 @@ use mhd_workbench::{em::CellField, gpu::GpuContext};
 use wgpu::util::DeviceExt;
 
 #[test]
+fn dimensional_motion_gate_preserves_small_current_scaling() {
+    let context = GpuContext::headless().unwrap();
+    let dims = [16, 8, 3];
+    let n = dims.iter().product::<u32>() as usize;
+    let h = 1e-4;
+    let cells: Vec<_> = (0..n)
+        .map(|i| {
+            [
+                2.2,
+                if i % 16 == 0 {
+                    0.5
+                } else if i % 16 == 15 {
+                    -0.5
+                } else {
+                    3.
+                },
+            ]
+        })
+        .collect();
+    let fields = vec![
+        CellField {
+            b: [0., 0.5, 0., 0.],
+            ..Default::default()
+        };
+        n
+    ];
+    let bias = context
+        .device
+        .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Shear-flow magnetic bias"),
+            contents: bytemuck::cast_slice(&fields),
+            usage: wgpu::BufferUsages::STORAGE,
+        });
+    let mut norms = Vec::new();
+    for scale in [1_f32, 1e-6] {
+        let flow: Vec<_> = (0..n)
+            .map(|i| CellField {
+                b: [
+                    0.,
+                    0.,
+                    scale * (std::f32::consts::TAU * ((i / 16) % 8) as f32 / 8.).sin(),
+                    0.,
+                ],
+                applied: [0., 0., 1., 0.],
+                ..Default::default()
+            })
+            .collect();
+        let velocity = context
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Scaled shear velocity and unchanged liquid fraction"),
+                contents: bytemuck::cast_slice(&flow),
+                usage: wgpu::BufferUsages::STORAGE,
+            });
+        let mut solver = Conduction::new(context.clone(), dims, h, &cells, &bias).unwrap();
+        solver.set_relative_tolerance(1e-6).unwrap();
+        solver
+            .set_motional_boundary_absolute_tolerance_a(1e-6)
+            .unwrap();
+        solver.attach_flow(&velocity).unwrap();
+        let (_, stats) = solver.solve_current(0.).unwrap();
+        let output = solver.read_fields().unwrap();
+        let j2: f64 = output
+            .iter()
+            .map(|f| f.j[..3].iter().map(|v| f64::from(*v).powi(2)).sum::<f64>())
+            .sum();
+        assert!(j2 > 0. && stats[2] > 0.);
+        assert!(solver.unit_boundary_current_defect <= 1e-5);
+        assert!(solver.relative_residual <= 1e-6);
+        norms.push((
+            j2.sqrt() / f64::from(scale),
+            f64::from(stats[2]) / f64::from(scale).powi(2),
+        ));
+    }
+    assert!((norms[1].0 / norms[0].0 - 1.).abs() < 5e-4, "{norms:?}");
+    assert!((norms[1].1 / norms[0].1 - 1.).abs() < 5e-4, "{norms:?}");
+}
+
+#[test]
 fn near_insulating_bridge_resolves_tiny_copper_terminal_gradients() {
     let context = GpuContext::headless().unwrap();
     let dims = [128, 1, 1];
