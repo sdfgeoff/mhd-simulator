@@ -1,7 +1,13 @@
 {
   "package": "hardware/designs/dogbone-strip-review",
-  "source": "artifacts/hardware-research/cases/m6-dogbone-strip-package-v1",
+  "source": "artifacts/hardware-research/cases/m6-dogbone-strip-package-v2",
   "regenerated_existing_inputs_byte_identical": true,
+  "strip_STL": {
+    "closed_connected_manifold": true,
+    "triangles": 1208,
+    "volume_mm3": 25.25859923659478,
+    "units": "mm"
+  },
   "files": [
     {
       "file": "assembly.bin",
@@ -41,6 +47,16 @@
     {
       "file": "observer-h010.mhd.json",
       "sha256": "aca644977b5bc4ebefd39b7ef14da0b964f3db449b5aae4a918a50f57f37d0c2",
+      "source_identical": true
+    },
+    {
+      "file": "strip-mm.stl",
+      "sha256": "1a194244be28912a51ab5c2a417419f38130478c9338a14ea1f02155a2ffef8b",
+      "source_identical": true
+    },
+    {
+      "file": "manifest.json",
+      "sha256": "a36753eaa68088eae3718fa7cef9e774965e230bbcc77fccf3d88c35743299c0",
       "source_identical": true
     }
   ]

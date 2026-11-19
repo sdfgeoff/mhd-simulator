@@ -1,6 +1,7 @@
 """Full-length replaceable stainless strip and bolted copper contacts for review."""
 
-import argparse, copy, json, math
+import argparse, copy, json, math, struct
+import numpy as np
 from pathlib import Path
 import manifold3d as cad
 from draw_hardware_layouts import load
