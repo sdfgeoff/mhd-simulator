@@ -652,6 +652,14 @@ are `target/debug/examples/thermal_conductance --check`.
     also completes, with threshold-sensitive trailing liquid. The [110 A counterpulse](rooted-retract100-screening.json)
     leaves two regions across all thresholds, with the secondary moving upward;
     this does not establish recovery or clean release.
+    The [zero-gap55A retrieval control](rooted-delay-screening.json) also
+    completes: leading region0.526mm at0.768m/s down, plus a0.426mm dense
+    trailing region with vertical speed0.00485m/s up atalpha0.5. Its trailing
+    connectivity remains threshold-sensitive, not demonstrated recovery.
+    Only the25us gap changed; both pulse widths remain fixed. Full-field
+    [comparison](rooted-delay-field-comparison.json) gives132.6nL liquid-fraction
+    redistribution difference, so the small leading-diameter change is not
+    evidence of unchanged flow.
 16. The [rooted-tip self-field diagnostic](m6-rooted-self-field-screening.json)
     postprocesses the earlier native cold current at110A. The local omitted
     self-force is about6% of applied-force L2 in the liquid/outlet regions.

@@ -1,0 +1,500 @@
+{
+  "status": "Completed fixed-grid retrieval-delay comparison; not grid convergence",
+  "study": "delay",
+  "runs": [
+    {
+      "source": "artifacts/hardware-research/m6-rooted08-flow110-r50-motionabs1e-06A-h010-dt1p5",
+      "native_status": {
+        "accepted_steps": 2400,
+        "body_acceleration_work_J": 9.108182935938582e-08,
+        "charge_boundary_criteria": {
+          "max_combined_port_imbalance_A": 0.00014495849609375,
+          "max_motional_imbalance_A": 9.61392743192846e-07,
+          "max_unit_relative_imbalance": 1.4601728253182955e-06,
+          "motional_absolute_tolerance_A": 9.999999974752427e-07,
+          "unit_relative_tolerance": 1e-05
+        },
+        "charge_potential_representation": "split f32 high/low",
+        "charge_requested_relative_tolerance": 9.999999747378752e-06,
+        "charge_solver": "conservative-split-f32-v2",
+        "contact_resistivity_ohm_m2": 0.0,
+        "electrical_work_definition": "sum terminal phi*I on both ports",
+        "error": null,
+        "field_every": 600,
+        "fluid_em_work_J": 1.8971394533057678e-06,
+        "fluid_external_work_J": 1.9882212826651536e-06,
+        "fluid_work_definition": "EM/impressed-force work only; excludes body acceleration",
+        "frequency_hz": 0.0,
+        "grid": {
+          "cell_m": 0.00010000000474974513,
+          "dims": [
+            76,
+            76,
+            185
+          ]
+        },
+        "joule_generated_J": 0.004717547252433423,
+        "lagged_electrical_work_J": 0.0047194012211849,
+        "lagged_mechanical_work_J": 1.8802906458416027e-06,
+        "limitations": [
+          "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+          "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+          "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+          "New research client; not a GUI electrode feature or frozen-baseline claim."
+        ],
+        "max_charge_boundary_current_defect": 0.0003788270987570286,
+        "max_terminal_voltage_V": 0.18187692761421204,
+        "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+        "peak_A": 110.0,
+        "periodic_fluid_axes": [
+          false,
+          false,
+          false
+        ],
+        "positive_duration_s": 0.00025,
+        "project": "artifacts/hardware-research/cases/m6-rooted08-flow-compactgas-h010.mhd.json",
+        "pulse_start_s": 0.0,
+        "released_static_workspace_bytes": 240119604,
+        "requested_steps": 2400,
+        "retract_delay_s": 2.4999999999999998e-05,
+        "retract_fraction": 0.5,
+        "rise_s": 2e-05,
+        "status": "complete",
+        "tail_timestep_s": 1.5e-06,
+        "tail_transition_not_before_s": 0.00035833333333333333,
+        "terminal_boundary": "body",
+        "terminal_x_cell_indices": [
+          0,
+          75
+        ],
+        "time_s": 0.003600000000000199,
+        "timestep_s": 1.5e-06,
+        "uniform_acceleration_m_s2": [
+          0.0,
+          0.0,
+          -9.8100004196167
+        ]
+      },
+      "analysis_sha256": "eab1bc5bda7c06b9f9d43bc97869a61f62b358fbb2d2dd83afe5a53c86c089e2",
+      "native_status_sha256": "cfc97fde342a4c78e8498736ef1a483778011834268aeda8c80f7af9623969cc",
+      "current_diagnostics_sha256": "86c32e539d9c6cffb7248bdea621c8f0b64196ea0b2d61cd1b6d1a3c92efac5f",
+      "maximum_true_local_residual": 9.999744e-06,
+      "accepted_step_command_I2dt_A2s": 2.8738715520703146,
+      "accepted_step_command_RMS_A_at_assumed200Hz": 23.974451201519983,
+      "command_dose_scope": "Piecewise constant accepted-step forcing; not exact continuous driver waveform. Rate200Hz is arithmetic only.",
+      "energy_identity_relative_defect": -5.577380080844737e-06,
+      "final_regions_by_alpha": {
+        "0.01": [
+          {
+            "volume_nl": 92.30556122935332,
+            "equivalent_diameter_mm": 0.5607161714417263,
+            "cells": 168,
+            "centre_mm": [
+              -3.871707253433058e-05,
+              7.021437926592445e-05,
+              -3.2119515010952484
+            ],
+            "velocity_m_s": [
+              -2.7168913220521063e-05,
+              0.00017332276911474764,
+              -0.8178679347038269
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "0.25": [
+          {
+            "volume_nl": 88.06925678494852,
+            "equivalent_diameter_mm": 0.5520035910257094,
+            "cells": 124,
+            "centre_mm": [
+              -2.4892248970160065e-05,
+              5.450245878533984e-05,
+              -3.2136270787637766
+            ],
+            "velocity_m_s": [
+              -1.90998034668155e-05,
+              0.0001744643086567521,
+              -0.8191232085227966
+            ],
+            "touches_domain_boundary": false
+          },
+          {
+            "volume_nl": 50.222370747497294,
+            "equivalent_diameter_mm": 0.4577547530767425,
+            "cells": 81,
+            "centre_mm": [
+              0.0001391501773914938,
+              -0.0013335462844926253,
+              -0.9241537321717437
+            ],
+            "velocity_m_s": [
+              -0.0006157932803034782,
+              0.00028149347053840756,
+              -0.015569658949971199
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "0.5": [
+          {
+            "volume_nl": 74.13484860829148,
+            "equivalent_diameter_mm": 0.5212042250294293,
+            "cells": 86,
+            "centre_mm": [
+              -1.4384625984619587e-05,
+              2.854343465205707e-05,
+              -3.206183242863835
+            ],
+            "velocity_m_s": [
+              -1.5753021216369234e-05,
+              0.0001748172362567857,
+              -0.8242435455322266
+            ],
+            "touches_domain_boundary": false
+          },
+          {
+            "volume_nl": 36.43584955361155,
+            "equivalent_diameter_mm": 0.4113170944560851,
+            "cells": 47,
+            "centre_mm": [
+              0.0016843748993290648,
+              -0.001625536531462062,
+              -0.9110091380945677
+            ],
+            "velocity_m_s": [
+              0.004863625857979059,
+              -0.005241315346211195,
+              -0.025153357535600662
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "0.75": [
+          {
+            "volume_nl": 56.60370155085391,
+            "equivalent_diameter_mm": 0.4763747531197669,
+            "cells": 58,
+            "centre_mm": [
+              -2.108925447633668e-06,
+              1.2009820858426212e-05,
+              -3.214363833416064
+            ],
+            "velocity_m_s": [
+              -1.712026096356567e-05,
+              0.00012539055023808032,
+              -0.8258727788925171
+            ],
+            "touches_domain_boundary": false
+          },
+          {
+            "volume_nl": 19.17699961930575,
+            "equivalent_diameter_mm": 0.33209373229539596,
+            "cells": 20,
+            "centre_mm": [
+              0.00032521418899300597,
+              -0.00033044887443938197,
+              -0.9285130597859365
+            ],
+            "velocity_m_s": [
+              0.001678195782005787,
+              -0.0025917822495102882,
+              -0.040224067866802216
+            ],
+            "touches_domain_boundary": false
+          }
+        ]
+      },
+      "final_below_tip_nl": 163.24378326918963,
+      "max_relative_volume_drift": 4.628262684214235e-08,
+      "any_saved_boundary_liquid": false
+    },
+    {
+      "source": "artifacts/hardware-research/m6-rooted08-flow110-r50-motionabs1e-06A-h010-dt1p5-delay0us",
+      "native_status": {
+        "accepted_steps": 2400,
+        "body_acceleration_work_J": 9.292498899236178e-08,
+        "charge_boundary_criteria": {
+          "max_combined_port_imbalance_A": 0.00014495849609375,
+          "max_motional_imbalance_A": 1.1425983075241675e-06,
+          "max_unit_relative_imbalance": 9.995026630349457e-06,
+          "motional_absolute_tolerance_A": 9.999999974752427e-07,
+          "unit_relative_tolerance": 1e-05
+        },
+        "charge_potential_representation": "split f32 high/low",
+        "charge_requested_relative_tolerance": 9.999999747378752e-06,
+        "charge_solver": "conservative-split-f32-v2",
+        "contact_resistivity_ohm_m2": 0.0,
+        "electrical_work_definition": "sum terminal phi*I on both ports",
+        "error": null,
+        "field_every": 600,
+        "fluid_em_work_J": 1.8736999815591936e-06,
+        "fluid_external_work_J": 1.9666249705515553e-06,
+        "fluid_work_definition": "EM/impressed-force work only; excludes body acceleration",
+        "frequency_hz": 0.0,
+        "grid": {
+          "cell_m": 0.00010000000474974513,
+          "dims": [
+            76,
+            76,
+            185
+          ]
+        },
+        "joule_generated_J": 0.004717143922507859,
+        "lagged_electrical_work_J": 0.0047189727551023965,
+        "lagged_mechanical_work_J": 1.8568357394055781e-06,
+        "limitations": [
+          "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+          "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+          "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+          "New research client; not a GUI electrode feature or frozen-baseline claim."
+        ],
+        "max_charge_boundary_current_defect": 0.001873051282018423,
+        "max_terminal_voltage_V": 0.18187692761421204,
+        "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+        "peak_A": 110.0,
+        "periodic_fluid_axes": [
+          false,
+          false,
+          false
+        ],
+        "positive_duration_s": 0.00025,
+        "project": "artifacts/hardware-research/cases/m6-rooted08-flow-compactgas-h010.mhd.json",
+        "pulse_start_s": 0.0,
+        "released_static_workspace_bytes": 240119604,
+        "requested_steps": 2400,
+        "retract_delay_s": 0.0,
+        "retract_fraction": 0.5,
+        "rise_s": 2e-05,
+        "status": "complete",
+        "tail_timestep_s": 1.5e-06,
+        "tail_transition_not_before_s": 0.0003333333333333333,
+        "terminal_boundary": "body",
+        "terminal_x_cell_indices": [
+          0,
+          75
+        ],
+        "time_s": 0.003600000000000199,
+        "timestep_s": 1.5e-06,
+        "uniform_acceleration_m_s2": [
+          0.0,
+          0.0,
+          -9.8100004196167
+        ]
+      },
+      "analysis_sha256": "30ce4586514912637524894258dc21a9f848f8eabcabe643ea6adf69362571c7",
+      "native_status_sha256": "5f526528fad120deee5c30a811824f478a05fc5c041a94d7b89a61a17aa5d2f6",
+      "current_diagnostics_sha256": "c56f8c7111b6c609c0d33e622184e167da5381c4581169364a839d4d3bb86e62",
+      "maximum_true_local_residual": 9.999867e-06,
+      "accepted_step_command_I2dt_A2s": 2.8737725302668706,
+      "accepted_step_command_RMS_A_at_assumed200Hz": 23.97403816742966,
+      "command_dose_scope": "Piecewise constant accepted-step forcing; not exact continuous driver waveform. Rate200Hz is arithmetic only.",
+      "energy_identity_relative_defect": -5.934161166323527e-06,
+      "final_regions_by_alpha": {
+        "0.01": [
+          {
+            "volume_nl": 93.43285985032672,
+            "equivalent_diameter_mm": 0.5629895581003669,
+            "cells": 177,
+            "centre_mm": [
+              0.0016861544001839101,
+              -0.0007640477753194027,
+              -3.0759629665684294
+            ],
+            "velocity_m_s": [
+              0.0007142276735976338,
+              -0.0007446135859936476,
+              -0.7613352537155151
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "0.25": [
+          {
+            "volume_nl": 88.35684929657415,
+            "equivalent_diameter_mm": 0.5526037989934677,
+            "cells": 123,
+            "centre_mm": [
+              0.0016567807199849205,
+              -0.00019348428779075217,
+              -3.071822823161765
+            ],
+            "velocity_m_s": [
+              0.0007091498700901866,
+              -0.00091258977772668,
+              -0.7642420530319214
+            ],
+            "touches_domain_boundary": false
+          },
+          {
+            "volume_nl": 56.794088618359275,
+            "equivalent_diameter_mm": 0.4769082523682391,
+            "cells": 98,
+            "centre_mm": [
+              -0.0002542497699834428,
+              0.0019472512986493538,
+              -0.9301038768327611
+            ],
+            "velocity_m_s": [
+              -0.0010518437484279275,
+              -0.018596254289150238,
+              -0.019010670483112335
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "0.5": [
+          {
+            "volume_nl": 76.10620617517124,
+            "equivalent_diameter_mm": 0.5257837388157794,
+            "cells": 88,
+            "centre_mm": [
+              0.0007205318197269431,
+              -0.000331818584243141,
+              -3.0789575495476726
+            ],
+            "velocity_m_s": [
+              0.0012584448559209704,
+              -0.0011480414541438222,
+              -0.7681636810302734
+            ],
+            "touches_domain_boundary": false
+          },
+          {
+            "volume_nl": 40.38272521137853,
+            "equivalent_diameter_mm": 0.4256627702729699,
+            "cells": 56,
+            "centre_mm": [
+              0.004333248301241914,
+              0.0014968501151343028,
+              -0.9308800266705286
+            ],
+            "velocity_m_s": [
+              0.005382490810006857,
+              -0.03073076903820038,
+              0.004852853715419769
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "0.75": [
+          {
+            "volume_nl": 59.111157495534265,
+            "equivalent_diameter_mm": 0.48330758811022284,
+            "cells": 61,
+            "centre_mm": [
+              0.0008954656480348525,
+              -0.0019303902055591384,
+              -3.0818813589386935
+            ],
+            "velocity_m_s": [
+              0.0009517089347355068,
+              -0.001507915323600173,
+              -0.7664251327514648
+            ],
+            "touches_domain_boundary": false
+          },
+          {
+            "volume_nl": 12.176632410869544,
+            "equivalent_diameter_mm": 0.2854365111900461,
+            "cells": 13,
+            "centre_mm": [
+              0.008923847494415405,
+              0.002527374995743386,
+              -1.10028002954259
+            ],
+            "velocity_m_s": [
+              0.0026439575012773275,
+              -0.01875719241797924,
+              0.20375925302505493
+            ],
+            "touches_domain_boundary": false
+          },
+          {
+            "volume_nl": 2.790123741038974,
+            "equivalent_diameter_mm": 0.17466596222931455,
+            "cells": 3,
+            "centre_mm": [
+              -0.049999883823282944,
+              -0.049999883823282944,
+              -0.6553931454612774
+            ],
+            "velocity_m_s": [
+              -0.1633698046207428,
+              -0.17919112741947174,
+              -0.23846878111362457
+            ],
+            "touches_domain_boundary": false
+          },
+          {
+            "volume_nl": 2.8324325544407025,
+            "equivalent_diameter_mm": 0.17554440214018896,
+            "cells": 3,
+            "centre_mm": [
+              0.050000116685826816,
+              0.050000116685826816,
+              -0.654136374573162
+            ],
+            "velocity_m_s": [
+              0.17796920239925385,
+              0.09991135448217392,
+              -0.2516738176345825
+            ],
+            "touches_domain_boundary": false
+          }
+        ]
+      },
+      "final_below_tip_nl": 167.95637903714726,
+      "max_relative_volume_drift": 4.4168411150735665e-08,
+      "any_saved_boundary_liquid": false
+    }
+  ],
+  "comparisons": [
+    {
+      "alpha_threshold": "0.01",
+      "region_counts": [
+        1,
+        1
+      ],
+      "leading_diameter_relative_change": 0.004054433908683652,
+      "leading_volume_relative_change": 0.012212683677556457,
+      "leading_vertical_velocity_difference_m_s": 0.05653268098831177
+    },
+    {
+      "alpha_threshold": "0.25",
+      "region_counts": [
+        2,
+        2
+      ],
+      "leading_diameter_relative_change": 0.0010873262013439966,
+      "leading_volume_relative_change": 0.003265526724358425,
+      "leading_vertical_velocity_difference_m_s": 0.054881155490875244
+    },
+    {
+      "alpha_threshold": "0.5",
+      "region_counts": [
+        2,
+        2
+      ],
+      "leading_diameter_relative_change": 0.008786409561610142,
+      "leading_volume_relative_change": 0.026591509983326267,
+      "leading_vertical_velocity_difference_m_s": 0.056079864501953125
+    },
+    {
+      "alpha_threshold": "0.75",
+      "region_counts": [
+        2,
+        4
+      ],
+      "leading_diameter_relative_change": 0.014553321612980064,
+      "leading_volume_relative_change": 0.04429844473029032,
+      "leading_vertical_velocity_difference_m_s": 0.059447646141052246
+    }
+  ],
+  "limits": [
+    "Earlier retrieval changes pulse timing, not pulse widths or reverse amplitude; one pulse does not establish recovery or repeatability.",
+    "The grid is still100um; breakup, wetting and thin wall layers remain unresolved.",
+    "One pulse, imposed permanent B, no thermal evolution or circuit switching.",
+    "Matching recorded native configuration does not prove historical project-file identity; use frozen queue manifests for input provenance."
+  ]
+}

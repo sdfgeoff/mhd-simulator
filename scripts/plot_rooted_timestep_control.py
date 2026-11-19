@@ -9,9 +9,10 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 from native_field_io import read_native_fields
+from rooted_control_pair import case_names, validate_pair, DESCRIPTIONS
 
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument("--study", choices=["timestep", "retract"], default="timestep")
+parser.add_argument("--study", choices=list(DESCRIPTIONS), default="timestep")
 parser.add_argument("--reference-retract", type=float, default=.25)
 parser.add_argument("--candidate-retract", type=float, default=.5)
 parser.add_argument("--output", type=Path, required=True)
@@ -26,6 +27,13 @@ if args.study == "retract":
     cases = [(f"m6-rooted08-flow110-r{r*100:g}-motionabs1e-06A-h010-dt1p5",
               f"Reverse: {110*r:g} A", "100 µm · 1.5 µs")
              for r in [args.reference_retract, args.candidate_retract]]
+elif args.study in ("delay", "interface"):
+    labels = (["Retrieval delay: 25 µs", "Retrieval delay: 0 µs"] if args.study == "delay"
+              else ["Ideal liquid/solid interface", "Interface resistivity: 10⁻⁹ Ω m²"])
+    cases = [(name, label, "100 µm · 1.5 µs · reverse 55 A")
+             for name, label in zip(case_names(args.study), labels)]
+    validate_pair([json.loads((root / name / "run-status.json").read_text())
+                   for name, _, _ in cases], args.study)
 fig, axes = plt.subplots(1, len(cases), figsize=(10 if len(cases) == 3 else 7.5, 7.8))
 fig.subplots_adjust(top=.84, bottom=.28, left=.07, right=.88, wspace=.32)
 for ax, (name, label, version) in zip(axes, cases):
@@ -56,13 +64,20 @@ for ax, (name, label, version) in zip(axes, cases):
     analysis = json.loads((directory / "flow-analysis.json").read_text())
     regions = analysis["frames"][-1]["connectivity_thresholds"]["0.5"]
     description = "\n".join(f"D = {r['equivalent_diameter_mm']:.3f} mm; "
-                            f"down = {-r['velocity_m_s'][2]:.2f} m/s" for r in regions)
+                            f"down = {-r['velocity_m_s'][2]:.3f} m/s" for r in regions)
     ax.text(.5, -.17, description, transform=ax.transAxes, ha="center", va="top", fontsize=9)
     del f
-fig.suptitle("Same 110 A pulse at 3.6 ms — isolate timestep before grid refinement" if args.study == "timestep" else "Stronger reverse-current pullback — accepted state at 3.6 ms", fontsize=14)
+titles = {"timestep": "Same 110 A pulse at 3.6 ms — isolate timestep before grid refinement",
+          "retract": "Stronger reverse-current pullback — accepted state at 3.6 ms",
+          "delay": "Earlier reverse-current retrieval — accepted state at 3.6 ms",
+          "interface": "Liquid/solid electrical interface sensitivity — accepted state at 3.6 ms"}
+fig.suptitle(titles[args.study], fontsize=14)
 color = fig.add_axes([.91, .28, .018, .43])
 fig.colorbar(picture, cax=color, label="Liquid fraction")
-caption = "Left pair: only the timestep changes. Right: finer grid at matched timestep, with an earlier charge solver.\n" if args.study == "timestep" else "Same geometry and forward pulse; reverse amplitude changes.\n"
+caption = {"timestep": "Left pair: only the timestep changes. Right: finer grid at matched timestep, with an earlier charge solver.\n",
+           "retract": "Same geometry and forward pulse; reverse amplitude changes.\n",
+           "delay": "Same geometry, currents and both pulse widths; only the 25 µs inter-pulse gap is removed.\n",
+           "interface": "Only liquid/solid interface resistivity changes, including feedstock contact; not Cu/SS dry-joint resistance.\n"}[args.study]
 fig.text(.5, .07, caption + "Two central XZ slices averaged; grey = solid, orange = exit. Diameters use 3D α ≥ 0.5 connectivity.\n"
          "One pulse only; no claim of converged breakup or repetitive hardware performance.", ha="center", fontsize=9)
 args.output.parent.mkdir(parents=True, exist_ok=True)
