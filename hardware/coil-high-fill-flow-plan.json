@@ -1,0 +1,64 @@
+{
+  "status": "Prepared zero/driven normal unified flow pair; no numerical result",
+  "source_sha256": {
+    "artifacts/hardware-research/cases/coil-fill-control-v1/high-symmetric100-flow-h010.mhd.json": "cc5f140d1d53f02fa23e63f9e51756ae221813261885f9bc55d4d948b8f48e03",
+    "artifacts/hardware-research/unipolar-coil-fast10-v2-plan.json": "6ca0215be32414919563b4c5ba2a0133aa1ad024026f65d6f50aed758bfff7a5"
+  },
+  "geometry": "high-fill",
+  "cold_geometry": "custom",
+  "jobs": [
+    {
+      "peak_A": 0,
+      "project": "artifacts/hardware-research/cases/coil-high-fill-flow-v1/high-fill-0A-flow-h020.mhd.json",
+      "project_sha256": "b500519d2ee7d63f03fe3db58edc2650fd376adb3a1d7e16c78d1937d5e068cc",
+      "output": "artifacts/hardware-research/coil-high-fill-flow-v1-0A-h020",
+      "requested_steps": 1800,
+      "end_time_s": 0.0021,
+      "command": [
+        "target/debug/mhd-workbench",
+        "--run-check",
+        "artifacts/hardware-research/cases/coil-high-fill-flow-v1/high-fill-0A-flow-h020.mhd.json",
+        "1800",
+        "--output",
+        "artifacts/hardware-research/coil-high-fill-flow-v1-0A-h020",
+        "--field-every",
+        "300",
+        "--tail-after-us",
+        "300",
+        "--tail-dt-us",
+        "1.5"
+      ]
+    },
+    {
+      "peak_A": 250,
+      "project": "artifacts/hardware-research/cases/coil-high-fill-flow-v1/high-fill-250A-flow-h020.mhd.json",
+      "project_sha256": "366e2b9adfd758d35e1910fade83a0f36e265ad0ff9796533be2aa336999613e",
+      "output": "artifacts/hardware-research/coil-high-fill-flow-v1-250A-h020",
+      "requested_steps": 1800,
+      "end_time_s": 0.0021,
+      "command": [
+        "target/debug/mhd-workbench",
+        "--run-check",
+        "artifacts/hardware-research/cases/coil-high-fill-flow-v1/high-fill-250A-flow-h020.mhd.json",
+        "1800",
+        "--output",
+        "artifacts/hardware-research/coil-high-fill-flow-v1-250A-h020",
+        "--field-every",
+        "300",
+        "--tail-after-us",
+        "300",
+        "--tail-dt-us",
+        "1.5"
+      ]
+    }
+  ],
+  "purpose": "Test moving interface under the original single unipolar coil mechanism, with a matched unpowered control. No prescribed pressure, jet or frozen force field.",
+  "limits": [
+    "200um exploratory mesh gives only2.5cells across0.5mm outlet; neither absence nor presence of a detached component certifies jetting.",
+    "Original9mm free level lies in the0.6/0.4mm radius feed annulus:0.2mm radial gap is one cell. The free area is44.2 times smaller than low-fill; geometry and forcing change together. No resolved return-path or jetting claim. Bottle-shaped chamber needs a joined cap, not a simple bored one-piece part.",
+    "Negative-z domain extends to\u22124mm versus\u22122mm in the cold screen; no assumption of identical native force is made.",
+    "Common clock0.5us through300us, then1.5us for both EM/fluid; changing timestep does not freeze EM coupling.",
+    "No thermal evolution, calibrated wetting, oxide, repetition or hardware qualification. Final duration2.1ms may require extension for breakup assessment.",
+    "The source encircling coil clashes with a conventional aluminium heater block; alternate heating/package geometry remains unresolved. These are mechanism controls, not assembled hardware designs."
+  ]
+}

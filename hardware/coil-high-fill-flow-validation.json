@@ -1,0 +1,54 @@
+{
+  "status": "CPU project-loader validation passed for both cases; no new native physics result",
+  "purpose": "Compare original narrow-annulus free surface to completed low-fill pair without changing currents, solver controls or solid/coil geometry",
+  "cases": [
+    {
+      "peak_A": 0,
+      "project_difference_keys": [
+        "geometry",
+        "bodies"
+      ],
+      "unchanged_solid_wire_coil_payloads": [
+        {
+          "mesh_index": 0,
+          "sha256": "5b562b263de5924e3ab48b3e025aa0ea0b90db8cfa2050b0aa83b81b0048e3bd"
+        },
+        {
+          "mesh_index": 2,
+          "sha256": "135d51ea554e7e69c0a86e38eb6a6e7f6cadb53a730ffa0e0f782a7897b2c58c"
+        },
+        {
+          "mesh_index": 3,
+          "sha256": "78db0150297ce5680bce728fc6961953202f03b0704b2503b9f1d5f9824b6aba"
+        }
+      ],
+      "project_sha256": "b500519d2ee7d63f03fe3db58edc2650fd376adb3a1d7e16c78d1937d5e068cc"
+    },
+    {
+      "peak_A": 250,
+      "project_difference_keys": [
+        "geometry",
+        "bodies"
+      ],
+      "unchanged_solid_wire_coil_payloads": [
+        {
+          "mesh_index": 0,
+          "sha256": "5b562b263de5924e3ab48b3e025aa0ea0b90db8cfa2050b0aa83b81b0048e3bd"
+        },
+        {
+          "mesh_index": 2,
+          "sha256": "135d51ea554e7e69c0a86e38eb6a6e7f6cadb53a730ffa0e0f782a7897b2c58c"
+        },
+        {
+          "mesh_index": 3,
+          "sha256": "78db0150297ce5680bce728fc6961953202f03b0704b2503b9f1d5f9824b6aba"
+        }
+      ],
+      "project_sha256": "366e2b9adfd758d35e1910fade83a0f36e265ad0ff9796533be2aa336999613e"
+    }
+  ],
+  "limits": [
+    "200um mesh leaves one cell across feed-neck radial gap; startup and return-path resistance unresolved.",
+    "No change to existing queued binaries, projects or scripts. No simulated ejection result yet."
+  ]
+}

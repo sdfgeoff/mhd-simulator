@@ -12,16 +12,19 @@ def sha(path):
 
 root = Path("artifacts/hardware-research")
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument("--geometry", choices=["low-fill", "v6"], default="low-fill")
+parser.add_argument("--geometry", choices=["low-fill", "high-fill", "v6"], default="low-fill")
 args = parser.parse_args()
 tag = "coil-" + args.geometry + "-flow-v1"
 folder = root / "cases" / tag
 folder.mkdir(parents=True, exist_ok=False)
-source = root / ("cases/coil-fill-control-v1/low-symmetric100-flow-h010.mhd.json"
-                 if args.geometry == "low-fill" else "cases/unipolar-coil-v2/v6-symmetric100-cold-h020.mhd.json")
+source = root / {
+    "low-fill": "cases/coil-fill-control-v1/low-symmetric100-flow-h010.mhd.json",
+    "high-fill": "cases/coil-fill-control-v1/high-symmetric100-flow-h010.mhd.json",
+    "v6": "cases/unipolar-coil-v2/v6-symmetric100-cold-h020.mhd.json",
+}[args.geometry]
 base = json.loads(source.read_text())
 cold_plan = root / "unipolar-coil-fast10-v2-plan.json"
-cold_geometry = "custom" if args.geometry == "low-fill" else "v6"
+cold_geometry = "v6" if args.geometry == "v6" else "custom"
 cold_job = next(j for j in json.loads(cold_plan.read_text())["jobs"] if j["geometry"] == cold_geometry)
 cold = json.loads(Path(cold_job["project"]).read_text())
 assert base["cad_curves"] == cold["cad_curves"]
@@ -56,8 +59,11 @@ plan = {
     "purpose": "Test moving interface under the original single unipolar coil mechanism, with a matched unpowered control. No prescribed pressure, jet or frozen force field.",
     "limits": [
         "200um exploratory mesh gives only2.5cells across0.5mm outlet; neither absence nor presence of a detached component certifies jetting.",
-        ("Low free level5.6mm and fixed feed tip5.5mm leave0.1mm immersion, below coarse spacing. Inspect native voxelization and refine before conclusions."
-         if args.geometry == "low-fill" else "Drawing-based V6 approximation:0.5mm outlet,0.9mm land,3.2mm inlet. Not a verified catalogue stainless0.5mm SKU. Existing V6 carrier metadata records these limits."),
+        {
+            "low-fill": "Low free level5.6mm and fixed feed tip5.5mm leave0.1mm immersion, below coarse spacing. Inspect native voxelization and refine before conclusions.",
+            "high-fill": "Original9mm free level lies in the0.6/0.4mm radius feed annulus:0.2mm radial gap is one cell. The free area is44.2 times smaller than low-fill; geometry and forcing change together. No resolved return-path or jetting claim. Bottle-shaped chamber needs a joined cap, not a simple bored one-piece part.",
+            "v6": "Drawing-based V6 approximation:0.5mm outlet,0.9mm land,3.2mm inlet. Not a verified catalogue stainless0.5mm SKU. Existing V6 carrier metadata records these limits.",
+        }[args.geometry],
         "Negative-z domain extends to−4mm versus−2mm in the cold screen; no assumption of identical native force is made.",
         "Common clock0.5us through300us, then1.5us for both EM/fluid; changing timestep does not freeze EM coupling.",
         "No thermal evolution, calibrated wetting, oxide, repetition or hardware qualification. Final duration2.1ms may require extension for breakup assessment.",
