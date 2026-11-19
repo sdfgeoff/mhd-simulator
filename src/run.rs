@@ -91,6 +91,10 @@ pub struct EnergyLedger {
     pub delta_stored_j: f64,
     pub joule_j: f64,
     pub external_work_j: f64,
+    /// Work of the EM/impressed force packet on fluid, excluding body acceleration.
+    pub fluid_em_work_j: f64,
+    /// Work of configured body acceleration (for example gravity) on fluid.
+    pub fluid_acceleration_work_j: f64,
     pub induction_numerical_loss_j: f64,
     pub fluid_loss_j: f64,
     pub coupling_defect_j: f64,
@@ -640,6 +644,8 @@ impl RunState {
                 ledger.thermal_balance_error_j += t.diagnostics.energy_error_j;
             }
             ledger.joule_j += e.joule_j;
+            ledger.fluid_em_work_j += f.em_work_j;
+            ledger.fluid_acceleration_work_j += f.acceleration_work_j;
             ledger.external_work_j += e.external_j + f.acceleration_work_j;
             ledger.induction_numerical_loss_j += e.backward_euler_j;
             ledger.fluid_loss_j +=
@@ -1037,6 +1043,85 @@ mod thermal_run_tests {
         domain::GpuDomain,
         simulation::{DomainSettings, ThermalProperties, default_materials},
     };
+    #[test]
+    fn impressed_force_work_is_separate_from_body_acceleration_work() {
+        use wgpu::util::DeviceExt;
+        let _lock = crate::gpu_test_lock();
+        let gpu = GpuDomain::new().unwrap();
+        let mut model = Model::load(std::path::Path::new("assets/annulus.gltf")).unwrap();
+        model.bodies[0].simulation.material_id = 3;
+        model.bodies[0].simulation.temperature_c = Some(250.);
+        let mut materials = default_materials();
+        materials[3].density_kg_m3 = Some(1000.);
+        let volume = gpu
+            .build(
+                &model,
+                &DomainSettings {
+                    min_mm: [2., -0.25, -0.25],
+                    max_mm: [2.5, 0.25, 0.25],
+                    cell_mm: 0.0625,
+                },
+                &materials,
+            )
+            .unwrap();
+        let grid = volume.inputs.snapshot().grid.clone();
+        let n = grid.dims.iter().product::<u32>() as usize;
+        let force = gpu
+            .context
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Opposing impressed force"),
+                contents: bytemuck::cast_slice(&vec![
+                    crate::em::CellField {
+                        force_heat: [0., 0., -1000., 0.],
+                        ..Default::default()
+                    };
+                    n
+                ]),
+                usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
+            });
+        let mut state = RunState::new_with_impressed_force(
+            gpu.context.clone(),
+            &volume,
+            &model,
+            RunConfig {
+                fluid_enabled: true,
+                thermal_enabled: false,
+                dt_s: 0.0001,
+                ..Default::default()
+            },
+            FluidConfig {
+                material_id: 3,
+                periodic: [true; 3],
+                acceleration_m_s2: [0., 0., 2.],
+                ..Default::default()
+            },
+            ForceField {
+                buffer: &force,
+                grid: &grid,
+            },
+        )
+        .unwrap();
+        assert_eq!(state.fluid.as_ref().unwrap().fluid_cells as usize, n);
+        for _ in 0..10 {
+            state.step(&model, &volume).unwrap();
+        }
+        // Uniform net acceleration is +1m/s2. Over1ms the EM force does
+        // negative work while gravity does twice as much positive work.
+        let mass = 1000. * (grid.cell_m as f64).powi(3) * n as f64;
+        let expected = 0.5 * mass * 0.001f64.powi(2);
+        assert!(
+            (state.energy.fluid_em_work_j / (-expected) - 1.).abs() < 1e-3,
+            "{:?}",
+            state.energy
+        );
+        assert!(
+            (state.energy.fluid_acceleration_work_j / (2. * expected) - 1.).abs() < 1e-3,
+            "{:?}",
+            state.energy
+        );
+        assert!((state.energy.external_work_j / expected - 1.).abs() < 1e-3);
+    }
     fn setup(phase: bool, cooling: bool) -> (GpuDomain, Volume, Model) {
         let gpu = GpuDomain::new().unwrap();
         let mut m = Model::load(std::path::Path::new("assets/annulus.gltf")).unwrap();

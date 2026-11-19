@@ -21,11 +21,32 @@ fn pulse_current(t: f64, duration: f64, rise: f64, peak: f32, retract: f32, dela
     peak * (trapezoid(t, 0., duration, rise)
         - retract * trapezoid(t, duration + delay, duration / 3., rise))
 }
+fn scheduled_current(
+    t: f64,
+    start: f64,
+    frequency: f64,
+    duration: f64,
+    rise: f64,
+    peak: f32,
+    retract: f32,
+    delay: f64,
+) -> f32 {
+    if t < start {
+        return 0.;
+    }
+    let elapsed = t - start;
+    let phase = if frequency > 0. {
+        elapsed.rem_euclid(1. / frequency)
+    } else {
+        elapsed
+    };
+    pulse_current(phase, duration, rise, peak, retract, delay)
+}
 
 fn main() -> Result<(), Box<dyn Error>> {
     let a: Vec<_> = std::env::args().collect();
     let mut p = project::load(Path::new(a.get(1).ok_or(
-        "Expected PROJECT PEAK_A POSITIVE_US STEPS OUTPUT [CONTACT] [RETRACT_FRACTION] [DT_US] [REPEAT_HZ] [FIELD_EVERY] [TAIL_DT_US] [RETRACT_DELAY_US] [body|x-ends]",
+        "Expected PROJECT PEAK_A POSITIVE_US STEPS OUTPUT [CONTACT] [RETRACT_FRACTION] [DT_US] [REPEAT_HZ] [FIELD_EVERY] [TAIL_DT_US] [RETRACT_DELAY_US] [body|x-ends] [PULSE_START_US]",
     )?))?;
     let peak: f32 = a.get(2).ok_or("Missing current")?.parse()?;
     let duration: f64 = a.get(3).ok_or("Missing duration")?.parse::<f64>()? * 1e-6;
@@ -56,6 +77,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         .transpose()?
         .unwrap_or(25e-6);
     let terminal_boundary = a.get(13).map(String::as_str).unwrap_or("body");
+    let pulse_start_s = a
+        .get(14)
+        .map(|s| s.parse::<f64>().map(|v| v * 1e-6))
+        .transpose()?
+        .unwrap_or(0.);
     if !matches!(terminal_boundary, "body" | "x-ends") {
         return Err("Choose body or x-ends terminal boundary".into());
     }
@@ -75,6 +101,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         || tail_dt_s <= 0.
         || !retract_delay_s.is_finite()
         || retract_delay_s < 0.
+        || !pulse_start_s.is_finite()
+        || pulse_start_s < 0.
     {
         return Err("Invalid pulse".into());
     }
@@ -199,7 +227,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut error: Option<String> = None;
     let mut costs = String::from("step,charge_wall_ms,fluid_wall_ms\n");
     for step in 1..=steps {
-        let next_dt = if run.time_s >= duration * 4. / 3. + retract_delay_s {
+        let next_dt = if run.time_s >= pulse_start_s + duration * 4. / 3. + retract_delay_s {
             tail_dt_s
         } else {
             dt_s
@@ -212,12 +240,16 @@ fn main() -> Result<(), Box<dyn Error>> {
             p.run.dt_s = next_dt;
         }
         let t = run.time_s + 0.5 * p.run.dt_s;
-        let pulse_time = if frequency_hz > 0. {
-            t.rem_euclid(1. / frequency_hz)
-        } else {
-            t
-        };
-        let command = pulse_current(pulse_time, duration, rise, peak, retract, retract_delay_s);
+        let command = scheduled_current(
+            t,
+            pulse_start_s,
+            frequency_hz,
+            duration,
+            rise,
+            peak,
+            retract,
+            retract_delay_s,
+        );
         let charge_start = std::time::Instant::now();
         let (voltage, s) = match current.solve_current(command) {
             Ok(v) => v,
@@ -269,7 +301,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                 current.iterations
             );
         }
-        if step % field_every == 0 || step == steps {
+        let onset_checkpoint =
+            pulse_start_s > 0. && (run.time_s - pulse_start_s).abs() <= 0.5 * p.run.dt_s;
+        if step % field_every == 0 || step == steps || onset_checkpoint {
             run.export_fields(&volume, &p.model, &out.join(format!("frame-{step:08}")))?;
             std::fs::write(out.join("current-diagnostics.csv"), &csv)?;
             std::fs::write(out.join("iteration-costs.csv"), &costs)?;
@@ -284,7 +318,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         performance.push_str(&report.csv_rows());
     }
     std::fs::write(out.join("performance.csv"), performance)?;
-    let report = serde_json::json!({"project":a[1],"terminal_boundary":terminal_boundary,"terminal_x_cell_indices":terminal_x,"uniform_acceleration_m_s2":p.fluid.acceleration_m_s2,"periodic_fluid_axes":p.fluid.periodic,"released_static_workspace_bytes":released_static_workspace_bytes,"status":if error.is_some(){"failed"}else{"complete"},"error":error,"accepted_steps":run.steps,"requested_steps":steps,"charge_solver":"conservative-split-f32-v1","charge_requested_relative_tolerance":current.relative_tolerance(),"time_s":run.time_s,"peak_A":peak,"timestep_s":dt_s,"tail_timestep_s":tail_dt_s,"tail_transition_not_before_s":duration*4./3.+retract_delay_s,"frequency_hz":frequency_hz,"field_every":field_every,"grid":{"dims":grid.dims,"cell_m":grid.cell_m},"positive_duration_s":duration,"rise_s":rise,"retract_fraction":retract,"retract_delay_s":retract_delay_s,"contact_resistivity_ohm_m2":contact,"max_terminal_voltage_V":max_voltage,"max_charge_boundary_current_defect":max_boundary_defect,"charge_potential_representation":"split f32 high/low","electrical_work_definition":"sum terminal phi*I on both ports","joule_generated_J":joule,"lagged_electrical_work_J":electrical,"lagged_mechanical_work_J":lagged_mechanical,"fluid_mechanical_work_J":run.energy.external_work_j,"method":"GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.","limitations":["Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.","Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.","Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.","New research client; not a GUI electrode feature or frozen-baseline claim."]});
+    let report = serde_json::json!({"project":a[1],"terminal_boundary":terminal_boundary,"terminal_x_cell_indices":terminal_x,"uniform_acceleration_m_s2":p.fluid.acceleration_m_s2,"periodic_fluid_axes":p.fluid.periodic,"released_static_workspace_bytes":released_static_workspace_bytes,"status":if error.is_some(){"failed"}else{"complete"},"error":error,"accepted_steps":run.steps,"requested_steps":steps,"charge_solver":"conservative-split-f32-v1","charge_requested_relative_tolerance":current.relative_tolerance(),"time_s":run.time_s,"peak_A":peak,"timestep_s":dt_s,"tail_timestep_s":tail_dt_s,"tail_transition_not_before_s":pulse_start_s+duration*4./3.+retract_delay_s,"pulse_start_s":pulse_start_s,"frequency_hz":frequency_hz,"field_every":field_every,"grid":{"dims":grid.dims,"cell_m":grid.cell_m},"positive_duration_s":duration,"rise_s":rise,"retract_fraction":retract,"retract_delay_s":retract_delay_s,"contact_resistivity_ohm_m2":contact,"max_terminal_voltage_V":max_voltage,"max_charge_boundary_current_defect":max_boundary_defect,"charge_potential_representation":"split f32 high/low","electrical_work_definition":"sum terminal phi*I on both ports","joule_generated_J":joule,"lagged_electrical_work_J":electrical,"lagged_mechanical_work_J":lagged_mechanical,"fluid_em_work_J":run.energy.fluid_em_work_j,"body_acceleration_work_J":run.energy.fluid_acceleration_work_j,"fluid_external_work_J":run.energy.external_work_j,"fluid_work_definition":"EM/impressed-force work only; excludes body acceleration","method":"GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.","limitations":["Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.","Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.","Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.","New research client; not a GUI electrode feature or frozen-baseline claim."]});
     std::fs::write(
         out.join("run-status.json"),
         serde_json::to_vec_pretty(&report)?,
@@ -298,6 +332,28 @@ fn main() -> Result<(), Box<dyn Error>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn conditioning_interval_has_no_early_single_or_repeated_pulse() {
+        for frequency in [0., 200.] {
+            for t in [0., 10e-6, 1e-3, 4.999e-3] {
+                assert_eq!(
+                    scheduled_current(t, 5e-3, frequency, 1e-3, 20e-6, 40., 0.25, 25e-6),
+                    0.
+                );
+            }
+            assert_eq!(
+                scheduled_current(5.1e-3, 5e-3, frequency, 1e-3, 20e-6, 40., 0.25, 25e-6),
+                40.
+            );
+        }
+        for i in 0..1200 {
+            let t = (i as f64 + 0.5) * 3e-6;
+            assert_eq!(
+                scheduled_current(t, 0., 0., 250e-6, 20e-6, 110., 0.25, 25e-6),
+                pulse_current(t, 250e-6, 20e-6, 110., 0.25, 25e-6)
+            );
+        }
+    }
 
     #[test]
     fn default_delay_preserves_original_commands() {

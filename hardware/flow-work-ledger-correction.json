@@ -1,0 +1,8 @@
+{
+  "status": "Research diagnostic correction; historical outputs retained",
+  "finding": "Earlier conduction_flow reports named RunState energy.external_work_j fluid_mechanical_work_J. That value includes both EM/impressed-force work and body-acceleration work, including gravity.",
+  "consequence": "Comparisons of the old fluid_mechanical_work_J with lagged_mechanical_work_J do not isolate EM coupling or lag error. Earlier approximately six-percent differences must not be interpreted as clean EM lag measurements.",
+  "correction": "Record fluid_em_work_J, body_acceleration_work_J and their existing total fluid_external_work_J separately. Export matching ledger components with field frames. The fluid operators and energy-balance formula are unchanged.",
+  "historical_limits": "Historical reports do not retain separate integrated work components; their exact split cannot be recovered from the total alone. Old reports remain unchanged.",
+  "validation": "Headless GPU test impressed_force_work_is_separate_from_body_acceleration_work passes: opposing uniform impressed force and body acceleration produce opposite work signs, with their sum matching the existing total. Three conduction_flow waveform tests also pass."
+}

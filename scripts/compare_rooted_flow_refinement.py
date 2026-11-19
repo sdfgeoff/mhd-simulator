@@ -49,6 +49,7 @@ for key in [
     "uniform_acceleration_m_s2",
     "periodic_fluid_axes",
     "terminal_boundary",
+    "pulse_start_s",
 ]:
     if cs[key] != fs[key]:
         raise ValueError("Drive/physics mismatch: " + key)
@@ -98,8 +99,8 @@ for path, status, analysis in [(coarse, cs, ca), (fine, fs, fa)]:
                 r["liquid_touches_domain_boundary_alpha01"] for r in analysis["frames"]
             ),
             "electrical_energy_identity_relative_defect": relative_defect,
-            "actual_over_lagged_fluid_work_minus_one": (
-                status["fluid_mechanical_work_J"] / status["lagged_mechanical_work_J"]
+            "em_work_relative_difference": (
+                status["fluid_em_work_J"] / status["lagged_mechanical_work_J"]
                 - 1
                 if status["lagged_mechanical_work_J"]
                 else None

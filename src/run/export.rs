@@ -54,11 +54,11 @@ impl RunState {
                 "byte_order":if cfg!(target_endian="little") {"little"} else {"big"},
                 "cell_order":"x fastest, then y, then z","files":files,
                 "moving_interface":self.surface.is_some(),
-                "forcing_kind":if self.em.is_some() {"computed_em"} else if self.prescribed_force.is_some() {"prescribed"} else {"none"},
+                "forcing_kind":if self.em.is_some() {"computed_em"} else if self.impressed_force.is_some() {"impressed"} else if self.prescribed_force.is_some() {"prescribed"} else {"none"},
                 "run":self.config,"electromagnetics":self.em_config,"fluid":self.fluid_config,
                 "materials":&snapshot.materials[..],
                 "material_volume_m3":self.surface.as_ref().map(|s|s.diagnostics.volume_m3),
-                "energy_j":{"magnetic":self.energy.magnetic_j,"kinetic":self.energy.kinetic_j,"thermal":self.energy.thermal_j,"joule":self.energy.joule_j,"external_work":self.energy.external_work_j}
+                "energy_j":{"magnetic":self.energy.magnetic_j,"kinetic":self.energy.kinetic_j,"thermal":self.energy.thermal_j,"joule":self.energy.joule_j,"external_work":self.energy.external_work_j,"fluid_em_work":self.energy.fluid_em_work_j,"fluid_acceleration_work":self.energy.fluid_acceleration_work_j,"surface":self.energy.surface_j,"surface_work":self.energy.surface_work_j,"surface_balance_error":self.energy.surface_balance_error_j,"fluid_loss":self.energy.fluid_loss_j}
             });
             let bytes = serde_json::to_vec_pretty(&metadata).map_err(|e| e.to_string())?;
             let staged = directory.join("metadata.writing");
