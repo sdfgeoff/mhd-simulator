@@ -1,0 +1,67 @@
+{
+  "status": "Byte-identical nominal carrier review package",
+  "source": "artifacts/hardware-research/cases/m6-carrier-review-wide-stops",
+  "package": "hardware/designs/pole-carrier-review",
+  "files": [
+    {
+      "file": "assembly.bin",
+      "sha256": "c2e3e2d6154f02b98daa5774859ace2b772e6abbe5a925c6d0676961a4e04143",
+      "identical": true
+    },
+    {
+      "file": "assembly.gltf",
+      "sha256": "cac22c6d7f1fab0f54d9ca79ef35f15e19b6a55ffd3e6316c773861b44690c9b",
+      "identical": true
+    },
+    {
+      "file": "assembly.inspection.mhd.json",
+      "sha256": "a74463111c134399b459750c99c21770d7d585540c2652dd19ac1fb04c8fb946",
+      "identical": true
+    },
+    {
+      "file": "carrier-only.bin",
+      "sha256": "59cb896ac3e0f2c299d17d3e8b1071d9d7938788794f266c7ecffe7471a38df9",
+      "identical": true
+    },
+    {
+      "file": "carrier-only.gltf",
+      "sha256": "de9e63414ba53812679d1cf3567da5ba2ac6297c1c9bac83993ed3fd1fe04596",
+      "identical": true
+    },
+    {
+      "file": "manifest.json",
+      "sha256": "009c6d208ef5e11d79f175c7f2fcfcaf3fdd0839bef00757ef393ad921cbf8ae",
+      "identical": true
+    },
+    {
+      "file": "part-00.stl",
+      "sha256": "51414204fb7d2d5549ac3e0b55c10db05c25b1f2d46af489bc9442e6d2762799",
+      "identical": true
+    },
+    {
+      "file": "part-01.stl",
+      "sha256": "6c06c929ad24affe19896ca14425296c2e97e212613ac7b471300fa0d7458d37",
+      "identical": true
+    },
+    {
+      "file": "part-04.stl",
+      "sha256": "08f08eb42f3a324c4a554694423975e2b4d6ab26994b22a7d823b4504c174775",
+      "identical": true
+    },
+    {
+      "file": "part-07.stl",
+      "sha256": "0816b84b0e96aeeda1ac1c0d549d8359da8af9897d56d1fc3ce5a5f21054a1dd",
+      "identical": true
+    },
+    {
+      "file": "part-08.stl",
+      "sha256": "e795a19b2f7f7c6484af1a5433100f4b171db6b571ae48cf1cc5dfcd7666da53",
+      "identical": true
+    },
+    {
+      "file": "part-11.stl",
+      "sha256": "ec6e3286ab66a1870f0f89bee23386d9546cb8647b7cdc2c14bdaa9e5cbc4458",
+      "identical": true
+    }
+  ]
+}

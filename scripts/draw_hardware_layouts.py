@@ -27,11 +27,19 @@ COLORS = {
     "heater": "#abb1b8",
     "wire": "#586575",
     "mica": "#e6cd7b",
+    "carrier": "#87aaa4",
+    "screw": "#657581",
 }
 
 
 def category(name):
     name = name.lower()
+    if "carrier" in name or "keeper" in name and "screw" not in name:
+        return "carrier"
+    if "screw" in name:
+        return "screw"
+    if "heated aluminium" in name:
+        return "heater"
     if "mica" in name:
         return "mica"
     if "liquid" in name:
@@ -48,7 +56,12 @@ def category(name):
 
 
 def load(name):
-    path = ROOT / "artifacts/hardware-research/cases" / (name + ".gltf")
+    candidate = Path(name)
+    path = (
+        (candidate if candidate.is_absolute() else ROOT / candidate)
+        if candidate.suffix == ".gltf"
+        else ROOT / "artifacts/hardware-research/cases" / (str(name) + ".gltf")
+    )
     g = json.loads(path.read_text())
     buffers = [(path.parent / b["uri"]).read_bytes() for b in g["buffers"]]
     parts, curves = [], []
@@ -428,119 +441,293 @@ def v6_detail():
     fig.savefig(OUT / "v6-disc-stack-setup.png", dpi=180)
 
 
-def v6_tip_detail(case="v6-tip-disc20-compact-h010", filename="v6-tip-contact-setup.png", title=None, footer=None):
+def v6_tip_detail(
+    case="v6-tip-disc20-compact-h010",
+    filename="v6-tip-contact-setup.png",
+    title=None,
+    footer=None,
+):
     parts, _ = load(case)
-    magnets = np.concatenate([faces.reshape(-1, 3) for name, faces, _ in parts if category(name) == "magnet"])
+    magnets = np.concatenate(
+        [faces.reshape(-1, 3) for name, faces, _ in parts if category(name) == "magnet"]
+    )
     gap = 2 * abs(magnets[:, 1]).min()
-    yextent = abs(magnets[:, 1]).max() + .8
+    yextent = abs(magnets[:, 1]).max() + 0.8
     centre_y = (abs(magnets[:, 1]).max() + gap / 2) / 2
     lower_z, upper_z = magnets[:, 2].min(), magnets[:, 2].max()
     fig, axes = plt.subplots(1, 3, figsize=(15, 8))
-    fig.subplots_adjust(left=.055, right=.985, bottom=.19, top=.85, wspace=.28)
+    fig.subplots_adjust(left=0.055, right=0.985, bottom=0.19, top=0.85, wspace=0.28)
     ax = axes[0]
     section(ax, parts, "yz")
-    ax.set(xlim=(-yextent,yextent), ylim=(lower_z-.8,14), title="Magnet poles below the shoulder")
-    ax.vlines([-centre_y,centre_y],lower_z,upper_z,colors="#6c8596",linestyles=":",linewidths=1)
-    ax.text(0,lower_z+(upper_z-lower_z)*.25,f"{gap:g} mm\nflight gap",ha="center",fontsize=10)
-    ax.annotate("Intended jet",xy=(0,-3),xytext=(0,-.7),ha="center",color="#27735b",arrowprops={"arrowstyle":"->","color":"#27735b","lw":2})
+    ax.set(
+        xlim=(-yextent, yextent),
+        ylim=(lower_z - 0.8, 14),
+        title="Magnet poles below the shoulder",
+    )
+    ax.vlines(
+        [-centre_y, centre_y],
+        lower_z,
+        upper_z,
+        colors="#6c8596",
+        linestyles=":",
+        linewidths=1,
+    )
+    ax.text(
+        0,
+        lower_z + (upper_z - lower_z) * 0.25,
+        f"{gap:g} mm\nflight gap",
+        ha="center",
+        fontsize=10,
+    )
+    ax.annotate(
+        "Intended jet",
+        xy=(0, -3),
+        xytext=(0, -0.7),
+        ha="center",
+        color="#27735b",
+        arrowprops={"arrowstyle": "->", "color": "#27735b", "lw": 2},
+    )
     ax = axes[1]
-    section(ax,parts)
-    ax.set(xlim=(-1.6,1.6),ylim=(-.3,1.4),title="Tip section enlarged")
-    label(ax,"Copper contacts",(1.2,.3),(.15,.85))
-    label(ax,"0.4 mm bore",(.18,.05),(-1.5,-.2))
-    ax.annotate("Force",xy=(0,-.25),xytext=(0,.2),ha="center",color="#27735b",arrowprops={"arrowstyle":"->","color":"#27735b","lw":2})
+    section(ax, parts)
+    ax.set(xlim=(-1.6, 1.6), ylim=(-0.3, 1.4), title="Tip section enlarged")
+    label(ax, "Copper contacts", (1.2, 0.3), (0.15, 0.85))
+    label(ax, "0.4 mm bore", (0.18, 0.05), (-1.5, -0.2))
+    ax.annotate(
+        "Force",
+        xy=(0, -0.25),
+        xytext=(0, 0.2),
+        ha="center",
+        color="#27735b",
+        arrowprops={"arrowstyle": "->", "color": "#27735b", "lw": 2},
+    )
     ax = axes[2]
-    section(ax,parts,"xy",.3)
-    ax.set(xlim=(-5.5,5.5),ylim=(-3,3),title="Plan through the contact band")
-    ax.annotate("I",xy=(1.2,0),xytext=(-1.2,0),color="#9b541f",fontsize=12,arrowprops={"arrowstyle":"->","color":"#9b541f","lw":2})
-    ax.annotate("B",xy=(0,-1.9),xytext=(0,1.9),color="#32678b",fontsize=12,arrowprops={"arrowstyle":"->","color":"#32678b","lw":2})
-    ax.text(3,2.5,"Pole face",ha="center",fontsize=9)
-    ax.text(3,-2.7,"Pole face",ha="center",fontsize=9)
-    handles=[Patch(facecolor=COLORS[k],edgecolor="#596673",label=v) for k,v in [("steel","Stainless steel"),("liquid","Solder"),("copper","Copper"),("magnet","SmCo")]]
-    fig.legend(handles=handles,loc="lower center",ncol=4,bbox_to_anchor=(.5,.045))
-    fig.suptitle(title or "V6 tip-contact variant — concentrate current near the orifice\nActual generated CAD sections; the metal nozzle remains intact",fontsize=16,weight="bold")
-    fig.text(.5,.015,footer or "Geometry under test • ideal electrical wetting assumed • heater, contact mounting and driver omitted",ha="center",fontsize=10)
-    OUT.mkdir(parents=True,exist_ok=True)
-    fig.savefig(OUT/filename,dpi=180)
+    section(ax, parts, "xy", 0.3)
+    ax.set(xlim=(-5.5, 5.5), ylim=(-3, 3), title="Plan through the contact band")
+    ax.annotate(
+        "I",
+        xy=(1.2, 0),
+        xytext=(-1.2, 0),
+        color="#9b541f",
+        fontsize=12,
+        arrowprops={"arrowstyle": "->", "color": "#9b541f", "lw": 2},
+    )
+    ax.annotate(
+        "B",
+        xy=(0, -1.9),
+        xytext=(0, 1.9),
+        color="#32678b",
+        fontsize=12,
+        arrowprops={"arrowstyle": "->", "color": "#32678b", "lw": 2},
+    )
+    ax.text(3, 2.5, "Pole face", ha="center", fontsize=9)
+    ax.text(3, -2.7, "Pole face", ha="center", fontsize=9)
+    handles = [
+        Patch(facecolor=COLORS[k], edgecolor="#596673", label=v)
+        for k, v in [
+            ("steel", "Stainless steel"),
+            ("liquid", "Solder"),
+            ("copper", "Copper"),
+            ("magnet", "SmCo"),
+        ]
+    ]
+    fig.legend(handles=handles, loc="lower center", ncol=4, bbox_to_anchor=(0.5, 0.045))
+    fig.suptitle(
+        title
+        or "V6 tip-contact variant — concentrate current near the orifice\nActual generated CAD sections; the metal nozzle remains intact",
+        fontsize=16,
+        weight="bold",
+    )
+    fig.text(
+        0.5,
+        0.015,
+        footer
+        or "Geometry under test • ideal electrical wetting assumed • heater, contact mounting and driver omitted",
+        ha="center",
+        fontsize=10,
+    )
+    OUT.mkdir(parents=True, exist_ok=True)
+    fig.savefig(OUT / filename, dpi=180)
 
 
 def two_phase_detail(case="foil-two-phase-plus90-200A-h020.mhd"):
     """Draw the imported CAD and actual current tables, without invented fields."""
     parts, curves = load(case)
-    project = json.loads((ROOT / "artifacts/hardware-research/cases" / (case + ".json")).read_text())
+    project = json.loads(
+        (ROOT / "artifacts/hardware-research/cases" / (case + ".json")).read_text()
+    )
     fig, axes = plt.subplots(1, 2, figsize=(12, 8))
-    fig.subplots_adjust(left=.07, right=.97, bottom=.16, top=.82, wspace=.3)
+    fig.subplots_adjust(left=0.07, right=0.97, bottom=0.16, top=0.82, wspace=0.3)
     ax = axes[0]
     section(ax, parts)
     colours = ["#bc6627", "#7449a2"]
     for index, curve in enumerate(curves):
         before = len(ax.patches)
-        coils(ax, [curve], radius=.5)
+        coils(ax, [curve], radius=0.5)
         for patch in list(ax.patches)[before:]:
             patch.set_facecolor(colours[index])
-    ax.set(xlim=(-7.5, 7.5), ylim=(-1., 12), title="Actual generated CAD section")
-    label(ax, "Phase A: 6 turns", (-5.2, 2.5), (-7.1, .65), colours[0])
+    ax.set(xlim=(-7.5, 7.5), ylim=(-1.0, 12), title="Actual generated CAD section")
+    label(ax, "Phase A: 6 turns", (-5.2, 2.5), (-7.1, 0.65), colours[0])
     label(ax, "Phase B: 6 turns", (5.2, 8), (1.6, 10.8), colours[1])
     label(ax, "6 mm liquid chamber", (-2.8, 4.8), (-7.1, 6.5))
-    label(ax, "1.2 mm feed neck\n0.8 mm wire", (.6, 7.7), (-7.1, 9.8))
+    label(ax, "1.2 mm feed neck\n0.8 mm wire", (0.6, 7.7), (-7.1, 9.8))
     ax = axes[1]
     for index, wire in enumerate(project["electromagnetics"]["wires"]):
         samples = np.array(wire["current"]["samples"])
-        ax.plot(samples[:, 0] * 1e6, samples[:, 1], color=colours[index],
-                label=f"Phase {'AB'[index]}", linewidth=1.5)
-    ax.set(xlim=(60, 120), ylim=(-230, 230), xlabel="time (µs)",
-           ylabel="prescribed current (A)", title="50 kHz carrier; 90° phase offset")
-    ax.axvspan(80, 100, color="#afcbd8", alpha=.25)
-    ax.axhline(0, color="#9da9af", linewidth=.6)
+        ax.plot(
+            samples[:, 0] * 1e6,
+            samples[:, 1],
+            color=colours[index],
+            label=f"Phase {'AB'[index]}",
+            linewidth=1.5,
+        )
+    ax.set(
+        xlim=(60, 120),
+        ylim=(-230, 230),
+        xlabel="time (µs)",
+        ylabel="prescribed current (A)",
+        title="50 kHz carrier; 90° phase offset",
+    )
+    ax.axvspan(80, 100, color="#afcbd8", alpha=0.25)
+    ax.axhline(0, color="#9da9af", linewidth=0.6)
     ax.text(90, -215, "comparison cycle", ha="center", fontsize=9)
     ax.legend(loc="upper right")
     ax.spines[["top", "right"]].set_visible(False)
-    fig.suptitle("Two-phase induction hypothesis\nOpposite phase sequences reverse the computed cold axial force",
-                 fontsize=16, weight="bold")
-    fig.text(.5, .07, "Upper coil is mostly over the narrow feed neck; placement is not optimized.", ha="center", fontsize=10)
-    fig.text(.5, .035, "Prescribed currents only: loaded voltage, driver, cooling, insulation and jetting remain unqualified.", ha="center", fontsize=10)
+    fig.suptitle(
+        "Two-phase induction hypothesis\nOpposite phase sequences reverse the computed cold axial force",
+        fontsize=16,
+        weight="bold",
+    )
+    fig.text(
+        0.5,
+        0.07,
+        "Upper coil is mostly over the narrow feed neck; placement is not optimized.",
+        ha="center",
+        fontsize=10,
+    )
+    fig.text(
+        0.5,
+        0.035,
+        "Prescribed currents only: loaded voltage, driver, cooling, insulation and jetting remain unqualified.",
+        ha="center",
+        fontsize=10,
+    )
     OUT.mkdir(parents=True, exist_ok=True)
     fig.savefig(OUT / "two-phase-coil-setup.png", dpi=180)
     plt.close(fig)
 
 
-def v6_pin_detail(case="v6-immersed-pins-pool35-v2-h010", filename="v6-immersed-pin-setup.png"):
+def v6_pin_detail(
+    case="v6-immersed-pins-pool35-v2-h010", filename="v6-immersed-pin-setup.png"
+):
     parts, _ = load(case)
-    config = json.loads((ROOT / "artifacts/hardware-research/cases" / (case + ".mhd-assumptions.json")).read_text())["configuration"]
-    diameter = config.get("pin_diameter_mm", .5)
-    tip = config.get("pin_tip_mm", 2.)
+    config = json.loads(
+        (
+            ROOT
+            / "artifacts/hardware-research/cases"
+            / (case + ".mhd-assumptions.json")
+        ).read_text()
+    )["configuration"]
+    diameter = config.get("pin_diameter_mm", 0.5)
+    tip = config.get("pin_tip_mm", 2.0)
     fill = config["fill_height"]
-    spacing = config.get("pin_spacing_mm", 1.)
+    spacing = config.get("pin_spacing_mm", 1.0)
     milled = config.get("nozzle_flat_width_mm") is not None
     pole_gap = config["pole_gap"] if config["pole_gap"] is not None else 8.5
-    magnet_points = np.concatenate([faces.reshape(-1, 3) for name, faces, _ in parts if category(name) == "magnet"])
+    magnet_points = np.concatenate(
+        [faces.reshape(-1, 3) for name, faces, _ in parts if category(name) == "magnet"]
+    )
     yextent = abs(magnet_points[:, 1]).max() + 1
     lower_z = magnet_points[:, 2].min() - 1
     fig, axes = plt.subplots(1, 3, figsize=(15, 8))
-    fig.subplots_adjust(left=.055, right=.985, bottom=.19, top=.85, wspace=.3)
+    fig.subplots_adjust(left=0.055, right=0.985, bottom=0.19, top=0.85, wspace=0.3)
     section(axes[0], parts, "yz")
-    axes[0].set(xlim=(-yextent, yextent), ylim=(lower_z, 15), title="Poles beside the milled collar" if milled else "Magnet stacks below the heater region")
-    axes[0].text(0, lower_z + .3, f"{pole_gap:g} mm\nflight gap", ha="center", fontsize=10)
-    axes[0].annotate("Intended jet", xy=(0, -3), xytext=(0, -1), ha="center", color="#27735b", arrowprops={"arrowstyle": "->", "color": "#27735b"})
+    axes[0].set(
+        xlim=(-yextent, yextent),
+        ylim=(lower_z, 15),
+        title="Poles beside the milled collar"
+        if milled
+        else "Magnet stacks below the heater region",
+    )
+    axes[0].text(
+        0, lower_z + 0.3, f"{pole_gap:g} mm\nflight gap", ha="center", fontsize=10
+    )
+    axes[0].annotate(
+        "Intended jet",
+        xy=(0, -3),
+        xytext=(0, -1),
+        ha="center",
+        color="#27735b",
+        arrowprops={"arrowstyle": "->", "color": "#27735b"},
+    )
     section(axes[1], parts)
-    axes[1].set(xlim=(-2, 2), ylim=(-.3, 5), title="Immersed pin tips — enlarged")
-    axes[1].axhline(fill, color="#268eb8", lw=.8, ls=":")
+    axes[1].set(xlim=(-2, 2), ylim=(-0.3, 5), title="Immersed pin tips — enlarged")
+    axes[1].axhline(fill, color="#268eb8", lw=0.8, ls=":")
     label(axes[1], f"{diameter:g} mm tungsten pins", (spacing / 2, 3.8), (-1.9, 4.7))
-    label(axes[1], f"{fill - tip:g} mm immersion", (spacing / 2 + diameter / 2, (fill + tip) / 2), (.9, 3.7))
-    label(axes[1], "0.4 mm outlet", (.2, .2), (-1.8, .7))
+    label(
+        axes[1],
+        f"{fill - tip:g} mm immersion",
+        (spacing / 2 + diameter / 2, (fill + tip) / 2),
+        (0.9, 3.7),
+    )
+    label(axes[1], "0.4 mm outlet", (0.2, 0.2), (-1.8, 0.7))
     section(axes[2], parts, "xy", (fill + tip) / 2)
-    axes[2].set(xlim=(-5.5, 5.5) if milled else (-2, 2), ylim=(-4, 4) if milled else (-2, 2), title="Plan through the immersed electrodes")
-    axes[2].annotate("I", xy=(.45, 0), xytext=(-.45, 0), color="#9b541f", arrowprops={"arrowstyle": "->", "color": "#9b541f"})
-    axes[2].annotate("B", xy=(0, -1.6), xytext=(0, -.6), color="#32678b", arrowprops={"arrowstyle": "->", "color": "#32678b"})
+    axes[2].set(
+        xlim=(-5.5, 5.5) if milled else (-2, 2),
+        ylim=(-4, 4) if milled else (-2, 2),
+        title="Plan through the immersed electrodes",
+    )
+    axes[2].annotate(
+        "I",
+        xy=(0.45, 0),
+        xytext=(-0.45, 0),
+        color="#9b541f",
+        arrowprops={"arrowstyle": "->", "color": "#9b541f"},
+    )
+    axes[2].annotate(
+        "B",
+        xy=(0, -1.6),
+        xytext=(0, -0.6),
+        color="#32678b",
+        arrowprops={"arrowstyle": "->", "color": "#32678b"},
+    )
     if milled:
-        axes[2].text(3, 0, f"Two flats\n{config['nozzle_flat_width_mm']:g} mm apart", ha="center", fontsize=10, bbox={"facecolor": "white", "edgecolor": "none", "alpha": .85})
+        axes[2].text(
+            3,
+            0,
+            f"Two flats\n{config['nozzle_flat_width_mm']:g} mm apart",
+            ha="center",
+            fontsize=10,
+            bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.85},
+        )
         axes[2].text(3, 3, "SmCo", ha="center", fontsize=10)
         axes[2].text(3, -3, "SmCo", ha="center", fontsize=10)
-    handles = [Patch(facecolor=COLORS[k], edgecolor="#596673", label=v) for k, v in [("steel", "Stainless steel"), ("liquid", "Solder"), ("wire", "Tungsten"), ("magnet", "SmCo")]]
-    fig.legend(handles=handles, loc="lower center", ncol=4, bbox_to_anchor=(.5, .06))
-    title = "V6 with two milled collar flats — original bore and M6 barrel retained" if milled else "V6 immersed-electrode variant — intact metal nozzle"
-    fig.suptitle(title + "\nActual generated CAD sections; two pins enter through the open pool", fontsize=16, weight="bold")
-    fig.text(.5, .015, "Screening geometry • pin clamps, heater and feedstock routing omitted • ideal electrode contact", ha="center", fontsize=10)
+    handles = [
+        Patch(facecolor=COLORS[k], edgecolor="#596673", label=v)
+        for k, v in [
+            ("steel", "Stainless steel"),
+            ("liquid", "Solder"),
+            ("wire", "Tungsten"),
+            ("magnet", "SmCo"),
+        ]
+    ]
+    fig.legend(handles=handles, loc="lower center", ncol=4, bbox_to_anchor=(0.5, 0.06))
+    title = (
+        "V6 with two milled collar flats — original bore and M6 barrel retained"
+        if milled
+        else "V6 immersed-electrode variant — intact metal nozzle"
+    )
+    fig.suptitle(
+        title + "\nActual generated CAD sections; two pins enter through the open pool",
+        fontsize=16,
+        weight="bold",
+    )
+    fig.text(
+        0.5,
+        0.015,
+        "Screening geometry • pin clamps, heater and feedstock routing omitted • ideal electrode contact",
+        ha="center",
+        fontsize=10,
+    )
     OUT.mkdir(parents=True, exist_ok=True)
     fig.savefig(OUT / filename, dpi=180)
 

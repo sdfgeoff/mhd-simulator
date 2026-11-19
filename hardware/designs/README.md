@@ -91,3 +91,8 @@ They do not substitute for the separate fine-grid and full-domain gravity checks
    0.8 mm boss, 0.2 mm nominal wall and R0.1 root. It retains the heated fingers
    and raised pool, at roughly 110 A / 23.4 A RMS comparison conditions. Those
    conditions do not establish a physical waveform or demonstrated drop rate.
+
+9. `pole-carrier-review`: independent aluminium magnet carriers, nominal 37 × 36.6 mm
+   footprint and 2.7 mm projection below the outlet. Assembly and six individual
+   STL meshes pass nominal interference/gap/manifold checks. Added fixtures are
+   excluded from physics; thermal contacts, preload and carriage isolation remain open.

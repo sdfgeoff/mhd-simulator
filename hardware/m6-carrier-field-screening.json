@@ -1,0 +1,21 @@
+{
+  "status": "Completed native applied-source translation check with fixed accepted J",
+  "charge_source": "artifacts/hardware-research/m6-rooted08-hot-current30-h010",
+  "conductive_head_geometry_matches_accepted_charge": true,
+  "final_review_new_fixtures_all_excluded": true,
+  "cases": [
+    {
+      "source": "artifacts/hardware-research/m6-carrier-reference-q4-h010",
+      "mean_liquid_By_T": -0.48576171696186066,
+      "outlet_downward_force_N_at30A": 0.0021243044070333
+    },
+    {
+      "source": "artifacts/hardware-research/m6-carrier-review-field-q4-h010",
+      "mean_liquid_By_T": -0.4869741064806779,
+      "outlet_downward_force_N_at30A": 0.0021318751978369353
+    }
+  ],
+  "force_ratio_lowered_to_reference": 1.0035638916807637,
+  "matching_peak_A_to_previous110A_cold_force": 109.60936409915324,
+  "scope": "Both poles translated down0.2mm; nozzle/liquid/copper geometry and fixed properties unchanged. Static J at zero velocity is independent of imposed B; magnets remain electrically disconnected from the head. Native q4 applied fields sampled on the accepted100um grid; phase IDs aligned. Nonmagnetic carrier fixtures excluded from physics; no eddy response, hot recoil, moving fluid or jetting conclusion."
+}
