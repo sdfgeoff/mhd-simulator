@@ -603,3 +603,20 @@ are `target/debug/examples/thermal_conductance --check`.
     `prepare_coil_fill_control.py` creates fresh inputs and verifies closed
     geometry, liquid volume and unchanged solid/coil payloads. It deliberately
     refuses to overwrite an existing control folder.
+12. The [completed custom pulse pair](unipolar-coil-v2-custom-pair.json) retains
+    both stationary100/100µs and50/250µs results. Their rise/fall force integrals
+    largely cancel; this cannot determine the response of a moving interface.
+    [Shorter future screens](unipolar-coil-tail-cost.json) avoid much of the
+    negligible-field tail, with an explicit final field-energy/heat gate.
+13. The [lower-fill flow pair](coil-low-fill-flow-plan.json) and
+    [V6-like flow pair](coil-v6-flow-plan.json) use the normal unified CLI for
+    matched unpowered/driven controls. They are queued mechanism tests, not
+    results. The200µm startup mesh does not resolve breakup. These encircling
+    coils also clash with a conventional heater block; alternate heating or
+    coil placement remains a packaging requirement.
+14. The [winding cooling budget](coil-winding-thermal-budget.json) separates
+    RMS current from thermal qualification. It reports required cooling
+    conductance under explicit temperatures and head-coupling assumptions.
+    Its20°C copper reference and linear temperature sensitivity do not replace
+    a hot-property curve or predict actual winding temperature. In particular,
+    the earlier fixed25MS/m assumption must not be called100°C copper.

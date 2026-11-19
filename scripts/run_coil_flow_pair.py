@@ -19,13 +19,18 @@ def sha(path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--after-pid", type=int, required=True)
+    parser.add_argument("--plan", type=Path)
+    parser.add_argument("--after-state", type=Path)
+    parser.add_argument("--cold-geometry", choices=["custom", "v6"], default="custom")
     args = parser.parse_args()
     root = Path("artifacts/hardware-research")
-    plan_path = root / "coil-low-fill-flow-v1-plan.json"
-    predecessor = root / "unipolar-coil-fast10-v2-amd-state.json"
+    plan_path = args.plan or root / "coil-low-fill-flow-v1-plan.json"
+    predecessor = args.after_state or root / "unipolar-coil-fast10-v2-amd-state.json"
     cold_plan = root / "unipolar-coil-fast10-v2-plan.json"
-    state = root / "coil-low-fill-flow-v1-amd-state.json"
+    state = root / (plan_path.stem.removesuffix("-plan") + "-amd-state.json")
     plan = json.loads(plan_path.read_text())
+    if plan.get("cold_geometry", "custom") != args.cold_geometry:
+        raise RuntimeError("Cold-result gate does not match the chosen flow geometry")
     if state.exists() or any(Path(j["output"]).exists() or Path(j["output"] + ".log").exists() for j in plan["jobs"]):
         raise RuntimeError("Existing state/output; inspect before repeating")
     manifest = Path(os.environ["VK_DRIVER_FILES"])
@@ -68,7 +73,7 @@ def main():
         # CPU-only analysis verifies completed native EM results and decay/work gates.
         subprocess.run([sys.executable, "scripts/analyze_unipolar_coil.py", "--plan", str(cold_plan)], check=True)
         result = json.loads((root / "unipolar-coil-fast10-v2-comparison.json").read_text())
-        custom = next(c for c in result["cases"] if c["geometry"] == "custom")
+        custom = next(c for c in result["cases"] if c["geometry"] == args.cold_geometry)
         if max(abs(v) for v in custom["loaded_terminal_interval_mean_voltage_range_V"]) > 48 or custom["rms_A_at_assumed200Hz"] > 30:
             record(stage="cold_result_needs_review", cold_result=custom)
             return

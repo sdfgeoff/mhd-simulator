@@ -1,5 +1,6 @@
 """Prepare normal unified RunState zero/driven controls; no GPU work."""
 import copy
+import argparse
 import hashlib
 import json
 from pathlib import Path
@@ -10,16 +11,22 @@ def sha(path):
 
 
 root = Path("artifacts/hardware-research")
-folder = root / "cases/coil-low-fill-flow-v1"
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--geometry", choices=["low-fill", "v6"], default="low-fill")
+args = parser.parse_args()
+tag = "coil-" + args.geometry + "-flow-v1"
+folder = root / "cases" / tag
 folder.mkdir(parents=True, exist_ok=False)
-source = root / "cases/coil-fill-control-v1/low-symmetric100-flow-h010.mhd.json"
+source = root / ("cases/coil-fill-control-v1/low-symmetric100-flow-h010.mhd.json"
+                 if args.geometry == "low-fill" else "cases/unipolar-coil-v2/v6-symmetric100-cold-h020.mhd.json")
 base = json.loads(source.read_text())
 cold_plan = root / "unipolar-coil-fast10-v2-plan.json"
-cold_job = next(j for j in json.loads(cold_plan.read_text())["jobs"] if j["geometry"] == "custom")
+cold_geometry = "custom" if args.geometry == "low-fill" else "v6"
+cold_job = next(j for j in json.loads(cold_plan.read_text())["jobs"] if j["geometry"] == cold_geometry)
 cold = json.loads(Path(cold_job["project"]).read_text())
 assert base["cad_curves"] == cold["cad_curves"]
 assert base["materials"] == cold["materials"]
-assert base["run"]["fluid_enabled"] and base["fluid"]["surface"]["enabled"]
+assert base["fluid"]["material_id"] == 4
 jobs = []
 for peak in [0, 250]:
     p = copy.deepcopy(base)
@@ -32,9 +39,9 @@ for peak in [0, 250]:
     p["electromagnetics"]["wires"][0]["current"]["samples"] = [
         [0, 0], [10e-6, peak], [110e-6, 0], [2.1e-3, 0]
     ]
-    path = folder / f"low-fill-{peak}A-flow-h020.mhd.json"
+    path = folder / f"{args.geometry}-{peak}A-flow-h020.mhd.json"
     path.write_text(json.dumps(p, indent=2) + "\n")
-    output = root / f"coil-low-fill-flow-v1-{peak}A-h020"
+    output = root / f"{tag}-{peak}A-h020"
     jobs.append({"peak_A": peak, "project": str(path), "project_sha256": sha(path),
                  "output": str(output), "requested_steps": 1800, "end_time_s": 2.1e-3,
                  "command": ["target/debug/mhd-workbench", "--run-check", str(path), "1800",
@@ -43,17 +50,21 @@ for peak in [0, 250]:
 plan = {
     "status": "Prepared zero/driven normal unified flow pair; no numerical result",
     "source_sha256": {str(source): sha(source), str(cold_plan): sha(cold_plan)},
+    "geometry": args.geometry,
+    "cold_geometry": cold_geometry,
     "jobs": jobs,
     "purpose": "Test moving interface under the original single unipolar coil mechanism, with a matched unpowered control. No prescribed pressure, jet or frozen force field.",
     "limits": [
         "200um exploratory mesh gives only2.5cells across0.5mm outlet; neither absence nor presence of a detached component certifies jetting.",
-        "Low free level5.6mm and fixed feed tip5.5mm leave0.1mm immersion, below coarse spacing. Inspect native voxelization and refine before conclusions.",
+        ("Low free level5.6mm and fixed feed tip5.5mm leave0.1mm immersion, below coarse spacing. Inspect native voxelization and refine before conclusions."
+         if args.geometry == "low-fill" else "Drawing-based V6 approximation:0.5mm outlet,0.9mm land,3.2mm inlet. Not a verified catalogue stainless0.5mm SKU. Existing V6 carrier metadata records these limits."),
         "Negative-z domain extends to−4mm versus−2mm in the cold screen; no assumption of identical native force is made.",
         "Common clock0.5us through300us, then1.5us for both EM/fluid; changing timestep does not freeze EM coupling.",
         "No thermal evolution, calibrated wetting, oxide, repetition or hardware qualification. Final duration2.1ms may require extension for breakup assessment.",
+        "The source encircling coil clashes with a conventional aluminium heater block; alternate heating/package geometry remains unresolved. These are mechanism controls, not assembled hardware designs.",
     ],
 }
-path = root / "coil-low-fill-flow-v1-plan.json"
+path = root / (tag + "-plan.json")
 path.write_text(json.dumps(plan, indent=2) + "\n")
-Path("hardware/coil-low-fill-flow-plan.json").write_text(json.dumps(plan, indent=2) + "\n")
+Path("hardware/coil-" + args.geometry + "-flow-plan.json").write_text(json.dumps(plan, indent=2) + "\n")
 print(path)

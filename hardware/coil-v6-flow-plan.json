@@ -1,0 +1,64 @@
+{
+  "status": "Prepared zero/driven normal unified flow pair; no numerical result",
+  "source_sha256": {
+    "artifacts/hardware-research/cases/unipolar-coil-v2/v6-symmetric100-cold-h020.mhd.json": "261ec880d4fabbd8db1f065b666b0f75acb27e3bc012940257b76aba4d7a0da3",
+    "artifacts/hardware-research/unipolar-coil-fast10-v2-plan.json": "6ca0215be32414919563b4c5ba2a0133aa1ad024026f65d6f50aed758bfff7a5"
+  },
+  "geometry": "v6",
+  "cold_geometry": "v6",
+  "jobs": [
+    {
+      "peak_A": 0,
+      "project": "artifacts/hardware-research/cases/coil-v6-flow-v1/v6-0A-flow-h020.mhd.json",
+      "project_sha256": "aa535c9b2ffabb12dcfb9087da4564d576c09e1dc75b09dcac783af83fd9e7cf",
+      "output": "artifacts/hardware-research/coil-v6-flow-v1-0A-h020",
+      "requested_steps": 1800,
+      "end_time_s": 0.0021,
+      "command": [
+        "target/debug/mhd-workbench",
+        "--run-check",
+        "artifacts/hardware-research/cases/coil-v6-flow-v1/v6-0A-flow-h020.mhd.json",
+        "1800",
+        "--output",
+        "artifacts/hardware-research/coil-v6-flow-v1-0A-h020",
+        "--field-every",
+        "300",
+        "--tail-after-us",
+        "300",
+        "--tail-dt-us",
+        "1.5"
+      ]
+    },
+    {
+      "peak_A": 250,
+      "project": "artifacts/hardware-research/cases/coil-v6-flow-v1/v6-250A-flow-h020.mhd.json",
+      "project_sha256": "c034f415f8519128fcd5e98d7f792a69e994f43648854f60103cf8a82d3bc1be",
+      "output": "artifacts/hardware-research/coil-v6-flow-v1-250A-h020",
+      "requested_steps": 1800,
+      "end_time_s": 0.0021,
+      "command": [
+        "target/debug/mhd-workbench",
+        "--run-check",
+        "artifacts/hardware-research/cases/coil-v6-flow-v1/v6-250A-flow-h020.mhd.json",
+        "1800",
+        "--output",
+        "artifacts/hardware-research/coil-v6-flow-v1-250A-h020",
+        "--field-every",
+        "300",
+        "--tail-after-us",
+        "300",
+        "--tail-dt-us",
+        "1.5"
+      ]
+    }
+  ],
+  "purpose": "Test moving interface under the original single unipolar coil mechanism, with a matched unpowered control. No prescribed pressure, jet or frozen force field.",
+  "limits": [
+    "200um exploratory mesh gives only2.5cells across0.5mm outlet; neither absence nor presence of a detached component certifies jetting.",
+    "Drawing-based V6 approximation:0.5mm outlet,0.9mm land,3.2mm inlet. Not a verified catalogue stainless0.5mm SKU. Existing V6 carrier metadata records these limits.",
+    "Negative-z domain extends to\u22124mm versus\u22122mm in the cold screen; no assumption of identical native force is made.",
+    "Common clock0.5us through300us, then1.5us for both EM/fluid; changing timestep does not freeze EM coupling.",
+    "No thermal evolution, calibrated wetting, oxide, repetition or hardware qualification. Final duration2.1ms may require extension for breakup assessment.",
+    "The source encircling coil clashes with a conventional aluminium heater block; alternate heating/package geometry remains unresolved. These are mechanism controls, not assembled hardware designs."
+  ]
+}

@@ -1,0 +1,711 @@
+{
+  "status": "Lumped winding/cooling sensitivity only; no measured temperature, cooling capacity or thermal qualification",
+  "source_project": "hardware/designs/single-coil-250A/case.mhd.json",
+  "source_sha256": "86c6c0dd3c85ad808c82fcc346d93674c27b0c1aa89fea63f679f24bd5eba12a",
+  "geometry": {
+    "round_wire_radius_m": 0.0006,
+    "wire_length_including_return_m": 0.36473449376361033,
+    "coil_inner_radius_m": 0.004347999851126374,
+    "coil_outer_radius_m": 0.006844000310223705,
+    "coil_height_m": 0.006479999780654907,
+    "packed_annular_envelope_area_m2": 0.0004541760164386616,
+    "all_bare_wire_area_m2": 0.0013750166473422603,
+    "copper_mass_kg": 0.003667169398461808,
+    "uniform_heat_capacity_J_K": 1.4448647429939523
+  },
+  "resistance": {
+    "IACS_20C_resistivity_ohm_m": 1.724137931034483e-08,
+    "near20C_temperature_coefficient_K_inv": 0.00393,
+    "R20_ohm": 0.005560277547758494,
+    "existing_25MS_m_R_ohm": 0.012899843910799704,
+    "linearized_temperature_corresponding_to25MS_m_C": 355.8778625954198
+  },
+  "method": "R(T)=R20[1+alpha20(T\u221220)]. Required net cooling conductance Gout=[Irms\u00b2R(T)+Ghead(250\u2212T)]/(T\u221225). Gout includes all paths to ambient; no convection coefficient or cooling capability is assumed. Envelope/bare-wire areas bracket geometric exposure estimates, not rigorous bounds on heat transfer.",
+  "cases": [
+    {
+      "waveform": "100/100us at250A",
+      "I2dt_A2s": 4.166666666666667,
+      "rms_A_at_assumed200Hz": 28.867513459481287,
+      "at_existing_25MS_m_assumption": {
+        "winding_heat_W_at_assumed200Hz": 10.74986992566642,
+        "one_pulse_adiabatic_uniform_rise_K": 0.03720026382328099
+      },
+      "cooling_requirements": [
+        {
+          "coil_temperature_C": 100,
+          "linearized_resistance_ohm": 0.007308428808773765,
+          "winding_heat_W_at_assumed200Hz": 6.090357340644804,
+          "assumed_head_to_coil_conductance_W_K": 0,
+          "head_heat_into_coil_W": 0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.08120476454193072,
+          "effective_h_W_m2_K_if_packed_envelope_area": 178.7958007529395,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 59.057295559940776
+        },
+        {
+          "coil_temperature_C": 100,
+          "linearized_resistance_ohm": 0.007308428808773765,
+          "winding_heat_W_at_assumed200Hz": 6.090357340644804,
+          "assumed_head_to_coil_conductance_W_K": 0.005,
+          "head_heat_into_coil_W": 0.75,
+          "required_total_coil_to_ambient_conductance_W_K": 0.09120476454193072,
+          "effective_h_W_m2_K_if_packed_envelope_area": 200.81369610200082,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 66.32993478167586
+        },
+        {
+          "coil_temperature_C": 100,
+          "linearized_resistance_ohm": 0.007308428808773765,
+          "winding_heat_W_at_assumed200Hz": 6.090357340644804,
+          "assumed_head_to_coil_conductance_W_K": 0.01,
+          "head_heat_into_coil_W": 1.5,
+          "required_total_coil_to_ambient_conductance_W_K": 0.10120476454193073,
+          "effective_h_W_m2_K_if_packed_envelope_area": 222.83159145106214,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 73.60257400341095
+        },
+        {
+          "coil_temperature_C": 150,
+          "linearized_resistance_ohm": 0.008401023346908308,
+          "winding_heat_W_at_assumed200Hz": 7.000852789090257,
+          "assumed_head_to_coil_conductance_W_K": 0,
+          "head_heat_into_coil_W": 0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.056006822312722054,
+          "effective_h_W_m2_K_if_packed_envelope_area": 123.3152352514986,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 40.731741263625004
+        },
+        {
+          "coil_temperature_C": 150,
+          "linearized_resistance_ohm": 0.008401023346908308,
+          "winding_heat_W_at_assumed200Hz": 7.000852789090257,
+          "assumed_head_to_coil_conductance_W_K": 0.005,
+          "head_heat_into_coil_W": 0.5,
+          "required_total_coil_to_ambient_conductance_W_K": 0.06000682231272206,
+          "effective_h_W_m2_K_if_packed_envelope_area": 132.12239339112313,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 43.64079695231904
+        },
+        {
+          "coil_temperature_C": 150,
+          "linearized_resistance_ohm": 0.008401023346908308,
+          "winding_heat_W_at_assumed200Hz": 7.000852789090257,
+          "assumed_head_to_coil_conductance_W_K": 0.01,
+          "head_heat_into_coil_W": 1.0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.06400682231272205,
+          "effective_h_W_m2_K_if_packed_envelope_area": 140.92955153074763,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 46.54985264101307
+        },
+        {
+          "coil_temperature_C": 180,
+          "linearized_resistance_ohm": 0.009056580069789036,
+          "winding_heat_W_at_assumed200Hz": 7.54715005815753,
+          "assumed_head_to_coil_conductance_W_K": 0,
+          "head_heat_into_coil_W": 0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.04869129069779051,
+          "effective_h_W_m2_K_if_packed_envelope_area": 107.20797429946738,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 35.41141904856559
+        },
+        {
+          "coil_temperature_C": 180,
+          "linearized_resistance_ohm": 0.009056580069789036,
+          "winding_heat_W_at_assumed200Hz": 7.54715005815753,
+          "assumed_head_to_coil_conductance_W_K": 0.005,
+          "head_heat_into_coil_W": 0.35000000000000003,
+          "required_total_coil_to_ambient_conductance_W_K": 0.050949355213919544,
+          "effective_h_W_m2_K_if_packed_envelope_area": 112.17975712022317,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 37.053627905086415
+        },
+        {
+          "coil_temperature_C": 180,
+          "linearized_resistance_ohm": 0.009056580069789036,
+          "winding_heat_W_at_assumed200Hz": 7.54715005815753,
+          "assumed_head_to_coil_conductance_W_K": 0.01,
+          "head_heat_into_coil_W": 0.7000000000000001,
+          "required_total_coil_to_ambient_conductance_W_K": 0.05320741973004858,
+          "effective_h_W_m2_K_if_packed_envelope_area": 117.15153994097896,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 38.69583676160725
+        },
+        {
+          "coil_temperature_C": 200,
+          "linearized_resistance_ohm": 0.009493617885042853,
+          "winding_heat_W_at_assumed200Hz": 7.9113482375357105,
+          "assumed_head_to_coil_conductance_W_K": 0,
+          "head_heat_into_coil_W": 0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.045207704214489774,
+          "effective_h_W_m2_K_if_packed_envelope_area": 99.53785003659537,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 32.87793227948968
+        },
+        {
+          "coil_temperature_C": 200,
+          "linearized_resistance_ohm": 0.009493617885042853,
+          "winding_heat_W_at_assumed200Hz": 7.9113482375357105,
+          "assumed_head_to_coil_conductance_W_K": 0.005,
+          "head_heat_into_coil_W": 0.25,
+          "required_total_coil_to_ambient_conductance_W_K": 0.0466362756430612,
+          "effective_h_W_m2_K_if_packed_envelope_area": 102.68326365788984,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 33.91688073973754
+        },
+        {
+          "coil_temperature_C": 200,
+          "linearized_resistance_ohm": 0.009493617885042853,
+          "winding_heat_W_at_assumed200Hz": 7.9113482375357105,
+          "assumed_head_to_coil_conductance_W_K": 0.01,
+          "head_heat_into_coil_W": 0.5,
+          "required_total_coil_to_ambient_conductance_W_K": 0.04806484707163263,
+          "effective_h_W_m2_K_if_packed_envelope_area": 105.82867727918432,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 34.955829199985416
+        },
+        {
+          "coil_temperature_C": 220,
+          "linearized_resistance_ohm": 0.00993065570029667,
+          "winding_heat_W_at_assumed200Hz": 8.275546416913892,
+          "assumed_head_to_coil_conductance_W_K": 0,
+          "head_heat_into_coil_W": 0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.042438699573917396,
+          "effective_h_W_m2_K_if_packed_envelope_area": 93.44108459687659,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 30.864135104070364
+        },
+        {
+          "coil_temperature_C": 220,
+          "linearized_resistance_ohm": 0.00993065570029667,
+          "winding_heat_W_at_assumed200Hz": 8.275546416913892,
+          "assumed_head_to_coil_conductance_W_K": 0.005,
+          "head_heat_into_coil_W": 0.15,
+          "required_total_coil_to_ambient_conductance_W_K": 0.04320793034314817,
+          "effective_h_W_m2_K_if_packed_envelope_area": 95.1347688544967,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 31.423568890357682
+        },
+        {
+          "coil_temperature_C": 220,
+          "linearized_resistance_ohm": 0.00993065570029667,
+          "winding_heat_W_at_assumed200Hz": 8.275546416913892,
+          "assumed_head_to_coil_conductance_W_K": 0.01,
+          "head_heat_into_coil_W": 0.3,
+          "required_total_coil_to_ambient_conductance_W_K": 0.04397716111237894,
+          "effective_h_W_m2_K_if_packed_envelope_area": 96.82845311211682,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 31.983002676644997
+        },
+        {
+          "coil_temperature_C": 240,
+          "linearized_resistance_ohm": 0.010367693515550487,
+          "winding_heat_W_at_assumed200Hz": 8.639744596292072,
+          "assumed_head_to_coil_conductance_W_K": 0,
+          "head_heat_into_coil_W": 0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.04018485858740499,
+          "effective_h_W_m2_K_if_packed_envelope_area": 88.47860109943107,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 29.224997868263944
+        },
+        {
+          "coil_temperature_C": 240,
+          "linearized_resistance_ohm": 0.010367693515550487,
+          "winding_heat_W_at_assumed200Hz": 8.639744596292072,
+          "assumed_head_to_coil_conductance_W_K": 0.005,
+          "head_heat_into_coil_W": 0.05,
+          "required_total_coil_to_ambient_conductance_W_K": 0.040417416726939874,
+          "effective_h_W_m2_K_if_packed_envelope_area": 88.99064517731622,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 29.394129012955457
+        },
+        {
+          "coil_temperature_C": 240,
+          "linearized_resistance_ohm": 0.010367693515550487,
+          "winding_heat_W_at_assumed200Hz": 8.639744596292072,
+          "assumed_head_to_coil_conductance_W_K": 0.01,
+          "head_heat_into_coil_W": 0.1,
+          "required_total_coil_to_ambient_conductance_W_K": 0.04064997486647475,
+          "effective_h_W_m2_K_if_packed_envelope_area": 89.50268925520135,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 29.563260157646965
+        },
+        {
+          "coil_temperature_C": 250,
+          "linearized_resistance_ohm": 0.010586212423177397,
+          "winding_heat_W_at_assumed200Hz": 8.821843685981165,
+          "assumed_head_to_coil_conductance_W_K": 0,
+          "head_heat_into_coil_W": 0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.03920819415991629,
+          "effective_h_W_m2_K_if_packed_envelope_area": 86.32819158387136,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 28.514705066081167
+        },
+        {
+          "coil_temperature_C": 250,
+          "linearized_resistance_ohm": 0.010586212423177397,
+          "winding_heat_W_at_assumed200Hz": 8.821843685981165,
+          "assumed_head_to_coil_conductance_W_K": 0.005,
+          "head_heat_into_coil_W": 0.0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.03920819415991629,
+          "effective_h_W_m2_K_if_packed_envelope_area": 86.32819158387136,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 28.514705066081167
+        },
+        {
+          "coil_temperature_C": 250,
+          "linearized_resistance_ohm": 0.010586212423177397,
+          "winding_heat_W_at_assumed200Hz": 8.821843685981165,
+          "assumed_head_to_coil_conductance_W_K": 0.01,
+          "head_heat_into_coil_W": 0.0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.03920819415991629,
+          "effective_h_W_m2_K_if_packed_envelope_area": 86.32819158387136,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 28.514705066081167
+        }
+      ]
+    },
+    {
+      "waveform": "50/250us at212.132A",
+      "I2dt_A2s": 4.5,
+      "rms_A_at_assumed200Hz": 30.0,
+      "at_existing_25MS_m_assumption": {
+        "winding_heat_W_at_assumed200Hz": 11.609859519719734,
+        "one_pulse_adiabatic_uniform_rise_K": 0.04017628492914346
+      },
+      "cooling_requirements": [
+        {
+          "coil_temperature_C": 100,
+          "linearized_resistance_ohm": 0.007308428808773765,
+          "winding_heat_W_at_assumed200Hz": 6.577585927896388,
+          "assumed_head_to_coil_conductance_W_K": 0,
+          "head_heat_into_coil_W": 0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.08770114570528517,
+          "effective_h_W_m2_K_if_packed_envelope_area": 193.09946481317465,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 63.781879204736036
+        },
+        {
+          "coil_temperature_C": 100,
+          "linearized_resistance_ohm": 0.007308428808773765,
+          "winding_heat_W_at_assumed200Hz": 6.577585927896388,
+          "assumed_head_to_coil_conductance_W_K": 0.005,
+          "head_heat_into_coil_W": 0.75,
+          "required_total_coil_to_ambient_conductance_W_K": 0.09770114570528518,
+          "effective_h_W_m2_K_if_packed_envelope_area": 215.117360162236,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 71.05451842647112
+        },
+        {
+          "coil_temperature_C": 100,
+          "linearized_resistance_ohm": 0.007308428808773765,
+          "winding_heat_W_at_assumed200Hz": 6.577585927896388,
+          "assumed_head_to_coil_conductance_W_K": 0.01,
+          "head_heat_into_coil_W": 1.5,
+          "required_total_coil_to_ambient_conductance_W_K": 0.10770114570528518,
+          "effective_h_W_m2_K_if_packed_envelope_area": 237.1352555112973,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 78.32715764820621
+        },
+        {
+          "coil_temperature_C": 150,
+          "linearized_resistance_ohm": 0.008401023346908308,
+          "winding_heat_W_at_assumed200Hz": 7.560921012217477,
+          "assumed_head_to_coil_conductance_W_K": 0,
+          "head_heat_into_coil_W": 0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.060487368097739816,
+          "effective_h_W_m2_K_if_packed_envelope_area": 133.1804540716185,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 43.990280564715
+        },
+        {
+          "coil_temperature_C": 150,
+          "linearized_resistance_ohm": 0.008401023346908308,
+          "winding_heat_W_at_assumed200Hz": 7.560921012217477,
+          "assumed_head_to_coil_conductance_W_K": 0.005,
+          "head_heat_into_coil_W": 0.5,
+          "required_total_coil_to_ambient_conductance_W_K": 0.06448736809773982,
+          "effective_h_W_m2_K_if_packed_envelope_area": 141.98761221124303,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 46.89933625340904
+        },
+        {
+          "coil_temperature_C": 150,
+          "linearized_resistance_ohm": 0.008401023346908308,
+          "winding_heat_W_at_assumed200Hz": 7.560921012217477,
+          "assumed_head_to_coil_conductance_W_K": 0.01,
+          "head_heat_into_coil_W": 1.0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.06848736809773982,
+          "effective_h_W_m2_K_if_packed_envelope_area": 150.79477035086754,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 49.80839194210308
+        },
+        {
+          "coil_temperature_C": 180,
+          "linearized_resistance_ohm": 0.009056580069789036,
+          "winding_heat_W_at_assumed200Hz": 8.150922062810132,
+          "assumed_head_to_coil_conductance_W_K": 0,
+          "head_heat_into_coil_W": 0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.05258659395361375,
+          "effective_h_W_m2_K_if_packed_envelope_area": 115.78461224342477,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 38.24433257245084
+        },
+        {
+          "coil_temperature_C": 180,
+          "linearized_resistance_ohm": 0.009056580069789036,
+          "winding_heat_W_at_assumed200Hz": 8.150922062810132,
+          "assumed_head_to_coil_conductance_W_K": 0.005,
+          "head_heat_into_coil_W": 0.35000000000000003,
+          "required_total_coil_to_ambient_conductance_W_K": 0.054844658469742784,
+          "effective_h_W_m2_K_if_packed_envelope_area": 120.75639506418055,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 39.88654142897166
+        },
+        {
+          "coil_temperature_C": 180,
+          "linearized_resistance_ohm": 0.009056580069789036,
+          "winding_heat_W_at_assumed200Hz": 8.150922062810132,
+          "assumed_head_to_coil_conductance_W_K": 0.01,
+          "head_heat_into_coil_W": 0.7000000000000001,
+          "required_total_coil_to_ambient_conductance_W_K": 0.057102722985871816,
+          "effective_h_W_m2_K_if_packed_envelope_area": 125.72817788493633,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 41.52875028549249
+        },
+        {
+          "coil_temperature_C": 200,
+          "linearized_resistance_ohm": 0.009493617885042853,
+          "winding_heat_W_at_assumed200Hz": 8.544256096538568,
+          "assumed_head_to_coil_conductance_W_K": 0,
+          "head_heat_into_coil_W": 0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.04882432055164896,
+          "effective_h_W_m2_K_if_packed_envelope_area": 107.50087803952302,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 35.508166861848856
+        },
+        {
+          "coil_temperature_C": 200,
+          "linearized_resistance_ohm": 0.009493617885042853,
+          "winding_heat_W_at_assumed200Hz": 8.544256096538568,
+          "assumed_head_to_coil_conductance_W_K": 0.005,
+          "head_heat_into_coil_W": 0.25,
+          "required_total_coil_to_ambient_conductance_W_K": 0.05025289198022039,
+          "effective_h_W_m2_K_if_packed_envelope_area": 110.6462916608175,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 36.54711532209673
+        },
+        {
+          "coil_temperature_C": 200,
+          "linearized_resistance_ohm": 0.009493617885042853,
+          "winding_heat_W_at_assumed200Hz": 8.544256096538568,
+          "assumed_head_to_coil_conductance_W_K": 0.01,
+          "head_heat_into_coil_W": 0.5,
+          "required_total_coil_to_ambient_conductance_W_K": 0.05168146340879182,
+          "effective_h_W_m2_K_if_packed_envelope_area": 113.79170528211195,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 37.586063782344596
+        },
+        {
+          "coil_temperature_C": 220,
+          "linearized_resistance_ohm": 0.00993065570029667,
+          "winding_heat_W_at_assumed200Hz": 8.937590130267003,
+          "assumed_head_to_coil_conductance_W_K": 0,
+          "head_heat_into_coil_W": 0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.04583379553983078,
+          "effective_h_W_m2_K_if_packed_envelope_area": 100.91637136462671,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 33.33326591239599
+        },
+        {
+          "coil_temperature_C": 220,
+          "linearized_resistance_ohm": 0.00993065570029667,
+          "winding_heat_W_at_assumed200Hz": 8.937590130267003,
+          "assumed_head_to_coil_conductance_W_K": 0.005,
+          "head_heat_into_coil_W": 0.15,
+          "required_total_coil_to_ambient_conductance_W_K": 0.04660302630906155,
+          "effective_h_W_m2_K_if_packed_envelope_area": 102.61005562224682,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 33.8926996986833
+        },
+        {
+          "coil_temperature_C": 220,
+          "linearized_resistance_ohm": 0.00993065570029667,
+          "winding_heat_W_at_assumed200Hz": 8.937590130267003,
+          "assumed_head_to_coil_conductance_W_K": 0.01,
+          "head_heat_into_coil_W": 0.3,
+          "required_total_coil_to_ambient_conductance_W_K": 0.047372257078292325,
+          "effective_h_W_m2_K_if_packed_envelope_area": 104.30373987986692,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 34.452133484970624
+        },
+        {
+          "coil_temperature_C": 240,
+          "linearized_resistance_ohm": 0.010367693515550487,
+          "winding_heat_W_at_assumed200Hz": 9.330924163995437,
+          "assumed_head_to_coil_conductance_W_K": 0,
+          "head_heat_into_coil_W": 0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.04339964727439738,
+          "effective_h_W_m2_K_if_packed_envelope_area": 95.55688918738554,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 31.562997697725052
+        },
+        {
+          "coil_temperature_C": 240,
+          "linearized_resistance_ohm": 0.010367693515550487,
+          "winding_heat_W_at_assumed200Hz": 9.330924163995437,
+          "assumed_head_to_coil_conductance_W_K": 0.005,
+          "head_heat_into_coil_W": 0.05,
+          "required_total_coil_to_ambient_conductance_W_K": 0.04363220541393227,
+          "effective_h_W_m2_K_if_packed_envelope_area": 96.0689332652707,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 31.73212884241657
+        },
+        {
+          "coil_temperature_C": 240,
+          "linearized_resistance_ohm": 0.010367693515550487,
+          "winding_heat_W_at_assumed200Hz": 9.330924163995437,
+          "assumed_head_to_coil_conductance_W_K": 0.01,
+          "head_heat_into_coil_W": 0.1,
+          "required_total_coil_to_ambient_conductance_W_K": 0.04386476355346715,
+          "effective_h_W_m2_K_if_packed_envelope_area": 96.58097734315584,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 31.90125998710808
+        },
+        {
+          "coil_temperature_C": 250,
+          "linearized_resistance_ohm": 0.010586212423177397,
+          "winding_heat_W_at_assumed200Hz": 9.527591180859657,
+          "assumed_head_to_coil_conductance_W_K": 0,
+          "head_heat_into_coil_W": 0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.04234484969270959,
+          "effective_h_W_m2_K_if_packed_envelope_area": 93.23444691058106,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 30.795881471367657
+        },
+        {
+          "coil_temperature_C": 250,
+          "linearized_resistance_ohm": 0.010586212423177397,
+          "winding_heat_W_at_assumed200Hz": 9.527591180859657,
+          "assumed_head_to_coil_conductance_W_K": 0.005,
+          "head_heat_into_coil_W": 0.0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.04234484969270959,
+          "effective_h_W_m2_K_if_packed_envelope_area": 93.23444691058106,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 30.795881471367657
+        },
+        {
+          "coil_temperature_C": 250,
+          "linearized_resistance_ohm": 0.010586212423177397,
+          "winding_heat_W_at_assumed200Hz": 9.527591180859657,
+          "assumed_head_to_coil_conductance_W_K": 0.01,
+          "head_heat_into_coil_W": 0.0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.04234484969270959,
+          "effective_h_W_m2_K_if_packed_envelope_area": 93.23444691058106,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 30.795881471367657
+        }
+      ]
+    },
+    {
+      "waveform": "10/100us at250A (not yet native-complete)",
+      "I2dt_A2s": 2.2916666666666665,
+      "rms_A_at_assumed200Hz": 21.40872096444188,
+      "at_existing_25MS_m_assumption": {
+        "winding_heat_W_at_assumed200Hz": 5.912428459116531,
+        "one_pulse_adiabatic_uniform_rise_K": 0.020460145102804538
+      },
+      "cooling_requirements": [
+        {
+          "coil_temperature_C": 100,
+          "linearized_resistance_ohm": 0.007308428808773765,
+          "winding_heat_W_at_assumed200Hz": 3.349696537354642,
+          "assumed_head_to_coil_conductance_W_K": 0,
+          "head_heat_into_coil_W": 0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.04466262049806189,
+          "effective_h_W_m2_K_if_packed_envelope_area": 98.33769041411672,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 32.48151255796742
+        },
+        {
+          "coil_temperature_C": 100,
+          "linearized_resistance_ohm": 0.007308428808773765,
+          "winding_heat_W_at_assumed200Hz": 3.349696537354642,
+          "assumed_head_to_coil_conductance_W_K": 0.005,
+          "head_heat_into_coil_W": 0.75,
+          "required_total_coil_to_ambient_conductance_W_K": 0.0546626204980619,
+          "effective_h_W_m2_K_if_packed_envelope_area": 120.35558576317804,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 39.75415177970251
+        },
+        {
+          "coil_temperature_C": 100,
+          "linearized_resistance_ohm": 0.007308428808773765,
+          "winding_heat_W_at_assumed200Hz": 3.349696537354642,
+          "assumed_head_to_coil_conductance_W_K": 0.01,
+          "head_heat_into_coil_W": 1.5,
+          "required_total_coil_to_ambient_conductance_W_K": 0.0646626204980619,
+          "effective_h_W_m2_K_if_packed_envelope_area": 142.37348111223935,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 47.0267910014376
+        },
+        {
+          "coil_temperature_C": 150,
+          "linearized_resistance_ohm": 0.008401023346908308,
+          "winding_heat_W_at_assumed200Hz": 3.8504690339996412,
+          "assumed_head_to_coil_conductance_W_K": 0,
+          "head_heat_into_coil_W": 0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.03080375227199713,
+          "effective_h_W_m2_K_if_packed_envelope_area": 67.82337938832423,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 22.402457694993753
+        },
+        {
+          "coil_temperature_C": 150,
+          "linearized_resistance_ohm": 0.008401023346908308,
+          "winding_heat_W_at_assumed200Hz": 3.8504690339996412,
+          "assumed_head_to_coil_conductance_W_K": 0.005,
+          "head_heat_into_coil_W": 0.5,
+          "required_total_coil_to_ambient_conductance_W_K": 0.034803752271997127,
+          "effective_h_W_m2_K_if_packed_envelope_area": 76.63053752794875,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 25.311513383687785
+        },
+        {
+          "coil_temperature_C": 150,
+          "linearized_resistance_ohm": 0.008401023346908308,
+          "winding_heat_W_at_assumed200Hz": 3.8504690339996412,
+          "assumed_head_to_coil_conductance_W_K": 0.01,
+          "head_heat_into_coil_W": 1.0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.03880375227199712,
+          "effective_h_W_m2_K_if_packed_envelope_area": 85.43769566757327,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 28.220569072381814
+        },
+        {
+          "coil_temperature_C": 180,
+          "linearized_resistance_ohm": 0.009056580069789036,
+          "winding_heat_W_at_assumed200Hz": 4.1509325319866415,
+          "assumed_head_to_coil_conductance_W_K": 0,
+          "head_heat_into_coil_W": 0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.026780209883784784,
+          "effective_h_W_m2_K_if_packed_envelope_area": 58.96438586470707,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 19.47628047671108
+        },
+        {
+          "coil_temperature_C": 180,
+          "linearized_resistance_ohm": 0.009056580069789036,
+          "winding_heat_W_at_assumed200Hz": 4.1509325319866415,
+          "assumed_head_to_coil_conductance_W_K": 0.005,
+          "head_heat_into_coil_W": 0.35000000000000003,
+          "required_total_coil_to_ambient_conductance_W_K": 0.029038274399913813,
+          "effective_h_W_m2_K_if_packed_envelope_area": 63.93616868546284,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 21.1184893332319
+        },
+        {
+          "coil_temperature_C": 180,
+          "linearized_resistance_ohm": 0.009056580069789036,
+          "winding_heat_W_at_assumed200Hz": 4.1509325319866415,
+          "assumed_head_to_coil_conductance_W_K": 0.01,
+          "head_heat_into_coil_W": 0.7000000000000001,
+          "required_total_coil_to_ambient_conductance_W_K": 0.03129633891604285,
+          "effective_h_W_m2_K_if_packed_envelope_area": 68.90795150621864,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 22.76069818975273
+        },
+        {
+          "coil_temperature_C": 200,
+          "linearized_resistance_ohm": 0.009493617885042853,
+          "winding_heat_W_at_assumed200Hz": 4.35124153064464,
+          "assumed_head_to_coil_conductance_W_K": 0,
+          "head_heat_into_coil_W": 0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.024864237317969374,
+          "effective_h_W_m2_K_if_packed_envelope_area": 54.74581752012745,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 18.082862753719322
+        },
+        {
+          "coil_temperature_C": 200,
+          "linearized_resistance_ohm": 0.009493617885042853,
+          "winding_heat_W_at_assumed200Hz": 4.35124153064464,
+          "assumed_head_to_coil_conductance_W_K": 0.005,
+          "head_heat_into_coil_W": 0.25,
+          "required_total_coil_to_ambient_conductance_W_K": 0.026292808746540802,
+          "effective_h_W_m2_K_if_packed_envelope_area": 57.891231141421926,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 19.12181121396719
+        },
+        {
+          "coil_temperature_C": 200,
+          "linearized_resistance_ohm": 0.009493617885042853,
+          "winding_heat_W_at_assumed200Hz": 4.35124153064464,
+          "assumed_head_to_coil_conductance_W_K": 0.01,
+          "head_heat_into_coil_W": 0.5,
+          "required_total_coil_to_ambient_conductance_W_K": 0.02772138017511223,
+          "effective_h_W_m2_K_if_packed_envelope_area": 61.03664476271639,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 20.16075967421506
+        },
+        {
+          "coil_temperature_C": 220,
+          "linearized_resistance_ohm": 0.00993065570029667,
+          "winding_heat_W_at_assumed200Hz": 4.55155052930264,
+          "assumed_head_to_coil_conductance_W_K": 0,
+          "head_heat_into_coil_W": 0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.02334128476565456,
+          "effective_h_W_m2_K_if_packed_envelope_area": 51.39259652828211,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 16.975274307238696
+        },
+        {
+          "coil_temperature_C": 220,
+          "linearized_resistance_ohm": 0.00993065570029667,
+          "winding_heat_W_at_assumed200Hz": 4.55155052930264,
+          "assumed_head_to_coil_conductance_W_K": 0.005,
+          "head_heat_into_coil_W": 0.15,
+          "required_total_coil_to_ambient_conductance_W_K": 0.024110515534885333,
+          "effective_h_W_m2_K_if_packed_envelope_area": 53.08628078590222,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 17.53470809352601
+        },
+        {
+          "coil_temperature_C": 220,
+          "linearized_resistance_ohm": 0.00993065570029667,
+          "winding_heat_W_at_assumed200Hz": 4.55155052930264,
+          "assumed_head_to_coil_conductance_W_K": 0.01,
+          "head_heat_into_coil_W": 0.3,
+          "required_total_coil_to_ambient_conductance_W_K": 0.0248797463041161,
+          "effective_h_W_m2_K_if_packed_envelope_area": 54.77996504352232,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 18.094141879813325
+        },
+        {
+          "coil_temperature_C": 240,
+          "linearized_resistance_ohm": 0.010367693515550487,
+          "winding_heat_W_at_assumed200Hz": 4.751859527960639,
+          "assumed_head_to_coil_conductance_W_K": 0,
+          "head_heat_into_coil_W": 0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.02210167222307274,
+          "effective_h_W_m2_K_if_packed_envelope_area": 48.66323060468708,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 16.073748827545167
+        },
+        {
+          "coil_temperature_C": 240,
+          "linearized_resistance_ohm": 0.010367693515550487,
+          "winding_heat_W_at_assumed200Hz": 4.751859527960639,
+          "assumed_head_to_coil_conductance_W_K": 0.005,
+          "head_heat_into_coil_W": 0.05,
+          "required_total_coil_to_ambient_conductance_W_K": 0.022334230362607625,
+          "effective_h_W_m2_K_if_packed_envelope_area": 49.17527468257223,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 16.24287997223668
+        },
+        {
+          "coil_temperature_C": 240,
+          "linearized_resistance_ohm": 0.010367693515550487,
+          "winding_heat_W_at_assumed200Hz": 4.751859527960639,
+          "assumed_head_to_coil_conductance_W_K": 0.01,
+          "head_heat_into_coil_W": 0.1,
+          "required_total_coil_to_ambient_conductance_W_K": 0.022566788502142505,
+          "effective_h_W_m2_K_if_packed_envelope_area": 49.687318760457366,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 16.41201111692819
+        },
+        {
+          "coil_temperature_C": 250,
+          "linearized_resistance_ohm": 0.010586212423177397,
+          "winding_heat_W_at_assumed200Hz": 4.85201402728964,
+          "assumed_head_to_coil_conductance_W_K": 0,
+          "head_heat_into_coil_W": 0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.021564506787953956,
+          "effective_h_W_m2_K_if_packed_envelope_area": 47.48050537112924,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 15.68308778634464
+        },
+        {
+          "coil_temperature_C": 250,
+          "linearized_resistance_ohm": 0.010586212423177397,
+          "winding_heat_W_at_assumed200Hz": 4.85201402728964,
+          "assumed_head_to_coil_conductance_W_K": 0.005,
+          "head_heat_into_coil_W": 0.0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.021564506787953956,
+          "effective_h_W_m2_K_if_packed_envelope_area": 47.48050537112924,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 15.68308778634464
+        },
+        {
+          "coil_temperature_C": 250,
+          "linearized_resistance_ohm": 0.010586212423177397,
+          "winding_heat_W_at_assumed200Hz": 4.85201402728964,
+          "assumed_head_to_coil_conductance_W_K": 0.01,
+          "head_heat_into_coil_W": 0.0,
+          "required_total_coil_to_ambient_conductance_W_K": 0.021564506787953956,
+          "effective_h_W_m2_K_if_packed_envelope_area": 47.48050537112924,
+          "effective_h_W_m2_K_if_all_bare_wire_area": 15.68308778634464
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "url": "https://help.copper.fyi/hc/en-us/articles/4410229175442-How-does-copper-set-the-standard-for-electrical-conductivity",
+      "use": "IACS resistivity1/58ohm mm2/m, density8890kg/m3 and near20C coefficient. Linear extrapolation to hot conditions is a sensitivity, not a calibrated alloy curve."
+    },
+    {
+      "url": "https://nvlpubs.nist.gov/nistpubs/Legacy/hb/nbshandbook100.pdf",
+      "use": "Copper wire tables reference for20C resistivity and temperature coefficient; table-specific validity not transferred to the full hot range."
+    },
+    {
+      "url": "https://mwswire.com/round-magnet-wire/",
+      "use": "Manufacturer identifies polyimide magnet wire as thermal class240C. Class does not establish this winding's operating temperature or assembly lifetime."
+    }
+  ],
+  "limits": [
+    "The earlier25MS/m assumption was explicit electrical conservatism, not a solved winding temperature. Linearized IACS correspondence is about356C; do not label it as copper at100C.",
+    "No prediction that a winding touching or near a250C head satisfies a200/240C insulation class. Bobbin, enamel build, support and measured winding temperature remain unspecified.",
+    "AssumedGhead0..0.01W/K is sensitivity only; no gap conduction/radiation/contact calculation or validated bound.",
+    "Uniform temperature, fixed dimensions and averagedI\u00b2R omit localized hot spots, skin/proximity loss, PWM ripple, terminals and winding stress. Heat capacity394J/kgK is an inherited rounded copper assumption.",
+    "All-wire exposed area includes return lead and hidden contacts; packed-envelope area omits some real exposed surfaces. Neither assigns a convection/radiation coefficient.",
+    "200Hz is arithmetic only; no stable repeated droplet or feed replenishment result. No passive/forced cooling method is qualified."
+  ]
+}
