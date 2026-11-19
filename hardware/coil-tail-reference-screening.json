@@ -1,0 +1,61 @@
+{
+  "status": "Native same-NVIDIA validation passed; new heater study has started",
+  "uniform_steps": 600,
+  "tail_steps": 350,
+  "common_end_time_us": 300,
+  "schedule": "0.5us until150us;3us thereafter. Drive is permanently zero after110us.",
+  "checked_prefix": {
+    "status": "passed",
+    "through_us": 150.0,
+    "samples": 301,
+    "absolute_tolerance": 1e-12,
+    "relative_tolerance": 1e-05,
+    "maximum_absolute_difference": {
+      "time_s": 0.0,
+      "roi_volume_m3": 0.0,
+      "roi_mean_Bz_T": 0.0,
+      "roi_mean_applied_Bz_T": 0.0,
+      "radial_pressure_proxy_Pa": 0.0,
+      "roi_force_z_N": 0.0,
+      "liquid_joule_power_W": 0.0,
+      "solid_joule_power_W": 0.0,
+      "accumulated_joule_J": 0.0,
+      "external_work_J": 0.0,
+      "coil_current_A": 0.0,
+      "reaction_linkage_Wb": 0.0,
+      "reaction_magnetic_J": 0.0,
+      "reaction_BE_J": 0.0
+    },
+    "sources_sha256": {
+      "artifacts/hardware-research/coil-tail-reference-v2-nvidia-uniform/diagnostics.csv": "fd5e03be5b8766bdfc901a01da41b03124e15128ee0a5ebf491dd81e5cd03905",
+      "artifacts/hardware-research/coil-tail-reference-v2-nvidia-tail/diagnostics.csv": "a4dff2f5221aa47732d7b597f4e38acf260ef2f02cb7f080f06548fbd80582ab"
+    },
+    "scope": "Driven prefix only. Separate native work and final decay gates remain required."
+  },
+  "native_cases": [
+    {
+      "source": "artifacts/hardware-research/coil-tail-reference-v2-nvidia-uniform",
+      "work_balance_relative_defect": -3.178030942924078e-07,
+      "final_reaction_energy_over_heat": 9.244460400744261e-23,
+      "loaded_interval_voltage_range_V": [
+        -2.55636892879933,
+        29.220886316587617
+      ]
+    },
+    {
+      "source": "artifacts/hardware-research/coil-tail-reference-v2-nvidia-tail",
+      "work_balance_relative_defect": -3.1780309430656896e-07,
+      "final_reaction_energy_over_heat": 9.219301783352866e-23,
+      "loaded_interval_voltage_range_V": [
+        -2.55636892879933,
+        29.220886316587617
+      ]
+    }
+  ],
+  "analysis_source_sha256": "bc3428a9bfec8c516ad72cd15f9dcce5e4162a27bc6996d42b355f3e237cfd82",
+  "limits": [
+    "Prefix check compares aggregate field/force/current/energy diagnostics, not every3Dfield sample.",
+    "Fewer accepted steps is not a measured end-to-end speedup.",
+    "This reference does not establish timestep convergence for the new heater geometry; its native work/decay checks remain required."
+  ]
+}

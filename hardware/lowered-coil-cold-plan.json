@@ -1,5 +1,5 @@
 {
-  "status": "Unstarted AMD queues cancelled before any native output; replacement NVIDIA queues prepared for after the active counterpulse.",
+  "status": "Same-NVIDIA uniform/tail reference passed; heater-off native case running, heater-on next. No heater result yet.",
   "reference_plan": "artifacts/hardware-research/coil-tail-reference-v2-nvidia-plan.json",
   "heater_plan": "artifacts/hardware-research/lowered-coil-cold-v2-nvidia-plan.json",
   "probe_binary": "target/debug/examples/hardware_probe_tail",
@@ -33,5 +33,6 @@
     "artifacts/hardware-research/coil-tail-reference-v1-amd-state.json",
     "artifacts/hardware-research/lowered-coil-cold-v1-amd-state.json"
   ],
-  "adapter_policy": "Verified defaultNVIDIA, with exact-name native check. Recognize the isolatedAMD manifest so its separate fluid solver may continue; one compute per physical GPU."
+  "adapter_policy": "Verified defaultNVIDIA, with exact-name native check. Recognize the isolatedAMD manifest so its separate fluid solver may continue; one compute per physical GPU.",
+  "reference_validation": "hardware/coil-tail-reference-screening.json"
 }
