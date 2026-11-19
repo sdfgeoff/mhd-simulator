@@ -620,3 +620,15 @@ are `target/debug/examples/thermal_conductance --check`.
     Its20°C copper reference and linear temperature sensitivity do not replace
     a hot-property curve or predict actual winding temperature. In particular,
     the earlier fixed25MS/m assumption must not be called100°C copper.
+15. The [completed direct-contact refinement](m6-rooted-flow-refinement-screening.json)
+    reaches3.6ms on both100µm/3µs and50µm/1.5µs grids. The fine leading
+    region is0.596mm at0.889m/s downward, with a second0.417mm region moving
+    slowly downward. This is ejection in the model, not clean single-drop release.
+    Leading diameter changes11% and volume36% with joint refinement. The
+    [follow-up controls](rooted-temporal-retract-plan.json) isolate the coarse
+    timestep, then increase reverse-current magnitude with geometry held fixed.
+16. The [rooted-tip self-field diagnostic](m6-rooted-self-field-screening.json)
+    postprocesses the earlier native cold current at110A. The local omitted
+    self-force is about6% of applied-force L2 in the liquid/outlet regions.
+    External current outside that electrical crop is missing, so this is not
+    a complete-circuit error bound or a correction to the moving-fluid results.

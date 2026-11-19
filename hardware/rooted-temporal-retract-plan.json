@@ -1,0 +1,51 @@
+{
+  "status": "Prepared follow-up after slit pair; no numerical result",
+  "purpose": [
+    "Isolate common-timestep change3us->1.5us at fixed100um grid and same110A/.25reverse waveform.",
+    "Then increase reverse fraction.25->.5 with fixedgeometry,grid,dt,positivepulse anddelay to test trailing-drop control."
+  ],
+  "command": [
+    "python",
+    "scripts/run_rooted_uniform_refinement.py",
+    "--study",
+    "temporal-retract",
+    "--after-state",
+    "artifacts/hardware-research/split-slit-conditioned-pair-after-fine-state.json",
+    "--after-pid",
+    "3797919"
+  ],
+  "native_client": "Unchanged target/debug/examples/conduction_flow; same normalfluid/interface RunState and imposedPM conduction forcing.",
+  "controls": {
+    "cell_um": 100,
+    "dt_us": 1.5,
+    "end_ms": 3.6,
+    "steps": 2400,
+    "peak_A": 110,
+    "positive_us": 250,
+    "rise_us": 20,
+    "reverse_delay_us": 25,
+    "reverse_duration_us": 83.33333333333333,
+    "reverse_fractions": [
+      0.25,
+      0.5
+    ]
+  },
+  "limits": [
+    "Fourcellsacross0.4mm outlet; no breakupconvergence claim.",
+    "Strongerpullback may preventejection; neither waveform is selected before actualresults.",
+    "No200Hz, thermal, calibratedcontact/wetting/oxide orcompletecircuitselffieldqualification.",
+    "No newPDE/fluidsolver; oneNVIDIAjobat a time, AMDsequenceindependent."
+  ],
+  "waveform_dose": [
+    {
+      "reverse_fraction": 0.25,
+      "exact_I2dt_A2s": 2.7451875,
+      "rms_A_at_assumed200Hz": 23.431549244554873
+    },
+    {
+      "reverse_fraction": 0.5,
+      "exact_I2dt_A2s": 2.87375,
+      "rms_A_at_assumed200Hz": 23.973944189473706
+    }
+  ]
+}

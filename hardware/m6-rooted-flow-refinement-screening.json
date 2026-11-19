@@ -1,0 +1,691 @@
+{
+  "status": "Completed paired grid/forced-timestep sensitivity comparison; not a convergence or hardware validation claim",
+  "runs": [
+    {
+      "source": "artifacts/hardware-research/m6-rooted08-flow110-r25-chargefix-h010",
+      "native_status": {
+        "accepted_steps": 1200,
+        "body_acceleration_work_J": 1.0194190143806181e-07,
+        "charge_potential_representation": "split f32 high/low",
+        "charge_requested_relative_tolerance": 9.999999747378752e-06,
+        "charge_solver": "conservative-split-f32-v1",
+        "contact_resistivity_ohm_m2": 0.0,
+        "electrical_work_definition": "sum terminal phi*I on both ports",
+        "error": null,
+        "field_every": 300,
+        "fluid_em_work_J": 2.1312489516537225e-06,
+        "fluid_external_work_J": 2.2331908530917843e-06,
+        "fluid_work_definition": "EM/impressed-force work only; excludes body acceleration",
+        "frequency_hz": 0.0,
+        "grid": {
+          "cell_m": 0.00010000000474974513,
+          "dims": [
+            76,
+            76,
+            185
+          ]
+        },
+        "joule_generated_J": 0.0045082239265541975,
+        "lagged_electrical_work_J": 0.004510298993697457,
+        "lagged_mechanical_work_J": 2.0991748845918606e-06,
+        "limitations": [
+          "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+          "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+          "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+          "New research client; not a GUI electrode feature or frozen-baseline claim."
+        ],
+        "max_charge_boundary_current_defect": 8.142997103277594e-06,
+        "max_terminal_voltage_V": 0.18187162280082703,
+        "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+        "peak_A": 110.0,
+        "periodic_fluid_axes": [
+          false,
+          false,
+          false
+        ],
+        "positive_duration_s": 0.00025,
+        "project": "artifacts/hardware-research/cases/m6-rooted08-flow-compactgas-h010.mhd.json",
+        "pulse_start_s": 0.0,
+        "released_static_workspace_bytes": 240119604,
+        "requested_steps": 1200,
+        "retract_delay_s": 2.4999999999999998e-05,
+        "retract_fraction": 0.25,
+        "rise_s": 2e-05,
+        "status": "complete",
+        "tail_timestep_s": 3e-06,
+        "tail_transition_not_before_s": 0.00035833333333333333,
+        "terminal_boundary": "body",
+        "terminal_x_cell_indices": [
+          0,
+          75
+        ],
+        "time_s": 0.0035999999999999648,
+        "timestep_s": 3e-06,
+        "uniform_acceleration_m_s2": [
+          0.0,
+          0.0,
+          -9.8100004196167
+        ]
+      },
+      "analysis_sha256": "a8c64403a30e07a8b2b3e9c94d4b3c546bb6ce432275cf30d99ab26629e78b76",
+      "initial_liquid_nl": 26940.00226170938,
+      "initial_aperture_proxy": {
+        "plane_z_mm": 0.050000002374872565,
+        "alpha_area_mm2": 0.12000000663101655,
+        "meaning": "Initial liquid-fraction area at the first cell-centre plane at or above the nominal exit; a voxel-aperture proxy, not the CAD area."
+      },
+      "max_abs_relative_liquid_volume_change": 1.7245113115293975e-08,
+      "any_saved_liquid_boundary_contact": false,
+      "electrical_energy_identity_relative_defect": -5.345042837742187e-06,
+      "em_work_relative_difference": 0.015279368716388797,
+      "final_below_tip_nl": 179.4075807369315,
+      "final_largest_detached_region_by_threshold": {
+        "0.01": {
+          "volume_nl": 93.84542981567736,
+          "equivalent_diameter_mm": 0.5638170026714974,
+          "cells": 168,
+          "centre_mm": [
+            3.923367633905396e-06,
+            -2.0103073355839005e-06,
+            -3.5438055622300193
+          ],
+          "velocity_m_s": [
+            3.6485969303612364e-06,
+            -7.293896828741708e-07,
+            -0.9268068671226501
+          ],
+          "touches_domain_boundary": false
+        },
+        "0.25": {
+          "volume_nl": 88.37390212826965,
+          "equivalent_diameter_mm": 0.5526393474671756,
+          "cells": 116,
+          "centre_mm": [
+            2.6479839211666003e-06,
+            -1.871302480496871e-06,
+            -3.5431749017089205
+          ],
+          "velocity_m_s": [
+            3.279255679444759e-06,
+            -1.3856463283445919e-06,
+            -0.9284064769744873
+          ],
+          "touches_domain_boundary": false
+        },
+        "0.5": {
+          "volume_nl": 81.4833308336776,
+          "equivalent_diameter_mm": 0.5378857643394469,
+          "cells": 96,
+          "centre_mm": [
+            1.915710291068436e-06,
+            -1.0202182810609488e-06,
+            -3.546966737421434
+          ],
+          "velocity_m_s": [
+            3.5901889532397036e-06,
+            -1.6284450339298928e-06,
+            -0.9308765530586243
+          ],
+          "touches_domain_boundary": false
+        },
+        "0.75": {
+          "volume_nl": 60.89046904839657,
+          "equivalent_diameter_mm": 0.488109093951218,
+          "cells": 64,
+          "centre_mm": [
+            5.391949628837231e-07,
+            -6.575876037966834e-07,
+            -3.539221401246602
+          ],
+          "velocity_m_s": [
+            2.7753631002269685e-06,
+            -2.3329766918323003e-06,
+            -0.9343475103378296
+          ],
+          "touches_domain_boundary": false
+        }
+      },
+      "all_final_detached_regions_by_threshold": {
+        "0.01": [
+          {
+            "volume_nl": 93.84542981567736,
+            "equivalent_diameter_mm": 0.5638170026714974,
+            "cells": 168,
+            "centre_mm": [
+              3.923367633905396e-06,
+              -2.0103073355839005e-06,
+              -3.5438055622300193
+            ],
+            "velocity_m_s": [
+              3.6485969303612364e-06,
+              -7.293896828741708e-07,
+              -0.9268068671226501
+            ],
+            "touches_domain_boundary": false
+          },
+          {
+            "volume_nl": 1.9459653261421868,
+            "equivalent_diameter_mm": 0.15489788638658245,
+            "cells": 10,
+            "centre_mm": [
+              0.5743595237613496,
+              -0.5811305613643394,
+              -3.3197203760749736
+            ],
+            "velocity_m_s": [
+              0.23946300148963928,
+              -0.21585597097873688,
+              -0.9905773997306824
+            ],
+            "touches_domain_boundary": false
+          },
+          {
+            "volume_nl": 1.947150672705867,
+            "equivalent_diameter_mm": 0.15492933100469514,
+            "cells": 10,
+            "centre_mm": [
+              -0.5743220251607741,
+              0.58097496220649,
+              -3.319453910372504
+            ],
+            "velocity_m_s": [
+              -0.23920373618602753,
+              0.21518726646900177,
+              -0.9904312491416931
+            ],
+            "touches_domain_boundary": false
+          },
+          {
+            "volume_nl": 1.9178054141106087,
+            "equivalent_diameter_mm": 0.15414708130857377,
+            "cells": 14,
+            "centre_mm": [
+              -7.644490121960266e-07,
+              0.00011512658731927101,
+              -1.986456327172351
+            ],
+            "velocity_m_s": [
+              -0.00018381723202764988,
+              0.0010737515985965729,
+              -0.1746496856212616
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "0.25": [
+          {
+            "volume_nl": 88.37390212826965,
+            "equivalent_diameter_mm": 0.5526393474671756,
+            "cells": 116,
+            "centre_mm": [
+              2.6479839211666003e-06,
+              -1.871302480496871e-06,
+              -3.5431749017089205
+            ],
+            "velocity_m_s": [
+              3.279255679444759e-06,
+              -1.3856463283445919e-06,
+              -0.9284064769744873
+            ],
+            "touches_domain_boundary": false
+          },
+          {
+            "volume_nl": 1.2976211668327633,
+            "equivalent_diameter_mm": 0.13532657789120323,
+            "cells": 3,
+            "centre_mm": [
+              0.5500001299071259,
+              -0.5740533062577797,
+              -3.3220103931664333
+            ],
+            "velocity_m_s": [
+              0.23618978261947632,
+              -0.1959577351808548,
+              -0.9870559573173523
+            ],
+            "touches_domain_boundary": false
+          },
+          {
+            "volume_nl": 1.297931260041393,
+            "equivalent_diameter_mm": 0.1353373567203303,
+            "cells": 3,
+            "centre_mm": [
+              -0.5499999097082764,
+              0.5738944945709659,
+              -3.3217291700153058
+            ],
+            "velocity_m_s": [
+              -0.23594897985458374,
+              0.19522739946842194,
+              -0.9868096113204956
+            ],
+            "touches_domain_boundary": false
+          },
+          {
+            "volume_nl": 54.5481686833026,
+            "equivalent_diameter_mm": 0.47053707758862595,
+            "cells": 84,
+            "centre_mm": [
+              1.480970123388286e-05,
+              -3.144959174926551e-06,
+              -0.9888661889483018
+            ],
+            "velocity_m_s": [
+              8.364135283045471e-05,
+              9.577357559464872e-06,
+              -0.03132091462612152
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "0.5": [
+          {
+            "volume_nl": 81.4833308336776,
+            "equivalent_diameter_mm": 0.5378857643394469,
+            "cells": 96,
+            "centre_mm": [
+              1.915710291068436e-06,
+              -1.0202182810609488e-06,
+              -3.546966737421434
+            ],
+            "velocity_m_s": [
+              3.5901889532397036e-06,
+              -1.6284450339298928e-06,
+              -0.9308765530586243
+            ],
+            "touches_domain_boundary": false
+          },
+          {
+            "volume_nl": 43.57017470359438,
+            "equivalent_diameter_mm": 0.43657972168728754,
+            "cells": 56,
+            "centre_mm": [
+              3.4438384800260007e-06,
+              7.695057385952474e-07,
+              -0.9721611486011534
+            ],
+            "velocity_m_s": [
+              7.875372102716938e-05,
+              3.927571015083231e-06,
+              -0.03048156201839447
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "0.75": [
+          {
+            "volume_nl": 60.89046904839657,
+            "equivalent_diameter_mm": 0.488109093951218,
+            "cells": 64,
+            "centre_mm": [
+              5.391949628837231e-07,
+              -6.575876037966834e-07,
+              -3.539221401246602
+            ],
+            "velocity_m_s": [
+              2.7753631002269685e-06,
+              -2.3329766918323003e-06,
+              -0.9343475103378296
+            ],
+            "touches_domain_boundary": false
+          },
+          {
+            "volume_nl": 25.551614468355325,
+            "equivalent_diameter_mm": 0.36543199981404945,
+            "cells": 28,
+            "centre_mm": [
+              2.0730975230751734e-06,
+              7.973935953772723e-06,
+              -0.9931635977290733
+            ],
+            "velocity_m_s": [
+              3.240200749132782e-05,
+              3.688315337058157e-05,
+              -0.05024758353829384
+            ],
+            "touches_domain_boundary": false
+          }
+        ]
+      }
+    },
+    {
+      "source": "artifacts/hardware-research/m6-rooted08-flow110-r25-chargefix-h0050",
+      "native_status": {
+        "accepted_steps": 2400,
+        "body_acceleration_work_J": 1.1179527980686904e-07,
+        "charge_potential_representation": "split f32 high/low",
+        "charge_requested_relative_tolerance": 9.999999747378752e-06,
+        "charge_solver": "conservative-split-f32-v1",
+        "contact_resistivity_ohm_m2": 0.0,
+        "electrical_work_definition": "sum terminal phi*I on both ports",
+        "error": null,
+        "field_every": 600,
+        "fluid_em_work_J": 2.206069419464696e-06,
+        "fluid_external_work_J": 2.317864699271565e-06,
+        "fluid_work_definition": "EM/impressed-force work only; excludes body acceleration",
+        "frequency_hz": 0.0,
+        "grid": {
+          "cell_m": 5.0000002374872565e-05,
+          "dims": [
+            152,
+            152,
+            370
+          ]
+        },
+        "joule_generated_J": 0.003761832294409826,
+        "lagged_electrical_work_J": 0.0037639538528607057,
+        "lagged_mechanical_work_J": 2.189430713634294e-06,
+        "limitations": [
+          "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+          "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+          "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+          "New research client; not a GUI electrode feature or frozen-baseline claim."
+        ],
+        "max_charge_boundary_current_defect": 9.99702842818806e-06,
+        "max_terminal_voltage_V": 0.15191294252872467,
+        "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+        "peak_A": 110.0,
+        "periodic_fluid_axes": [
+          false,
+          false,
+          false
+        ],
+        "positive_duration_s": 0.00025,
+        "project": "artifacts/hardware-research/cases/m6-rooted08-flow-compactgas-h0050.mhd.json",
+        "pulse_start_s": 0.0,
+        "released_static_workspace_bytes": 1906163336,
+        "requested_steps": 2400,
+        "retract_delay_s": 2.4999999999999998e-05,
+        "retract_fraction": 0.25,
+        "rise_s": 2e-05,
+        "status": "complete",
+        "tail_timestep_s": 1.5e-06,
+        "tail_transition_not_before_s": 0.00035833333333333333,
+        "terminal_boundary": "body",
+        "terminal_x_cell_indices": [
+          0,
+          151
+        ],
+        "time_s": 0.003600000000000199,
+        "timestep_s": 1.5e-06,
+        "uniform_acceleration_m_s2": [
+          0.0,
+          0.0,
+          -9.8100004196167
+        ]
+      },
+      "analysis_sha256": "9ecd6cfcac4dd7581b4763f3e1a6111498d652cdff3bc8ce2c4a982b849253f7",
+      "initial_liquid_nl": 26867.502281072975,
+      "initial_aperture_proxy": {
+        "plane_z_mm": 0.025000001187436283,
+        "alpha_area_mm2": 0.13000001234933764,
+        "meaning": "Initial liquid-fraction area at the first cell-centre plane at or above the nominal exit; a voxel-aperture proxy, not the CAD area."
+      },
+      "max_abs_relative_liquid_volume_change": 2.3649511904366705e-08,
+      "any_saved_liquid_boundary_contact": false,
+      "electrical_energy_identity_relative_defect": -1.8032171861802116e-05,
+      "em_work_relative_difference": 0.007599558061731404,
+      "final_below_tip_nl": 198.98846138068973,
+      "final_largest_detached_region_by_threshold": {
+        "0.01": {
+          "volume_nl": 117.11785959979129,
+          "equivalent_diameter_mm": 0.6070272231310453,
+          "cells": 1249,
+          "centre_mm": [
+            -7.342440438716791e-05,
+            7.428631400918018e-05,
+            -3.2466870312055263
+          ],
+          "velocity_m_s": [
+            -1.7449039660277776e-05,
+            2.8190786906634457e-05,
+            -0.8857470750808716
+          ],
+          "touches_domain_boundary": false
+        },
+        "0.25": {
+          "volume_nl": 114.77050425101582,
+          "equivalent_diameter_mm": 0.6029443397240382,
+          "cells": 1033,
+          "centre_mm": [
+            -0.00011380192023162363,
+            6.49830145703171e-05,
+            -3.2470639263845085
+          ],
+          "velocity_m_s": [
+            -8.990495189209469e-06,
+            3.0522711313096806e-05,
+            -0.8869192600250244
+          ],
+          "touches_domain_boundary": false
+        },
+        "0.5": {
+          "volume_nl": 110.95353366424239,
+          "equivalent_diameter_mm": 0.5961847167364611,
+          "cells": 946,
+          "centre_mm": [
+            -3.550194908774066e-05,
+            4.202201428332723e-05,
+            -3.2480540744056268
+          ],
+          "velocity_m_s": [
+            -1.70958064700244e-05,
+            3.767757152672857e-05,
+            -0.8890392780303955
+          ],
+          "touches_domain_boundary": false
+        },
+        "0.75": {
+          "volume_nl": 101.90137378024747,
+          "equivalent_diameter_mm": 0.5795093831066987,
+          "cells": 832,
+          "centre_mm": [
+            -2.0818538500313283e-05,
+            1.847289932455903e-05,
+            -3.2447855346840875
+          ],
+          "velocity_m_s": [
+            -1.7966378436540253e-05,
+            4.426414307090454e-05,
+            -0.8934863209724426
+          ],
+          "touches_domain_boundary": false
+        }
+      },
+      "all_final_detached_regions_by_threshold": {
+        "0.01": [
+          {
+            "volume_nl": 117.11785959979129,
+            "equivalent_diameter_mm": 0.6070272231310453,
+            "cells": 1249,
+            "centre_mm": [
+              -7.342440438716791e-05,
+              7.428631400918018e-05,
+              -3.2466870312055263
+            ],
+            "velocity_m_s": [
+              -1.7449039660277776e-05,
+              2.8190786906634457e-05,
+              -0.8857470750808716
+            ],
+            "touches_domain_boundary": false
+          },
+          {
+            "volume_nl": 43.94557232588709,
+            "equivalent_diameter_mm": 0.4378299847367359,
+            "cells": 567,
+            "centre_mm": [
+              -0.00035490018794518405,
+              0.0003157119128128135,
+              -1.2334848208745395
+            ],
+            "velocity_m_s": [
+              -0.0019751633517444134,
+              0.0023490781895816326,
+              -0.06936489790678024
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "0.25": [
+          {
+            "volume_nl": 114.77050425101582,
+            "equivalent_diameter_mm": 0.6029443397240382,
+            "cells": 1033,
+            "centre_mm": [
+              -0.00011380192023162363,
+              6.49830145703171e-05,
+              -3.2470639263845085
+            ],
+            "velocity_m_s": [
+              -8.990495189209469e-06,
+              3.0522711313096806e-05,
+              -0.8869192600250244
+            ],
+            "touches_domain_boundary": false
+          },
+          {
+            "volume_nl": 42.35450528211769,
+            "equivalent_diameter_mm": 0.4324809646192759,
+            "cells": 424,
+            "centre_mm": [
+              -0.0001893004014387667,
+              0.00020621296309655587,
+              -1.235219283374632
+            ],
+            "velocity_m_s": [
+              -0.0018163658678531647,
+              0.0022664167918264866,
+              -0.07176828384399414
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "0.5": [
+          {
+            "volume_nl": 110.95353366424239,
+            "equivalent_diameter_mm": 0.5961847167364611,
+            "cells": 946,
+            "centre_mm": [
+              -3.550194908774066e-05,
+              4.202201428332723e-05,
+              -3.2480540744056268
+            ],
+            "velocity_m_s": [
+              -1.70958064700244e-05,
+              3.767757152672857e-05,
+              -0.8890392780303955
+            ],
+            "touches_domain_boundary": false
+          },
+          {
+            "volume_nl": 37.956749699434404,
+            "equivalent_diameter_mm": 0.4169623079151412,
+            "cells": 326,
+            "centre_mm": [
+              -0.0006220623474733367,
+              0.0003713605842992525,
+              -1.2327616743696297
+            ],
+            "velocity_m_s": [
+              -0.0021964902989566326,
+              0.0026470127049833536,
+              -0.07645858079195023
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "0.75": [
+          {
+            "volume_nl": 101.90137378024747,
+            "equivalent_diameter_mm": 0.5795093831066987,
+            "cells": 832,
+            "centre_mm": [
+              -2.0818538500313283e-05,
+              1.847289932455903e-05,
+              -3.2447855346840875
+            ],
+            "velocity_m_s": [
+              -1.7966378436540253e-05,
+              4.426414307090454e-05,
+              -0.8934863209724426
+            ],
+            "touches_domain_boundary": false
+          },
+          {
+            "volume_nl": 34.81592860709556,
+            "equivalent_diameter_mm": 0.4051288024686611,
+            "cells": 286,
+            "centre_mm": [
+              -0.0006429194920662711,
+              0.0007706941068235723,
+              -1.2333851518608059
+            ],
+            "velocity_m_s": [
+              -0.001675882376730442,
+              0.001949536264874041,
+              -0.07814513146877289
+            ],
+            "touches_domain_boundary": false
+          }
+        ]
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "alpha_threshold": "0.01",
+      "coarse_has_detachment": true,
+      "fine_has_detachment": true,
+      "diameter_relative_change": 0.0766387325228004,
+      "volume_relative_change": 0.24798682077351564,
+      "coarse_vertical_velocity_m_s": -0.9268068671226501,
+      "fine_vertical_velocity_m_s": -0.8857470750808716,
+      "vertical_velocity_difference_m_s": 0.041059792041778564,
+      "vertical_velocity_relative_change": -0.04430242534698969
+    },
+    {
+      "alpha_threshold": "0.25",
+      "coarse_has_detachment": true,
+      "fine_has_detachment": true,
+      "diameter_relative_change": 0.09102680163368304,
+      "volume_relative_change": 0.2986922777771317,
+      "coarse_vertical_velocity_m_s": -0.9284064769744873,
+      "fine_vertical_velocity_m_s": -0.8869192600250244,
+      "vertical_velocity_difference_m_s": 0.04148721694946289,
+      "vertical_velocity_relative_change": -0.04468647944450199
+    },
+    {
+      "alpha_threshold": "0.5",
+      "coarse_has_detachment": true,
+      "fine_has_detachment": true,
+      "diameter_relative_change": 0.10838537894492983,
+      "volume_relative_change": 0.3616715532986601,
+      "coarse_vertical_velocity_m_s": -0.9308765530586243,
+      "fine_vertical_velocity_m_s": -0.8890392780303955,
+      "vertical_velocity_difference_m_s": 0.04183727502822876,
+      "vertical_velocity_relative_change": -0.04494395619995162
+    },
+    {
+      "alpha_threshold": "0.75",
+      "coarse_has_detachment": true,
+      "fine_has_detachment": true,
+      "diameter_relative_change": 0.18725381331374136,
+      "volume_relative_change": 0.6735192776927843,
+      "coarse_vertical_velocity_m_s": -0.9343475103378296,
+      "fine_vertical_velocity_m_s": -0.8934863209724426,
+      "vertical_velocity_difference_m_s": 0.04086118936538696,
+      "vertical_velocity_relative_change": -0.04373232540707783
+    }
+  ],
+  "initial_liquid_relative_difference": -0.0026911646083804808,
+  "final_time_difference_us": 2.3418766925686896e-10,
+  "limits": [
+    "Space and the uniform common timestep change together by a factor of two. Their separate effects are not isolated.",
+    "Discrete aperture and initial pool volume change with voxelization. This pair includes geometry-resolution effects.",
+    "Largest detached component is selected independently at each threshold/run. All final components are preserved; this selection alone does not establish corresponding droplets or clean single-drop release.",
+    "Saved component thresholds and a finite number of exports do not certify pinch-off or absence of satellites between frames.",
+    "The compact exterior-gas approximation was checked separately at100um; its fine-grid influence remains unisolated.",
+    "No thermal evolution, replenishment, calibrated wetting/oxide/contact resistance, self-field or physical driver validation. A single pulse does not establish hundreds of droplets per second."
+  ]
+}

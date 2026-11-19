@@ -1,0 +1,61 @@
+{
+  "source_directory": "artifacts/hardware-research/m6-rooted08-cold30-h0050",
+  "current_A": 110.0,
+  "method": "Free-space Biot-Savart convolution of exported cold J; zero-padded linear FFT, self-cell integral zero by symmetry. Source cubes within four cells use subcell quadrature when enabled; farther sources use cell centres.",
+  "near_subdivisions": 4,
+  "regions": {
+    "all_liquid": {
+      "cells": 214940,
+      "self_B_rms_T": 0.007446853021340085,
+      "self_B_max_T": 0.050761257126866244,
+      "applied_B_rms_T": 0.2338263839483261,
+      "self_force_integral_N": [
+        1.0314056023940535e-10,
+        -5.4091590015888535e-11,
+        -8.967809367933692e-07
+      ],
+      "applied_force_integral_N": [
+        2.8896660719842227e-09,
+        -1.2369398469698077e-09,
+        -0.014229820310523127
+      ],
+      "self_over_applied_force_L2": 0.06063610044878276
+    },
+    "liquid_outlet_land": {
+      "cells": 624,
+      "self_B_rms_T": 0.028379771074086995,
+      "self_B_max_T": 0.050761257126866244,
+      "applied_B_rms_T": 0.4832116663455963,
+      "self_force_integral_N": [
+        -1.957889682317239e-12,
+        -3.3344071965011555e-11,
+        0.00020728424259363744
+      ],
+      "applied_force_integral_N": [
+        2.5506873125979877e-10,
+        -6.814433340117192e-10,
+        -0.008029563732547759
+      ],
+      "self_over_applied_force_L2": 0.06150994568818084
+    }
+  },
+  "limits": [
+    "Diagnostic only: no feedback on current, moving interface or force in the recorded fluid run.",
+    "Current outside the exported electrical domain is absent, including CAD conductors continuing beyond the crop and external return leads. This is not a complete closed-circuit field or an error bound.",
+    "Near-neighbour cell-centre quadrature requires grid refinement. Permeability is unity; magnetic diffusion and terminal transients are absent.",
+    "Net force cancellation does not establish negligible local pinching or unchanged breakup.",
+    "Source is the accepted earlier x-ends static charge solution at30A, scaled to110A; the body-terminal moving-fluid run is not the same boundary/geometry state.",
+    "Whole-liquid net self-force nearly cancels while local force does not. The6.15%outletL2ratio cannot certify unchanged breakup or be used as a total error bound."
+  ],
+  "status": "Completed fixed-geometry diagnostic of omitted self-field; not a coupled correction or a complete-circuit error bound",
+  "source_sha256": {
+    "grid.json": "46cdf5c7f509e87cc37b52d7954df40dce56b955030f59c3e36534a48050fc9b",
+    "report.json": "82437795eecfdb0f4e369c2bd4bf25d9336657095d1fc624d545d6596759671d",
+    "em.bin": "3cfb3df33b6dc3883d71c279a2dc670e91545a0401598d2a0c45cd3f8818022f",
+    "material-ids.bin": "719ab06d17a0020d33c8504cfb2e18cd3439c439a47875cbf8efcc7b428df040"
+  },
+  "checks": {
+    "finite_wire_relative_error": 5.743635623334242e-06,
+    "fft_direct_max_error_T": 3.2311742677852644e-26
+  }
+}
