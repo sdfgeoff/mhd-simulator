@@ -513,7 +513,7 @@ TMPDIR="$PWD/artifacts/build-temp" cargo test --offline -j2 --example conduction
 ```
 
 Parallel example tests stalled locally with waiting workers and no GPU work;
-the serial run passes all four checks. The underlying cause was not established. The native thermal rod checks
+the serial run now passes five checks, including the charge-conservation bottleneck control. The underlying cause was not established. The native thermal rod checks
 are `target/debug/examples/thermal_conductance --check`.
 
 ## Magnet-carrier sizing and field limits
@@ -529,3 +529,30 @@ are `target/debug/examples/thermal_conductance --check`.
    Those samples are rejected as evidence of demagnetization margin. The separate
    conditional component bound and grade-curve links are recorded in
    `m6-magnet-internal-field-screening.json`; no hot lifetime is qualified.
+
+## Slit and single-pulse coil comparisons
+
+1. The [slit electrical matrix](split-slit-electrical-screening.json) contains
+   all 13 completed stationary comparisons after the conservation repair.
+   At 30 A, the stainless chamber has about 20% less outlet-region downward
+   force than alumina. This force is neither nozzle pressure nor a drop prediction.
+2. The [unpowered slit diagnostics](split-slit-zero-drive-diagnostics.json)
+   show sideways spreading beneath the chamber followed by meniscus retraction.
+   No detached component appeared through 5.001 ms. Motion persists, and two
+   cells across the gap do not establish retention, equilibrium or calibrated
+   wetting. `scripts/analyze_slit_retention.py` reproduces the spatial analysis.
+3. `scripts/run_slit_conditioned_pair.py` runs matched 0/40 A, 10.002 ms cases,
+   with a common 5.001 ms conditioning interval and finite copper electrodes.
+   These runs are queued; preparation is not an ejection result.
+4. The earlier [single-coil trial](single-coil-flow-screening.json) used an AC
+   burst. It does not test a single unipolar coil-current pulse. The new
+   `prepare_unipolar_coil_cases.py` prepares 250 A triangular pulses with
+   100/100 µs and 50/250 µs rise/fall times in the custom and V6-like chambers.
+   Cold comparisons are queued; no new coil jetting result is available.
+5. `analyze_unipolar_coil.py` will combine native reaction linkage with checked
+   air inductance and explicit winding/lead assumptions. It does not infer
+   voltage compliance from air inductance alone. Thermal and circuit estimates
+   remain separate from moving-fluid and repetition qualification.
+6. Earlier `fluid_mechanical_work_J` values included gravity. See the
+   [work-ledger correction](flow-work-ledger-correction.json) before interpreting
+   old comparisons with lagged EM work. New runs record those components separately.

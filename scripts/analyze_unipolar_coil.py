@@ -118,7 +118,7 @@ def main():
                 "midpoint_terminal_net_work_J": source_work_midpoint,
                 "backward_Euler_metal_source_work_J": work,
                 "metal_work_balance_relative_defect": defect,
-                "metal_work_balance_gate_1e3_passed": abs(defect) <= 1e-3,
+                "metal_work_balance_gate_1e_minus3_passed": abs(defect) <= 1e-3,
                 "reaction_backward_Euler_loss_J": be,
                 "final_reaction_field_energy_J": final_field,
                 "radial_force_moment_over_ROI_volume_Pa_range": [
