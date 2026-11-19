@@ -28,6 +28,8 @@ parser.add_argument("--motion-absolute-tolerance-a", type=float, default=0.,
 parser.add_argument("--single-retract", type=float, help="One explicit reverse/forward amplitude ratio at fixed100um/1.5us")
 parser.add_argument("--single-delay-us", type=float, default=25., help="Explicit counterpulse delay for a single reversal case")
 parser.add_argument("--single-interface-ohm-m2", type=float, default=0., help="Specific liquid/solid face resistivity for one matched case")
+parser.add_argument("--energy-diagnostics", action="store_true", help="Separate instrumented executable and baseline output; no physics change")
+parser.add_argument("--verify-energy-reference", type=Path, help="Require matching final fields against an existing native reference")
 args = parser.parse_args()
 if not math.isfinite(args.motion_absolute_tolerance_a) or args.motion_absolute_tolerance_a < 0:
     parser.error("Choose a finite nonnegative motional current tolerance")
@@ -39,6 +41,10 @@ if not math.isfinite(args.single_delay_us) or args.single_delay_us < 0 or (args.
     parser.error("A finite nonnegative custom delay requires a single reversal case")
 if not math.isfinite(args.single_interface_ohm_m2) or args.single_interface_ohm_m2 < 0 or (args.single_retract is None and args.single_interface_ohm_m2 != 0):
     parser.error("A finite nonnegative custom interface resistance requires a single case")
+if args.energy_diagnostics and args.single_retract is None:
+    parser.error("Energy instrumentation requires one explicit matched case")
+if args.verify_energy_reference is not None and not args.energy_diagnostics:
+    parser.error("Energy reference verification requires the instrumented executable")
 if (args.after_state is None) != (args.after_pid is None):
     parser.error("Supply both predecessor state and controller PID")
 state = args.state or root / {"uniform": "rooted-uniform-refinement-state.json",
@@ -49,6 +55,8 @@ binary = Path("target/debug/examples/conduction_flow_precision" if args.study ==
               else "target/debug/examples/conduction_flow")
 if args.motion_absolute_tolerance_a > 0:
     binary = Path("target/debug/examples/conduction_flow_current_tolerance")
+if args.energy_diagnostics:
+    binary = Path("target/debug/examples/conduction_flow_energy")
 jobs = []
 specs = ([
     ("h010", "3", "1200", "300", ".25", "m6-rooted08-flow110-r25-chargefix-h010"),
@@ -68,7 +76,8 @@ if args.single_retract is not None:
     specs = [("h010", "1.5", "2400", "600", str(ratio),
               f"m6-rooted08-flow110-r{ratio*100:g}-precisionv2-h010-dt1p5"
               + (f"-delay{args.single_delay_us:g}us" if args.single_delay_us != 25 else "")
-              + (f"-interface{args.single_interface_ohm_m2:g}ohmm2" if args.single_interface_ohm_m2 != 0 else ""))]
+              + (f"-interface{args.single_interface_ohm_m2:g}ohmm2" if args.single_interface_ohm_m2 != 0 else "")
+              + ("-energyv1" if args.energy_diagnostics else ""))]
 for grid, dt, steps, every, retract, name in specs:
     if args.motion_absolute_tolerance_a > 0:
         name = name.replace("precisionv2", f"motionabs{args.motion_absolute_tolerance_a:g}A")
@@ -109,6 +118,14 @@ for job in jobs:
     p = json.loads(path.read_text())
     geometry = path.parent / p["geometry"]
     inputs += [path, geometry] + [geometry.parent / b["uri"] for b in json.loads(geometry.read_text())["buffers"]]
+if args.verify_energy_reference is not None:
+    reference = args.verify_energy_reference
+    reference_status = json.loads((reference / "run-status.json").read_text())
+    if reference_status["status"] != "complete":
+        raise RuntimeError("Energy reference is not complete")
+    inputs += [reference / "run-status.json"]
+    inputs += list(reference.glob("frame-*/metadata.json"))
+    inputs += list(reference.glob("frame-*/fluid.bin"))
 hashes = {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in inputs}
 adapter = None
 
@@ -128,6 +145,8 @@ def record(**values):
                 "single_retract_fraction": args.single_retract,
                 "single_retract_delay_us": args.single_delay_us,
                 "single_interface_resistivity_ohm_m2": args.single_interface_ohm_m2,
+                "energy_diagnostics": args.energy_diagnostics,
+                "energy_reference": str(args.verify_energy_reference) if args.verify_energy_reference else None,
                 "jobs": jobs,
                 "predecessor_state": str(args.after_state),
                 "predecessor_pid": args.after_pid,
@@ -220,6 +239,28 @@ for index, job in enumerate(jobs):
         check=True,
         stdout=(root / (Path(job["output"]).name + "-report.log")).open("x"),
     )
+    if args.energy_diagnostics:
+        import csv
+        directory = Path(job["output"])
+        energy_rows = list(csv.DictReader((directory / "fluid-energy-diagnostics.csv").open()))
+        profile_rows = list(csv.DictReader((directory / "performance.csv").open()))
+        expected = set(range(1, int(job["command"][4]) + 1))
+        if ({int(r["step"]) for r in energy_rows} != expected
+                or {int(r["step"]) for r in profile_rows if r["accepted"] == "true"} != expected):
+            record(stage="failed", error="Incomplete energy/profile diagnostic coverage")
+            raise RuntimeError("Missing diagnostic steps")
+    if args.verify_energy_reference is not None:
+        comparison = root / (Path(job["output"]).name + "-field-comparison.json")
+        subprocess.run(["uv", "run", "--offline", "--with", "numpy", "python",
+                        "scripts/compare_native_flows.py", str(args.verify_energy_reference),
+                        job["output"], "--output", str(comparison)], check=True, env=env)
+        checked = json.loads(comparison.read_text())
+        if (len(set(checked["final_field_sha256"].values())) != 1
+                or any(r["alpha_L1_volume_difference_nl"] != 0
+                       or r["common_liquid_weighted_velocity_RMS_difference_m_s"] != 0
+                       for r in checked["frames"])):
+            record(stage="failed", error="Instrumented/reference fields differ; review before using new diagnostics")
+            raise RuntimeError("Instrumentation baseline mismatch")
     record(stage="reported", index=index, job=job)
 if args.study == "uniform":
     subprocess.run([sys.executable, "scripts/compare_rooted_flow_refinement.py"], check=True, env=env)

@@ -226,6 +226,12 @@ pub(crate) fn main() -> Result<(), Box<dyn Error>> {
     let mut csv = String::from(
         "step,time_s,command_A,current_A,voltage_V,joule_W,mechanical_W,field_power_defect_W,max_u_m_s,liquid_volume_m3,charge_iterations,charge_true_residual,pressure_iterations,timestep_s,charge_boundary_current_defect,charge_unit_boundary_current_defect,charge_motional_boundary_imbalance_A,return_current_A\n",
     );
+    let mut fluid_energy_csv = String::from(
+        "step,time_s,kinetic_J,surface_energy_estimate_J,fluid_EM_work_J,body_work_J,fluid_external_work_J,capillary_work_J,area_work_mismatch_J,discrete_fluid_loss_J,electrical_source_work_J,electrical_joule_J,lagged_electrical_mechanical_J\n",
+    );
+    let mut performance = String::from(
+        "step,time_s,accepted,stage,cpu_wall_ms,gpu_pass_ms,recorded_passes,total_passes\n",
+    );
     let mut joule = 0.;
     let mut electrical = 0.;
     let mut lagged_mechanical = 0.;
@@ -278,10 +284,24 @@ pub(crate) fn main() -> Result<(), Box<dyn Error>> {
             "{step},{charge_ms},{}\n",
             fluid_start.elapsed().as_secs_f64() * 1000.
         ));
+        // Drain the profiler's bounded history while advancing, as the main
+        // CLI does. This only collects diagnostics already completed on GPU.
+        for report in gpu.context.profiler.take_completed(false) {
+            performance.push_str(&report.csv_rows());
+        }
         joule += f64::from(s[2]) * p.run.dt_s;
         let terminal_power = voltage * 0.5 * (s[0] - s[1]);
         electrical += f64::from(terminal_power) * p.run.dt_s;
         lagged_mechanical += f64::from(s[3]) * p.run.dt_s;
+        let energy = &run.energy;
+        fluid_energy_csv.push_str(&format!(
+            "{step},{},{},{},{},{},{},{},{},{},{},{},{}\n",
+            run.time_s, energy.kinetic_j, energy.surface_j,
+            energy.fluid_em_work_j, energy.fluid_acceleration_work_j,
+            energy.external_work_j, energy.surface_work_j,
+            energy.surface_balance_error_j, energy.fluid_loss_j,
+            electrical, joule, lagged_mechanical
+        ));
         max_voltage = max_voltage.max(voltage.abs());
         max_boundary_defect = max_boundary_defect.max(current.boundary_current_defect);
         max_unit_boundary_defect =
@@ -329,9 +349,7 @@ pub(crate) fn main() -> Result<(), Box<dyn Error>> {
     }
     std::fs::write(out.join("current-diagnostics.csv"), &csv)?;
     std::fs::write(out.join("iteration-costs.csv"), &costs)?;
-    let mut performance = String::from(
-        "step,time_s,accepted,stage,cpu_wall_ms,gpu_pass_ms,recorded_passes,total_passes\n",
-    );
+    std::fs::write(out.join("fluid-energy-diagnostics.csv"), fluid_energy_csv)?;
     for report in gpu.context.profiler.take_completed(true) {
         performance.push_str(&report.csv_rows());
     }
@@ -343,6 +361,14 @@ pub(crate) fn main() -> Result<(), Box<dyn Error>> {
         "max_unit_relative_imbalance": max_unit_boundary_defect,
         "max_motional_imbalance_A": max_motion_imbalance_a,
         "max_combined_port_imbalance_A": max_port_imbalance_a,
+    });
+    report["fluid_energy_diagnostics"] = serde_json::json!({
+        "surface_energy_estimate_J": run.energy.surface_j,
+        "capillary_work_J": run.energy.surface_work_j,
+        "area_work_mismatch_J": run.energy.surface_balance_error_j,
+        "kinetic_J": run.energy.kinetic_j,
+        "discrete_fluid_loss_J": run.energy.fluid_loss_j,
+        "scope": "Existing RunState ledger only; no additional GPU solve. Area-work mismatch compares the interface-area estimator with capillary-force work; it is not a certified discretization-error bound. Fluid loss includes physical and numerical contributions. Electrical Joule heat is accounted separately by the conduction client; thermal evolution is disabled."
     });
     std::fs::write(
         out.join("run-status.json"),

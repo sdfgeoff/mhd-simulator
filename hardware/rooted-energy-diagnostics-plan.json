@@ -1,0 +1,22 @@
+{
+  "status": "Diagnostic-only baseline prepared; no native result yet",
+  "binary": "target/debug/examples/conduction_flow_energy",
+  "binary_sha256": "266b8e515965626120b8b5aa5932c2d5aa0737471e034d1032577d9ce92e644e",
+  "reference": "artifacts/hardware-research/m6-rooted08-flow110-r50-motionabs1e-06A-h010-dt1p5",
+  "same_physics": "Same compiled GPU solver sources, geometry, material laws,110A250us forward/55A reverse/25us delay,h100,1.5us and1uA motion allowance. No added GPU physics solve.",
+  "additional_outputs": [
+    "Per-step fluid-energy-diagnostics.csv: existing surface estimator, capillary work, their mismatch, kinetic energy, impressed-EM and gravity work, discrete fluid loss, plus separate conduction electrical work/Joule heat.",
+    "Final fluid_energy_diagnostics object inrun-status.json.",
+    "Drain completed profiler records each step instead of retaining only32finaltimings. Existing hand-measured iteration-costs stay available."
+  ],
+  "verification": [
+    "Three existing CPU waveform tests pass.",
+    "Native matched baseline must complete all2400steps, have energy/profile coverage for every accepted step, identical alpha/velocity at shared exports and identical final rawfluid field SHA."
+  ],
+  "scope": [
+    "Area-work mismatch is a diagnostic comparing a surface-area estimator with capillary-force work, not a certified error bound.",
+    "Electrical energy accounting remains separate from fluid/interface energy and disabled thermal evolution.",
+    "Do not interpret missing old capillary-work output as proof that old dynamics conserve interface energy.",
+    "Active and already queued binaries are not rebuilt or replaced."
+  ]
+}
