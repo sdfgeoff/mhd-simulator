@@ -1,0 +1,27 @@
+{
+  "status": "Literature option only; no geometry, native self-field solve or droplet result",
+  "concept": "Inject current through feedstock/central electrode and return through the nozzle; nonuniform current interacts with its own magnetic field (electrovortex flow), potentially avoiding an actuator coil/permanent magnets.",
+  "primary_sources": [
+    {
+      "title": "Transient behaviour of electrovortex flow in a cylindrical container",
+      "url": "https://arxiv.org/abs/2201.08591",
+      "doi": "10.22364/mhd.57.4.2",
+      "access": "Author abstract read in full.",
+      "supported_scope": "Constant-current GaInSn experiment and simulation use a tapered electrode; self-field drives an electrovortex jet, and a weak axial background field changes its transient motion. This is confined bulk flow, not solder drop-on-demand at nozzle scale."
+    },
+    {
+      "title": "Experimental Study of the Velocity of the Electrovortex Flow of In-Ga-Sn in Hemispherical Geometry",
+      "url": "https://www.mdpi.com/2075-4701/11/11/1806",
+      "access": "Publisher-indexed abstract/results read; full open returned429.",
+      "supported_scope": "Reported100\u2013450A InGaSn velocity measurements establish the mechanism in their apparatus. Their500A contact-separation observation is not a transferable current limit for a micro-nozzle."
+    }
+  ],
+  "main_design_obstacle": "Bare immersed feedstock permits current to leave along its length. It does not guarantee that terminal current reaches a small tip. An insulating sleeve or isolated electrode region may be required, reducing the proposed simplicity.",
+  "simulation_scope": "Current research electrode client deliberately omits applied-current self-field. Running it with no applied magnetic field cannot test this option. A finite wire/current-return geometry and a validated self-field calculation are required first. Existing static self-field postprocessing is diagnostic only.",
+  "constraints": [
+    "Do not substitute the axial-wire magnetic-pressure scale for actual nozzle pressure or a jetting threshold.",
+    "Current-return path, insulation, wire melting, interface resistance, thermal localization and interruption of wet contact matter.",
+    "Prefer current single-coil and external-contact evidence over presenting this untested alternative as a leading design."
+  ],
+  "queue": "No new EVF case queued."
+}
