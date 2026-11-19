@@ -96,3 +96,7 @@ They do not substitute for the separate fine-grid and full-domain gravity checks
    footprint and 2.7 mm projection below the outlet. Assembly and six individual
    STL meshes pass nominal interference/gap/manifold checks. Added fixtures are
    excluded from physics; thermal contacts, preload and carriage isolation remain open.
+
+10. `strip-tip-review`: matched replaceable copper/stainless orifice-strip screens,
+    including 0.5 and 0.1 mm thicknesses. Continuous copper bypasses substantial
+    liquid current in these geometries; sealing and contact life remain unqualified.

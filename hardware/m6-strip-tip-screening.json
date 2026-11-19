@@ -1,0 +1,215 @@
+{
+  "status": "Completed matched 50um native current and applied field comparison; not a seal or jetting qualification",
+  "cases": [
+    {
+      "label": "steel08",
+      "project": "artifacts/hardware-research/cases/m6-strip-tip-v1/steel08.mhd.json",
+      "strip_width_mm": 0.8,
+      "strip_thickness_mm": 0.5,
+      "bore_mm": 0.4,
+      "insulating_separation_mm": 0.1,
+      "strip_material": "steel",
+      "native_report": {
+        "contact_resistivity_ohm_m2": 0.0,
+        "current_A": 29.999855041503906,
+        "iterations": 448,
+        "joule_power_W": 2.011134624481201,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          -3.6128260167271235e-10,
+          -3.224430333696722e-10,
+          -0.0029712540938352724
+        ],
+        "liquid_joule_power_W": 0.24037484417436647,
+        "liquid_mean_By_T": -0.16217463809323104,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 1.5439565890612406,
+        "mean_wall_current_over_x_plus_minus_2mm_A": 4.450426083422143,
+        "midplane_adjacent_cell_liquid_current_A": 19.013458648965443,
+        "midplane_adjacent_cell_wall_current_A": 10.976495558626935,
+        "power_relative_defect": -3.0994415283203125e-06,
+        "project": "artifacts/hardware-research/cases/m6-strip-tip-v1/steel08.mhd.json",
+        "released_static_workspace_bytes": 1493723848,
+        "requested_relative_tolerance": 9.999999974752427e-07,
+        "return_current_A": -29.99970817565918,
+        "source_power_W": 2.011140823364258,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_boundary": "x-ends",
+        "terminal_voltage_V": 0.06703834980726242,
+        "terminal_x_cell_indices": [
+          0,
+          151
+        ],
+        "true_relative_residual": 9.58810915108188e-07
+      },
+      "outlet_force_N_at30A": 0.002842757935477481,
+      "midplane_adjacent_cell_liquid_current_A": 19.01345864896541,
+      "midplane_adjacent_cell_strip_current_A": 10.900378385480309,
+      "terminal_R_ohm": 0.0022346224578257746,
+      "force_ratio_to_same_width_steel": 1.0
+    },
+    {
+      "label": "copper08",
+      "project": "artifacts/hardware-research/cases/m6-strip-tip-v1/copper08.mhd.json",
+      "strip_width_mm": 0.8,
+      "strip_thickness_mm": 0.5,
+      "bore_mm": 0.4,
+      "insulating_separation_mm": 0.1,
+      "strip_material": "copper",
+      "native_report": {
+        "contact_resistivity_ohm_m2": 0.0,
+        "current_A": 29.999984741210938,
+        "iterations": 384,
+        "joule_power_W": 0.711417555809021,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          -2.7009874468448666e-10,
+          -4.612060446185451e-12,
+          -0.0005602947398193746
+        ],
+        "liquid_joule_power_W": 0.008701478664005611,
+        "liquid_mean_By_T": -0.16217463809323104,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 0.2909998267292114,
+        "mean_wall_current_over_x_plus_minus_2mm_A": -0.0008449625904662941,
+        "midplane_adjacent_cell_liquid_current_A": 3.479295960059518,
+        "midplane_adjacent_cell_wall_current_A": 0.015253701272673979,
+        "power_relative_defect": -1.6093254089355469e-06,
+        "project": "artifacts/hardware-research/cases/m6-strip-tip-v1/copper08.mhd.json",
+        "released_static_workspace_bytes": 1493723848,
+        "requested_relative_tolerance": 9.999999974752427e-07,
+        "return_current_A": -29.99994659423828,
+        "source_power_W": 0.7114186882972717,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_boundary": "x-ends",
+        "terminal_voltage_V": 0.023713968694210052,
+        "terminal_x_cell_indices": [
+          0,
+          151
+        ],
+        "true_relative_residual": 9.497824748905259e-07
+      },
+      "outlet_force_N_at30A": 0.0005345596090690873,
+      "midplane_adjacent_cell_liquid_current_A": 3.479295960059512,
+      "midplane_adjacent_cell_strip_current_A": 26.503052137654677,
+      "terminal_R_ohm": 0.0007904660251921464,
+      "force_ratio_to_same_width_steel": 0.18804260552677007
+    },
+    {
+      "label": "steel28",
+      "project": "artifacts/hardware-research/cases/m6-strip-tip-v1/steel28.mhd.json",
+      "strip_width_mm": 2.8,
+      "strip_thickness_mm": 0.5,
+      "bore_mm": 0.4,
+      "insulating_separation_mm": 0.1,
+      "strip_material": "steel",
+      "native_report": {
+        "contact_resistivity_ohm_m2": 0.0,
+        "current_A": 30.0,
+        "iterations": 416,
+        "joule_power_W": 0.6199551224708557,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          -5.37898700922752e-10,
+          -1.0182008779866166e-10,
+          -0.0009443900453678677
+        ],
+        "liquid_joule_power_W": 0.024302198627729723,
+        "liquid_mean_By_T": -0.16217463809323104,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 0.49045327221288826,
+        "mean_wall_current_over_x_plus_minus_2mm_A": 5.506311610463391,
+        "midplane_adjacent_cell_liquid_current_A": 6.055542140861085,
+        "midplane_adjacent_cell_wall_current_A": 23.940289273707783,
+        "power_relative_defect": -6.556510925292969e-06,
+        "project": "artifacts/hardware-research/cases/m6-strip-tip-v1/steel28.mhd.json",
+        "released_static_workspace_bytes": 1493723848,
+        "requested_relative_tolerance": 9.999999974752427e-07,
+        "return_current_A": -29.999719619750977,
+        "source_power_W": 0.6199591755867004,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_boundary": "x-ends",
+        "terminal_voltage_V": 0.020665306597948074,
+        "terminal_x_cell_indices": [
+          0,
+          151
+        ],
+        "true_relative_residual": 9.41273015087063e-07
+      },
+      "outlet_force_N_at30A": 0.0009039106061597127,
+      "midplane_adjacent_cell_liquid_current_A": 6.055542140861093,
+      "midplane_adjacent_cell_strip_current_A": 23.91640190193611,
+      "terminal_R_ohm": 0.0006888435532649358,
+      "force_ratio_to_same_width_steel": 1.0
+    },
+    {
+      "label": "copper28",
+      "project": "artifacts/hardware-research/cases/m6-strip-tip-v1/copper28.mhd.json",
+      "strip_width_mm": 2.8,
+      "strip_thickness_mm": 0.5,
+      "bore_mm": 0.4,
+      "insulating_separation_mm": 0.1,
+      "strip_material": "copper",
+      "native_report": {
+        "contact_resistivity_ohm_m2": 0.0,
+        "current_A": 30.0,
+        "iterations": 384,
+        "joule_power_W": 0.19629305601119995,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          -1.344303589007203e-10,
+          -1.3409195996318062e-12,
+          -0.00013211183364216726
+        ],
+        "liquid_joule_power_W": 0.00048437305749617,
+        "liquid_mean_By_T": -0.16217463809323104,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 0.06859750502973026,
+        "mean_wall_current_over_x_plus_minus_2mm_A": -0.0002851859849423744,
+        "midplane_adjacent_cell_liquid_current_A": 0.8145890631776109,
+        "midplane_adjacent_cell_wall_current_A": 0.0035789074168857673,
+        "power_relative_defect": -2.1457672119140625e-06,
+        "project": "artifacts/hardware-research/cases/m6-strip-tip-v1/copper28.mhd.json",
+        "released_static_workspace_bytes": 1493723848,
+        "requested_relative_tolerance": 9.999999974752427e-07,
+        "return_current_A": -29.999916076660156,
+        "source_power_W": 0.19629347324371338,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_boundary": "x-ends",
+        "terminal_voltage_V": 0.006543115712702274,
+        "terminal_x_cell_indices": [
+          0,
+          151
+        ],
+        "true_relative_residual": 9.198931252285547e-07
+      },
+      "outlet_force_N_at30A": 0.00012606662872134146,
+      "midplane_adjacent_cell_liquid_current_A": 0.8145890631776121,
+      "midplane_adjacent_cell_strip_current_A": 29.181163387061574,
+      "terminal_R_ohm": 0.00021810385709007581,
+      "force_ratio_to_same_width_steel": 0.1394680268848031
+    }
+  ],
+  "scope": "Cold fixed-property current-sharing comparison. Whole strip represented by three touching material regions to supply terminals. Ideal joints, no gasket/clamp/seal qualification, hot properties, motion or lifetime. Existing liquid geometry retained, including 0.1mm neck between strip and upper steel.",
+  "interpretation": "Same-width steel/copper pairs differ only in central strip material. Copper extensions retain the same geometry and fixed conductivity. Do not infer repetitive limits or electrode lifetime from this cold screen."
+}

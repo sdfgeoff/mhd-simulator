@@ -1,0 +1,125 @@
+{
+  "package": "hardware/designs/strip-tip-review",
+  "files": [
+    {
+      "file": "steel08.bin",
+      "sha256": "2ba616b30672f836084a0636ccbab7fa762c44dd8a3fbd0405589e26371ab2eb",
+      "source_identical": true
+    },
+    {
+      "file": "steel08.gltf",
+      "sha256": "f8aae5d772f9d5abc0ca05235600ffa6677ffbf5f79af9a4481f1b3ddb40cad0",
+      "source_identical": true
+    },
+    {
+      "file": "steel08.mhd.json",
+      "sha256": "6560435bcfc9f43ae3b7f6b674971bbb4561ac8645b629a285b86c0d86bd898b",
+      "source_identical": true
+    },
+    {
+      "file": "copper08.bin",
+      "sha256": "2ba616b30672f836084a0636ccbab7fa762c44dd8a3fbd0405589e26371ab2eb",
+      "source_identical": true
+    },
+    {
+      "file": "copper08.gltf",
+      "sha256": "620c60e63a33d8ece26f5ed11c8502ae6b20d4e7e2e2cc055cfe5c69a9270a17",
+      "source_identical": true
+    },
+    {
+      "file": "copper08.mhd.json",
+      "sha256": "78389be5997c40e5308e1b242fe4b693f50a8139a165071c54ab3270646c364a",
+      "source_identical": true
+    },
+    {
+      "file": "steel28.bin",
+      "sha256": "ced3d60d6adab9066c9d53857fdff1c6c14271f563bed1a8a5e2547863900e2c",
+      "source_identical": true
+    },
+    {
+      "file": "steel28.gltf",
+      "sha256": "38cfa71d2db9479680661a86bcecb0efd26dc642e3ac4df6568cc6f5d7c5ae31",
+      "source_identical": true
+    },
+    {
+      "file": "steel28.mhd.json",
+      "sha256": "125022cc214d648c36f39ae0d863b353e6dc4fd2454f51a302a78761d238e8cf",
+      "source_identical": true
+    },
+    {
+      "file": "copper28.bin",
+      "sha256": "ced3d60d6adab9066c9d53857fdff1c6c14271f563bed1a8a5e2547863900e2c",
+      "source_identical": true
+    },
+    {
+      "file": "copper28.gltf",
+      "sha256": "de11ffda592dc7cbb9a3e921738e6381ae4a7ea278d6e88e5c0ce4002c49e715",
+      "source_identical": true
+    },
+    {
+      "file": "copper28.mhd.json",
+      "sha256": "f6ba544f0366af207a3ca69fcf6eca80cea6c173bac966e5a652a499fee9aa2d",
+      "source_identical": true
+    },
+    {
+      "file": "steel08t01.bin",
+      "sha256": "dd032574637463840bce31004de3d43e6daa67279b801bba3549bdb1bafa935e",
+      "source_identical": true
+    },
+    {
+      "file": "steel08t01.gltf",
+      "sha256": "f0e1ea41e697eeda5f87c27da026a3e873294b7a7371e429cb4b8d93fecc6a25",
+      "source_identical": true
+    },
+    {
+      "file": "steel08t01.mhd.json",
+      "sha256": "afabf8092ff9f8da5c2dffa57a92c55f0e2475c15f8edb5ca9727c51bea2076b",
+      "source_identical": true
+    },
+    {
+      "file": "copper08t01.bin",
+      "sha256": "dd032574637463840bce31004de3d43e6daa67279b801bba3549bdb1bafa935e",
+      "source_identical": true
+    },
+    {
+      "file": "copper08t01.gltf",
+      "sha256": "984da71f6339a6bcec65050b0175088ae737765a26d2451ca04ec8534f96883e",
+      "source_identical": true
+    },
+    {
+      "file": "copper08t01.mhd.json",
+      "sha256": "59fef8f5567043ca3e29f507ccc435a33da018cbdc97226192552db3ccf21a3d",
+      "source_identical": true
+    },
+    {
+      "file": "steel28t01.bin",
+      "sha256": "a8fd601a96c4956512628987a74ef1bdb69e8476a3f9467f716020ecc87a464a",
+      "source_identical": true
+    },
+    {
+      "file": "steel28t01.gltf",
+      "sha256": "52003e8e3583fa7b98f91bc6ff06c6095f0374fec23a03bb872c13c7bd8f48d1",
+      "source_identical": true
+    },
+    {
+      "file": "steel28t01.mhd.json",
+      "sha256": "171002d594b957e670b0f6080e1fa649a28e9c9e9e043bbee25d9e1975b8d7ea",
+      "source_identical": true
+    },
+    {
+      "file": "copper28t01.bin",
+      "sha256": "a8fd601a96c4956512628987a74ef1bdb69e8476a3f9467f716020ecc87a464a",
+      "source_identical": true
+    },
+    {
+      "file": "copper28t01.gltf",
+      "sha256": "d57d1969847e825613ff48765514546a5af6124237f9dd8a27d79861b3be09d8",
+      "source_identical": true
+    },
+    {
+      "file": "copper28t01.mhd.json",
+      "sha256": "2b4a9d89e926753badf942109228f990bdcdcb44b818358e7bedb0146b0a1d87",
+      "source_identical": true
+    }
+  ]
+}

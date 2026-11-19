@@ -1,0 +1,286 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "MHD hardware study; E3D dimension-based simplified CAD"
+  },
+  "buffers": [
+    {
+      "uri": "steel08t01.bin",
+      "byteLength": 156600
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 99144
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 99144,
+      "byteLength": 41328
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 140472,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 140904,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 141336,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 141768,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 142200,
+      "byteLength": 14400
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 8262,
+      "type": "VEC3",
+      "min": [
+        -0.0035,
+        -0.003,
+        0.00020000000298023225
+      ],
+      "max": [
+        0.0035,
+        0.003,
+        0.01
+      ]
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 3444,
+      "type": "VEC3",
+      "min": [
+        -0.0015999999046325685,
+        -0.0015999999046325685,
+        0.0
+      ],
+      "max": [
+        0.0015999999046325685,
+        0.0015999999046325685,
+        0.006
+      ]
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.005,
+        -0.0004000000059604645,
+        0.0
+      ],
+      "max": [
+        -0.0004000000059604645,
+        0.0004000000059604645,
+        0.00010000000149011613
+      ]
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        0.0004000000059604645,
+        -0.0004000000059604645,
+        0.0
+      ],
+      "max": [
+        0.005,
+        0.0004000000059604645,
+        0.00010000000149011613
+      ]
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.0125,
+        -0.011699999809265137,
+        -0.002
+      ],
+      "max": [
+        0.0125,
+        -0.0017000000476837158,
+        0.003
+      ]
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.0125,
+        0.0017000000476837158,
+        -0.002
+      ],
+      "max": [
+        0.0125,
+        0.011699999809265137,
+        0.003
+      ]
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5126,
+      "count": 1200,
+      "type": "VEC3",
+      "min": [
+        -0.0004000000059604645,
+        -0.0004000000059604645,
+        0.0
+      ],
+      "max": [
+        0.0004000000059604645,
+        0.0004000000059604645,
+        0.00010000000149011613
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Stainless upper nozzle",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Molten solder",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Positive copper terminal",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 2
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Negative copper terminal",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 3
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Bias magnet 1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 4
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Bias magnet 2",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 5
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Steel replaceable orifice strip",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 6
+          },
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "Stainless upper nozzle"
+    },
+    {
+      "mesh": 1,
+      "name": "Molten solder"
+    },
+    {
+      "mesh": 2,
+      "name": "Positive copper terminal"
+    },
+    {
+      "mesh": 3,
+      "name": "Negative copper terminal"
+    },
+    {
+      "mesh": 4,
+      "name": "Bias magnet 1"
+    },
+    {
+      "mesh": 5,
+      "name": "Bias magnet 2"
+    },
+    {
+      "mesh": 6,
+      "name": "Steel replaceable orifice strip"
+    }
+  ],
+  "scenes": [
+    {
+      "nodes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    }
+  ],
+  "scene": 0
+}

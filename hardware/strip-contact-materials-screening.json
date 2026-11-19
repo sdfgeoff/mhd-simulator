@@ -1,0 +1,31 @@
+{
+  "status": "Literature-informed contact/seal concerns; not service-life prediction",
+  "sources": [
+    {
+      "url": "https://www.3m.com/mws/media/136011O/3m-polyimide-film-tape-5413-tds.pdf",
+      "evidence": "5413 polyimide film plus silicone adhesive, solder masking, upper temperature260C; no continuously molten solder seal qualification supplied.",
+      "inference": "Do not substitute bare film heat resistance for adhesive joint qualification."
+    },
+    {
+      "url": "https://www.hakko.com/english/support/maintenance/detail.php?seq=163",
+      "evidence": "Copper-core soldering tips use iron plating for corrosion resistance; lead-free and elevated temperatures shorten life."
+    },
+    {
+      "url": "https://scholars.lib.ntu.edu.tw/server/api/core/bitstreams/b1cf1d9e-d0db-4a87-9b0e-013f43b2f10b/content",
+      "title": "Pronounced electromigration of Cu in molten Sn-based solders, Huang et al., J Mater Res23(1),2008",
+      "evidence": "Molten Sn3.5Ag at255C, continuous6300A/cm2; pronounced cathode copper dissolution and anode intermetallic accumulation compared with no-current controls.",
+      "limit": "Different alloy/current/geometry; not a lifetime scaling law for our pulsed nozzle."
+    },
+    {
+      "url": "https://www.ampp.org/technical-research/impact/corrosion-basics/group-1/galvanic-corrosion",
+      "evidence": "Ordinary galvanic-corrosion description requires coupled dissimilar materials and corrosive electrolyte.",
+      "inference": "Molten solder current is metallic conduction; dissolution and electromigration are the more directly supported contact mechanisms here."
+    }
+  ],
+  "next_measurements": [
+    "No-current soak and matched-temperature pulse coupons for both solders, copper and316SS.",
+    "Inspect bore growth, electrode recession, wetting, deposits and leakage over time; compare pulse polarity.",
+    "Four-wire joint resistance and actual peak contact temperature; RMS alone does not bound a contact hot spot."
+  ],
+  "design_preference": "Replaceable mechanically clamped strip worth exploring. Continuous copper may bypass liquid current; isolate conductivity from geometry in native solves. Adhesive-free gasket remains unqualified, not specified as a proven hot seal."
+}
