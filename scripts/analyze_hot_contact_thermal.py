@@ -24,6 +24,9 @@ for file in files:
     report["method"] = (
         "Existing native GPU scalar FV operator with conductivity k; entire aluminium heater ID8 fixed+0.5K, outermost copper planes fixed-0.5K; steel/liquid/copper/mica unknown. No new field solver."
     )
+    report["limits"][0] = (
+        "Steady anchors-mode screen: entire aluminium heater ID8 fixed-temperature reservoir; steel/liquid/copper/mica solved; effective sheet k represents contact-quality sensitivity."
+    )
     rows.append({"source": str(root / file), "native_report": report})
 record = {
     "status": "Completed stationary heated-contact thermal experiment; not a qualified operating head",

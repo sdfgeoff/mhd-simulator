@@ -86,3 +86,8 @@ They do not substitute for the separate fine-grid and full-domain gravity checks
 7. `hot-contact-m6`: thermal research fixture for folded, electrically insulated
    heated contact fingers. It addresses the cold-copper outlet-freezing flag.
    Actual clamp hardware, magnet heat paths and jetting remain unqualified.
+
+8. `rooted08-hot-contact-m6`: current mechanical prototype candidate with a
+   0.8 mm boss, 0.2 mm nominal wall and R0.1 root. It retains the heated fingers
+   and raised pool, at roughly 110 A / 23.4 A RMS comparison conditions. Those
+   conditions do not establish a physical waveform or demonstrated drop rate.

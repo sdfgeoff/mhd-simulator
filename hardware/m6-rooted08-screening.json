@@ -1,0 +1,288 @@
+{
+  "status": "Completed separate cold, steady thermal and one-shot thermal screens; no jetting result",
+  "geometry": {
+    "boss_mm": 0.8,
+    "nominal_wall_mm": 0.2,
+    "root_radius_mm": 0.1,
+    "contact_height_mm": 0.35,
+    "contact_top_mm": 0.45,
+    "fillet_start_mm": 0.5,
+    "bore_mm": 0.4,
+    "land_mm": 0.6
+  },
+  "fine50um_straight_fingers": {
+    "source": "artifacts/hardware-research/m6-rooted08-cold30-h0050",
+    "outlet_force_N_at30A": 0.002189885473291906,
+    "force_ratio_to_previous07": 0.860079730312218,
+    "peak_A_matching_previous93A_outlet_force": 108.12951023301063,
+    "charge_report": {
+      "contact_resistivity_ohm_m2": 0.0,
+      "current_A": 30.00006103515625,
+      "iterations": 640,
+      "joule_power_W": 2.1053781509399414,
+      "limitations": [
+        "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+        "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+        "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+        "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+        "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+      ],
+      "liquid_force_N": [
+        7.880923502879437e-10,
+        -3.373479173277937e-10,
+        -0.003880867980318262
+      ],
+      "liquid_joule_power_W": 0.14886188755260288,
+      "liquid_mean_By_T": -0.16217463809323104,
+      "mean_liquid_current_over_x_plus_minus_2mm_A": 2.129981967441878,
+      "mean_wall_current_over_x_plus_minus_2mm_A": 3.8684914256193905,
+      "midplane_adjacent_cell_liquid_current_A": 20.23262070481803,
+      "midplane_adjacent_cell_wall_current_A": 9.767897429230969,
+      "power_relative_defect": -4.76837158203125e-07,
+      "project": "artifacts/hardware-research/cases/m6-rooted08-v1/stub4.mhd.json",
+      "released_static_workspace_bytes": 1493305064,
+      "requested_relative_tolerance": 9.999999974752427e-07,
+      "return_current_A": -30.000080108642578,
+      "source_power_W": 2.105379104614258,
+      "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+      "terminal_boundary": "x-ends",
+      "terminal_voltage_V": 0.07017916440963745,
+      "terminal_x_cell_indices": [
+        0,
+        151
+      ],
+      "true_relative_residual": 9.30838837120973e-07
+    }
+  },
+  "coarse100um_full_hot_fixture": {
+    "source": "artifacts/hardware-research/m6-rooted08-hot-current30-h010",
+    "field_observer": "m6-hot-contact-field-observer-h010",
+    "outlet_force_N_at30A": 0.0021131516114511963,
+    "force_ratio_times110A_to_previous07_at93A": 1.0514036399211657,
+    "R_ohm_including_two50mm_1mm2_extensions": 0.0075308795427638225,
+    "voltage_V_at_comparison110A": 0.8283967497040204,
+    "average_Joule_W_at_assumed200Hz": 4.134735276960192,
+    "charge_report": {
+      "contact_resistivity_ohm_m2": 0.0,
+      "current_A": 29.999319076538086,
+      "iterations": 1376,
+      "joule_power_W": 6.777933597564697,
+      "limitations": [
+        "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+        "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+        "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+        "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+        "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+      ],
+      "liquid_force_N": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "liquid_joule_power_W": 0.15082119372287006,
+      "liquid_mean_By_T": 0.0,
+      "mean_liquid_current_over_x_plus_minus_2mm_A": 1.8525335641911669,
+      "mean_wall_current_over_x_plus_minus_2mm_A": 4.088552266531538,
+      "midplane_adjacent_cell_liquid_current_A": 19.41037998269071,
+      "midplane_adjacent_cell_wall_current_A": 10.532029104771409,
+      "power_relative_defect": 6.639957427978516e-05,
+      "project": "artifacts/hardware-research/cases/m6-rooted08-hot-v1/hot-contact-current-only.mhd.json",
+      "released_static_workspace_bytes": 0,
+      "requested_relative_tolerance": 3.999999989900971e-06,
+      "return_current_A": -29.99920654296875,
+      "source_power_W": 6.777483940124512,
+      "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+      "terminal_boundary": "x-ends",
+      "terminal_voltage_V": 0.22592125833034515,
+      "terminal_x_cell_indices": [
+        5,
+        1204
+      ],
+      "true_relative_residual": 3.5004222809220664e-06
+    }
+  },
+  "comparison_waveform": {
+    "peak_A": 110,
+    "positive_us": 250,
+    "ramp_us": 20,
+    "reverse_fraction": 0.25,
+    "reverse_us": 83.33333333333333,
+    "gap_us": 25,
+    "I2dt_A2s": 2.7451875,
+    "RMS_A_at_assumed200Hz": 23.431549244554873
+  },
+  "one_shot_tip_thermal50um": {
+    "I2dt_A2s": 2.7451875,
+    "adiabatic_control": false,
+    "cold": "artifacts/hardware-research/m6-rooted08-cold30-h0050",
+    "dt_us": 1.0,
+    "expected_joule_J": 0.004634270105623531,
+    "grid": {
+      "cell_m": 5.0000002374872565e-05,
+      "dims": [
+        60,
+        40,
+        24
+      ],
+      "origin_m": [
+        -0.001500000013038516,
+        -0.0010000000474974513,
+        0.0
+      ]
+    },
+    "initial_temperature_C": 250.0,
+    "joule_J": 0.0046342695863409444,
+    "limits": [
+      "Fixed current path/material properties; no temperature-dependent conductivity, moving interface, electrical contact heating or heater/clamp cooling.",
+      "Closed insulated retained conductors initially250C; magnet/air heat transfer omitted, no repetition equilibrium or qualified melting margin.",
+      "TIP_ROI when enabled uses insulated cuts and exact native-cell source mapping from the full-head electrical solution; validate thermal cut sensitivity before use, and do not extrapolate it to steady heating.",
+      "Sharp contact geometry and finite grid do not resolve real microscopic contact areas or establish peak convergence."
+    ],
+    "method": "Native ThermalState diffusion/enthalpy with exact per-interval I\u00b2dt scaling of accepted cold Joule field. Isolated zero-Joule magnet bodies omitted from thermal domain; all retained material IDs/grid match.",
+    "peak_A": 110.0,
+    "peak_temperature_C": 261.2176208496094,
+    "peak_time_s": 0.00023399999999999945,
+    "per_material_at_global_peak": [
+      {
+        "id": 4,
+        "index": 8432,
+        "maximum_C_at_global_peak_frame": 254.06533813476562,
+        "name": "Sn99.3Cu0.7 molten research properties"
+      },
+      {
+        "id": 14,
+        "index": 20437,
+        "maximum_C_at_global_peak_frame": 261.2176208496094,
+        "name": "Thin-wall stainless screening"
+      },
+      {
+        "id": 16,
+        "index": 20421,
+        "maximum_C_at_global_peak_frame": 251.49038696289062,
+        "name": "Positive copper terminal"
+      },
+      {
+        "id": 17,
+        "index": 20438,
+        "maximum_C_at_global_peak_frame": 251.49038696289062,
+        "name": "Negative copper terminal"
+      }
+    ],
+    "positive_us": 250.0,
+    "project": "artifacts/hardware-research/cases/m6-rooted08-v1/stub4.mhd.json",
+    "source_energy_relative_error": -1.120527234523269e-07,
+    "source_offset_cells": [
+      46,
+      56,
+      80
+    ],
+    "status": "complete",
+    "steps": 400,
+    "summed_step_energy_error_J": 3.0264779571353984e-10,
+    "time_s": 0.0004000000000000032,
+    "tip_roi": true
+  },
+  "stationary_heated_anchor_thermal100um": {
+    "cold_boundary_cells": 200,
+    "cold_return_W": -0.013748866505920887,
+    "conductance_W_K": 0.013748584315180779,
+    "copper_k_W_m_K_if_used": 394.0,
+    "grid": {
+      "cell_m": 0.00010000000474974513,
+      "dims": [
+        1210,
+        110,
+        107
+      ],
+      "origin_m": [
+        -0.06050000339746475,
+        -0.005500000435858965,
+        -0.00020000000949949026
+      ]
+    },
+    "heat_return_relative_error": 2.0525076251942664e-05,
+    "heater_start_mm": 4.0,
+    "hot_boundary_cells": 1460680,
+    "isothermal_pool_cells": 0,
+    "iterations": 1504,
+    "limits": [
+      "Steady anchors-mode screen: entire aluminium heater ID8 is a fixed-temperature reservoir; all retained steel/liquid/copper/mica temperatures are solved. Interfaces are ideal unless represented through the effective sheet conductivity; thread roots/contact resistance unresolved.",
+      "Air and magnets thermally omitted. Copper omitted in pool mode; included in leads/anchors modes. Anchors mode adds fixed167W/mK heater and requested effective-k mica with ideal interfaces; reducing k can represent extra sheet/interface resistance. No feed advection, wire melting, latent heat, transient heat capacity, Joule heating, external convection or radiation.",
+      "Pool mode assumes isothermal liquid. Leads mode instead solves stationary liquid/steel/copper temperature with fixed cold outer copper planes; it omits Joule heat, external losses and feeding, and uses fixed liquid k even if temperatures indicate freezing. Neither is a complete operation model."
+    ],
+    "liquid_k_W_m_K": 60.5,
+    "liquid_min_location_m": [
+      -0.00014999881386756897,
+      4.9999915063381195e-05,
+      5.0000002374872565e-05
+    ],
+    "liquid_min_unit_potential": 0.4491322338581085,
+    "method": "Native scalar GPU FV: entire aluminium heater ID8 fixed+0.5K; outer copper planes fixed-0.5K; all steel/liquid/copper/mica unknown. Raw method sentence inherited old default-mode text; numerical output unchanged.",
+    "mica_effective_k_W_m_K": 0.10000000149011612,
+    "mode": "anchors",
+    "power_identity_relative_error": 4.76837158203125e-06,
+    "project": "artifacts/hardware-research/cases/m6-rooted08-hot-v1/hot-contact.mhd.json",
+    "requested_relative_tolerance": 1.9999999949504854e-06,
+    "steel_k_W_m_K": 15.0,
+    "temperature_cases": [
+      {
+        "cold_boundary_C": 25.0,
+        "heat_draw_W": 3.0934314727783203,
+        "heater_C": 250.0,
+        "liquid_min_C": 238.55474853515625
+      },
+      {
+        "cold_boundary_C": 100.0,
+        "heat_draw_W": 2.0622875690460205,
+        "heater_C": 250.0,
+        "liquid_min_C": 242.3698272705078
+      },
+      {
+        "cold_boundary_C": 150.0,
+        "heat_draw_W": 1.3748583793640137,
+        "heater_C": 250.0,
+        "liquid_min_C": 244.91322326660156
+      },
+      {
+        "cold_boundary_C": 200.0,
+        "heat_draw_W": 0.6874291896820068,
+        "heater_C": 250.0,
+        "liquid_min_C": 247.45660400390625
+      },
+      {
+        "cold_boundary_C": 220.0,
+        "heat_draw_W": 0.41245752573013306,
+        "heater_C": 250.0,
+        "liquid_min_C": 248.47396850585938
+      },
+      {
+        "cold_boundary_C": 230.0,
+        "heat_draw_W": 0.27497169375419617,
+        "heater_C": 250.0,
+        "liquid_min_C": 248.98263549804688
+      },
+      {
+        "cold_boundary_C": 240.0,
+        "heat_draw_W": 0.13748584687709808,
+        "heater_C": 250.0,
+        "liquid_min_C": 249.49131774902344
+      }
+    ],
+    "temperature_difference_K": 1.0,
+    "thermal_resistance_K_W": 72.7347640991211,
+    "true_relative_residual": 1.896455842143041e-06,
+    "unit_energy_identity_value": 0.013748649507761002
+  },
+  "limits": [
+    "Matched cold force is not matched droplet volume/speed. No rooted-tip moving-fluid result.",
+    "Straight-finger fine charge and full-fixture coarse charge are different domains/geometries; comparisons at each grid are explicitly separate.",
+    "Thermal models are separate: one pulse starts uniformly250C with ideal joints and insulated ROI; steady fixture omits Joule heat, feed and external losses. Do not add their temperatures.",
+    "No concentricity, clamp preload, real joint resistance, material temperature feedback or operating lifetime qualification."
+  ],
+  "tool_geometry_source": {
+    "url": "https://www.ns-tool.com/en/products/detail/107",
+    "verified": "2026-11-19",
+    "scope": "Maker catalogue lists a1mm corner-radius cutter withR0.1 (08-00700-01001). Confirms nominal radius availability; not a machining process or tool-selection qualification."
+  },
+  "metadata_correction": "Canonical anchor-mode method/first-limit prose corrected from the raw default-mode description. Actual code fixes ID8 heater; accepted numerical fields and flux/energy values are unchanged."
+}

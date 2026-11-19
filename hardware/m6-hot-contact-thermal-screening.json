@@ -26,7 +26,7 @@
         "hot_boundary_cells": 952380,
         "isothermal_pool_cells": 0,
         "limits": [
-          "Steady conduction screen; fixed k, perfect contact to outer M6 cylindrical envelope. Thread helix/root/contact resistance unresolved.",
+          "Steady anchors-mode screen: entire aluminium heater ID8 is a fixed-temperature reservoir; all retained steel/liquid/copper/mica temperatures are solved. Interfaces are ideal unless represented through the effective sheet conductivity; thread roots/contact resistance unresolved.",
           "Air and magnets thermally omitted. Copper omitted in pool mode; included in leads/anchors modes. Anchors mode adds fixed167W/mK heater and requested effective-k mica with ideal interfaces; reducing k can represent extra sheet/interface resistance. No feed advection, wire melting, latent heat, transient heat capacity, Joule heating, external convection or radiation.",
           "Pool mode assumes isothermal liquid. Leads mode instead solves stationary liquid/steel/copper temperature with fixed cold outer copper planes; it omits Joule heat, external losses and feeding, and uses fixed liquid k even if temperatures indicate freezing. Neither is a complete operation model."
         ],
@@ -118,7 +118,7 @@
         "hot_boundary_cells": 952380,
         "isothermal_pool_cells": 0,
         "limits": [
-          "Steady conduction screen; fixed k, perfect contact to outer M6 cylindrical envelope. Thread helix/root/contact resistance unresolved.",
+          "Steady anchors-mode screen: entire aluminium heater ID8 is a fixed-temperature reservoir; all retained steel/liquid/copper/mica temperatures are solved. Interfaces are ideal unless represented through the effective sheet conductivity; thread roots/contact resistance unresolved.",
           "Air and magnets thermally omitted. Copper omitted in pool mode; included in leads/anchors modes. Anchors mode adds fixed167W/mK heater and requested effective-k mica with ideal interfaces; reducing k can represent extra sheet/interface resistance. No feed advection, wire melting, latent heat, transient heat capacity, Joule heating, external convection or radiation.",
           "Pool mode assumes isothermal liquid. Leads mode instead solves stationary liquid/steel/copper temperature with fixed cold outer copper planes; it omits Joule heat, external losses and feeding, and uses fixed liquid k even if temperatures indicate freezing. Neither is a complete operation model."
         ],
@@ -211,7 +211,7 @@
         "isothermal_pool_cells": 0,
         "iterations": 1632,
         "limits": [
-          "Steady conduction screen; fixed k, perfect contact to outer M6 cylindrical envelope. Thread helix/root/contact resistance unresolved.",
+          "Steady anchors-mode screen: entire aluminium heater ID8 is a fixed-temperature reservoir; all retained steel/liquid/copper/mica temperatures are solved. Interfaces are ideal unless represented through the effective sheet conductivity; thread roots/contact resistance unresolved.",
           "Air and magnets thermally omitted. Copper omitted in pool mode; included in leads/anchors modes. Anchors mode adds fixed167W/mK heater and requested effective-k mica with ideal interfaces; reducing k can represent extra sheet/interface resistance. No feed advection, wire melting, latent heat, transient heat capacity, Joule heating, external convection or radiation.",
           "Pool mode assumes isothermal liquid. Leads mode instead solves stationary liquid/steel/copper temperature with fixed cold outer copper planes; it omits Joule heat, external losses and feeding, and uses fixed liquid k even if temperatures indicate freezing. Neither is a complete operation model."
         ],
@@ -304,7 +304,7 @@
         "hot_boundary_cells": 952380,
         "isothermal_pool_cells": 0,
         "limits": [
-          "Steady conduction screen; fixed k, perfect contact to outer M6 cylindrical envelope. Thread helix/root/contact resistance unresolved.",
+          "Steady anchors-mode screen: entire aluminium heater ID8 is a fixed-temperature reservoir; all retained steel/liquid/copper/mica temperatures are solved. Interfaces are ideal unless represented through the effective sheet conductivity; thread roots/contact resistance unresolved.",
           "Air and magnets thermally omitted. Copper omitted in pool mode; included in leads/anchors modes. Anchors mode adds fixed167W/mK heater and0.528W/mK mica with ideal interfaces. No feed advection, wire melting, latent heat, transient heat capacity, Joule heating, external convection or radiation.",
           "Pool mode assumes isothermal liquid. Leads mode instead solves stationary liquid/steel/copper temperature with fixed cold outer copper planes; it omits Joule heat, external losses and feeding, and uses fixed liquid k even if temperatures indicate freezing. Neither is a complete operation model."
         ],
@@ -396,7 +396,7 @@
         "isothermal_pool_cells": 0,
         "iterations": 1664,
         "limits": [
-          "Steady conduction screen; fixed k, perfect contact to outer M6 cylindrical envelope. Thread helix/root/contact resistance unresolved.",
+          "Steady anchors-mode screen: entire aluminium heater ID8 is a fixed-temperature reservoir; all retained steel/liquid/copper/mica temperatures are solved. Interfaces are ideal unless represented through the effective sheet conductivity; thread roots/contact resistance unresolved.",
           "Air and magnets thermally omitted. Copper omitted in pool mode; included in leads/anchors modes. Anchors mode adds fixed167W/mK heater and requested effective-k mica with ideal interfaces; reducing k can represent extra sheet/interface resistance. No feed advection, wire melting, latent heat, transient heat capacity, Joule heating, external convection or radiation.",
           "Pool mode assumes isothermal liquid. Leads mode instead solves stationary liquid/steel/copper temperature with fixed cold outer copper planes; it omits Joule heat, external losses and feeding, and uses fixed liquid k even if temperatures indicate freezing. Neither is a complete operation model."
         ],
@@ -467,7 +467,7 @@
   ],
   "interpretation": "At250C heater/25C outer wire ends, narrow plates without mica coupling give179C outlet; nominal mica gives245C. Effective k0.1 (sheet plus interface resistance) gives228C for30mm\u00b2 plates and237C for60mm\u00b2 plates. Wider heated anchors improve thermal margin in this model.",
   "geometry": "Two folded copper fingers and6x10x0.4mm anchor plates for preferred thermal fixture;0.1mm insulation; each50mm,1mm\u00b2 straight Cu supply extension ends at imposed25C. FullCADcollisionchecked; source accepts fixed-k heat reservoir.",
-  "metadata_correction": "Earlier raw anchor reports had a pool/leads method sentence; canonical copied method text corrected above. Actual code fixed ID8 heater, confirmed by hot_boundary_cells and input source. Accepted scalar/flux numbers are unchanged.",
+  "metadata_correction": "Canonical anchor-mode method/first-limit prose corrected from the raw default-mode description. Actual code fixes ID8 heater; accepted numerical fields and flux/energy values are unchanged.",
   "rejected_solve": {
     "case": "narrow anchors k0.528",
     "requested_relative_tolerance": 1e-06,

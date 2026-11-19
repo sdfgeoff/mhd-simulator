@@ -1,0 +1,22 @@
+{
+  "status": "Byte-identical rooted-tip heated-contact thermal fixture",
+  "source": "artifacts/hardware-research/cases/m6-rooted08-hot-v1",
+  "package": "hardware/designs/rooted08-hot-contact-m6",
+  "files": [
+    {
+      "file": "hot-contact.gltf",
+      "sha256": "736e8ea6980f7210e40099703110454fcd7e1ed73fa34cf58f1b6f60f009ffc7",
+      "identical": true
+    },
+    {
+      "file": "hot-contact.bin",
+      "sha256": "2e24ba487a92e6e17c8a31a89aa4ef95aac03336fcc4ae09565ccb2d6fc4cf25",
+      "identical": true
+    },
+    {
+      "file": "hot-contact.mhd.json",
+      "sha256": "75a74eeb1cbbdd4292ee7769be7394b7c4191ccb30af694874a19854063351cc",
+      "identical": true
+    }
+  ]
+}

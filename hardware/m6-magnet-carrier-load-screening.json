@@ -1,0 +1,44 @@
+{
+  "status": "Completed fixed-source static pole-attraction screen; not a qualified carrier",
+  "cases": [
+    {
+      "source": "artifacts/hardware-research/m6-load-plane-25-15",
+      "half_extent_X_mm": 25,
+      "half_extent_Z_mm": 15,
+      "cell_mm": 0.2500000118743628,
+      "pole_attraction_N": 9.329030218063782,
+      "maximum_normal_B_T": 0.4883565306663513,
+      "maximum_tangential_B_T": 0.0015136302517039153
+    },
+    {
+      "source": "artifacts/hardware-research/m6-load-plane-40-25",
+      "half_extent_X_mm": 40,
+      "half_extent_Z_mm": 25,
+      "cell_mm": 0.2500000118743628,
+      "pole_attraction_N": 9.385278160121207,
+      "maximum_normal_B_T": 0.48835664987564087,
+      "maximum_tangential_B_T": 0.0015136644408597134
+    }
+  ],
+  "relative_force_change_expanding_plane": 0.006029345038299105,
+  "method": "Integrate Tyy=(By\u00b2-0.5|B|\u00b2)/mu0 on source-free y0 plane using nativeq4 source fields. The full infinite plane separates both pole groups; finite-plane truncation checked by expansion. Unit permeability throughout, no imposed head current.",
+  "illustrative_two_end_supports_per_pole": {
+    "force_each_support_N": 4.692639080060603,
+    "unsupported_length_mm": 15.0,
+    "section_width_X_mm": 5.0,
+    "section_thickness_Y_mm": 3.0,
+    "assumed_Young_modulus_GPa": 69.0,
+    "cantilever_tip_deflection_each_um": 6.80092620298638,
+    "two_sides_gap_closure_um": 13.60185240597276,
+    "root_bending_stress_MPa": 9.385278160121207
+  },
+  "limits": [
+    "Fixed uniform magnetization Br0.95T, source quadratureq4; no hot recoil, eddy forces, assembly error or current self-field. Force scales roughly withBr\u00b2 only within this fixed-source approximation.",
+    "End-support calculation assumes independent15mm cantilevers and equal load split. It excludes screw joints, holes, stress concentration, carrier contact compliance and thermal distortion; it is a sizing estimate, not an actual-frame FEM.",
+    "The nozzle tip must not act as a mechanical stop for the magnets. Carrier lips/fasteners may project below the magnets and must count toward stand-off."
+  ],
+  "reference": "https://web.mit.edu/viz/guide/Chapter-11-Inductance%20and%20Magnetic%20Energy.pdf",
+  "illustrative_design_load_N_per_pole": 20,
+  "design_load_basis": "Chosen rounded engineering allowance above twice nominal static model; not a certified load bound.",
+  "two_sides_gap_closure_um_at_design_load": 28.98550724637681
+}

@@ -1,0 +1,101 @@
+{
+  "status": "Completed native fixed-M internal-field diagnostic; not a demagnetization/lifetime qualification",
+  "source_Br_T": 0.95,
+  "magnetization_A_m": 755985.9796865028,
+  "cases": [
+    {
+      "q": 3,
+      "source": "artifacts/hardware-research/m6-magnet-interior-q3",
+      "sampled_margin_mm": {
+        "0.0": {
+          "sample_count": 10000,
+          "minimum_H_parallel_kA_m": -517.6426866174997,
+          "maximum_H_parallel_kA_m": 588.7082720696651
+        },
+        "0.5": {
+          "sample_count": 6912,
+          "minimum_H_parallel_kA_m": -376.90391143690596,
+          "maximum_H_parallel_kA_m": -13.589477181891212
+        },
+        "1.0": {
+          "sample_count": 4416,
+          "minimum_H_parallel_kA_m": -304.5986513935701,
+          "maximum_H_parallel_kA_m": -68.10007858290128
+        }
+      }
+    },
+    {
+      "q": 4,
+      "source": "artifacts/hardware-research/m6-magnet-interior-q4",
+      "sampled_margin_mm": {
+        "0.0": {
+          "sample_count": 10000,
+          "minimum_H_parallel_kA_m": -461.40950202143864,
+          "maximum_H_parallel_kA_m": 281.5039129941091
+        },
+        "0.5": {
+          "sample_count": 6912,
+          "minimum_H_parallel_kA_m": -336.81077215673497,
+          "maximum_H_parallel_kA_m": -65.33593897129258
+        },
+        "1.0": {
+          "sample_count": 4416,
+          "minimum_H_parallel_kA_m": -296.6168638703717,
+          "maximum_H_parallel_kA_m": -102.80702080415178
+        }
+      }
+    }
+  ],
+  "q4_q3_H_max_difference_kA_m_in_core_1mm": 35.7926102761979,
+  "analytic_pair_centre_H_parallel_kA_m": -166.78192783477476,
+  "method": "Native bound-surface-current diagnostics plus analytical solid-angle point checks and component bounds for rectangular bars.",
+  "limits": [
+    "Fixed uniform magnetization; no material recoil curve, local demagnetization feedback, hot-property update or actual grade certificate.",
+    "Near-surface source quadrature and smoothing can bias fields; sampled maxima are not worst-case bounds, especially sharp corners and seams.",
+    "Applied-current self-field and external return conductors are absent. Do not compare only to room-temperature Hcj or call centre margin a full lifetime qualification.",
+    "Use a supplier-certified grade and hot curve; a generic300C maximum does not establish recoil/irreversible-loss margin. Analytical component bound does not bound transverse H or current-induced heating."
+  ],
+  "closed_form_point_checks": [
+    {
+      "label": "minimum",
+      "point_mm": [
+        4.75000063306652,
+        11.450000602053478,
+        -1.7500000831205398
+      ],
+      "native_H_parallel_kA_m": -461.40950202143864,
+      "closed_form_H_parallel_kA_m": -302.20620061026176
+    },
+    {
+      "label": "maximum",
+      "point_mm": [
+        6.750000728061423,
+        5.950000340817496,
+        -1.7500000831205398
+      ],
+      "native_H_parallel_kA_m": 281.5039129941091,
+      "closed_form_H_parallel_kA_m": -130.03041485455321
+    },
+    {
+      "label": "near_center",
+      "point_mm": [
+        0.2500004193279892,
+        6.9500003883149475,
+        0.7500000356230885
+      ],
+      "native_H_parallel_kA_m": -168.74025981836195,
+      "closed_form_H_parallel_kA_m": -168.51040043412846
+    }
+  ],
+  "near_surface_internal_field_accepted_for_margin": false,
+  "reason": "At the native positive-H extremum, closed form gives -130kA/m while native q4 gives+282kA/m. At the negative extremum it gives-302 versus-461. Near-centre error is0.23kA/m. This near-face quadrature error precludes a lifetime conclusion from sampled extrema.",
+  "uniform_fixed_M_self_demag_component_bound_kA_m": 481.032357297013,
+  "bound_derivation": "Inside a uniformly magnetized cuboid, both charged end faces oppose M. Each face subtends at most2pi steradians; at least one face is>=5mm away, so that face subtends no more than the centred25x5mm rectangle at5mm. Sum/(4pi) bounds the opposing H component. The aligned opposite pole supports M within the common rectangular projection; ignoring that support retains the bound. Fixed-M, mu_r1 and ideal abutting bars only; current self-field absent.",
+  "grade_curve_reference": {
+    "url": "https://www.horizonmagnet.com/uploads/Grade-YXG26H-Samarium-Cobalt-Magnet-Demagnetization-Curves-at-Different-Temperatures.pdf",
+    "verified": "2026-11-19",
+    "scope": "Visually inspected typical YXG26H curves; the250C curve has not entered its steep polarization fall by about-0.5MA/m. This is not a batch certificate for the catalogue bars or a quantitative knee measurement."
+  },
+  "individual_stock_25x5x5_bar_self_demag_component_bound_kA_m": 562.3606928508709,
+  "individual_bar_bound_scope": "Neglect supporting field from all other aligned bars. Applies to each actual5mm-thick stock bar, even with small seam gaps; the481kA/m bound uses an ideal continuous10mm pair. FixedM,mu_r1 only; current and transverse fields/recoil excluded."
+}

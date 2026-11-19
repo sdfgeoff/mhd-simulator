@@ -1,6 +1,7 @@
 """Short M6 nozzles: retain heater interface, trade small magnet projection for a stout body."""
 
 import argparse, copy, json, math
+import manifold3d as cad
 from pathlib import Path
 from make_conduction_hardware import box, triangles
 from make_hardware import emit, heater, lathe, orient
@@ -13,7 +14,19 @@ p.add_argument("--pole-gap-mm", type=float, default=3.0)
 p.add_argument("--heater-clearance-mm", type=float, default=0.45)
 p.add_argument("--only", choices=["stub3", "stub3p5", "stub4", "stub5"])
 p.add_argument("--lower-drill-half-angle-deg", type=float, default=45.0)
+p.add_argument("--boss-width-mm", type=float, default=0.7)
+p.add_argument("--tip-root-radius-mm", type=float, default=0.0)
+p.add_argument("--contact-height-mm", type=float, default=0.4)
 a = p.parse_args()
+if not 0.5 <= a.boss_width_mm <= 1.0:
+    p.error("Boss width must be0.5..1mm")
+if not 0 <= a.tip_root_radius_mm <= 0.2:
+    p.error("Root radius must be0..0.2mm")
+if (
+    not 0.1 <= a.contact_height_mm <= 0.4
+    or 0.1 + a.contact_height_mm > 0.6 - a.tip_root_radius_mm + 1e-9
+):
+    p.error("Contact must fit below root fillet")
 if not math.isfinite(a.cell_mm) or a.cell_mm <= 0:
     p.error("Positive finite spacing required")
 if not math.isfinite(a.pole_gap_mm) or a.pole_gap_mm < 2.8:
@@ -80,8 +93,28 @@ for below in [3.0, 3.5, 4.0, 5.0]:
         solid = solid - box(
             [20.0, 20.0, below - 0.28], [sign * 13.0, 0.0, (below - 0.3 - 0.02) / 2]
         )
-        solid = solid - box([20.0, 20.0, 0.62], [sign * 10.35, 0.0, 0.29])
-        solid = solid - box([20.0, 20.0, 0.62], [0.0, sign * 10.35, 0.29])
+        if a.tip_root_radius_mm == 0:
+            solid = solid - box(
+                [20.0, 20.0, 0.62], [sign * (10 + a.boss_width_mm / 2), 0.0, 0.29]
+            )
+            solid = solid - box(
+                [20.0, 20.0, 0.62], [0.0, sign * (10 + a.boss_width_mm / 2), 0.29]
+            )
+    if a.tip_root_radius_mm > 0:
+        r = a.tip_root_radius_mm
+        half = a.boss_width_mm / 2
+        poly = [(half, -0.02), (10.0, -0.02), (10.0, 0.6)]
+        poly += [
+            (half + r + r * math.cos(t), 0.6 - r + r * math.sin(t))
+            for t in [math.pi / 2 + i * math.pi / 32 for i in range(17)]
+        ]
+        cutter = (
+            cad.CrossSection([poly])
+            .extrude(20.0)
+            .transform([[1, 0, 0, 0], [0, 0, 1, -10], [0, 1, 0, 0]])
+        )
+        for angle in [0, 90, 180, 270]:
+            solid = solid - cutter.rotate([0, 0, angle])
     pool_profile = [
         (0.0, fill, False),
         (upper, fill, False),
@@ -99,7 +132,10 @@ for below in [3.0, 3.5, 4.0, 5.0]:
     parts = [("Short M6 nozzle " + name, mesh(solid)), ("Liquid solder", pool_faces)]
     contacts = []
     for i, sign in enumerate([-1, 1]):
-        copper = box([4.65, 0.7, 0.4], [sign * 2.675, 0.0, 0.3])
+        copper = box(
+            [5 - a.boss_width_mm / 2, a.boss_width_mm, a.contact_height_mm],
+            [sign * (5 + a.boss_width_mm / 2) / 2, 0.0, 0.1 + a.contact_height_mm / 2],
+        )
         contacts.append(copper)
         if (solid ^ copper).volume() > 1e-6 or (pool ^ copper).volume() > 1e-6:
             raise ValueError("Contact collision")
@@ -143,6 +179,10 @@ for below in [3.0, 3.5, 4.0, 5.0]:
             "chamber_diameter_mm": 2.0,
             "lower_drill_point_included_angle_deg": 2 * a.lower_drill_half_angle_deg,
             "outlet_mm": 0.4,
+            "boss_width_mm": a.boss_width_mm,
+            "tip_root_radius_mm": a.tip_root_radius_mm,
+            "contact_height_mm": a.contact_height_mm,
+            "nominal_tip_wall_mm": (a.boss_width_mm - 0.4) / 2,
             "pool_level_mm": fill,
             "waist_Y_mm": 2.8,
             "wrench_X_AF_mm": 6.0,

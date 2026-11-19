@@ -8,21 +8,23 @@ actuator currents below a few hundred amps, using accessible parts. Following
    the latest preference, roughly 30 A RMS is the working thermal target; pulse
    peaks are separate and no physical head operating envelope is qualified.
 
-The [near-flush CAD/project bundle](designs/v6-flat-shortbar) is available for
-inspection and research reproduction. Its 175 A run is the most promising
-packaging case, but remains a numerical candidate.
+The current mechanical candidate is a **short M6 nozzle with a thicker,
+radiused outlet boss and heated contact fingers**. It trades a small current
+increase for a 0.2 mm nominal wall and an explicit R0.1 tool radius. The earlier
+near-flush V6 and thin 0.7 mm boss packages remain comparison cases. See the
+[current CAD fixture](designs/rooted08-hot-contact-m6) and
+[prototype measurement plan](bench-test-plan.md).
 
-**Motion qualification:** isolated-drop controls expose severe capillary motion
-error at 100 µm spacing. Every coarse velocity/trajectory below is provisional;
-a separated component is insufficient evidence of usable jetting. The 50/25 µm
-600 µs translation controls improve strongly, but the 50 µm gravity case still
-shows severe numerical pinning over 3 ms. Longer translation checks are running.
-See [drop-flight-controls.json](drop-flight-controls.json).
+**Motion qualification:** the 25 µm gravity control reduces the earlier coarse
+pinning but still has about 14% speed error over 3 ms. Slow capillary motion,
+breakup and repetition remain unqualified. Completed controls are recorded in
+[drop-flight-controls.json](drop-flight-controls.json); no control is still
+running merely because an older paragraph below describes its initial prefix.
 
 The circuit-design handoff is [pulse-generator-handoff.md](pulse-generator-handoff.md):
 a proposed ±300 A peak / 100 A RMS bipolar current driver on 24/48 V.
 
-## Leading candidates and completed controls
+## Earlier candidates and completed controls
 
 Completed moving-fluid results use **zero gravity** unless explicitly marked
 gravity-on. The matched gravity-on tip-contact control is now complete.
@@ -88,11 +90,12 @@ electronics capability from unqualified head limits. Revision 2 of the driver
 handoff starts the real-head mode disarmed and reserves full-current validation
 waveforms for dummy loads.
 
-The [isolated-drop flight controls](drop-flight-controls.json) are now a priority:
-an initial 0.6 ms periodic-translation prefix already loses about 9% of its liquid
-speed. Hardware-run departure velocities remain provisional until that numerical
-behavior is understood. The zero-gravity at-rest control remains centred in its
-initial prefix; gravity and translation controls continue.
+The [isolated-drop controls](drop-flight-controls.json) expose velocity-dependent
+capillary errors: the 25 µm slow-translation case loses about 5.2% speed over
+0.6 ms, and its gravity control remains about 14% low in speed over 3 ms.
+[Read-only curvature probes](drop-curvature-diagnosis.json) show that complete
+height-function coverage improves strongly with refinement. No numerical force
+correction was applied to the hardware results.
 
 ## Physical scope and limits
 
@@ -478,6 +481,11 @@ improvement over coarser pinning, but still not a converged jetting prediction.
 
 ## Short heated-contact concept
 
+The [radiused 0.8 mm tip](designs/rooted08-hot-contact-m6) is the current
+mechanical candidate. The following controls introduced its heated-finger layout
+using the earlier 0.7 mm tip. The updated record is
+[m6-rooted08-screening.json](m6-rooted08-screening.json).
+
 1. The shorter M6 body moves the pool into the heated barrel and avoids the long,
    thin relieved section. The first pool-isothermal heat-path result does **not**
    prove the outlet remains molten: a later native stationary check finds cold
@@ -504,6 +512,20 @@ Run the research GPU analytic checks serially on this machine:
 TMPDIR="$PWD/artifacts/build-temp" cargo test --offline -j2 --example conduction_probe -- --test-threads=1
 ```
 
-Concurrent device creation in the example tests stalled in the local Vulkan
-driver; the serial run passes all four checks. The native thermal rod checks
+Parallel example tests stalled locally with waiting workers and no GPU work;
+the serial run passes all four checks. The underlying cause was not established. The native thermal rod checks
 are `target/debug/examples/thermal_conductance --check`.
+
+## Magnet-carrier sizing and field limits
+
+1. Native midplane Maxwell stress gives roughly 9.4 N attraction per pole group.
+   Expanding the integration plane changes force by 0.6%. A chosen 20 N per-pole
+   carrier load is an engineering allowance, not a certified bound. A simple
+   two-end cantilever example suggests a metal carrier can keep closure small;
+   actual joints, lips, thermal distortion and stand-off still need CAD/detailing.
+   See `m6-magnet-carrier-load-screening.json`.
+2. Source quadrature inside the magnets near their surfaces disagrees strongly
+   with analytical cuboid checks, including a wrong sign at one sampled point.
+   Those samples are rejected as evidence of demagnetization margin. The separate
+   conditional component bound and grade-curve links are recorded in
+   `m6-magnet-internal-field-screening.json`; no hot lifetime is qualified.

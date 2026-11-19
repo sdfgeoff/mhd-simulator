@@ -1,6 +1,6 @@
 {
   "topic": 19,
-  "latest_authorization_reply": 635,
+  "latest_authorization_reply": 688,
   "droplet_mm": [
     0.4,
     0.6
@@ -46,7 +46,25 @@
     {
       "reply": 636,
       "context": "Coil experiments remain interesting; asks about stockV6externalcoil performance."
+    },
+    {
+      "reply": 677,
+      "instruction": "Focus on roughly30A RMS rather than treating300A peak as a head operating target."
+    },
+    {
+      "reply": 679,
+      "instruction": "May depart further from V6 for better performance."
+    },
+    {
+      "reply": 683,
+      "instruction": "Keep heater-block screw interface; consider cutouts, closer magnets and chamber sizes."
+    },
+    {
+      "reply": 688,
+      "instruction": "Address machining and heat conduction concerns for long thin lower sections."
     }
   ],
-  "current_focus": "External tip contacts are the primary electrode option. Continue bounded single/two-coil investigation, without claiming stockV6carrier jetting was ruled out."
+  "current_focus": "Shorter2mm-bore M6 lower body, heated external contact fingers, stock-sized SmCo bars; compare thicker radiused boss with thinner electrical-performance reference. Jetting and repeated thermal operation remain unqualified.",
+  "working_RMS_current_A": 30,
+  "heater_interface": "M6x1 envelope compatible with existing V6 heater block; preserve top sealing arrangement"
 }

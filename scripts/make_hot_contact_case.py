@@ -14,11 +14,12 @@ from make_v6_conduction import as_solid
 p = argparse.ArgumentParser(description=__doc__)
 p.add_argument("output", type=Path)
 p.add_argument("--anchor-width-mm", type=float, default=5.0)
+p.add_argument("--source-case", default="m6-stub-drilled-v1/stub4")
 a = p.parse_args()
 if not 5 <= a.anchor_width_mm <= 14:
     p.error("Anchor width must be5..14mm")
 a.output.mkdir(parents=True, exist_ok=False)
-parts, _ = load("m6-stub-drilled-v1/stub4")
+parts, _ = load(a.source_case)
 out = []
 for i, (name, faces, solid) in enumerate(parts):
     if i in [2, 3]:
@@ -56,8 +57,8 @@ for i, (name, _, solid) in enumerate(out):
 path = a.output / "hot-contact.gltf"
 emit(path, [(n, f) for n, f, _ in out], None)
 project = json.loads(
-    Path(
-        "artifacts/hardware-research/cases/m6-stub-drilled-v1/stub4.mhd.json"
+    (
+        Path("artifacts/hardware-research/cases") / (a.source_case + ".mhd.json")
     ).read_text()
 )
 project["geometry"] = path.name
@@ -93,7 +94,9 @@ project["domain"].update(
     json.dumps(
         {
             "status": "Generated full-CAD collision-checked thermal experiment; not qualified hardware",
+            "source_case": a.source_case,
             "project": str(a.output / "hot-contact.mhd.json"),
+            "source_case": a.source_case,
             "mica_each_mm": [6, a.anchor_width_mm, 0.1],
             "anchor_copper_each_mm": [6, a.anchor_width_mm, 0.4],
             "supply_extension_each_mm": [50, 2.5, 0.4],

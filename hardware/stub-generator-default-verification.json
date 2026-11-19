@@ -1,0 +1,8 @@
+{
+  "status": "Default CAD and simulation project unchanged after adding boss/root/contact controls",
+  "old": "artifacts/hardware-research/cases/m6-stub-drilled-v1",
+  "regenerated": "artifacts/hardware-research/cases/m6-default-repro-check-v1",
+  "CAD_binary_byte_identical": true,
+  "project_data_identical": true,
+  "CAD_sha256": "4e782fea777c3c94904242817d19965b2f9f62875031bc49eba4b8966f8ea3e0"
+}

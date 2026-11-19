@@ -1,0 +1,360 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "MHD hardware study; E3D dimension-based simplified CAD"
+  },
+  "buffers": [
+    {
+      "uri": "hot-contact.bin",
+      "byteLength": 180792
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 103824
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 103824,
+      "byteLength": 41472
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 145296,
+      "byteLength": 2664
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 147960,
+      "byteLength": 2304
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 150264,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 150696,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 151128,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 151560,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 151992,
+      "byteLength": 28800
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 8652,
+      "type": "VEC3",
+      "min": [
+        -0.0035,
+        -0.003,
+        0.0
+      ],
+      "max": [
+        0.0035,
+        0.003,
+        0.01
+      ]
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 3456,
+      "type": "VEC3",
+      "min": [
+        -0.0015999999046325685,
+        -0.0015999999046325685,
+        0.0
+      ],
+      "max": [
+        0.0015999999046325685,
+        0.0015999999046325685,
+        0.006
+      ]
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 222,
+      "type": "VEC3",
+      "min": [
+        -0.06,
+        -0.005,
+        0.00010000000149011613
+      ],
+      "max": [
+        -0.0004000000059604645,
+        0.005,
+        0.0039000000953674317
+      ]
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 192,
+      "type": "VEC3",
+      "min": [
+        0.0004000000059604645,
+        -0.005,
+        0.00010000000149011613
+      ],
+      "max": [
+        0.06,
+        0.005,
+        0.0039000000953674317
+      ]
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.0125,
+        -0.011699999809265137,
+        -0.002
+      ],
+      "max": [
+        0.0125,
+        -0.0017000000476837158,
+        0.003
+      ]
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.0125,
+        0.0017000000476837158,
+        -0.002
+      ],
+      "max": [
+        0.0125,
+        0.011699999809265137,
+        0.003
+      ]
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.01,
+        -0.005,
+        0.0039000000953674317
+      ],
+      "max": [
+        -0.004,
+        0.005,
+        0.004
+      ]
+    },
+    {
+      "bufferView": 7,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        0.004,
+        -0.005,
+        0.0039000000953674317
+      ],
+      "max": [
+        0.01,
+        0.005,
+        0.004
+      ]
+    },
+    {
+      "bufferView": 8,
+      "componentType": 5126,
+      "count": 2400,
+      "type": "VEC3",
+      "min": [
+        -0.0115,
+        -0.008,
+        0.004
+      ],
+      "max": [
+        0.0115,
+        0.008,
+        0.0155
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Short M6 nozzle stub4",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Liquid solder",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Positive copper contact",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 2
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Negative copper contact",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 3
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Bias magnet 1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 4
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Bias magnet 2",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 5
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Mica electrical insulator -1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 6
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Mica electrical insulator 1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 7
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Heated aluminium block",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 8
+          },
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "Short M6 nozzle stub4"
+    },
+    {
+      "mesh": 1,
+      "name": "Liquid solder"
+    },
+    {
+      "mesh": 2,
+      "name": "Positive copper contact"
+    },
+    {
+      "mesh": 3,
+      "name": "Negative copper contact"
+    },
+    {
+      "mesh": 4,
+      "name": "Bias magnet 1"
+    },
+    {
+      "mesh": 5,
+      "name": "Bias magnet 2"
+    },
+    {
+      "mesh": 6,
+      "name": "Mica electrical insulator -1"
+    },
+    {
+      "mesh": 7,
+      "name": "Mica electrical insulator 1"
+    },
+    {
+      "mesh": 8,
+      "name": "Heated aluminium block"
+    }
+  ],
+  "scenes": [
+    {
+      "nodes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    }
+  ],
+  "scene": 0
+}
