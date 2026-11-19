@@ -1,0 +1,40 @@
+{
+  "status": "Reused existing native applied field; sources checked identical apart from quadrature",
+  "source_run": "artifacts/hardware-research/m6-rooted08-cold30-h0050",
+  "source_project_sha256": "33010fe31550005c299e733b2bf6fa4c57971c041e534c4f4d010e9094e52bb8",
+  "target_project_sha256": "2561663107001e1ccbe1b7b47f006e62df463f18892554e9d706110511f2d7b9",
+  "magnet_triangle_sha256": [
+    "44a2ed72f9fa7ba9ceb9c865f97ee32252ebe3aec4d8139c45ae5fc8f0aa1669",
+    "4de8396a7909fe1621b28898c9b7b323a6bdfca89e2d4736637673dd9b490a9e"
+  ],
+  "field_file_sha256": "a3a06d51c5bc357db29680bd04a2f0c287d37dec821969475fc1911c56128d83",
+  "dims": [
+    24,
+    24,
+    120
+  ],
+  "origin_m": [
+    -0.000599999912083149,
+    -0.000599999912083149,
+    0.0
+  ],
+  "cell_m": 5.0000002374872565e-05,
+  "source_subdivisions": [
+    3,
+    3
+  ],
+  "queued_outlet_observer_subdivisions": [
+    4,
+    4
+  ],
+  "By_range_T_over_crop": [
+    -0.49565252661705017,
+    -0.010537659749388695
+  ],
+  "limits": [
+    "This reuses the native prescribed-magnetization, unit-permeability applied-field model. It includes no eddy-current reaction, temperature feedback or nonlinear magnetic material.",
+    "Source uses3subdivisions and queued outlet observer4. Compare overlapping samples before combining results; that overlap check alone does not prove whole-pool quadrature convergence.",
+    "No material IDs or current field are reused: these must come from the new slit charge solution.",
+    "Crop covers the initial liquid bore/slot region only, not a future spreading or moving meniscus."
+  ]
+}
