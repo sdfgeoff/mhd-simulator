@@ -1,0 +1,21 @@
+{
+  "source": "https://doi.org/10.1038/s44334-025-00029-w",
+  "title": "Enabling multi-resolution droplet-on-demand metal jetting through tailored pulsing",
+  "authors": ["Viktor Sukhotskiy", "Andrew J. Pascall", "Jason R. Jeffries"],
+  "published": "2025-05-13",
+  "published_experiment": {
+    "liquid": "Aluminum4008",
+    "apparatus": "Modified Xerox ElemX; two-orifice graphite lower nozzle, boron-nitride upper nozzle",
+    "coarse_mode_orifice_um": 500,
+    "coarse_mode_orifice_land_um": 445,
+    "coarse_mode_drive_time_us": 250,
+    "coarse_mode_reported_drive_V": 75,
+    "coarse_mode_measured_coil_peak_A": 569,
+    "coarse_mode_measured_drop_velocity_m_s": 0.63,
+    "coarse_mode_velocity_uncertainty_m_s": 0.28,
+    "repeated_ejection_demonstrations_Hz": [200, 300]
+  },
+  "mechanism": "Approximately triangular coil-current pulses induce circulating liquid current. Radial force during the rising/falling portions provides a push/pull pressure history.",
+  "application_to_this_study": "Supports testing a single shaped pulse instead of relying on the earlier AC-burst screen. Does not demonstrate our stainless chamber, solder alloys,250A limit or24/48V supply. Different geometry, winding, conductivity and fluid inertia prevent transferring the published current as our required current.",
+  "uncertainty": "The paper's reported circuit drive voltage is not silently reinterpreted as a supply or every switch-node maximum. Published drive time is not assumed to equal our complete rise-plus-fall duration. No equivalent winding turn-count, ampere-turn or inductance comparison is asserted."
+}

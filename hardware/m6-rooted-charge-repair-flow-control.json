@@ -1,0 +1,56 @@
+{
+  "status": "Completed coarse flow consistency check across the research charge repair; not spatial convergence",
+  "comparison_artifact": "artifacts/hardware-research/rooted-coarse-chargefix-comparison.json",
+  "comparison_sha256": "42cca8574c68f357de95c699fbcc3029ce3ca424e280068a9aa7d76cf5af69b5",
+  "source_runs": [
+    "artifacts/hardware-research/m6-rooted08-flow110-r25-compactgas-h010",
+    "artifacts/hardware-research/m6-rooted08-flow110-r25-chargefix-h010"
+  ],
+  "exported_physics_configurations_and_open_masks_match": true,
+  "pulse_and_timestep_parameters_match_with_float_tolerance": true,
+  "final_primary_alpha05_before_after": [
+    {
+      "volume_nl": 81.48346941449645,
+      "equivalent_diameter_mm": 0.5378860692713745,
+      "cells": 96,
+      "centre_mm": [
+        2.169206446139088e-06,
+        -6.630645026035191e-07,
+        -3.546966334250584
+      ],
+      "velocity_m_s": [
+        2.802352810249431e-06,
+        8.03271618110557e-08,
+        -0.930875837802887
+      ],
+      "touches_domain_boundary": false
+    },
+    {
+      "volume_nl": 81.4833308336776,
+      "equivalent_diameter_mm": 0.5378857643394469,
+      "cells": 96,
+      "centre_mm": [
+        1.915710291068436e-06,
+        -1.0202182810609488e-06,
+        -3.546966737421434
+      ],
+      "velocity_m_s": [
+        3.5901889532397036e-06,
+        -1.6284450339298928e-06,
+        -0.9308765530586243
+      ],
+      "touches_domain_boundary": false
+    }
+  ],
+  "primary_diameter_relative_change": -5.669080219705691e-07,
+  "primary_axial_speed_relative_change": 7.683685709913846e-07,
+  "final_alpha_L1_volume_difference_nl": 0.13707048556510823,
+  "final_common_liquid_weighted_velocity_RMS_difference_m_s": 5.998523071294429e-05,
+  "maximum_saved_alpha_L1_volume_difference_nl": 0.13707048556510823,
+  "limits": [
+    "Two completed100um runs on the same native grid and time schedule. Does not replace the pending50um refinement or establish repetition.",
+    "Both retain the whole-body electrode approximation: the old client had no x-ends option; the new run explicitly requests body. The old report lacks the newer terminal-boundary metadata.",
+    "Old fluid_mechanical_work_J includes gravity and is not a pure EM-work diagnostic. No old/new coupling-error claim is made from it.",
+    "Both runs have a substantial tail/secondary component. A stable leading-drop diameter alone does not qualify a clean single-drop pulse."
+  ]
+}

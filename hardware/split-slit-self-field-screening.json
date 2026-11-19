@@ -1,0 +1,66 @@
+{
+  "status": "Read-only self-field diagnostic of the stationary slit current; no feedback or breakup proof",
+  "raw_artifact": "artifacts/hardware-research/split-slit-steel-flowsetup-xends-h0050/self-field-40A-q4.json",
+  "raw_artifact_sha256": "1b71d113a6fda38575e011fdbefd8289aa2eec3220249826d41ea880f7ee1ecb",
+  "source_sha256": {
+    "report.json": "a25cdebcd7b1ca0ae606274c47324d1bc35aea30304264fca0c9f23ce0274791",
+    "grid.json": "96a7fcbc789af34a56644445448bfd53bee6d1a03c337ef3d8741c3b09a41ad8",
+    "material-ids.bin": "cefb22ded2e133e78ef8f5a55b6af2e45985cfecb23da81a8721f15372c29b37",
+    "em.bin": "239a5a6b84680cd39419333775bf6e8c1a23bcfe5d5fcd6513f58dad1751d9fe"
+  },
+  "diagnostic": {
+    "source_directory": "artifacts/hardware-research/split-slit-steel-flowsetup-xends-h0050",
+    "current_A": 40.0,
+    "method": "Free-space Biot-Savart convolution of exported cold J; zero-padded linear FFT, self-cell integral zero by symmetry. Source cubes within four cells use subcell quadrature when enabled; farther sources use cell centres.",
+    "near_subdivisions": 4,
+    "regions": {
+      "all_liquid": {
+        "cells": 35560,
+        "self_B_rms_T": 0.003495443077475847,
+        "self_B_max_T": 0.01611071293565118,
+        "applied_B_rms_T": 0.30835485458374023,
+        "self_force_integral_N": [
+          4.685495797138974e-14,
+          -7.914236859969427e-13,
+          -2.2720080146405467e-06
+        ],
+        "applied_force_integral_N": [
+          2.0404742403781655e-10,
+          1.8526360338118962e-10,
+          -0.004726910772284524
+        ],
+        "self_over_applied_force_L2": 0.020286606863107078
+      },
+      "liquid_outlet_land": {
+        "cells": 1432,
+        "self_B_rms_T": 0.009241693172279677,
+        "self_B_max_T": 0.01611071293565118,
+        "applied_B_rms_T": 0.485838383436203,
+        "self_force_integral_N": [
+          -6.475289760870965e-14,
+          -5.074228398761475e-13,
+          1.7288228328042408e-05
+        ],
+        "applied_force_integral_N": [
+          1.7428697145046115e-10,
+          3.012008047123363e-10,
+          -0.002916747629468367
+        ],
+        "self_over_applied_force_L2": 0.021030255926191302
+      }
+    },
+    "limits": [
+      "Diagnostic only: no feedback on current, moving interface or force in the recorded fluid run.",
+      "External return leads beyond exported CAD are absent; this is not a complete closed-circuit field or an error bound.",
+      "Near-neighbour cell-centre quadrature requires grid refinement. Permeability is unity; magnetic diffusion and terminal transients are absent.",
+      "Net force cancellation does not establish negligible local pinching or unchanged breakup."
+    ]
+  },
+  "scope_correction": "Historical raw report says leads beyond exported CAD are absent. More precisely, all current outside the exported electrical domain is absent, including portions of CAD conductors beyond the crop. The actual return path must be included before calling this a closed-circuit self-field estimate.",
+  "region_definition": "The diagnostic outlet land is z0..0.6mm. The electrical matrix uses z0..0.5mm; its force integrals must not be interchanged.",
+  "checks_reverified": {
+    "finite_wire_relative_error": 5.743635623334242e-06,
+    "fft_vs_direct_max_error_T": 3.2311742677852644e-26
+  },
+  "interpretation": "At40A the computed local self-force L2 is about2%of prescribed-field force in the initial liquid. This supports a small-term screening approximation for this current configuration, but is not a complete-circuit error bound, a moving-interface calculation, or proof of unchanged breakup."
+}

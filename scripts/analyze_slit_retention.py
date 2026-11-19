@@ -19,6 +19,11 @@ def main():
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--plot", required=True, type=Path)
     args = parser.parse_args()
+    status = json.loads((args.directory / "run-status.json").read_text())
+    if status.get("peak_A") != 0:
+        raise ValueError(
+            "This unpowered-retention analysis requires a zero-current run"
+        )
     rows, sections = [], []
     paths = sorted(args.directory.glob("frame-*/metadata.json"))
     if not paths:
@@ -69,9 +74,7 @@ def main():
     result = {
         "status": "Completed native slit diagnostics; not equilibrium or retention qualification",
         "source": str(args.directory),
-        "native_run_status": json.loads(
-            (args.directory / "run-status.json").read_text()
-        ),
+        "native_run_status": status,
         "method": "Accepted native alpha and cell-centred velocity. Land z0..0.5mm; outside-radius volume uses cell centres r>=0.55mm to avoid initial bore-edge samples. Native signed alpha is retained for volume; RMS and kinetic proxy use alpha clipped0..1 for weights. The kinetic proxy assumes rho7000 and is not the MAC solver energy ledger.",
         "frames": rows,
         "limits": [

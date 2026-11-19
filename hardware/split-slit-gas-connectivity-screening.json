@@ -1,0 +1,40 @@
+{
+  "method": "Read-only six-neighbour labels from the initial native packet: mobile flag>0.5 and alpha<0.01. No field solver.",
+  "run": "artifacts/hardware-research/split-slit-steel-zero-xends-h010",
+  "metadata_sha256": "0284e3041247ed8347ae8abd495d6b9e8e261a490e32f635d3732b576b1ee6a9",
+  "gas_components": 1,
+  "mobile_components": 1,
+  "probes": [
+    {
+      "point_mm": [
+        0,
+        0,
+        9
+      ],
+      "cell_xyz": [
+        37,
+        37,
+        149
+      ],
+      "gas_label": 1
+    },
+    {
+      "point_mm": [
+        0,
+        0,
+        -3
+      ],
+      "cell_xyz": [
+        37,
+        37,
+        29
+      ],
+      "gas_label": 1
+    }
+  ],
+  "air_connected": true,
+  "limits": [
+    "Initial voxel connectivity is not a gas-flow resistance or domain-convergence check.",
+    "No proof of continued ventilation after liquid motion or physical wetting."
+  ]
+}
