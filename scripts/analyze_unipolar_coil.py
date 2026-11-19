@@ -40,6 +40,8 @@ def main():
         if digest(project_path) != job["project_sha256"]:
             raise ValueError("Prepared input changed")
         project = json.loads(project_path.read_text())
+        if project["run"]["fluid_enabled"] or project["run"]["thermal_enabled"]:
+            raise ValueError("Current scaling requires fixed stationary properties")
         wire = project["electromagnetics"]["wires"][0]
         points = project["cad_curves"][wire["cad_curve"]]["points_mm"]
         length = sum(math.dist(a, b) for a, b in zip(points, points[1:])) * 1e-3
@@ -89,6 +91,34 @@ def main():
             raise ValueError(
                 "Accepted waveform dose differs from the triangular command"
             )
+        radial_range = [
+            min(float(r["radial_pressure_proxy_Pa"]) for r in rows),
+            max(float(r["radial_pressure_proxy_Pa"]) for r in rows),
+        ]
+        axial_range = [
+            min(float(r["roi_force_z_N"]) for r in rows),
+            max(float(r["roi_force_z_N"]) for r in rows),
+        ]
+
+        def projection(scale):
+            return {
+                "peak_A": job["peak_A"] * scale,
+                "rms_A_at_assumed200Hz": math.sqrt(i2dt * 200) * scale,
+                "loaded_terminal_interval_mean_voltage_range_V": [
+                    min(volts) * scale,
+                    max(volts) * scale,
+                ],
+                "winding_metal_and_series_resistive_heat_W_at_assumed200Hz": (
+                    winding_heat + heat + series_r * i2dt
+                )
+                * 200
+                * scale**2,
+                "radial_force_moment_over_ROI_volume_Pa_range": [
+                    v * scale**2 for v in radial_range
+                ],
+                "liquid_axial_force_N_range": [v * scale**2 for v in axial_range],
+            }
+
         results.append(
             {
                 "geometry": job["geometry"],
@@ -121,14 +151,15 @@ def main():
                 "metal_work_balance_gate_1e_minus3_passed": abs(defect) <= 1e-3,
                 "reaction_backward_Euler_loss_J": be,
                 "final_reaction_field_energy_J": final_field,
-                "radial_force_moment_over_ROI_volume_Pa_range": [
-                    min(float(r["radial_pressure_proxy_Pa"]) for r in rows),
-                    max(float(r["radial_pressure_proxy_Pa"]) for r in rows),
-                ],
-                "liquid_axial_force_N_range": [
-                    min(float(r["roi_force_z_N"]) for r in rows),
-                    max(float(r["roi_force_z_N"]) for r in rows),
-                ],
+                "radial_force_moment_over_ROI_volume_Pa_range": radial_range,
+                "liquid_axial_force_N_range": axial_range,
+                "stationary_current_projections": {
+                    "at_200A_working_target": projection(200 / job["peak_A"]),
+                    "capped_at_tested_peak_and30Arms200Hz": projection(
+                        min(1.0, 30 / math.sqrt(i2dt * 200))
+                    ),
+                    "scope": "Same waveform, geometry and fixed conductivity/permeability: field/linkage/voltage scale with I; force/Joule heat with I². Reuses the native stationary solution, not another field solver. No thermal, moving-interface or droplet scaling is inferred.",
+                },
                 "scope": "Static liquid force moment is not nozzle pressure or a droplet criterion. Rate200Hz is arithmetic only, not demonstrated repetition.",
             }
         )
