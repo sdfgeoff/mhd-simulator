@@ -1,0 +1,160 @@
+{
+  "status": "Research charge-conservation repair validated; prior fine flow remains incomplete",
+  "old_fine_native_status": {
+    "accepted_steps": 1104,
+    "contact_resistivity_ohm_m2": 0.0,
+    "error": "Conservative interface CFL exceeds 0.45; reduce common timestep",
+    "field_every": 300,
+    "fluid_mechanical_work_J": 2.321500854990676e-06,
+    "frequency_hz": 0.0,
+    "grid": {
+      "cell_m": 5.0000002374872565e-05,
+      "dims": [
+        152,
+        152,
+        370
+      ]
+    },
+    "joule_generated_J": 0.003761831869809437,
+    "lagged_electrical_work_J": 0.0037639539987717636,
+    "lagged_mechanical_work_J": 2.19010491448279e-06,
+    "limitations": [
+      "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+      "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+      "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+      "New research client; not a GUI electrode feature or frozen-baseline claim."
+    ],
+    "max_terminal_voltage_V": 0.15191295742988586,
+    "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+    "peak_A": 110.0,
+    "periodic_fluid_axes": [
+      false,
+      false,
+      false
+    ],
+    "positive_duration_s": 0.00025,
+    "project": "artifacts/hardware-research/cases/m6-rooted08-flow-compactgas-h0050.mhd.json",
+    "released_static_workspace_bytes": 1906163336,
+    "retract_delay_s": 2.5e-05,
+    "retract_fraction": 0.25,
+    "rise_s": 2e-05,
+    "status": "failed",
+    "tail_timestep_s": 3e-06,
+    "tail_transition_not_before_s": 0.00035833333333333333,
+    "time_s": 0.002953499999999971,
+    "timestep_s": 1.5e-06,
+    "uniform_acceleration_m_s2": [
+      0.0,
+      0.0,
+      -9.8100004196167
+    ]
+  },
+  "old_fine_interpretation": "Leading detached region was observed by2.3415ms, but CFL failure at2.9535ms prevents a completed3.6ms refinement claim. No automatic resume from exported cell-centred fields.",
+  "old_touching_holder_report": {
+    "contact_resistivity_ohm_m2": 0.0,
+    "current_A": 29.999984741210938,
+    "iterations": 768,
+    "joule_power_W": 0.9793461561203003,
+    "limitations": [
+      "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+      "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+      "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+      "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+      "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+    ],
+    "liquid_force_N": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "liquid_joule_power_W": 0.045927620255457366,
+    "liquid_mean_By_T": 0.0,
+    "mean_liquid_current_over_x_plus_minus_2mm_A": 1.9497828647197541,
+    "mean_wall_current_over_x_plus_minus_2mm_A": 5.662167393728601,
+    "midplane_adjacent_cell_liquid_current_A": 21.439352072175893,
+    "midplane_adjacent_cell_wall_current_A": 6.616818801230022,
+    "power_relative_defect": 0.001437067985534668,
+    "project": "hardware/designs/split-slit-review/steel_touch-charge-h010.mhd.json",
+    "released_static_workspace_bytes": 0,
+    "requested_relative_tolerance": 9.999999747378752e-06,
+    "return_current_A": -30.086057662963867,
+    "source_power_W": 0.9779407382011414,
+    "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+    "terminal_boundary": "x-ends",
+    "terminal_voltage_V": 0.032598040997982025,
+    "terminal_x_cell_indices": [
+      0,
+      249
+    ],
+    "true_relative_residual": 7.555240244982997e-06
+  },
+  "new_touching_holder_report": {
+    "boundary_current_defect": 9.009877430798952e-07,
+    "contact_resistivity_ohm_m2": 0.0,
+    "current_A": 30.0,
+    "iterations": 2048,
+    "joule_power_W": 0.9765456914901733,
+    "limitations": [
+      "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+      "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+      "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+      "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+      "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+    ],
+    "liquid_force_N": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "liquid_joule_power_W": 0.04579704158947546,
+    "liquid_mean_By_T": 0.0,
+    "mean_liquid_current_over_x_plus_minus_2mm_A": 1.9470584851059587,
+    "mean_wall_current_over_x_plus_minus_2mm_A": 5.658631491350299,
+    "midplane_adjacent_cell_liquid_current_A": 21.408679413988743,
+    "midplane_adjacent_cell_wall_current_A": 6.611653501984473,
+    "potential_representation": "split f32 high/low",
+    "power_definition": "sum terminal phi*I on both ports",
+    "power_relative_defect": 1.5497207641601562e-06,
+    "project": "hardware/designs/split-slit-review/steel_touch-charge-h010.mhd.json",
+    "released_static_workspace_bytes": 0,
+    "requested_relative_tolerance": 9.999999974752427e-07,
+    "return_current_A": -30.00005340576172,
+    "source_power_W": 0.976544201374054,
+    "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+    "terminal_boundary": "x-ends",
+    "terminal_voltage_V": 0.032551445066928864,
+    "terminal_x_cell_indices": [
+      0,
+      249
+    ],
+    "true_relative_residual": 9.981942383774367e-08
+  },
+  "old_source_return_relative_imbalance": 0.0028690988510635673,
+  "new_source_return_relative_imbalance": 1.7801920573212726e-06,
+  "changes": [
+    "Independent global terminal-face current acceptance, in addition to trueL2 residual.",
+    "Recursive iteration target tightens when independent acceptance checks fail, soCG does not freeze at its earlier recursive stop.",
+    "Face-difference residual and splitf32potential accumulation retain small corrections withoutf64/f16device features.",
+    "Same8storagebindings; predictor storage grows by8bytes/cell.",
+    "Electrical input power now sumsphi*I overbothports. Current conservation remains an independent gate, rather than being hidden by the power definition."
+  ],
+  "validation": {
+    "conduction_probe_GPU_tests": "5passed, including analytical long parallel bottleneck paths, contact/motional power and changing phase/predictors",
+    "conduction_flow_waveform_tests": "2passed",
+    "strict_case_requested_residual": 1e-06,
+    "strict_case_true_residual": 9.981942383774367e-08,
+    "strict_case_boundary_current_defect": 9.009877430798952e-07,
+    "strict_case_power_relative_defect": 1.5497207641601562e-06
+  },
+  "solver_source_sha256": {
+    "examples/conduction/gpu.rs": "25bf4a605bb7d6e48f6b813438ec7d065e22eeed9a98738eef25a38c3e3d76f8",
+    "examples/conduction/solver.wgsl": "491ca5a8eca57005a843b6a1b4c60b60b441616ec9a4fcbf0dda1d877e1c8eb4",
+    "examples/conduction/tests.rs": "2fc77097d02d5bb70689b835490be40d7091a38d3250b2d9a9695710eb31e450"
+  },
+  "limits": [
+    "Changes are in research examples; frozen main application unchanged.",
+    "This is numerical validation, not material/contact/hardware calibration.",
+    "Repeat matched coarse/fine runs with this solver before attributing differences solely to grid and timestep.",
+    "Keep failed runs and old charge reports; their power definitions differ from the corrected both-port ledger."
+  ]
+}

@@ -6,6 +6,7 @@ No automatic resumption of existing output directories.
 
 import argparse
 import copy
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -17,11 +18,17 @@ from datetime import datetime
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--prepare-only", action="store_true")
+parser.add_argument("--tag", default="chargefix-v1")
+parser.add_argument("--tolerance", type=float, default=1e-6)
 args = parser.parse_args()
+if not re.fullmatch(r"[a-zA-Z0-9-]+", args.tag) or not 0 < args.tolerance < 1:
+    parser.error("Use an alphanumeric/hyphen tag and a tolerance between0and1")
 root = Path("artifacts/hardware-research")
 source = Path("hardware/designs/split-slit-review")
-plan_path = root / "split-slit-plan.json"
-state_path = root / "split-slit-state.json"
+plan_path = root / f"split-slit-{args.tag}-plan.json"
+state_path = root / f"split-slit-{args.tag}-state.json"
+if state_path.exists():
+    raise RuntimeError("Existing queue state; inspect it and use a new tag")
 env = {**os.environ, "TMPDIR": str(Path.cwd() / "artifacts/build-temp")}
 jobs = []
 
@@ -38,7 +45,7 @@ def record(**values):
 
 
 def charge(label, project, suffix):
-    output = root / ("split-slit-" + label + "-" + suffix)
+    output = root / ("split-slit-" + args.tag + "-" + label + "-" + suffix)
     jobs.append(
         {
             "label": label,
@@ -51,7 +58,7 @@ def charge(label, project, suffix):
                 str(output),
                 "0",
                 "x-ends",
-                "1e-5",
+                str(args.tolerance),
             ],
         }
     )
@@ -65,11 +72,15 @@ for label in ["alumina", "steel", "steel_touch", "alumina_touch"]:
     narrow = copy.deepcopy(json.loads(wide_path.read_text()))
     narrow["geometry"] = str((source / narrow["geometry"]).resolve())
     narrow["domain"].update(min_mm=[-12.5, -3.2, -2.2], max_mm=[12.5, 3.2, 10.5])
-    narrow_path = root / "cases" / ("split-slit-" + label + "-narrow-h010.mhd.json")
+    narrow_path = (
+        root
+        / "cases"
+        / ("split-slit-" + args.tag + "-" + label + "-narrow-h010.mhd.json")
+    )
     narrow_path.write_text(json.dumps(narrow, indent=2) + "\n")
     charge(label, narrow_path, "narrow-h010")
 
-observer_output = root / "split-slit-field-h0050"
+observer_output = root / f"split-slit-{args.tag}-field-h0050"
 jobs.append(
     {
         "label": "common",
@@ -90,7 +101,20 @@ plan = {
     "current_A": 30,
     "contact_resistivity_ohm_m2": 0,
     "terminal_boundary": "x-ends",
-    "relative_tolerance": 1e-5,
+    "relative_tolerance": args.tolerance,
+    "boundary_current_defect_limit": 1e-5,
+    "tag": args.tag,
+    "solver_sources_sha256": {
+        str(p): hashlib.sha256(p.read_bytes()).hexdigest()
+        for p in [
+            Path("examples/conduction/gpu.rs"),
+            Path("examples/conduction/solver.wgsl"),
+            Path("examples/conduction_probe.rs"),
+        ]
+    },
+    "probe_binary_sha256": hashlib.sha256(
+        Path("target/debug/examples/conduction_probe").read_bytes()
+    ).hexdigest(),
     "jobs": jobs,
     "controls": [
         "Compare full/narrow anchor width at the same100um spacing before interpreting50um results.",
@@ -99,12 +123,12 @@ plan = {
         "Fixed conductivity assumptions do not constitute a hot aluminium/copper comparison.",
     ],
 }
+if plan_path.exists() and json.loads(plan_path.read_text()) != plan:
+    raise RuntimeError("Existing plan differs; use a fresh tag")
 plan_path.write_text(json.dumps(plan, indent=2) + "\n")
 print(plan_path, flush=True)
 if args.prepare_only:
     raise SystemExit(0)
-if state_path.exists():
-    raise RuntimeError("Existing slit queue state; inspect before repeating")
 for job in jobs:
     if Path(job["output"]).exists():
         raise RuntimeError("Existing output: " + job["output"])
@@ -164,7 +188,9 @@ for index, job in enumerate(jobs):
     if job["kind"] != "field-h0050":
         if not (
             abs(report["power_relative_defect"]) < 1e-4
-            and report["true_relative_residual"] <= 1e-5
+            and report["true_relative_residual"] <= args.tolerance
+            and report["boundary_current_defect"] <= 1e-5
+            and abs(report["return_current_A"] / report["current_A"] + 1) < 2.1e-5
         ):
             record(stage="failed_numerical_gate", job=job)
             raise RuntimeError("Numerical gate failed")

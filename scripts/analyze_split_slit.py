@@ -9,11 +9,24 @@ import numpy as np
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--root", type=Path, default=Path("artifacts/hardware-research"))
+parser.add_argument("--plan", type=Path)
 parser.add_argument(
     "--output", type=Path, default=Path("hardware/split-slit-electrical-screening.json")
 )
 args = parser.parse_args()
-plan = json.loads((args.root / "split-slit-plan.json").read_text())
+plan = json.loads(
+    (args.plan or args.root / "split-slit-chargefix-v1-plan.json").read_text()
+)
+
+
+def job_path(label, kind):
+    return Path(
+        next(j for j in plan["jobs"] if j["label"] == label and j["kind"] == kind)[
+            "output"
+        ]
+    )
+
+
 missing = [
     j["output"]
     for j in plan["jobs"]
@@ -36,7 +49,7 @@ def fields(path, grid):
     return data, ids
 
 
-observer = args.root / "split-slit-field-h0050"
+observer = job_path("common", "field-h0050")
 og = read(observer)
 of, oi = fields(observer, og)
 liquid = oi == 4
@@ -69,11 +82,13 @@ rows = []
 for label in ["alumina", "steel", "steel_touch", "alumina_touch"]:
     cases = {}
     for kind in ["wide-h010", "narrow-h010", "narrow-h0050"]:
-        path = args.root / ("split-slit-" + label + "-" + kind)
+        path = job_path(label, kind)
         r = read(path)
         if not (
             abs(r["power_relative_defect"]) < 1e-4
-            and r["true_relative_residual"] <= 1e-5
+            and r["true_relative_residual"] <= plan["relative_tolerance"]
+            and r["boundary_current_defect"] <= 1e-5
+            and abs(r["return_current_A"] / r["current_A"] + 1) < 2.1e-5
         ):
             raise ValueError("Electrical closure/residual: " + str(path))
         cases[kind] = {
@@ -82,7 +97,7 @@ for label in ["alumina", "steel", "steel_touch", "alumina_touch"]:
             "R_ohm_cropped": r["terminal_voltage_V"] / r["current_A"],
             "liquid_Joule_fraction": r["liquid_joule_power_W"] / r["joule_power_W"],
         }
-    path = args.root / ("split-slit-" + label + "-narrow-h0050")
+    path = job_path(label, "narrow-h0050")
     g = read(path, "grid.json")
     h = g["cell_m"]
     if abs(h / og["cell_m"] - 1) > 1e-6:

@@ -28,6 +28,7 @@ pub struct Conduction {
     pub result: wgpu::Buffer,
     pub iterations: u32,
     pub relative_residual: f32,
+    pub boundary_current_defect: f32,
 }
 impl Conduction {
     pub fn new(
@@ -54,7 +55,7 @@ impl Conduction {
                     .filter(|c| c[1] == 3.)
                     .map(|c| c[0])
                     .fold(0., f32::max),
-                0.,
+                1e-5,
                 0.,
                 0.,
             ],
@@ -86,8 +87,8 @@ impl Conduction {
         let scalars = storage("DC scalars", 64);
         let result = storage("DC current force and heating", u64::from(n) * 64);
         let unit_potential = storage(
-            "DC unit and motional potential predictors",
-            u64::from(n) * 8,
+            "DC compensated unit and motional potential predictors",
+            u64::from(n) * 16,
         );
         let layout = context
             .device
@@ -166,6 +167,8 @@ impl Conduction {
             "beta_reduce",
             "update_search",
             "true_residual",
+            "terminal_flux",
+            "terminal_flux_reduce",
             "collect_fields",
             "fields_reduce",
         ] {
@@ -196,6 +199,7 @@ impl Conduction {
             result,
             iterations: 0,
             relative_residual: f32::INFINITY,
+            boundary_current_defect: f32::INFINITY,
         })
     }
     fn dispatch(&self, commands: &[(&str, u32)]) {
@@ -222,6 +226,8 @@ impl Conduction {
     }
     pub fn solve(&mut self) -> Result<(), String> {
         let groups = self.params.dims[3].div_ceil(256);
+        self.params.extra[1] = self.params.physical[2];
+        self.write_params();
         self.dispatch(&[
             ("update_phase", groups),
             ("initial_guess", groups),
@@ -233,11 +239,15 @@ impl Conduction {
         if initial[2] == 0. {
             self.dispatch(&[("clear_solution", groups)]);
             self.relative_residual = 0.;
+            self.boundary_current_defect = 0.;
             return Ok(());
         }
         self.relative_residual = (initial[1] / initial[2]).sqrt();
         if self.relative_residual <= self.params.physical[2] {
-            return Ok(());
+            if self.boundary_current_conserved()? {
+                return Ok(());
+            }
+            self.tighten_iteration_target();
         }
         for batch in 0..125 {
             let mut commands = Vec::new();
@@ -257,19 +267,46 @@ impl Conduction {
             if !ratio.is_finite() {
                 return Err("Nonfinite DC residual".into());
             }
-            if ratio <= self.params.physical[2] {
+            if ratio <= self.params.extra[1] {
                 self.dispatch(&[("true_residual", groups), ("initial_reduce", 1)]);
                 let s = self.scalar_values()?;
                 self.relative_residual = (s[0][1] / s[0][2].max(1e-38)).sqrt();
-                if self.relative_residual <= self.params.physical[2] {
+                if self.relative_residual <= self.params.physical[2]
+                    && self.boundary_current_conserved()?
+                {
                     return Ok(());
                 }
+                self.tighten_iteration_target();
             }
         }
+        self.dispatch(&[("true_residual", groups), ("initial_reduce", 1)]);
+        let s = self.scalar_values()?;
+        self.relative_residual = (s[0][1] / s[0][2].max(1e-38)).sqrt();
+        if self.boundary_current_conserved()? && self.relative_residual <= self.params.physical[2] {
+            return Ok(());
+        }
         Err(format!(
-            "DC solve did not converge after {} iterations, true residual {}",
-            self.iterations, self.relative_residual
+            "DC solve did not converge after {} iterations, true residual {}, boundary current defect {}",
+            self.iterations, self.relative_residual, self.boundary_current_defect
         ))
+    }
+    fn tighten_iteration_target(&mut self) {
+        // The recursive CG stop must not freeze the iteration while the
+        // independent true-residual/current-conservation checks still fail.
+        self.params.extra[1] = (self.params.extra[1].min(self.relative_residual) * 0.1).max(1e-30);
+        self.write_params();
+    }
+    fn boundary_current_conserved(&mut self) -> Result<bool, String> {
+        self.dispatch(&[
+            ("terminal_flux", self.params.dims[3].div_ceil(256)),
+            ("terminal_flux_reduce", 1),
+        ]);
+        let values = self.scalar_values()?[3];
+        self.boundary_current_defect = values[0].abs() / values[1].max(1e-30);
+        // A local L2 residual alone can hide a coherent current leak in a large
+        // conductor. Normalize by absolute terminal-face flux, including when
+        // the motional solve has opposing currents at a zero-net-current port.
+        Ok(self.boundary_current_defect.is_finite() && self.boundary_current_defect <= 1e-5)
     }
     pub fn set_relative_tolerance(&mut self, tolerance: f32) -> Result<(), String> {
         if !tolerance.is_finite() || tolerance <= 0. || tolerance >= 1. {
@@ -329,6 +366,7 @@ impl Conduction {
         self.solve()?;
         let unit_iterations = self.iterations;
         let unit_residual = self.relative_residual;
+        let unit_boundary_defect = self.boundary_current_defect;
         let unit = self.fields(1.)?;
         if !unit[0].is_finite() || unit[0] <= 0. {
             return Err("No conducting path between terminals".into());
@@ -344,6 +382,7 @@ impl Conduction {
         let result = self.fields(voltage)?;
         self.iterations += unit_iterations;
         self.relative_residual = self.relative_residual.max(unit_residual);
+        self.boundary_current_defect = self.boundary_current_defect.max(unit_boundary_defect);
         Ok((voltage, result))
     }
     pub fn fields(&mut self, voltage: f32) -> Result<[f32; 4], String> {
@@ -362,9 +401,13 @@ impl Conduction {
     pub fn read_scalar_solution(&self) -> Result<Vec<f32>, String> {
         let work = &self.buffers[2];
         let bytes = read_bytes(&self.context, work, 0, work.size())?;
+        let predictors = &self.buffers[8];
+        let low_bytes = read_bytes(&self.context, predictors, 0, predictors.size())?;
+        let low = bytemuck::cast_slice::<u8, [f32; 4]>(&low_bytes);
         Ok(bytemuck::cast_slice::<u8, [f32; 4]>(&bytes)
             .iter()
-            .map(|v| v[0])
+            .zip(low)
+            .map(|(v, correction)| v[0] + correction[self.params.control[0] as usize + 2])
             .collect())
     }
     pub fn read_fields(&self) -> Result<Vec<CellField>, String> {

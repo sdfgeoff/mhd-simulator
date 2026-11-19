@@ -3,6 +3,62 @@ use mhd_workbench::{em::CellField, gpu::GpuContext};
 use wgpu::util::DeviceExt;
 
 #[test]
+fn long_bottlenecked_parallel_paths_conserve_current_and_match_series_resistance() {
+    let context = GpuContext::headless().unwrap();
+    let dims = [256, 32, 4];
+    let h = 1e-4;
+    let n = dims.iter().product::<u32>() as usize;
+    let bias = context
+        .device
+        .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Bottleneck zero field"),
+            contents: bytemuck::cast_slice(&vec![CellField::default(); n]),
+            usage: wgpu::BufferUsages::STORAGE,
+        });
+    let mut cells = vec![[0., 2.]; n];
+    for (i, cell) in cells.iter_mut().enumerate() {
+        let x = i as u32 % dims[0];
+        let y = (i as u32 / dims[0]) % dims[1];
+        if y >= 4 && y < 8 {
+            continue;
+        }
+        if x < 8 || x >= 248 {
+            *cell = [25., if x < 8 { 0.5 } else { -0.5 }];
+        } else if y < 4 {
+            *cell = [2.2, 3.];
+        } else {
+            *cell = [if x <= 10 || x == 247 { 1.1 } else { 25. }, 2.];
+        }
+    }
+    let mut solver = Conduction::new(context, dims, h, &cells, &bias).unwrap();
+    solver.set_relative_tolerance(2e-6).unwrap();
+    solver.solve().unwrap();
+    let stats = solver.fields(1.).unwrap();
+    // Harmonic faces give half-cell endpoint resistances and full unknown
+    // cells in series. The two paths are separated by insulating rows.
+    let liquid_area = 4. * 4. * h * h;
+    let metal_area = 24. * 4. * h * h;
+    let liquid_r = h * (240. / 2.2e6 + 1. / 25e6) / liquid_area;
+    let metal_r = h * (4. / 1.1e6 + 237. / 25e6) / metal_area;
+    let exact_current = 1. / liquid_r + 1. / metal_r;
+    assert!(
+        (stats[0] / exact_current - 1.).abs() < 1e-4,
+        "Current {} versus analytical {}",
+        stats[0],
+        exact_current
+    );
+    assert!((stats[1] / stats[0] + 1.).abs() < 3e-5);
+    assert!((stats[2] / stats[0] - 1.).abs() < 5e-5);
+    assert!(solver.boundary_current_defect <= 1e-5);
+    let phi = solver.read_scalar_solution().unwrap();
+    let expected_phi = 0.5 - (4.5 / 2.2e6 + 0.5 / 25e6) / (240. / 2.2e6 + 1. / 25e6);
+    assert!(
+        (phi[12 + 256 + 256 * 32] - expected_phi).abs() < 1e-6,
+        "Scalar diagnostics must reconstruct both stored potential words"
+    );
+}
+
+#[test]
 fn potential_predictors_reuse_only_solutions_that_pass_the_current_equation() {
     let context = GpuContext::headless().unwrap();
     let dims = [24, 6, 4];
