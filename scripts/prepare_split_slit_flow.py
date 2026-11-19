@@ -54,7 +54,7 @@ record = {
         "100/50um grids give only2/4cells across the gap; breakup and contact-line behavior are not converged by construction.",
         "Inherited neutral-wall treatment is not calibrated alumina/copper/solder wetting, pinning or oxide behavior. No experiment-specific retention guarantee follows.",
         "Exterior heater omitted from gas obstacles; gas-domain sensitivity remains open for this geometry. No thermal evolution, solidification or feed replenishment.",
-        "conduction_flow fixes each entire electrode at one potential; the separate x-ends cold solves include conductor resistance. Check the effect of this boundary approximation before interpreting a drive threshold.",
+        "conduction_flow supports body and x-ends terminal modes. Pass x-ends explicitly to resolve finite modeled copper resistance, as in the matched slit electrical screens. Outside leads remain separate.",
         "The initial liquid volume and hydraulic geometry differ from the circular nozzle. Its110A pulse is not transferred as a qualified operating point.",
     ],
 }
