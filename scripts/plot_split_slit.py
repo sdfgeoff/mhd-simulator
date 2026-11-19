@@ -20,6 +20,7 @@ parser.add_argument("output", type=Path)
 args = parser.parse_args()
 manifest = json.loads((args.case / "manifest.json").read_text())
 gap = manifest["cases"][0]["slit_gap_mm"]
+end_stops = manifest["cases"][0].get("insulating_end_stops", False)
 short = manifest["cases"][0]["tube_OD_ID_length_mm"][2] < 9.5
 reservoir_id = manifest["cases"][0].get("reservoir_id_mm", 1.0)
 COLORS = {**COLORS, "alumina": "#f3e7c7"}
@@ -76,12 +77,14 @@ fig.subplots_adjust(
     left=0.07, right=0.97, bottom=0.14, top=0.89, hspace=0.35, wspace=0.28
 )
 a, b, c, d = axes.flat
-section(a, "alumina")
+section(a, "steel" if end_stops else "alumina")
 a.set(
     xlim=(-6.3, 6.3),
     ylim=(-0.5, 10.5),
     title=(
-        "A. Central section: short ceramic insert"
+        "A. Central section: straight stainless tube"
+        if end_stops
+        else "A. Central section: short ceramic insert"
         if short
         else "A. Central section: straight ceramic tube"
     ),
@@ -97,12 +100,14 @@ if short:
     note(a, f"Ø{reservoir_id:g} mm reservoir\nin stainless", (0.7, 6.5), (1.3, 6.3))
 note(a, "Two separate\n0.5 mm copper plates", (2, 0.25), (-5.8, 1.8))
 a.axhline(0, color="#4e7789", lw=0.6, ls=":")
-section(b, "alumina")
+section(b, "steel" if end_stops else "alumina")
 b.set(
     xlim=(-1.5, 1.5),
     ylim=(-0.3, 3.6 if short else 2.2),
     title=(
-        "B. Outlet and insert seat"
+        "B. Stainless tube touches both copper plates"
+        if end_stops
+        else "B. Outlet and insert seat"
         if short
         else "B. Outlet detail: alumina touches both plates"
     ),
@@ -118,7 +123,7 @@ b.annotate(
     arrowprops={"arrowstyle": "<->", "lw": 0.8},
 )
 b.text(0.2, -0.16, f"{gap:g} mm gap", fontsize=9)
-section(c, "alumina", "xy", 0.25)
+section(c, "steel" if end_stops else "alumina", "xy", 0.25)
 c.set(
     xlim=(-1.5, 1.5),
     ylim=(-1.5, 1.5),
@@ -132,7 +137,7 @@ c.plot(
     color="#536879",
 )
 note(c, "Dashed: 1 mm chamber bore", (0.35, 0.35), (-1.4, 1.15))
-note(c, "Wetted slit ~1 mm long", (0, 0.2), (-1.4, -0.9))
+note(c, "1 mm opening between shims" if end_stops else "Initially wetted slit ~1 mm", (0, 0.2), (-1.4, -0.9))
 c.annotate(
     "I",
     xy=(0.8, 0),
@@ -162,7 +167,9 @@ note(
 note(d, "Bridge across the clearance", (2, 0.75), (-3.1, -0.12))
 fig.suptitle(
     (
-        "Short ceramic insert and metal reservoir: same split-plate outlet\nActual review CAD; copper electrodes remain separate"
+        "Insulating end shims confine the split-plate outlet\nIdeal geometry: hot sealing and retention remain unqualified"
+        if end_stops
+        else "Short ceramic insert and metal reservoir: same split-plate outlet\nActual review CAD; copper electrodes remain separate"
         if short
         else "Split-plate slit nozzle: no drilled outlet and a straight chamber tube\nActual comparison CAD; copper electrodes remain separate"
     ),
@@ -175,7 +182,8 @@ fig.legend(
             ("alumina", "Alumina"),
             ("liquid", "Solder"),
             ("copper", "Copper"),
-            ("steel", "Stainless holder"),
+            ("steel", "Stainless holder / tube"),
+            *([("mica", "Mica end shims")] if end_stops else []),
         ]
     ],
     loc="lower center",
@@ -193,7 +201,7 @@ fig.text(
 fig.text(
     0.5,
     0.024,
-    "Magnets, heater and long terminal extensions omitted from these sections. No slit jetting result yet.",
+    "Magnets, heater and long terminal extensions omitted from these sections. Geometry only; see separate numerical flow reports.",
     ha="center",
     fontsize=10,
 )

@@ -1,0 +1,17 @@
+# Slit end-stop review
+
+1. This is an unrun geometry variant of the stainless split-plate head. Two ideal insulating mica shims close the slot outside the 1 mm bore footprint. Each is 0.2 mm thick across the electrode gap, 1 mm long along the slot and 0.5 mm high. Their inner ends are at y = ±0.5 mm; their faces are flush with the plate faces at z = 0 and 0.5 mm. They must remain electrically insulating between the copper plates.
+
+2. The original ten solids are unchanged: their complete geometry binary is a byte-identical prefix of the new binary. The initial liquid volume remains 4.41590057 mm³ and the initial outlet area remains 0.19858808 mm². The additional solids occupy the previously open slot beneath the tube wall and outside it. This isolates geometric end confinement from a change in initial liquid volume or electrode shape.
+
+3. The motivation is the **failed, coarse open-slot flow test**, not a qualified hardware defect: its last saved 9.519 ms frame contained approximately 189 nL outside the initial bore footprint in the plate-height region, including 93 nL beyond the tube OD. It also contained a detached region. See [the accepted-prefix assessment](../../split-slit-conditioned-prefix-screening.json). Neither spreading nor breakup is converged or calibrated for real wetting.
+
+4. The shims add two small parts and require alignment, retention and a hot seal at their plate/tube interfaces. No adhesive, interference fit or clamp has been qualified. The mica material is inherited from the existing fixture: zero electrical conductivity and unit permeability are modeling assumptions; its thermal data do not qualify it for molten-solder contact. This variant therefore does not establish a simpler assembled head than the one-piece stainless circular nozzle.
+
+5. `observer.mhd.json` retains the applied-field observer. `flow-h010.mhd.json` and `flow-h0050.mhd.json` are inputs for the research `conduction_flow` client, which enables the common fluid/interface engine and applies its terminal drive. They are not GUI electrode-drive projects. They use 100/50 µm cells (2/4 cells across the gap), omit the exterior heater obstacle and retain the uncalibrated neutral-wall treatment. No new GPU run is queued or completed for these files.
+
+6. All four generator variants pass closed-mesh, connected-volume and pairwise overlap checks. The three projects here load through the actual application project loader, with twelve bodies each. These checks establish usable nominal geometry, not sealing, current distribution, retention or jetting.
+
+7. Reproduce the source CAD from the repository root with `TMPDIR="$PWD/artifacts/build-temp" uv run --offline --with manifold3d --with matplotlib python scripts/make_split_slit_cases.py NEW_DIRECTORY --insulating-end-stops`. This creates stainless, alumina and deliberate holder-shunt variants. The files here select the stainless geometry, rename its binary to `geometry.bin` and use the same flow domain and heater omission as the open-slot controls. Draw the source variants with `scripts/plot_split_slit.py NEW_DIRECTORY OUTPUT.png`.
+
+8. Before selecting this variant: verify gas connectivity, compare conditioned unpowered/driven runs at smaller timesteps and finer spacing, and assess the shims' hot mechanical/electrical interfaces experimentally. End stops do not remove oxide, wetting, electrode dissolution, heat-flow or repeated-feed uncertainties.

@@ -1,0 +1,23 @@
+{
+  "status": "Prepared and CPU validated only; no GPU physics result or queued job",
+  "source": "hardware/designs/split-slit-review/steel.gltf",
+  "candidate": "hardware/designs/split-slit-endstop-review",
+  "changes": "Two insulating end shims, nominal thickness0.2mm x length1mm x height0.5mm; slot inner ends y=+-0.5mm. Original ten bodies unchanged.",
+  "geometry_checks": {
+    "generator": "Closed manifold, one connected volume per body, pairwise overlap <=1e-5 mm3",
+    "original_binary_prefix_identical": true,
+    "original_binary_sha256": "92ee45622b19a863121b9840ff6e7f0b8a7eeead61b6231d5441d7edd0f2980c",
+    "candidate_binary_sha256": "61abcafab7730f0b7c461b7d5ed71c93792785b562f29e3c54c602adbc6477da",
+    "original_binary_bytes": 92736,
+    "candidate_binary_bytes": 93600,
+    "CPU_project_loader": "observer, flow-h010 and flow-h0050 all loaded:12 bodies each"
+  },
+  "unchanged_liquid_volume_mm3": 4.415900569985931,
+  "unchanged_initial_outlet_area_mm2": 0.19858808435353748,
+  "limits": [
+    "Ideal flush faces do not establish a real seal or clamp.",
+    "Mica modeling properties do not qualify hot molten-solder compatibility.",
+    "Gap remains only2/4cells at100/50um; contact angle uncalibrated.",
+    "Added parts may defeat the desired simplicity. No design selected from this CAD alone."
+  ]
+}

@@ -15,6 +15,8 @@ p.add_argument("--gap-mm", type=float, default=0.2)
 p.add_argument("--tube-top-mm", type=float, default=10.0)
 p.add_argument("--reservoir-id-mm", type=float, default=1.0)
 p.add_argument("--pool-top-mm", type=float, default=6.0)
+p.add_argument("--insulating-end-stops", action="store_true",
+               help="Add two ideal mica shims closing the slot beyond the 1 mm bore; no seal qualification")
 a = p.parse_args()
 if not 0.15 <= a.gap_mm <= 0.4:
     p.error("Gap must be0.15..0.4mm")
@@ -96,6 +98,15 @@ for label, tube_mid, bridge in [
     solids.append(original[8][2])
     names.append(original[8][0])
     mids.append(8)
+    if a.insulating_end_stops:
+        # 0.2 mm sheet thickness spans the electrode gap. Each shim is 0.5 mm
+        # high and 1 mm long, flush with the plate faces and tube underside.
+        # The bore/slot liquid intersection is unchanged. Mica is an existing
+        # insulating material in the source fixture, not a calibrated hot seal.
+        for sign in [-1, 1]:
+            solids.append(box([a.gap_mm, 1., .5], [0., sign * 1., .25]))
+            names.append("Mica slot end stop " + ("minus Y" if sign < 0 else "plus Y"))
+            mids.append(19)
     for i, s in enumerate(solids):
         if str(s.status()) != "Error.NoError" or len(s.decompose()) != 1:
             raise ValueError("Topology " + names[i])
@@ -155,7 +166,9 @@ for label, tube_mid, bridge in [
             "tube_material_id": tube_mid,
             "plate_to_holder_bridge": bridge,
             "slit_gap_mm": a.gap_mm,
-            "slit_max_length_mm": 1.0,
+            "initial_wetted_slit_length_mm": 1.0,
+            "physical_open_slit_length_mm": 1.0 if a.insulating_end_stops else 3.0,
+            "insulating_end_stops": a.insulating_end_stops,
             "plate_thickness_mm": 0.5,
             "tube_OD_ID_length_mm": [2, 1, tube_length],
             "tube_top_z_mm": a.tube_top_mm,
