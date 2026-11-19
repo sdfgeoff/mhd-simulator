@@ -76,7 +76,7 @@ def loop(a):
     setup(a,'4. Transformer-coupled liquid loop + bias magnet','Concept only: liquid is a closed electrical secondary. Flux linkage is drawn symbolically.')
     pipe(a,[(3,6.5),(10,6.5),(10,3.6),(3,3.6),(3,6.5)],22)
     arrow(a,8,6.5,5.8,6.5,C['current']);arrow(a,4,3.6,6.3,3.6,C['current'])
-    arrow(a,10,5.9,10,4.6,C['current']);arrow(a,3,4.2,3,5.5,C['current'])
+    arrow(a,10,4.6,10,5.9,C['current']);arrow(a,3,5.5,3,4.2,C['current'])
     nozzle(a,7.5,3.6);drop(a,7.5,1.9)
     box(a,.4,4.8,1.5,1.3,C['wall']);txt(a,1.15,5.45,'core /\nprimary',9,ha='center')
     for y in [4.9,5.15,5.4,5.65,5.9]:box(a,.4,y,.15,.13,C['copper'])
