@@ -1,0 +1,16 @@
+{
+  "status": "Prepared,not completed. No force or jetting result.",
+  "plan": "artifacts/hardware-research/unipolar-coil-fast10-v1-plan.json",
+  "motivation": "Test a faster single-pulse rise using more of available24/48V headroom, while lowering current dose. No AC carrier.",
+  "peak_A": 250,
+  "rise_us": 10,
+  "fall_us": 100,
+  "rms_A_at_assumed200Hz": 21.40872096444188,
+  "unloaded_lumped_rise_voltage_max_V": 29.38177315328042,
+  "unloaded_lumped_fall_voltage_min_V": -2.5656812175580495,
+  "limits": [
+    "UnloadedL+lead estimate excludes native metal reaction and switch-node overshoot.",
+    "Native0.5us timestep gives20samples across rise; time-refine promising results before quantitative selection.",
+    "No thermal, moving-fluid or repetition proof."
+  ]
+}

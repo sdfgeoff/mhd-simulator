@@ -149,6 +149,34 @@ def main():
             max(float(r["roi_force_z_N"]) for r in rows),
         ]
 
+        def integrate_samples(key, lower, upper):
+            # Piecewise-linear accepted native samples, clipped at phase edges.
+            integral = 0.0
+            for a, b in zip(rows, rows[1:]):
+                t0, t1 = float(a["time_s"]), float(b["time_s"])
+                lo, hi = max(t0, lower), min(t1, upper)
+                if hi <= lo:
+                    continue
+                f0, f1 = float(a[key]), float(b[key])
+                value = lambda t: f0 + (f1 - f0) * (t - t0) / (t1 - t0)
+                integral += (hi - lo) * (value(lo) + value(hi)) / 2
+            return integral
+
+        rise_end = job["rise_us"] * 1e-6
+        fall_end = (job["rise_us"] + job["fall_us"]) * 1e-6
+        phases = [("rise", 0, rise_end), ("fall", rise_end, fall_end),
+                  ("zero_current_decay", fall_end, float(rows[-1]["time_s"]))]
+        impulses = {
+            label: {
+                "axial_force_impulse_N_s_positive_up": integrate_samples("roi_force_z_N", lo, hi),
+                "radial_moment_integral_Pa_s": integrate_samples("radial_pressure_proxy_Pa", lo, hi),
+            }
+            for label, lo, hi in phases
+        }
+        total_impulse = integrate_samples("roi_force_z_N", 0, float(rows[-1]["time_s"]))
+        if abs(sum(p["axial_force_impulse_N_s_positive_up"] for p in impulses.values()) - total_impulse) > 1e-14:
+            raise ValueError("Impulse phase partition does not close")
+
         def projection(scale):
             return {
                 "peak_A": job["peak_A"] * scale,
@@ -202,6 +230,11 @@ def main():
                 "final_reaction_field_energy_J": final_field,
                 "radial_force_moment_over_ROI_volume_Pa_range": radial_range,
                 "liquid_axial_force_N_range": axial_range,
+                "native_force_integrals": {
+                    "phases": impulses,
+                    "total_axial_impulse_N_s_positive_up": total_impulse,
+                    "scope": "Trapezoidal integration of stationary liquid ROI forces. Neither a wall-pressure solution nor the impulse delivered to an expelled drop. Rise/fall cancellation can change when the interface moves.",
+                },
                 "stationary_current_projections": {
                     "at_200A_working_target": projection(200 / job["peak_A"]),
                     "capped_at_tested_peak_and30Arms200Hz": projection(

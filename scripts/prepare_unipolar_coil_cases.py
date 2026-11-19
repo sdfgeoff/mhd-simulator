@@ -8,6 +8,7 @@ import copy
 import argparse
 import hashlib
 import json
+import math
 from pathlib import Path
 
 
@@ -26,6 +27,8 @@ def save_new_or_identical(path, value):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--tag", default="unipolar-coil-v2")
+    parser.add_argument("--pulse", nargs=3, action="append", metavar=("NAME", "RISE_US", "FALL_US"),
+                        help="Repeat for explicit positive triangular pulse shapes; default100/100 and50/250")
     args = parser.parse_args()
     if not args.tag or any(
         c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-"
@@ -46,6 +49,17 @@ def main():
         if bases["custom"][key] != bases["v6"][key]:
             raise RuntimeError("Unexpected actuator/material mismatch: " + key)
     shapes = [("symmetric100", 100, 100), ("fast50-slow250", 50, 250)]
+    if args.pulse:
+        shapes = []
+        for label, rise, fall in args.pulse:
+            rise, fall = float(rise), float(fall)
+            if (not label or any(c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-" for c in label)
+                    or not all(math.isfinite(t) and t > 0 and abs(t * 2 - round(t * 2)) < 1e-8 for t in [rise, fall])
+                    or rise + fall > 300):
+                parser.error("Require safe labels and positive half-microsecond durations totaling at most300us")
+            shapes.append((label, rise, fall))
+        if len({s[0] for s in shapes}) != len(shapes):
+            parser.error("Pulse labels must be unique")
     jobs = []
     source_hashes = {str(path): sha(path) for path in sources.values()}
     for geometry, base in bases.items():
@@ -109,7 +123,7 @@ def main():
         "source_sha256": source_hashes,
         "jobs": jobs,
         "reference": "https://doi.org/10.1038/s44334-025-00029-w",
-        "rationale": "Compare single nonnegative triangular coil-current pulses with the earlier AC burst. Rise and fall can produce differently timed radial force lobes. Published shaped-pulse jetting motivates the test, not these exact amplitudes/durations or a solder outcome.",
+        "rationale": "Compare single nonnegative triangular coil-current pulses. Rise and fall can produce differently timed radial force lobes. Published shaped-pulse jetting motivates the test, not these exact amplitudes/durations or a solder outcome.",
         "scope": [
             "Same actuator/materials, common cold domain/grid/dt; custom and V6 geometry and liquid volume intentionally differ.",
             "Cold force moment is a diagnostic, not pressure, breakup or a droplet threshold.",

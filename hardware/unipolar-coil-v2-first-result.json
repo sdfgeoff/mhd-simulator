@@ -90,6 +90,24 @@
         -0.018364270873747066,
         0.015774898747520614
       ],
+      "native_force_integrals": {
+        "phases": {
+          "rise": {
+            "axial_force_impulse_N_s_positive_up": -8.897364072343636e-07,
+            "radial_moment_integral_Pa_s": 0.09041424772722144
+          },
+          "fall": {
+            "axial_force_impulse_N_s_positive_up": 8.399519704935956e-07,
+            "radial_moment_integral_Pa_s": -0.08297851952304201
+          },
+          "zero_current_decay": {
+            "axial_force_impulse_N_s_positive_up": 1.0667029695750263e-09,
+            "radial_moment_integral_Pa_s": -8.539585604275905e-05
+          }
+        },
+        "total_axial_impulse_N_s_positive_up": -4.8717733771193837e-08,
+        "scope": "Trapezoidal integration of stationary liquid ROI forces. Neither a wall-pressure solution nor the impulse delivered to an expelled drop. Rise/fall cancellation can change when the interface moves."
+      },
       "stationary_current_projections": {
         "at_200A_working_target": {
           "peak_A": 200.0,
