@@ -172,7 +172,7 @@ def main():
             pattern = (
                 r"^\s*\d+\s+(?:\S*/)?target/(?:debug|release)/examples/amd_hardware_probe(?:_tail)?\s"
                 if args.adapter == "amd"
-                else r"^\s*\d+\s+(?:\S*/)?target/(?:debug|release)/(?:examples/(?:conduction_flow(?:_precision|_current_tolerance)?|conduction_probe|applied_probe|hardware_probe(?:_tail)?)\s|mhd-workbench\s+--run-check\s)"
+                else r"^\s*\d+\s+(?:\S*/)?target/(?:debug|release)/(?:examples/(?:conduction_flow(?:_precision|_current_tolerance|_energy)?|conduction_probe|applied_probe|hardware_probe(?:_tail)?)\s|mhd-workbench\s+--run-check\s)"
             )
             if any(
                 re.search(

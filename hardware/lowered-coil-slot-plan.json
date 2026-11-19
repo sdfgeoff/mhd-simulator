@@ -1,0 +1,47 @@
+{
+  "status": "Prepared radial-slot CAD sensitivity only; no native EM, fluid or thermal result",
+  "source_project": "artifacts/hardware-research/cases/lowered-coil-cold-v1/heater-on.mhd.json",
+  "source_project_sha256": "22ad15538a305003b5b331c0b71cb6ea4fe60573c10f21990add43d507c8e876",
+  "source_geometry_sha256": "b48c8e73b70f0f12162f44fa5f5f6c640f10414d907823151dbc8b180b235701",
+  "project": "artifacts/hardware-research/cases/lowered-coil-slotted-heater-v1/heater-slotted.mhd.json",
+  "project_sha256": "f1e6fa979f7e2e2cce3d881f83533a77eab7c4722a94fb1f3231d2b44d763b6e",
+  "slot_width_mm": 0.8,
+  "slot_path": "Smooth M6 bore to+x outer face, through entire5.5..17mm block height",
+  "heater_connected_components": 1,
+  "unslotted_volume_mm3": 3190.7295705269717,
+  "slotted_volume_mm3": 3171.9648241516275,
+  "unchanged_mesh_payloads": [
+    {
+      "mesh": "Stainless nozzle",
+      "sha256": "b50ec3b811b8c5d38bd2035ca5bfc34e7d7c2ea18870979a3a01fe89d7a41497"
+    },
+    {
+      "mesh": "Liquid solder",
+      "sha256": "1f5b605b7eea853661f2e7ce557ee926c89b4ff3c02ea92f4f278befea476386"
+    },
+    {
+      "mesh": "Fixed feed wire",
+      "sha256": "135d51ea554e7e69c0a86e38eb6a6e7f6cadb53a730ffa0e0f782a7897b2c58c"
+    },
+    {
+      "mesh": "Lower12turn4layercoil",
+      "sha256": "5c6a54ed2a08a44cd70732ce57bad512261388bd763360c0ecdd47cbd084a40d"
+    }
+  ],
+  "unchanged_project_configuration_except": [
+    "geometry path",
+    "heater triangle count"
+  ],
+  "motivation": "Interrupt circumferential heater eddy-current paths using a simple accessible saw/mill cut, before changing nozzle or adding ceramics. Effect size and force direction require native comparison.",
+  "source": {
+    "url": "https://doi.org/10.1002/mrm.25424",
+    "title": "Dual optimization method of radiofrequency and quasistatic field simulations for reduction of eddy currents generated on7T radiofrequency coil shielding",
+    "scope": "Primary MRI experiments support testing patterned current-path interruptions. Their result does not establish that one radial heater slot suppresses our fields or improves jetting; simple slot layouts can remain problematic."
+  },
+  "limits": [
+    "Proposed custom cut, not a represented stock heater clamp slot or a qualified machining drawing.",
+    "M6 threads, heatbreak, inserts and fasteners remain omitted; conductive bridges can restore current paths across the cut.",
+    "Thread retention, tightening torque, thermal conduction and heater/sensor retention need separate checks. No slit through the pressure-containing nozzle is proposed.",
+    "Four200um cells span the slot. This is not a convergence result, calibrated hot conductivity or working-head recommendation."
+  ]
+}
