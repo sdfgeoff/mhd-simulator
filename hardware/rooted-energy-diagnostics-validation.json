@@ -1,0 +1,33 @@
+{
+  "status": "Completed diagnostic-only baseline validation; no new design or physics change",
+  "source": "artifacts/hardware-research/m6-rooted08-flow110-r50-motionabs1e-06A-h010-dt1p5-energyv1",
+  "reference": "artifacts/hardware-research/m6-rooted08-flow110-r50-motionabs1e-06A-h010-dt1p5",
+  "matched_shared_exports": 5,
+  "final_fluid_binary_identical": true,
+  "final_sha256": "7b97c5b593648d751d883f92615b174cd5ac11d555912fad6c9a61b55babe692",
+  "every_shared_export_alpha_and_cellcentred_velocity_identical": true,
+  "accepted_energy_steps": 2400,
+  "profile_accepted_step_coverage": 2400,
+  "profile_rows": 16800,
+  "native_fluid_energy": {
+    "area_work_mismatch_J": 1.0531525052109225e-07,
+    "capillary_work_J": -7.616456296208288e-07,
+    "discrete_fluid_loss_J": 9.171405182384655e-07,
+    "kinetic_J": 3.0938463169150054e-07,
+    "scope": "Existing RunState ledger only; no additional GPU solve. Area-work mismatch compares the interface-area estimator with capillary-force work; it is not a certified discretization-error bound. Fluid loss includes physical and numerical contributions. Electrical Joule heat is accounted separately by the conduction client; thermal evolution is disabled.",
+    "surface_energy_estimate_J": 5.268177262510989e-06
+  },
+  "final_electrical_work_J": 0.0047194012211849,
+  "final_joule_J": 0.004717547252433423,
+  "final_fluid_EM_work_J": 1.8971394533057678e-06,
+  "body_work_J": 9.108182935938582e-08,
+  "csv_sha256": {
+    "fluid-energy-diagnostics.csv": "5d6e261262537dd43f9103f4c3d28e475c47c0bb56b395f108c9fe04cd6804a9",
+    "performance.csv": "a5fcd5abacb61faef24784f5c81f8e71465db05d32275b22d685368f8f388dfc"
+  },
+  "limits": [
+    "Final full fluid buffer is identical; other shared exports explicitly compare alpha and cell-centred velocity, not every field component.",
+    "Area-work mismatch is not a certified error bound; fluid-loss residual combines physical/numerical contributions. Thermal evolution disabled.",
+    "This verifies instrumentation on one baseline, not numerical convergence, physical energy closure or hardware performance."
+  ]
+}

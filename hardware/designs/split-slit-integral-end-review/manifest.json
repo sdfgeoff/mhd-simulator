@@ -1,0 +1,63 @@
+{
+  "status": "Prepared one-piece end-wall CAD and stationary current-sharing screen; no native result",
+  "source": "hardware/designs/split-slit-endstop-review/flow-h010.mhd.json",
+  "source_sha256": "3f21ac8d0baf4e6167d55daa7510bded6081b59ca19dbf6ecc7c8b8080c686d3",
+  "unchanged_mesh_payloads": [
+    {
+      "mesh": "M6 metal tube holder",
+      "sha256": "4f94c85a6789cc951e4c9e71c0e25d881942877608dd559dfe092b65aa62c572",
+      "steel_overlap_mm3": 0.0
+    },
+    {
+      "mesh": "Liquid solder",
+      "sha256": "a721f0408dc5c6116cd1c11cba37d62dcbface7f2336f30d42f7839d3f0df8b5",
+      "steel_overlap_mm3": -9.486769009248164e-19
+    },
+    {
+      "mesh": "Positive split copper plate",
+      "sha256": "799f7c06c85c94422b7cd1d2b4d895429934369251868b7a0edc6bcc7735c9e8",
+      "steel_overlap_mm3": -5.929230630780102e-19
+    },
+    {
+      "mesh": "Negative split copper plate",
+      "sha256": "96c39c82eae5d9ecc5a59369129328ab341068a0281b1ddecf3cdbd71557a640",
+      "steel_overlap_mm3": -1.5415999640028266e-18
+    },
+    {
+      "mesh": "Bias magnet 1",
+      "sha256": "3a2ea9d8b6a15c641269815553ba5784fd3ba630a54ee32d83fa39637ad82f51",
+      "steel_overlap_mm3": 0.0
+    },
+    {
+      "mesh": "Bias magnet 2",
+      "sha256": "2004224816bf8802cef6a5cefeac6cdc13f0dbdc30859caf4b0baafcb8e13f36",
+      "steel_overlap_mm3": 0.0
+    },
+    {
+      "mesh": "Mica electrical insulator -1",
+      "sha256": "4db1b09f7c794cdf9c876beeaa1137b0a67e6ce4492c36c12b6fc651b481705a",
+      "steel_overlap_mm3": 0.0
+    },
+    {
+      "mesh": "Mica electrical insulator 1",
+      "sha256": "8f098e11df4117348763dd872869b6fae604fe6bc5242255f965f1173a34adf9",
+      "steel_overlap_mm3": 0.0
+    },
+    {
+      "mesh": "Heated aluminium block",
+      "sha256": "d5f175822a3e7cf9ed10f5d34aead62fbb898a03f3e36e5c970ae0a71c6c4b0c",
+      "steel_overlap_mm3": 0.0
+    }
+  ],
+  "nominal_machining": "Through-drill1mm bore; turn2mm tube above a3mm diameter basal flange; two opposing0.5mm-deep cuts leave0.2mm-wide end walls. No small drilled outlet and no loose end shims.",
+  "construction_overlap_mm": 0.001,
+  "joined_stainless_components": 1,
+  "source_tube_volume_mm3": 22.367870151234754,
+  "new_stainless_volume_mm3": 22.568448710542032,
+  "limits": [
+    "This exchanges insulating end walls for conducting stainless; current can bypass through them. Check native current sharing before flow selection.",
+    "0.2mm-wide walls are thin machining/clamping features. Strength, burrs, flatness and hot Cu/SS seam sealing are unqualified.",
+    "Smooth ideal electrical contact, fixed conductivities, neutral wetting and two-cell gap remain assumptions. Heater excluded from this local shunt screen.",
+    "No thermal, oxide, lifetime, repeated-pulse or build recommendation. A connected CAD solid does not demonstrate a hot seal."
+  ]
+}

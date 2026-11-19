@@ -1,0 +1,460 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "MHD hardware study; E3D dimension-based simplified CAD"
+  },
+  "buffers": [
+    {
+      "uri": "geometry.bin",
+      "byteLength": 123840
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 28512
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 28512,
+      "byteLength": 15264
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 43776,
+      "byteLength": 2448
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 46224,
+      "byteLength": 2160
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 48384,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 48816,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 49248,
+      "byteLength": 27648
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 76896,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 77328,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 77760,
+      "byteLength": 14976
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 92736,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 93168,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 93600,
+      "byteLength": 30240
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 2376,
+      "type": "VEC3",
+      "min": [
+        -0.003,
+        -0.003,
+        0.001
+      ],
+      "max": [
+        0.003,
+        0.003,
+        0.01
+      ]
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 1272,
+      "type": "VEC3",
+      "min": [
+        -0.0005,
+        -0.0005,
+        0.0
+      ],
+      "max": [
+        0.0005,
+        0.0005,
+        0.006
+      ]
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 204,
+      "type": "VEC3",
+      "min": [
+        -0.06,
+        -0.005,
+        0.0
+      ],
+      "max": [
+        -0.00010000000149011613,
+        0.005,
+        0.0039000000953674317
+      ]
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 180,
+      "type": "VEC3",
+      "min": [
+        0.00010000000149011613,
+        -0.005,
+        0.0
+      ],
+      "max": [
+        0.06,
+        0.005,
+        0.0039000000953674317
+      ]
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.0125,
+        -0.011699999809265137,
+        -0.002
+      ],
+      "max": [
+        0.0125,
+        -0.0017000000476837158,
+        0.003
+      ]
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.0125,
+        0.0017000000476837158,
+        -0.002
+      ],
+      "max": [
+        0.0125,
+        0.011699999809265137,
+        0.003
+      ]
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5126,
+      "count": 2304,
+      "type": "VEC3",
+      "min": [
+        -0.001,
+        -0.001,
+        0.0005
+      ],
+      "max": [
+        0.001,
+        0.001,
+        0.01
+      ]
+    },
+    {
+      "bufferView": 7,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.01,
+        -0.005,
+        0.0039000000953674317
+      ],
+      "max": [
+        -0.004,
+        0.005,
+        0.004
+      ]
+    },
+    {
+      "bufferView": 8,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        0.004,
+        -0.005,
+        0.0039000000953674317
+      ],
+      "max": [
+        0.01,
+        0.005,
+        0.004
+      ]
+    },
+    {
+      "bufferView": 9,
+      "componentType": 5126,
+      "count": 1248,
+      "type": "VEC3",
+      "min": [
+        -0.0115,
+        -0.008,
+        0.004
+      ],
+      "max": [
+        0.0115,
+        0.008,
+        0.0155
+      ]
+    },
+    {
+      "bufferView": 10,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.00010000000149011613,
+        -0.0015,
+        0.0
+      ],
+      "max": [
+        0.00010000000149011613,
+        -0.0005,
+        0.0005
+      ]
+    },
+    {
+      "bufferView": 11,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.00010000000149011613,
+        0.0005,
+        0.0
+      ],
+      "max": [
+        0.00010000000149011613,
+        0.0015,
+        0.0005
+      ]
+    },
+    {
+      "bufferView": 12,
+      "componentType": 5126,
+      "count": 2520,
+      "type": "VEC3",
+      "min": [
+        -0.001,
+        -0.0015,
+        0.0
+      ],
+      "max": [
+        0.001,
+        0.0015,
+        0.01
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "M6 metal tube holder",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Liquid solder",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Positive split copper plate",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 2
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Negative split copper plate",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 3
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Bias magnet 1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 4
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Bias magnet 2",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 5
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Stainless chamber with integral slit end walls",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 12
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Mica electrical insulator -1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 7
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Mica electrical insulator 1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 8
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Heated aluminium block",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 9
+          },
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "M6 metal tube holder"
+    },
+    {
+      "mesh": 1,
+      "name": "Liquid solder"
+    },
+    {
+      "mesh": 2,
+      "name": "Positive split copper plate"
+    },
+    {
+      "mesh": 3,
+      "name": "Negative split copper plate"
+    },
+    {
+      "mesh": 4,
+      "name": "Bias magnet 1"
+    },
+    {
+      "mesh": 5,
+      "name": "Bias magnet 2"
+    },
+    {
+      "mesh": 6,
+      "name": "Stainless chamber with integral slit end walls"
+    },
+    {
+      "mesh": 7,
+      "name": "Mica electrical insulator -1"
+    },
+    {
+      "mesh": 8,
+      "name": "Mica electrical insulator 1"
+    },
+    {
+      "mesh": 9,
+      "name": "Heated aluminium block"
+    }
+  ],
+  "scenes": [
+    {
+      "nodes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ]
+    }
+  ],
+  "scene": 0
+}
