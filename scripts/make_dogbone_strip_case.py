@@ -7,13 +7,18 @@ import manifold3d as cad
 from draw_hardware_layouts import load
 from make_conduction_hardware import box, cylinder, triangles
 from make_hardware import emit, orient
+from make_v6_conduction import as_solid
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("output", type=Path)
 parser.add_argument("--waist-half-length-mm", type=float, default=1.0)
+parser.add_argument("--strip-thickness-mm", type=float, choices=[0.5, 0.8], default=0.5)
 args = parser.parse_args()
 args.output.mkdir(exist_ok=False)
 w = args.waist_half_length_mm
+t = args.strip_thickness_mm
+bottom = 0 if t == 0.5 else round(0.5 - t, 3)
+zmin = min(-2.2, round(bottom - 2.1, 3))
 if not 0.4 <= w <= 1.0:
     parser.error("Waist half length .4..1mm")
 source = Path("hardware/designs/rooted08-hot-contact-m6/hot-contact.mhd.json")
@@ -34,10 +39,19 @@ outline = [
     (-w - 1, 2),
     (-8, 2),
 ]
-strip = cad.CrossSection([outline]).extrude(0.5) - cylinder(0.2, 0.7, [0, 0, 0.25])
+strip = cad.CrossSection([outline]).extrude(t).translate([0, 0, bottom]) - cylinder(
+    0.2, t + 0.2, [0, 0, bottom + t / 2]
+)
 for sign in [-1, 1]:
-    strip = strip - cylinder(1.1, 0.7, [sign * 5.5, 0, 0.25])
-shapes = [parts[0][2] - box([40, 40, 10.5], [0, 0, -4.75]), parts[1][2]]
+    strip = strip - cylinder(1.1, t + 0.2, [sign * 5.5, 0, bottom + t / 2])
+liquid = parts[1][2]
+if bottom < 0:
+    liquid_faces = parts[1][1].copy()
+    liquid_faces[:, :, 2] = np.where(
+        abs(liquid_faces[:, :, 2]) < 1e-6, bottom, liquid_faces[:, :, 2]
+    )
+    liquid = as_solid(liquid_faces)
+shapes = [parts[0][2] - box([40, 40, 10.5], [0, 0, -4.75]), liquid]
 names = ["Upper stainless nozzle with flat strip seat", "Liquid solder"]
 mids = [14, 4]
 for sign, mid in [(-1, 16), (1, 17)]:
@@ -64,8 +78,8 @@ names.append("Replaceable stainless dogbone strip")
 mids.append(14)
 for sign in [-1, 1]:
     # M2x3: 3.8x2mm head below strip; 4mm-AF x1.6mm nut above Cu.
-    head = cylinder(1.9, 2, [sign * 5.5, 0, -1])
-    shaft = cylinder(1, 3, [sign * 5.5, 0, 1.5])
+    head = cylinder(1.9, 2, [sign * 5.5, 0, bottom - 1])
+    shaft = cylinder(1, 3, [sign * 5.5, 0, bottom + 1.5])
     radius = 4 / math.sqrt(3)
     nut = (
         cad.CrossSection(
@@ -94,10 +108,13 @@ for i, a in enumerate(shapes):
         overlap = (a ^ b).volume()
         if overlap > 1e-5:
             raise ValueError(f"Overlap {names[i]} / {names[j]} {overlap}")
-meshes = [
-    (name, orient(triangles(s.set_tolerance(1e-5).simplify())))
-    for name, s in zip(names, shapes)
-]
+meshes = []
+for name, solid in zip(names, shapes):
+    try:
+        faces = orient(triangles(solid.set_tolerance(1e-5).simplify()))
+    except AssertionError as error:
+        raise ValueError("Export topology: " + name) from error
+    meshes.append((name, faces))
 emit(args.output / "assembly.gltf", meshes, None)
 project["geometry"] = "assembly.gltf"
 template = copy.deepcopy(project["bodies"][0])
@@ -115,18 +132,21 @@ for (name, faces), mid in zip(meshes, mids):
 for magnet in project["electromagnetics"]["magnets"]:
     magnet["subdivisions"] = 4
 project["domain"].update(
-    min_mm=[-60.5, -5.5, -2.2], max_mm=[60.5, 5.5, 10.5], cell_mm=0.1
+    min_mm=[-60.5, -5.5, zmin], max_mm=[60.5, 5.5, 10.5], cell_mm=0.1
 )
 (args.output / "assembly.mhd.json").write_text(json.dumps(project, indent=2) + "\n")
 charge = copy.deepcopy(project)
 charge["electromagnetics"]["magnets"] = []
-charge["domain"].update(min_mm=[-10, -2.3, -2.2], max_mm=[10, 2.3, 10.5], cell_mm=0.05)
+charge["domain"].update(min_mm=[-10, -2.3, zmin], max_mm=[10, 2.3, 10.5], cell_mm=0.05)
 (args.output / "charge.mhd.json").write_text(json.dumps(charge, indent=2) + "\n")
 observer = copy.deepcopy(project)
-observer["domain"].update(min_mm=[-0.3, -0.3, 0], max_mm=[0.3, 0.3, 0.6], cell_mm=0.05)
+observer["domain"].update(
+    min_mm=[-0.3, -0.3, bottom], max_mm=[0.3, 0.3, 0.6], cell_mm=0.05
+)
 (args.output / "observer.mhd.json").write_text(json.dumps(observer, indent=2) + "\n")
 thermal = copy.deepcopy(project)
-thermal["domain"].update(min_mm=[-60.5, -5.4, -2.2], max_mm=[60.5, 5.4, 10.5])
+ypad = 5.4 if t == 0.5 else 5.3
+thermal["domain"].update(min_mm=[-60.5, -ypad, zmin], max_mm=[60.5, ypad, 10.5])
 (args.output / "thermal-h010.mhd.json").write_text(json.dumps(thermal, indent=2) + "\n")
 coarse = copy.deepcopy(charge)
 coarse["domain"]["cell_mm"] = 0.1
@@ -151,12 +171,13 @@ with (args.output / "strip-mm.stl").open("wb") as out:
             "waist_length_mm": 2 * w,
             "waist_width_mm": 0.8,
             "end_tab_width_mm": 4,
-            "thickness_mm": 0.5,
+            "thickness_mm": t,
+            "outlet_z_mm": bottom,
             "bore_mm": 0.4,
             "contact_screw_positions_x_mm": [-5.5, 5.5],
             "pole_gap_mm": 4.6,
             "screw_head_projection_mm": 2,
-            "magnet_projection_mm": 2.2,
+            "magnet_projection_mm": round(2.2 + bottom, 3),
             "contact_to_pole_nominal_clearance_mm": 0.3,
             "scope": "Full-length SS strip and bolted Cu end contacts. Ideal flat direct-metal seat. Heater-anchor clamping and nozzle-seat preload are not modeled. No torque, sealing finish, tool access, thread form or thermal expansion qualification. Carrier geometry not included; previous carriers require repositioning for wider poles. Charge domain crops outer anchors/leads; its resistance omits those outer paths.",
             "dimension_sources": [

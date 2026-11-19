@@ -1,0 +1,21 @@
+{
+  "method": "Read-only six-neighbour labels from native initial packet: mobile flag>0.5 andalpha<0.01. Probes at(0,0,9) and(0,0,-3)mm. No field solver.",
+  "cases": [
+    {
+      "run": "artifacts/hardware-research/m6-rooted08-flow110-r25-h010",
+      "gas_components": 2,
+      "mobile_components": 1,
+      "upper_bore_gas_label": 2,
+      "below_nozzle_gas_label": 1,
+      "air_connected": false
+    },
+    {
+      "run": "artifacts/hardware-research/m6-rooted08-flow110-r25-vented-h010",
+      "gas_components": 1,
+      "mobile_components": 1,
+      "upper_bore_gas_label": 1,
+      "below_nozzle_gas_label": 1,
+      "air_connected": true
+    }
+  ]
+}

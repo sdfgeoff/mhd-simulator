@@ -1,0 +1,31 @@
+{
+  "status": "Prepared0.8mm full-strip CAD; no electrical/thermal/flow result for it yet",
+  "thick_case": {
+    "status": "Nominal closed collision-checked geometry, not seal or mounting qualification",
+    "source": "hardware/designs/rooted08-hot-contact-m6/hot-contact.mhd.json",
+    "strip_length_mm": 16,
+    "waist_length_mm": 0.8,
+    "waist_width_mm": 0.8,
+    "end_tab_width_mm": 4,
+    "thickness_mm": 0.8,
+    "outlet_z_mm": -0.3,
+    "bore_mm": 0.4,
+    "contact_screw_positions_x_mm": [
+      -5.5,
+      5.5
+    ],
+    "pole_gap_mm": 4.6,
+    "screw_head_projection_mm": 2,
+    "magnet_projection_mm": 1.9,
+    "contact_to_pole_nominal_clearance_mm": 0.3,
+    "scope": "Full-length SS strip and bolted Cu end contacts. Ideal flat direct-metal seat. Heater-anchor clamping and nozzle-seat preload are not modeled. No torque, sealing finish, tool access, thread form or thermal expansion qualification. Carrier geometry not included; previous carriers require repositioning for wider poles. Charge domain crops outer anchors/leads; its resistance omits those outer paths.",
+    "dimension_sources": [
+      "https://www.annapol.eu/documents/6ee345428db47b168b9ffe8bc9f44571/BN610-DE.pdf",
+      "https://www.accu.co.uk/hexagon-nuts/7884-HPN-M2-A2"
+    ]
+  },
+  "conditional_max_bending_stress_MPa_per_N": 18.75,
+  "scope": "Same simply supported approximation as0.5mm strip, no hot allowable/contact/FEM proof. Extended strip below samez0.5 seat, outletz-0.3. Carrier floor needs local screw-head clearance; old carrier geometry is not included.",
+  "default05_regeneration": "All existing geometry/project/STL bytes identical to packaged0.5mm input; only added outlet metadata in manifest.",
+  "default_geometry_sha256": "4c935dd3bf9d687080fafcab723f4ece686f6e026d2c6c049846b4571943d295"
+}
