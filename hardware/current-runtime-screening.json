@@ -1,0 +1,189 @@
+{
+  "status": "Measured saved timings, not a controlled hardware/algorithm benchmark",
+  "direct_contact_runs": [
+    {
+      "source": "artifacts/hardware-research/m6-rooted08-flow110-r25-motionabs1e-06A-h010-dt3",
+      "accepted_steps": 1200,
+      "grid": {
+        "cell_m": 0.00010000000474974513,
+        "dims": [
+          76,
+          76,
+          185
+        ]
+      },
+      "timestep_s": 3e-06,
+      "charge_solver": "conservative-split-f32-v2",
+      "timings": {
+        "charge_wall_ms": {
+          "sum_s": 63.414070505999995,
+          "median_ms": 49.017857
+        },
+        "fluid_wall_ms": {
+          "sum_s": 340.564806342,
+          "median_ms": 287.879415
+        }
+      },
+      "measured_solver_stage_s": 403.97887684799997,
+      "timing_csv_sha256": "e8e883f0098b389dd11ca1d6221b877fa7bec741bbb943d6fae4f70ba635f659"
+    },
+    {
+      "source": "artifacts/hardware-research/m6-rooted08-flow110-r25-motionabs1e-06A-h010-dt1p5",
+      "accepted_steps": 2400,
+      "grid": {
+        "cell_m": 0.00010000000474974513,
+        "dims": [
+          76,
+          76,
+          185
+        ]
+      },
+      "timestep_s": 1.5e-06,
+      "charge_solver": "conservative-split-f32-v2",
+      "timings": {
+        "charge_wall_ms": {
+          "sum_s": 118.643692707,
+          "median_ms": 47.507071499999995
+        },
+        "fluid_wall_ms": {
+          "sum_s": 714.684550344,
+          "median_ms": 303.012465
+        }
+      },
+      "measured_solver_stage_s": 833.328243051,
+      "timing_csv_sha256": "377cf2c5b304551a29958f4a36e08c9bf4515af5bce782eb33761d4e1118aa98"
+    },
+    {
+      "source": "artifacts/hardware-research/m6-rooted08-flow110-r50-motionabs1e-06A-h010-dt1p5",
+      "accepted_steps": 2400,
+      "grid": {
+        "cell_m": 0.00010000000474974513,
+        "dims": [
+          76,
+          76,
+          185
+        ]
+      },
+      "timestep_s": 1.5e-06,
+      "charge_solver": "conservative-split-f32-v2",
+      "timings": {
+        "charge_wall_ms": {
+          "sum_s": 119.838300063,
+          "median_ms": 48.2982085
+        },
+        "fluid_wall_ms": {
+          "sum_s": 708.7094942250001,
+          "median_ms": 303.67862049999997
+        }
+      },
+      "measured_solver_stage_s": 828.5477942880001,
+      "timing_csv_sha256": "6b185772fc26fceaa28e89c5eda69b510ad2a86a3dfe1dd8d91a336b570d9dfc"
+    },
+    {
+      "source": "artifacts/hardware-research/m6-rooted08-flow110-r25-chargefix-h0050",
+      "accepted_steps": 2400,
+      "grid": {
+        "cell_m": 5.0000002374872565e-05,
+        "dims": [
+          152,
+          152,
+          370
+        ]
+      },
+      "timestep_s": 1.5e-06,
+      "charge_solver": "conservative-split-f32-v1",
+      "timings": {
+        "charge_wall_ms": {
+          "sum_s": 1427.125206058,
+          "median_ms": 471.406645
+        },
+        "fluid_wall_ms": {
+          "sum_s": 6030.166266272,
+          "median_ms": 2630.4956225
+        }
+      },
+      "measured_solver_stage_s": 7457.29147233,
+      "timing_csv_sha256": "aace83d8ec23452029f3540582b0678d7a9b40f61c8e381db3f0d43d7fd70425"
+    }
+  ],
+  "unpowered_coil_control": {
+    "source": "artifacts/hardware-research/coil-low-fill-flow-v1-0A-h020",
+    "adapter": "AMD RADV RENOIR",
+    "accepted_steps": 1800,
+    "profiled_host_wall_s": 2138.1533178730006,
+    "stages": [
+      {
+        "stage": "Pressure solve",
+        "host_wall_s": 1726.1808173990005,
+        "fraction": 0.8073232181105593
+      },
+      {
+        "stage": "Interface/heat transport",
+        "host_wall_s": 153.67502818400007,
+        "fraction": 0.0718727824143469
+      },
+      {
+        "stage": "EM solve",
+        "host_wall_s": 98.89137450799998,
+        "fraction": 0.04625083415738188
+      },
+      {
+        "stage": "Fluid transport/output",
+        "host_wall_s": 38.879523215999996,
+        "fraction": 0.018183692858226227
+      },
+      {
+        "stage": "Phase/topology",
+        "host_wall_s": 32.60804371999994,
+        "fraction": 0.0152505638615466
+      },
+      {
+        "stage": "EM output",
+        "host_wall_s": 30.729331207000033,
+        "fraction": 0.01437190259002056
+      },
+      {
+        "stage": "Other",
+        "host_wall_s": 27.016763910999973,
+        "fraction": 0.012635559707138215
+      },
+      {
+        "stage": "Energy accounting",
+        "host_wall_s": 23.260714220000054,
+        "fraction": 0.010878880399062976
+      },
+      {
+        "stage": "EM coefficients",
+        "host_wall_s": 6.005824285999994,
+        "fraction": 0.002808883832509489
+      },
+      {
+        "stage": "EM preparation",
+        "host_wall_s": 0.3536829629999995,
+        "fraction": 0.0001654151552386512
+      },
+      {
+        "stage": "Viscous stress",
+        "host_wall_s": 0.31522388000000034,
+        "fraction": 0.0001474280994562073
+      },
+      {
+        "stage": "Applied sources",
+        "host_wall_s": 0.23699037899999983,
+        "fraction": 0.00011083881451296203
+      }
+    ],
+    "timing_csv_sha256": "1b083a7556bd8d6ee116008cbfb286c9f35b125b58e7823b1044327cb7556863"
+  },
+  "inferences": [
+    "Direct-contact fluid work dominates the saved charge-plus-fluid wall time; finer-grid planning must allow about2hours of measured solver-stage time for the existing50um case.",
+    "Pressure projection dominates the unpowered AMD control. This does not establish the bottleneck in the still-running powered coil case.",
+    "A low-amplitude induction tail may offer savings, but iteration count alone is insufficient evidence to remove it. Require complete powered-case timings and physical error/energy checks first."
+  ],
+  "limits": [
+    "Host wall time includes waiting for GPU work; it does not identify CPU computation as the bottleneck.",
+    "Static setup, field-export I/O and postprocessing are excluded from direct-contact stage totals.",
+    "Different grids, charge implementations, adapters, concurrent work, clocks and temperatures prevent treating these ratios as controlled speedups.",
+    "No active run or frozen input is modified. No new solver optimization is claimed."
+  ]
+}
