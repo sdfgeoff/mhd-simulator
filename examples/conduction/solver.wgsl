@@ -83,9 +83,11 @@ fn alpha_reduce(@builtin(local_invocation_index) l:u32){let v=sum_partials(l);if
 @compute @workgroup_size(256)
 fn update_residual(@builtin(global_invocation_id) g:vec3<u32>,@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>){
  let i=g.x;var v=vec4<f32>(0.0);if i<cfg.dims.w&&unknown(i){
-  // Explicit mantissa splitting leaves room for an f32 low word without adding
-  // an f64/f16 device requirement or restricting the f32 exponent range.
-  let old=work[i].x;let increment=scalars[0].w*work[i].z+correction(i);let high=bitcast<f32>(bitcast<u32>(old+increment)&0xffffe000u);
+  // Keep twenty high-word mantissa bits. Clearing thirteen bits made the low
+  // word too large: subtracting adjacent nearly-equal copper potentials then
+  // lost the tiny face drop at high conductivity contrast. The explicit
+  // three-bit split retains a small low word without requiring f64/f16.
+  let old=work[i].x;let increment=scalars[0].w*work[i].z+correction(i);let high=bitcast<f32>(bitcast<u32>(old+increment)&0xfffffff8u);
   unit_potential[i][cfg.control.x+2u]=(old-high)+increment;work[i].x=high;
   work[i].y-=scalars[0].w*work[i].w;let r=work[i].y;v=vec4<f32>(r*r/diagonal(i),r*r,0.0,0.0);
  }reduce(v,l,group.x);

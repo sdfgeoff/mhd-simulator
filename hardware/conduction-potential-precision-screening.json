@@ -1,0 +1,46 @@
+{
+  "status": "GPU precision regression reproduced and repaired; full native flow sensitivity still pending",
+  "scope": "Research DC client only. No PDE, conservation gate, requested tolerance or frozen simulator baseline change.",
+  "old_mask": "0xffffe000",
+  "new_mask": "0xfffffff8",
+  "cause": "A coarse high-word split leaves a large low word. Subtracting nearlyequal copper potentials then loses small terminal face drops when adjacent cells have tiny conductivity. Keeping20highmantissa bits instead of10 reduces the low-word cancellation.",
+  "analytical_case": {
+    "dims": [
+      128,
+      1,
+      1
+    ],
+    "h_m": 0.0001,
+    "copper_S_m": 25000000.0,
+    "single_bridge_S_m": 1,
+    "voltage_V": 1,
+    "exact_current_A": 9.999949322386734e-05,
+    "old_GPU_current_A": 0.00010000803,
+    "old_test_exit_code": 101,
+    "old_current_relative_error": 8.536819395232875e-05,
+    "new_current_relative_error_absolute_bound": 1e-05,
+    "new_GPU_tests_passed": 6,
+    "new_GPU_test_seconds": 2.24
+  },
+  "tests": [
+    "Analyticnearinsulatingseriesbridge",
+    "Longbottleneckedparallelpaths",
+    "UniformandparallelOhm/power",
+    "ContactresistanceandmotionalEMFpower",
+    "Detachedtranslatingconductorbridge-removal",
+    "Potentialpredictorvalidation"
+  ],
+  "production_failure": {
+    "source": "artifacts/hardware-research/m6-rooted08-flow110-r25-chargefix-h010-dt1p5",
+    "time_s": 0.0025785,
+    "accepted_steps": 1719,
+    "true_relative_residual": 9.6569664e-08,
+    "boundary_current_defect": 1.9508083e-05,
+    "status": "Failedatunchanged1e-5boundarygate;notrelabelledcomplete"
+  },
+  "followup": "Newconduction_flow_precision executable preserveshistoricalfrozenbinary. Firstrepeatoldcoarse3usbaseline,then1.5uscontroland.5reversewithsameprojectstoquantifyfield/outcomechanges.",
+  "limits": [
+    "Analyticregressiondoesnotprovethenativepinch-offcasefixed;awaitnewfullGPUruns.",
+    "Onlyrounding/storageofthepotentialchanged. Physicalmodels,contact/wetting/thermal/inductionlesslimitationsremain."
+  ]
+}

@@ -3,6 +3,53 @@ use mhd_workbench::{em::CellField, gpu::GpuContext};
 use wgpu::util::DeviceExt;
 
 #[test]
+fn near_insulating_bridge_resolves_tiny_copper_terminal_gradients() {
+    let context = GpuContext::headless().unwrap();
+    let dims = [128, 1, 1];
+    let h = 1e-4;
+    let cells: Vec<_> = (0..128)
+        .map(|x| {
+            [
+                if x == 63 { 1e-6 } else { 25. },
+                if x == 0 {
+                    0.5
+                } else if x == 127 {
+                    -0.5
+                } else {
+                    2.
+                },
+            ]
+        })
+        .collect();
+    let bias = context
+        .device
+        .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Zero field for near-insulating bridge identity"),
+            contents: bytemuck::cast_slice(&vec![CellField::default(); 128]),
+            usage: wgpu::BufferUsages::STORAGE,
+        });
+    let mut solver = Conduction::new(context, dims, h, &cells, &bias).unwrap();
+    solver.set_relative_tolerance(1e-6).unwrap();
+    solver.solve().unwrap();
+    let stats = solver.fields(1.).unwrap();
+    // Exact series face resistances, including half-cells at both terminals.
+    let resistance: f64 = cells
+        .windows(2)
+        .map(|p| {
+            0.5 / (f64::from(p[0][0]) * 1e6 * f64::from(h))
+                + 0.5 / (f64::from(p[1][0]) * 1e6 * f64::from(h))
+        })
+        .sum();
+    let expected = 1. / resistance;
+    assert!(
+        (f64::from(stats[0]) / expected - 1.).abs() < 1e-5,
+        "{stats:?}, expected{expected}"
+    );
+    assert!(solver.boundary_current_defect <= 1e-5);
+    assert!((stats[2] / stats[0] - 1.).abs() < 2e-5);
+}
+
+#[test]
 fn long_bottlenecked_parallel_paths_conserve_current_and_match_series_resistance() {
     let context = GpuContext::headless().unwrap();
     let dims = [256, 32, 4];

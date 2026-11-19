@@ -7,6 +7,8 @@ use mhd_workbench::{
 use std::collections::HashMap;
 use wgpu::util::DeviceExt;
 
+pub const SOLVER_VERSION: &str = "conservative-split-f32-v2";
+
 #[repr(C)]
 #[derive(Clone, Copy, Pod, Zeroable)]
 struct Params {
@@ -285,9 +287,16 @@ impl Conduction {
         if self.boundary_current_conserved()? && self.relative_residual <= self.params.physical[2] {
             return Ok(());
         }
+        let terminal = self.scalar_values()?[3];
+        let amperes = self.params.physical[0] * 1e6;
         Err(format!(
-            "DC solve did not converge after {} iterations, true residual {}, boundary current defect {}",
-            self.iterations, self.relative_residual, self.boundary_current_defect
+            "DC solve did not converge after {} iterations, true residual {}, boundary current defect {}, mode {}, net boundary flux {} A / absolute {} A",
+            self.iterations,
+            self.relative_residual,
+            self.boundary_current_defect,
+            self.params.control[0],
+            terminal[0] * amperes,
+            terminal[1] * amperes
         ))
     }
     fn tighten_iteration_target(&mut self) {
