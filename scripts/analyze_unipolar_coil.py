@@ -77,8 +77,8 @@ def main():
         status = json.loads((directory / "run-status.json").read_text())
         if (
             status["status"] != "complete"
-            or status["accepted_steps"] != 1200
-            or abs(status["time_s"] - 600e-6) > 1e-10
+            or status["accepted_steps"] != job.get("requested_steps", 1200)
+            or abs(status["time_s"] - job.get("end_time_s", 600e-6)) > 1e-10
         ):
             raise ValueError("Native coil run incomplete")
         project_path = Path(job["project"])
@@ -100,7 +100,7 @@ def main():
         winding_r = length / (25e6 * math.pi * radius**2)
         series_r, series_l = 0.002, 0.2e-6
         rows = list(csv.DictReader((directory / "diagnostics.csv").open()))
-        if len(rows) != 1201:
+        if len(rows) != job.get("requested_steps", 1200) + 1:
             raise ValueError("Missing native diagnostics")
         i2dt = work = winding_heat = source_work_midpoint = 0.0
         volts = []
@@ -130,6 +130,9 @@ def main():
         heat = float(final["accumulated_joule_J"])
         be = sum(float(row["reaction_BE_J"]) for row in rows)
         final_field = float(final["reaction_magnetic_J"])
+        decay_fraction = final_field / max(heat, 1e-30)
+        if decay_fraction > 1e-8:
+            raise ValueError("Stationary screen retains appreciable reaction energy; extend decay")
         defect = (work - heat - be - final_field) / max(
             abs(work), abs(heat + be + final_field), 1e-15
         )
@@ -228,6 +231,8 @@ def main():
                 "metal_work_balance_gate_1e_minus3_passed": abs(defect) <= 1e-3,
                 "reaction_backward_Euler_loss_J": be,
                 "final_reaction_field_energy_J": final_field,
+                "final_reaction_energy_over_generated_heat": decay_fraction,
+                "final_reaction_energy_fraction_gate_1e_minus8_passed": True,
                 "radial_force_moment_over_ROI_volume_Pa_range": radial_range,
                 "liquid_axial_force_N_range": axial_range,
                 "native_force_integrals": {

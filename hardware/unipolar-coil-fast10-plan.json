@@ -1,6 +1,6 @@
 {
-  "status": "Prepared,not completed. No force or jetting result.",
-  "plan": "artifacts/hardware-research/unipolar-coil-fast10-v1-plan.json",
+  "status": "Prepared shorter300us screen; supersedes unstarted600us fast10v1 queue. No force or jetting result.",
+  "plan": "artifacts/hardware-research/unipolar-coil-fast10-v2-plan.json",
   "motivation": "Test a faster single-pulse rise using more of available24/48V headroom, while lowering current dose. No AC carrier.",
   "peak_A": 250,
   "rise_us": 10,
@@ -12,5 +12,6 @@
     "UnloadedL+lead estimate excludes native metal reaction and switch-node overshoot.",
     "Native0.5us timestep gives20samples across rise; time-refine promising results before quantitative selection.",
     "No thermal, moving-fluid or repetition proof."
-  ]
+  ],
+  "end_us": 300
 }

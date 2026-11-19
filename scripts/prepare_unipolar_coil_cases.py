@@ -27,9 +27,13 @@ def save_new_or_identical(path, value):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--tag", default="unipolar-coil-v2")
+    parser.add_argument("--end-us", type=float, default=600,
+                        help="Stationary screen horizon; retain at least50us after pulse")
     parser.add_argument("--pulse", nargs=3, action="append", metavar=("NAME", "RISE_US", "FALL_US"),
                         help="Repeat for explicit positive triangular pulse shapes; default100/100 and50/250")
     args = parser.parse_args()
+    if not math.isfinite(args.end_us) or args.end_us <= 0 or abs(args.end_us * 2 - round(args.end_us * 2)) > 1e-8:
+        parser.error("Require a positive half-microsecond screen horizon")
     if not args.tag or any(
         c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-"
         for c in args.tag
@@ -60,6 +64,8 @@ def main():
             shapes.append((label, rise, fall))
         if len({s[0] for s in shapes}) != len(shapes):
             parser.error("Pulse labels must be unique")
+    if any(args.end_us < rise + fall + 50 for _, rise, fall in shapes):
+        parser.error("Retain at least50us of zero-current decay")
     jobs = []
     source_hashes = {str(path): sha(path) for path in sources.values()}
     for geometry, base in bases.items():
@@ -84,7 +90,7 @@ def main():
                     [0, 0],
                     [rise * 1e-6, 250],
                     [(rise + fall) * 1e-6, 0],
-                    [600e-6, 0],
+                    [args.end_us * 1e-6, 0],
                 ],
             }
             path = folder / f"{geometry}-{label}-cold-h020.mhd.json"
@@ -98,12 +104,14 @@ def main():
                     "rise_us": rise,
                     "fall_us": fall,
                     "peak_A": 250,
+                    "requested_steps": round(args.end_us * 2),
+                    "end_time_s": args.end_us * 1e-6,
                     "output": str(output),
                     "project_sha256": sha(path),
                     "command": [
                         "target/debug/examples/hardware_probe",
                         str(path),
-                        "1200",
+                        str(round(args.end_us * 2)),
                         str(output),
                         "0",
                         "9",
@@ -127,7 +135,7 @@ def main():
         "scope": [
             "Same actuator/materials, common cold domain/grid/dt; custom and V6 geometry and liquid volume intentionally differ.",
             "Cold force moment is a diagnostic, not pressure, breakup or a droplet threshold.",
-            "Cold trial includes full600us, with at least300us zero-current decay after each pulse.",
+            f"Cold trial includes full{args.end_us:g}us; assess final reaction-field energy and work balance to verify sufficient decay.",
             "Retain existing 200um cold screens for continuity, then refine promising pulse and flow; optional100um flow has onlyfivecells across0.5mm outlet and1.5cells across0.15mm land.",
             "Estimate loaded terminal voltage from native reaction linkage plus independently checked air inductance and explicit winding/lead R. AirL*dI/dt alone does not qualify24/48V operation.",
             "No new heater arrangement, wall temperature, winding manufacture, contact angle, oxide or repetition qualification.",

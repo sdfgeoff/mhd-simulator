@@ -51,6 +51,8 @@ def main():
             original_binary
         ):
             raise RuntimeError("Unexpected prepared job")
+        if int(job["command"][2]) != job.get("requested_steps", 1200):
+            raise RuntimeError("Prepared step count differs from the command")
         project = Path(job["project"])
         p = json.loads(project.read_text())
         if (
@@ -182,8 +184,8 @@ def main():
             status = json.loads((Path(job["output"]) / "run-status.json").read_text())
             if not (
                 status["status"] == "complete"
-                and status["accepted_steps"] == 1200
-                and abs(status["time_s"] - 600e-6) < 1e-10
+                and status["accepted_steps"] == job.get("requested_steps", 1200)
+                and abs(status["time_s"] - job.get("end_time_s", 600e-6)) < 1e-10
             ):
                 record(stage="invalid_completed_report", index=index, status=status)
                 raise RuntimeError("Cold run did not complete requested interval")

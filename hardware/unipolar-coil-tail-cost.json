@@ -1,0 +1,15 @@
+{
+  "source": "artifacts/hardware-research/unipolar-coil-v2-custom-symmetric100-cold-h020/diagnostics.csv",
+  "sha256": "e5bd66349f010344a7bb0e018f1b03e12c0a5058130c2e962d4ef159b40e3100",
+  "accepted_steps": 1200,
+  "total_EM_iterations": 120594,
+  "EM_iterations_after250us": 88044,
+  "fraction_after250us": 0.7300860739340266,
+  "reaction_energy_J_at250us": 4.0492850103577706e-17,
+  "reaction_energy_J_at300us": 1.2640920153113342e-27,
+  "limits": [
+    "Iteration count is a work proxy, not measured wall-time speedup.",
+    "Native profiler export retains only final reports; do not treat it as full-run timing.",
+    "Shortening a future observation horizon does not change its timesteps or accepted earlier fields. New300us screens must pass finalreactionenergy/heat<=1e-8 and nativeworkbalance."
+  ]
+}
