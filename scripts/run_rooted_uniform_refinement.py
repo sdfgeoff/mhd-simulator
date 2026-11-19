@@ -21,10 +21,11 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--study", choices=["uniform", "temporal-retract"], default="uniform")
 parser.add_argument("--after-state", type=Path)
 parser.add_argument("--after-pid", type=int)
+parser.add_argument("--state", type=Path, help="Fresh state path for an explicitly reviewed unstarted study")
 args = parser.parse_args()
 if (args.after_state is None) != (args.after_pid is None):
     parser.error("Supply both predecessor state and controller PID")
-state = root / ("rooted-uniform-refinement-state.json" if args.study == "uniform" else "rooted-temporal-retract-state.json")
+state = args.state or root / ("rooted-uniform-refinement-state.json" if args.study == "uniform" else "rooted-temporal-retract-state.json")
 env = {**os.environ, "TMPDIR": str(Path.cwd() / "artifacts/build-temp")}
 jobs = []
 specs = ([

@@ -1,0 +1,71 @@
+{
+  "status": "Reviewed recovery of independent unstarted study; failedslitoutputsremainunchanged",
+  "old_queue_state": "artifacts/hardware-research/rooted-temporal-retract-state.json",
+  "old_queue_stage": "predecessor_not_complete",
+  "slit_failure": {
+    "accepted_steps": 3333,
+    "body_acceleration_work_J": 1.0297406432777936e-07,
+    "charge_potential_representation": "split f32 high/low",
+    "charge_requested_relative_tolerance": 9.999999747378752e-06,
+    "charge_solver": "conservative-split-f32-v1",
+    "contact_resistivity_ohm_m2": 0.0,
+    "electrical_work_definition": "sum terminal phi*I on both ports",
+    "error": "Moving-interface capillary or conservative CFL limit exceeded; reduce common timestep",
+    "field_every": 167,
+    "fluid_em_work_J": 1.4426668700343862e-06,
+    "fluid_external_work_J": 1.5456409343621656e-06,
+    "fluid_work_definition": "EM/impressed-force work only; excludes body acceleration",
+    "frequency_hz": 0.0,
+    "grid": {
+      "cell_m": 0.00010000000474974513,
+      "dims": [
+        76,
+        76,
+        165
+      ]
+    },
+    "joule_generated_J": 0.0007177848979469032,
+    "lagged_electrical_work_J": 0.0007191456396400905,
+    "lagged_mechanical_work_J": 1.4351250257951173e-06,
+    "limitations": [
+      "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+      "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+      "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+      "New research client; not a GUI electrode feature or frozen-baseline claim."
+    ],
+    "max_charge_boundary_current_defect": 9.991207662096713e-06,
+    "max_terminal_voltage_V": 0.02051009051501751,
+    "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+    "peak_A": 40.0,
+    "periodic_fluid_axes": [
+      false,
+      false,
+      false
+    ],
+    "positive_duration_s": 0.001,
+    "project": "artifacts/hardware-research/cases/split-slit-steel-flow-h010.mhd.json",
+    "pulse_start_s": 0.005000999999999999,
+    "released_static_workspace_bytes": 214294308,
+    "requested_steps": 3334,
+    "retract_delay_s": 2.4999999999999998e-05,
+    "retract_fraction": 0.25,
+    "rise_s": 2e-05,
+    "status": "failed",
+    "tail_timestep_s": 3e-06,
+    "tail_transition_not_before_s": 0.006359333333333332,
+    "terminal_boundary": "x-ends",
+    "terminal_x_cell_indices": [
+      0,
+      75
+    ],
+    "time_s": 0.009999000000000138,
+    "timestep_s": 3e-06,
+    "uniform_acceleration_m_s2": [
+      0.0,
+      0.0,
+      -9.8100004196167
+    ]
+  },
+  "new_queue_state": "artifacts/hardware-research/rooted-temporal-retract-after-slit-failure-state.json",
+  "reason": "The predecessor was GPU serialization only; these timestep/pullback controls consume no slit data. The driven slit failed at9.999ms of10.002ms with a conservative CFL guard. No requested native control output/log exists, and predecessor controller/nativePIDsareterminal. A fresh queue may run the already-planned controls; do not relabel the slit as complete."
+}
