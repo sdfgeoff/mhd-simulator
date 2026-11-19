@@ -12,20 +12,47 @@ from make_hardware import emit, orient
 p = argparse.ArgumentParser(description=__doc__)
 p.add_argument("output", type=Path)
 p.add_argument("--gap-mm", type=float, default=0.2)
+p.add_argument("--tube-top-mm", type=float, default=10.0)
+p.add_argument("--reservoir-id-mm", type=float, default=1.0)
+p.add_argument("--pool-top-mm", type=float, default=6.0)
 a = p.parse_args()
 if not 0.15 <= a.gap_mm <= 0.4:
     p.error("Gap must be0.15..0.4mm")
+if not 1.5 <= a.tube_top_mm <= 10 or not 0.5 < a.pool_top_mm <= 9:
+    p.error("Tube top must be1.5..10mm and pool top0.5..9mm")
+if not 1 <= a.reservoir_id_mm <= 3.2:
+    p.error("Reservoir ID must be1..3.2mm")
 a.output.mkdir(exist_ok=False)
 source = Path("hardware/designs/rooted08-hot-contact-m6/hot-contact.mhd.json")
 base = json.loads(source.read_text())
 original, _ = load(str(source.with_suffix("").with_suffix(".gltf")))
 # Metal M6 holder, through-bored 2mm. Tube projects0.5mm below its metal sleeve.
-holder = (cylinder(3, 6, [0, 0, 7]) + box([6, 2.8, 3], [0, 0, 2.5])) - cylinder(
-    1, 10, [0, 0, 5.5]
+holder_blank = cylinder(3, 6, [0, 0, 7]) + box(
+    [6, max(2.8, a.reservoir_id_mm + 0.6), 3], [0, 0, 2.5]
 )
-tube = cylinder(1, 9.5, [0, 0, 5.25]) - cylinder(0.5, 10, [0, 0, 5.25])
+if a.tube_top_mm == 10 and a.reservoir_id_mm == 1:
+    holder = holder_blank - cylinder(1, 10, [0, 0, 5.5])
+else:
+    holder = holder_blank - cylinder(
+        1, a.tube_top_mm - 0.5, [0, 0, (a.tube_top_mm + 0.5) / 2]
+    )
+    holder = holder - cylinder(
+        a.reservoir_id_mm / 2, 10.5 - a.tube_top_mm, [0, 0, (10.5 + a.tube_top_mm) / 2]
+    )
+tube_length = a.tube_top_mm - 0.5
+tube_centre = [0, 0, (a.tube_top_mm + 0.5) / 2]
+tube = cylinder(1, tube_length, tube_centre) - cylinder(
+    0.5, tube_length + 0.5, tube_centre
+)
 # Same bore above the plates; below the tube the opening is the bore/slot intersection.
-upper = cylinder(0.5, 5.5, [0, 0, 3.25])
+neck_top = min(a.pool_top_mm, a.tube_top_mm)
+upper = cylinder(0.5, neck_top - 0.5, [0, 0, (neck_top + 0.5) / 2])
+if a.pool_top_mm > a.tube_top_mm:
+    upper = upper + cylinder(
+        a.reservoir_id_mm / 2,
+        a.pool_top_mm - a.tube_top_mm,
+        [0, 0, (a.pool_top_mm + a.tube_top_mm) / 2],
+    )
 lower = cylinder(0.5, 0.5, [0, 0, 0.25]) ^ box([a.gap_mm, 2, 0.5], [0, 0, 0.25])
 liquid = upper + lower
 rows = []
@@ -130,8 +157,10 @@ for label, tube_mid, bridge in [
             "slit_gap_mm": a.gap_mm,
             "slit_max_length_mm": 1.0,
             "plate_thickness_mm": 0.5,
-            "tube_OD_ID_length_mm": [2, 1, 9.5],
-            "pool_top_z_mm": 6,
+            "tube_OD_ID_length_mm": [2, 1, tube_length],
+            "tube_top_z_mm": a.tube_top_mm,
+            "reservoir_id_mm": a.reservoir_id_mm,
+            "pool_top_z_mm": a.pool_top_mm,
             "liquid_volume_mm3": liquid.volume(),
             "nominal_exit_area_mm2": lower.slice(0.25).area(),
             "scope": "Tube contacts plates directly; normal case has0.5mm clearance between metal holder and plates. Touch case bridges that clearance. Alumina_touch deliberately tests a metal-holder shunt despite insulating chamber. Mechanical mounting/clamps absent; no sealing or current result yet.",

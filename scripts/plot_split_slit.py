@@ -20,6 +20,8 @@ parser.add_argument("output", type=Path)
 args = parser.parse_args()
 manifest = json.loads((args.case / "manifest.json").read_text())
 gap = manifest["cases"][0]["slit_gap_mm"]
+short = manifest["cases"][0]["tube_OD_ID_length_mm"][2] < 9.5
+reservoir_id = manifest["cases"][0].get("reservoir_id_mm", 1.0)
 COLORS = {**COLORS, "alumina": "#f3e7c7"}
 
 
@@ -78,20 +80,37 @@ section(a, "alumina")
 a.set(
     xlim=(-6.3, 6.3),
     ylim=(-0.5, 10.5),
-    title="A. Central section: straight ceramic tube",
+    title=(
+        "A. Central section: short ceramic insert"
+        if short
+        else "A. Central section: straight ceramic tube"
+    ),
 )
 note(a, "M6 metal holder\n(thread envelope)", (2.2, 8), (-5.8, 9))
-note(a, "OD 2 / ID 1 mm tube", (0.8, 5.5), (1.5, 6))
+note(
+    a,
+    "OD 2 / ID 1 mm tube",
+    (0.8, 1.5) if short else (0.8, 5.5),
+    (1.5, 2.0) if short else (1.5, 6),
+)
+if short:
+    note(a, f"Ø{reservoir_id:g} mm reservoir\nin stainless", (0.7, 6.5), (1.3, 6.3))
 note(a, "Two separate\n0.5 mm copper plates", (2, 0.25), (-5.8, 1.8))
 a.axhline(0, color="#4e7789", lw=0.6, ls=":")
 section(b, "alumina")
 b.set(
     xlim=(-1.5, 1.5),
-    ylim=(-0.3, 2.2),
-    title="B. Outlet detail: alumina touches both plates",
+    ylim=(-0.3, 3.6 if short else 2.2),
+    title=(
+        "B. Outlet and insert seat"
+        if short
+        else "B. Outlet detail: alumina touches both plates"
+    ),
 )
 note(b, "Liquid solder", (0, 0.9), (-1.4, 1.7))
-note(b, "0.5 mm metal-holder clearance", (1.15, 0.75), (-1.4, 2.05))
+note(b, "0.5 mm metal-holder clearance", (1.15, 0.75), (-1.4, 3.35 if short else 2.05))
+if short:
+    note(b, "0.1 mm locating ledge", (0.95, 2.5), (-1.4, 2.95))
 b.annotate(
     "",
     xy=(-gap / 2, -0.12),
@@ -142,7 +161,11 @@ note(
 )
 note(d, "Bridge across the clearance", (2, 0.75), (-3.1, -0.12))
 fig.suptitle(
-    "Split-plate slit nozzle: no drilled outlet and a straight chamber tube\nActual comparison CAD; copper electrodes remain separate",
+    (
+        "Short ceramic insert and metal reservoir: same split-plate outlet\nActual review CAD; copper electrodes remain separate"
+        if short
+        else "Split-plate slit nozzle: no drilled outlet and a straight chamber tube\nActual comparison CAD; copper electrodes remain separate"
+    ),
     fontsize=15,
 )
 fig.legend(

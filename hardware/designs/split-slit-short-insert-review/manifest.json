@@ -1,0 +1,50 @@
+{
+  "status": "Nominal split-slit comparison CAD; no physics qualification",
+  "cases": [
+    {
+      "label": "alumina",
+      "project": "hardware/designs/split-slit-short-insert-review/alumina-charge.mhd.json",
+      "tube_material_id": 7,
+      "plate_to_holder_bridge": false,
+      "slit_gap_mm": 0.2,
+      "slit_max_length_mm": 1.0,
+      "plate_thickness_mm": 0.5,
+      "tube_OD_ID_length_mm": [
+        2,
+        1,
+        2.0
+      ],
+      "tube_top_z_mm": 2.5,
+      "reservoir_id_mm": 1.8,
+      "pool_top_z_mm": 9.0,
+      "liquid_volume_mm3": 18.197647961361678,
+      "nominal_exit_area_mm2": 0.19858808435353748,
+      "scope": "Tube contacts plates directly; normal case has0.5mm clearance between metal holder and plates. Touch case bridges that clearance. Alumina_touch deliberately tests a metal-holder shunt despite insulating chamber. Mechanical mounting/clamps absent; no sealing or current result yet."
+    }
+  ],
+  "source_sketch_attachment": "6a29e1d4-df86-44e8-a193-1bd473c76918",
+  "tube_stock_reference": "https://almathcrucibles.com/product/alm21/",
+  "stock_scope": "Manufacturer lists2mmOD/1mmID99.7%alumina tube; cut/lap short length, dimensions/fits and thermal contact not qualified.",
+  "conductivity_scope": "Initial geometry cases use existing fixedCu25MS/m,SS1.1MS/m,liquid2.2MS/m andidealinterfaces. Aluminium bar conductivity needs a separately documented sensitivity; it is not silently assumed superior.",
+  "generator_arguments": [
+    "--tube-top-mm",
+    "2.5",
+    "--reservoir-id-mm",
+    "1.8",
+    "--pool-top-mm",
+    "9"
+  ],
+  "rejected_variant": {
+    "reservoir_id_mm": 3.2,
+    "tube_top_mm": 2.5,
+    "reason": "Lower holder overlaps each existing pole by2.4mm3; rejected by exact CAD overlap check."
+  },
+  "scope": "One untested geometry candidate. Short ceramic insert has a nominal0.1mm radial locating shoulder. No sealing, retention, thermal or flow result. Metal reservoir can provide a current bypass reached through liquid.",
+  "sha256": {
+    "alumina.gltf": "946d229f98136628c51f9507a1a356003c9c16bcf2f35e827150be871e466c63",
+    "alumina.bin": "20c7a7631fb9728f15dc456bb5c26a07b263b8c58ef5b4bb57b7a6eed5d76ae6",
+    "alumina-charge.mhd.json": "e1424358d528fabcc9c666c62b8a90a324da476caeaf11d7fc5499cb81ec716a",
+    "alumina-charge-h010.mhd.json": "e00f2d66aabc95ff06e27515e641ddfd4f0f37755f1dab83408122015284d256",
+    "alumina-observer.mhd.json": "64134102ef9db2e0551c8ddceffcc08ba037a9475bd2f52f88eba91775e34711"
+  }
+}

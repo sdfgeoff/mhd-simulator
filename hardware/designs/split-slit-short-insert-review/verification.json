@@ -1,0 +1,20 @@
+{
+  "status": "Reloaded closed CAD and disconnected electrode checks passed; analytical geometry scales only",
+  "closed_exported_bodies": 10,
+  "holder_electrode_components_without_liquid": 3,
+  "default_generator_CAD_and_projects_byte_identical": true,
+  "liquid_volume_ratio_new_over_old": 4.120936980566946,
+  "plug_flow_inertance_old_Pa_s2_m3": 66644143.451002106,
+  "plug_flow_inertance_new_Pa_s2_m3": 53330144.75482083,
+  "plug_flow_inertance_ratio": 0.8002225250899961,
+  "equal_net_pressure_displacement_time_ratio": 0.8945515776577648,
+  "radial_only_resistance_old_K_W": 7.666949210706427,
+  "radial_only_resistance_new_K_W": 2.5549096420891195,
+  "radial_model_assumptions": "Isothermal pool; cylindrical heater skinR3mm. Old direct heated overlap2mm, steelR1..3 andaluminaR0.5..1. New overlap5mm, steelR0.9..3. Fixed screening k15/30. No interface/contact resistance, axial paths, heat loss to plates, convection, Joule heat or feed. These resistances do not predict actual pool temperature.",
+  "limits": [
+    "No native electrical/thermal/flow result for this short-insert variant.",
+    "Inertance uses ideal plug flow in successive constant-area sections; entrance effects, wetting, capillary dynamics and bypass current omitted.",
+    "20% inertance reduction is modest; the main hypothesis is improved heat delivery, not a demonstrated reduction in required pulse current.",
+    "Locating shoulder0.1mmradial width is not a qualified preload/seal design."
+  ]
+}
