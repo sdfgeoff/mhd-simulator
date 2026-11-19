@@ -1,0 +1,350 @@
+{
+  "method": "Compare completed, matched-grid native fluid exports without interpolation.\n\nCell-centred alpha/velocity diagnostics only; not an additional fluid solver.\nAlpha L1 is an absolute phase-volume difference, not net mass loss.\n",
+  "comparison_scope": "completed matched runs",
+  "partial_comparison_requested": false,
+  "export_matching": "physical time within1ps",
+  "reference": "artifacts/hardware-research/m6-rooted08-flow110-r25-motionabs1e-06A-h010-dt3",
+  "driven": "artifacts/hardware-research/m6-rooted08-flow110-r25-motionabs1e-06A-h010-dt1p5",
+  "reference_status": {
+    "accepted_steps": 1200,
+    "body_acceleration_work_J": 1.0194241453343313e-07,
+    "charge_boundary_criteria": {
+      "max_combined_port_imbalance_A": 1.52587890625e-05,
+      "max_motional_imbalance_A": 2.3173926422259683e-07,
+      "max_unit_relative_imbalance": 4.326152520661708e-06,
+      "motional_absolute_tolerance_A": 9.999999974752427e-07,
+      "unit_relative_tolerance": 1e-05
+    },
+    "charge_potential_representation": "split f32 high/low",
+    "charge_requested_relative_tolerance": 9.999999747378752e-06,
+    "charge_solver": "conservative-split-f32-v2",
+    "contact_resistivity_ohm_m2": 0.0,
+    "electrical_work_definition": "sum terminal phi*I on both ports",
+    "error": null,
+    "field_every": 300,
+    "fluid_em_work_J": 2.131249066018837e-06,
+    "fluid_external_work_J": 2.2331914805522702e-06,
+    "fluid_work_definition": "EM/impressed-force work only; excludes body acceleration",
+    "frequency_hz": 0.0,
+    "grid": {
+      "cell_m": 0.00010000000474974513,
+      "dims": [
+        76,
+        76,
+        185
+      ]
+    },
+    "joule_generated_J": 0.004508223936481988,
+    "lagged_electrical_work_J": 0.0045102990100589985,
+    "lagged_mechanical_work_J": 2.0991750125478746e-06,
+    "limitations": [
+      "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+      "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+      "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+      "New research client; not a GUI electrode feature or frozen-baseline claim."
+    ],
+    "max_charge_boundary_current_defect": 0.00014612286759074777,
+    "max_terminal_voltage_V": 0.18187162280082703,
+    "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+    "peak_A": 110.0,
+    "periodic_fluid_axes": [
+      false,
+      false,
+      false
+    ],
+    "positive_duration_s": 0.00025,
+    "project": "artifacts/hardware-research/cases/m6-rooted08-flow-compactgas-h010.mhd.json",
+    "pulse_start_s": 0.0,
+    "released_static_workspace_bytes": 240119604,
+    "requested_steps": 1200,
+    "retract_delay_s": 2.4999999999999998e-05,
+    "retract_fraction": 0.25,
+    "rise_s": 2e-05,
+    "status": "complete",
+    "tail_timestep_s": 3e-06,
+    "tail_transition_not_before_s": 0.00035833333333333333,
+    "terminal_boundary": "body",
+    "terminal_x_cell_indices": [
+      0,
+      75
+    ],
+    "time_s": 0.0035999999999999648,
+    "timestep_s": 3e-06,
+    "uniform_acceleration_m_s2": [
+      0.0,
+      0.0,
+      -9.8100004196167
+    ]
+  },
+  "driven_status": {
+    "accepted_steps": 2400,
+    "body_acceleration_work_J": 1.0230682755674306e-07,
+    "charge_boundary_criteria": {
+      "max_combined_port_imbalance_A": 0.00014495849609375,
+      "max_motional_imbalance_A": 2.762135409284383e-07,
+      "max_unit_relative_imbalance": 1.4601728253182955e-06,
+      "motional_absolute_tolerance_A": 9.999999974752427e-07,
+      "unit_relative_tolerance": 1e-05
+    },
+    "charge_potential_representation": "split f32 high/low",
+    "charge_requested_relative_tolerance": 9.999999747378752e-06,
+    "charge_solver": "conservative-split-f32-v2",
+    "contact_resistivity_ohm_m2": 0.0,
+    "electrical_work_definition": "sum terminal phi*I on both ports",
+    "error": null,
+    "field_every": 600,
+    "fluid_em_work_J": 2.130480079067776e-06,
+    "fluid_external_work_J": 2.232786906624519e-06,
+    "fluid_work_definition": "EM/impressed-force work only; excludes body acceleration",
+    "frequency_hz": 0.0,
+    "grid": {
+      "cell_m": 0.00010000000474974513,
+      "dims": [
+        76,
+        76,
+        185
+      ]
+    },
+    "joule_generated_J": 0.004507965957267718,
+    "lagged_electrical_work_J": 0.0045100522429432416,
+    "lagged_mechanical_work_J": 2.1144462614997385e-06,
+    "limitations": [
+      "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+      "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+      "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+      "New research client; not a GUI electrode feature or frozen-baseline claim."
+    ],
+    "max_charge_boundary_current_defect": 0.00022636548965238035,
+    "max_terminal_voltage_V": 0.18187692761421204,
+    "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+    "peak_A": 110.0,
+    "periodic_fluid_axes": [
+      false,
+      false,
+      false
+    ],
+    "positive_duration_s": 0.00025,
+    "project": "artifacts/hardware-research/cases/m6-rooted08-flow-compactgas-h010.mhd.json",
+    "pulse_start_s": 0.0,
+    "released_static_workspace_bytes": 240119604,
+    "requested_steps": 2400,
+    "retract_delay_s": 2.4999999999999998e-05,
+    "retract_fraction": 0.25,
+    "rise_s": 2e-05,
+    "status": "complete",
+    "tail_timestep_s": 1.5e-06,
+    "tail_transition_not_before_s": 0.00035833333333333333,
+    "terminal_boundary": "body",
+    "terminal_x_cell_indices": [
+      0,
+      75
+    ],
+    "time_s": 0.003600000000000199,
+    "timestep_s": 1.5e-06,
+    "uniform_acceleration_m_s2": [
+      0.0,
+      0.0,
+      -9.8100004196167
+    ]
+  },
+  "frames": [
+    {
+      "step": 0,
+      "candidate_step": 0,
+      "time_us": 0.0,
+      "comparison_grid": {
+        "dims": [
+          76,
+          76,
+          185
+        ],
+        "origin_m": [
+          -0.003800000064074993,
+          -0.003800000064074993,
+          -0.00800000037997961
+        ],
+        "cell_m": 0.00010000000474974513,
+        "scope": "common aligned native cells; no interpolation"
+      },
+      "exported_configuration_matches_except_wire_currents": false,
+      "alpha_L1_volume_difference_nl": 0.0,
+      "alpha_RMS_difference": 0.0,
+      "common_liquid_weighted_velocity_RMS_difference_m_s": 0.0,
+      "static_open_mask_identical": true,
+      "reference": {
+        "liquid_volume_nl": 26940.00226170938,
+        "whole_domain_liquid_volume_nl": 26940.00226170938,
+        "below_tip_nl": 1.202524061592914e-05,
+        "liquid_weighted_RMS_speed_m_s": 0.0,
+        "liquid_centre_z_mm": 4.0200075029646145
+      },
+      "driven": {
+        "liquid_volume_nl": 26940.00226170938,
+        "whole_domain_liquid_volume_nl": 26940.00226170938,
+        "below_tip_nl": 1.202524061592914e-05,
+        "liquid_weighted_RMS_speed_m_s": 0.0,
+        "liquid_centre_z_mm": 4.0200075029646145
+      }
+    },
+    {
+      "step": 300,
+      "candidate_step": 600,
+      "time_us": 899.9999999999964,
+      "comparison_grid": {
+        "dims": [
+          76,
+          76,
+          185
+        ],
+        "origin_m": [
+          -0.003800000064074993,
+          -0.003800000064074993,
+          -0.00800000037997961
+        ],
+        "cell_m": 0.00010000000474974513,
+        "scope": "common aligned native cells; no interpolation"
+      },
+      "exported_configuration_matches_except_wire_currents": false,
+      "alpha_L1_volume_difference_nl": 0.742962492101121,
+      "alpha_RMS_difference": 6.96445506787126e-05,
+      "common_liquid_weighted_velocity_RMS_difference_m_s": 0.000349811825021713,
+      "static_open_mask_identical": true,
+      "reference": {
+        "liquid_volume_nl": 26940.00270217047,
+        "whole_domain_liquid_volume_nl": 26940.00270217047,
+        "below_tip_nl": 130.93838104512525,
+        "liquid_weighted_RMS_speed_m_s": 0.09702363295503423,
+        "liquid_centre_z_mm": 3.9879906962866127
+      },
+      "driven": {
+        "liquid_volume_nl": 26940.00339023007,
+        "whole_domain_liquid_volume_nl": 26940.00339023007,
+        "below_tip_nl": 130.84052902301283,
+        "liquid_weighted_RMS_speed_m_s": 0.09703637911305091,
+        "liquid_centre_z_mm": 3.9880199167184456
+      }
+    },
+    {
+      "step": 600,
+      "candidate_step": 1200,
+      "time_us": 1799.999999999986,
+      "comparison_grid": {
+        "dims": [
+          76,
+          76,
+          185
+        ],
+        "origin_m": [
+          -0.003800000064074993,
+          -0.003800000064074993,
+          -0.00800000037997961
+        ],
+        "cell_m": 0.00010000000474974513,
+        "scope": "common aligned native cells; no interpolation"
+      },
+      "exported_configuration_matches_except_wire_currents": false,
+      "alpha_L1_volume_difference_nl": 4.968148149706859,
+      "alpha_RMS_difference": 0.0005115008542007676,
+      "common_liquid_weighted_velocity_RMS_difference_m_s": 0.0019927629210512894,
+      "static_open_mask_identical": true,
+      "reference": {
+        "liquid_volume_nl": 26940.00273696046,
+        "whole_domain_liquid_volume_nl": 26940.00273696046,
+        "below_tip_nl": 186.82427309547148,
+        "liquid_weighted_RMS_speed_m_s": 0.07180096043767116,
+        "liquid_centre_z_mm": 3.9706666209630965
+      },
+      "driven": {
+        "liquid_volume_nl": 26940.003139869066,
+        "whole_domain_liquid_volume_nl": 26940.003139869066,
+        "below_tip_nl": 186.84180024214496,
+        "liquid_weighted_RMS_speed_m_s": 0.07165091539127307,
+        "liquid_centre_z_mm": 3.9706717705511525
+      }
+    },
+    {
+      "step": 900,
+      "candidate_step": 1800,
+      "time_us": 2699.9999999999754,
+      "comparison_grid": {
+        "dims": [
+          76,
+          76,
+          185
+        ],
+        "origin_m": [
+          -0.003800000064074993,
+          -0.003800000064074993,
+          -0.00800000037997961
+        ],
+        "cell_m": 0.00010000000474974513,
+        "scope": "common aligned native cells; no interpolation"
+      },
+      "exported_configuration_matches_except_wire_currents": false,
+      "alpha_L1_volume_difference_nl": 18.5409575122885,
+      "alpha_RMS_difference": 0.0019197567832519157,
+      "common_liquid_weighted_velocity_RMS_difference_m_s": 0.004941186366708166,
+      "static_open_mask_identical": true,
+      "reference": {
+        "liquid_volume_nl": 26940.00267705315,
+        "whole_domain_liquid_volume_nl": 26940.00267705315,
+        "below_tip_nl": 198.45881572376362,
+        "liquid_weighted_RMS_speed_m_s": 0.059422254347538686,
+        "liquid_centre_z_mm": 3.9639401243230994
+      },
+      "driven": {
+        "liquid_volume_nl": 26940.00327544174,
+        "whole_domain_liquid_volume_nl": 26940.00327544174,
+        "below_tip_nl": 198.55991327980843,
+        "liquid_weighted_RMS_speed_m_s": 0.05952204757911491,
+        "liquid_centre_z_mm": 3.963895544953591
+      }
+    },
+    {
+      "step": 1200,
+      "candidate_step": 2400,
+      "time_us": 3599.999999999965,
+      "comparison_grid": {
+        "dims": [
+          76,
+          76,
+          185
+        ],
+        "origin_m": [
+          -0.003800000064074993,
+          -0.003800000064074993,
+          -0.00800000037997961
+        ],
+        "cell_m": 0.00010000000474974513,
+        "scope": "common aligned native cells; no interpolation"
+      },
+      "exported_configuration_matches_except_wire_currents": false,
+      "alpha_L1_volume_difference_nl": 39.15432080309965,
+      "alpha_RMS_difference": 0.0027579507123812494,
+      "common_liquid_weighted_velocity_RMS_difference_m_s": 0.0112990180375512,
+      "static_open_mask_identical": true,
+      "reference": {
+        "liquid_volume_nl": 26940.002672029463,
+        "whole_domain_liquid_volume_nl": 26940.002672029463,
+        "below_tip_nl": 179.40919635759445,
+        "liquid_weighted_RMS_speed_m_s": 0.06314798075923445,
+        "liquid_centre_z_mm": 3.965031028095773
+      },
+      "driven": {
+        "liquid_volume_nl": 26940.003081958243,
+        "whole_domain_liquid_volume_nl": 26940.003081958243,
+        "below_tip_nl": 180.23611140950555,
+        "liquid_weighted_RMS_speed_m_s": 0.06303034605744533,
+        "liquid_centre_z_mm": 3.9648409836667504
+      }
+    }
+  ],
+  "final_field_sha256": {
+    "artifacts/hardware-research/m6-rooted08-flow110-r25-motionabs1e-06A-h010-dt3/frame-00001200/fluid.bin": "729cf8a77c453df78e61083d764fc6fe17cd1b64e23aa08e3a8c16058f4d4eaf",
+    "artifacts/hardware-research/m6-rooted08-flow110-r25-motionabs1e-06A-h010-dt1p5/frame-00002400/fluid.bin": "fa8aa432b817a89c1577c19eaca6080eef822e84a1be27ab7730ae9157d945f8"
+  },
+  "limits": [
+    "Cell-centred diagnostics are not the solver's discrete face kinetic energy.",
+    "Comparisons do not establish grid convergence, driver feasibility or repetitive jetting."
+  ]
+}

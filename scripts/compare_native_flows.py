@@ -71,11 +71,21 @@ def main():
         action="store_true",
         help="Compare only common aligned cells of different-size domains",
     )
+    parser.add_argument("--match-time", action="store_true",
+                        help="Match exports by physical time when timestep counts differ")
     parser.add_argument("--available", action="store_true",
                         help="Explicit partial comparison of shared accepted exports; permits unfinished/failed runs")
     args = parser.parse_args()
     reference_status, reference = frames(args.reference, args.available)
     driven_status, driven = frames(args.driven, args.available)
+    if args.match_time:
+        def by_time(items):
+            result = {round(meta["time_s"] * 1e12): (path, meta)
+                      for path, meta in items.values()}
+            if len(result) != len(items):
+                raise ValueError("Multiple exports map to one physical time")
+            return result
+        reference, driven = by_time(reference), by_time(driven)
     if args.available:
         common = reference.keys() & driven.keys()
         reference = {k: reference[k] for k in common}
@@ -118,7 +128,8 @@ def main():
             for k in ["bodies", "materials", "cad_curves", "fluid", "run", "geometry"]
         )
         row = {
-            "step": step,
+            "step": a["step"],
+            "candidate_step": b["step"],
             "time_us": a["time_s"] * 1e6,
             "comparison_grid": grid,
             "exported_configuration_matches_except_wire_currents": current_only,
@@ -163,6 +174,7 @@ def main():
         "method": __doc__,
         "comparison_scope": "shared accepted exports only; partial run comparison" if args.available else "completed matched runs",
         "partial_comparison_requested": args.available,
+        "export_matching": "physical time within1ps" if args.match_time else "same accepted step",
         "reference": str(args.reference),
         "driven": str(args.driven),
         "reference_status": reference_status,
