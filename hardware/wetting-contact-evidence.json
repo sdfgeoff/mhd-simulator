@@ -1,0 +1,47 @@
+{
+  "status": "Primary wetting evidence and explicit electrical-contact data gap; no simulation calibration",
+  "accessed_NZ_date": "2026-11-20",
+  "sources": [
+    {
+      "title": "Wettability of Pure Metals with Liquid Sodium and Liquid Tin",
+      "authors": "J.-i.Saito,Y.Kobayashi,H.Shibutani",
+      "year": 2021,
+      "doi": "10.2320/matertrans.MT-M2021107",
+      "url": "https://www.jstage.jst.go.jp/article/matertrans/62/10/62_MT-M2021107/_html/-char/en",
+      "evidence": "Full primary HTML and Figure4 inspected. Pure liquid Sn at530K in argon: oxygen<3ppm and moisture2.6ppm. Polished substrates; SUS304 is a reference. Figure4b suggests about30deg onCu and130deg onSUS304; these are approximate graph readings, not fitted model inputs.",
+      "figure_local_sha256": "8c26b0ac61e73d38f98407c16160a86c34ddb08c7fbef0fd984c716bfc7fb8b3",
+      "limits": "PureSn, notSn99.3Cu0.7 or60/40. SUS304, not316. Does not measure specific electrical contact resistivity. Surface history and drop scale differ from this head."
+    },
+    {
+      "title": "Wettability of Liquid Tin on Solid Copper",
+      "authors": "I.Kawakatsu,T.Osawa",
+      "year": 1973,
+      "doi": "10.2320/matertrans1960.14.114",
+      "url": "https://www.jstage.jst.go.jp/article/matertrans1960/14/2/14_2_114/_article",
+      "evidence": "Primary abstract inspected. At340C, oxidizedCu with roughly60nmCu2O gives about half the tin spreading area of the unoxidized comparison.",
+      "limits": "Differenttemperature and surface preparation. Spreading area is not an electrical-contact-resistivity measurement."
+    },
+    {
+      "title": "Non-wetting to Wetting Transition Temperatures of Liquid Tin on Surfaces of Different Steel Samples Corresponding to their Spontaneous Deoxidation",
+      "authors": "D.Varanasi,K.E.Aldawoudi,P.Baumli,D.Koncz-Horvath,G.Kaptay",
+      "year": 2021,
+      "doi": "10.24425/amm.2021.135880",
+      "url": "https://www.imim.pl/files/archiwum/Vol2_2021/16.pdf",
+      "evidence": "Primary paper inspected. Initially oxidized steels in high vacuum remain nonwetting near tin melting; wetting transitions occur at substantially higher temperatures.",
+      "limits": "Steels tested areC45,S103,CK60,EN1.4034, not our316. These high-temperature transition data are not250C wetting-angle or electrical-contact calibration."
+    }
+  ],
+  "what_was_not_found": "No defensible measured specific electrical contact resistivity for this SnCu/solder/stainless/Cu geometry and preparation at operating temperature. The1e-9ohmm2 simulation remains an explicitly assumed sensitivity, not a literature-derived nominal value.",
+  "design_inferences": [
+    "Material-dependent wetting deserves attention: wetted copper electrodes could aid current transfer while relatively nonwetting stainless end walls could aid confinement. This is a testable design hypothesis, not established head performance.",
+    "A uniform neutral-wall fluid treatment and a uniform electrical-interface parameter do not capture these different surface states. Contact angle does not uniquely determine electrical contact resistivity.",
+    "Better wetting can also encourage unwanted film spreading. Integral stainless end walls still need a real hot seal against the copper plates; material choice alone does not close a seam."
+  ],
+  "targeted_measurement_outline": [
+    "Measure sessile-drop advancing/receding behavior on actual machined/preparedCu and316 coupons with each solder and the intended atmosphere/temperature; record preparation and timehistory.",
+    "Characterize electrical transfer in a known insulating bath fixture that prevents a steel-wall bypass. Use separate current/sense connections and reversed low-current readings to distinguish resistance from thermoelectric offsets.",
+    "Use geometry/area variation and bulk-current modeling to separate interface effects from liquid spreading resistance. Total head resistance alone can hide poor liquid transfer behind a metal shunt.",
+    "Only after low-current characterization, compare pulse-shapedV/I/contact behavior under the intended drive. Do not assume ohmic contact or transfer a fitted coefficient across different surface preparations."
+  ],
+  "scope": "These are proposed characterization steps, not tests performed or instructions to purchase hardware. No model input, native result or frozen simulator baseline changed."
+}
