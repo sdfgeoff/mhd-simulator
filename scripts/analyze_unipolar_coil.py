@@ -4,6 +4,7 @@ This is lumped circuit accounting, not another field or fluid solver.
 """
 
 import csv
+import argparse
 import hashlib
 import json
 import math
@@ -15,14 +16,21 @@ def digest(path):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--plan", type=Path)
+    parser.add_argument("--output", type=Path)
+    args = parser.parse_args()
     root = Path("artifacts/hardware-research")
-    plan_path = root / "unipolar-coil-v1-plan.json"
+    plan_path = args.plan or root / "unipolar-coil-v2-plan.json"
     plan = json.loads(plan_path.read_text())
     for job in plan["jobs"]:
         if not (Path(job["output"]) / "run-status.json").exists():
             raise SystemExit("Pending native coil run; no comparison written")
     inductance_path = root / "unipolar-coil-v1-air-inductance.json"
     air = json.loads(inductance_path.read_text())
+    air_project = json.loads(Path(air["project"]).read_text())
+    air_wire = air_project["electromagnetics"]["wires"][0]
+    air_points = air_project["cad_curves"][air_wire["cad_curve"]]["points_mm"]
     air_l = air["winding"][-1]["inductance_h"]
     if air["circle_check"]["relative_error"] > 0.005:
         raise ValueError("Independent air-inductance check failed")
@@ -44,6 +52,10 @@ def main():
             raise ValueError("Current scaling requires fixed stationary properties")
         wire = project["electromagnetics"]["wires"][0]
         points = project["cad_curves"][wire["cad_curve"]]["points_mm"]
+        if points != air_points or wire["core_radius_mm"] != air_wire["core_radius_mm"]:
+            raise ValueError(
+                "Air-inductance source winding differs from the native case"
+            )
         length = sum(math.dist(a, b) for a, b in zip(points, points[1:])) * 1e-3
         radius = wire["core_radius_mm"] * 1e-3
         # Explicit round-wire/hot-conductivity assumption, rather than silently
@@ -177,7 +189,9 @@ def main():
             "200um cold screen is not spatial convergence. Inspect work-balance and numerical-loss sensitivity before selecting a flow waveform.",
         ],
     }
-    output = root / "unipolar-coil-v1-comparison.json"
+    output = args.output or root / (
+        plan_path.stem.removesuffix("-plan") + "-comparison.json"
+    )
     output.write_text(json.dumps(record, indent=2) + "\n")
     print(output)
 

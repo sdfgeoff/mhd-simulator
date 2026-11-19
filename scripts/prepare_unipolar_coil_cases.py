@@ -5,6 +5,7 @@ RunState. A nonnegative coil current is not a DC current through the solder.
 """
 
 import copy
+import argparse
 import hashlib
 import json
 from pathlib import Path
@@ -23,8 +24,16 @@ def save_new_or_identical(path, value):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--tag", default="unipolar-coil-v2")
+    args = parser.parse_args()
+    if not args.tag or any(
+        c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-"
+        for c in args.tag
+    ):
+        parser.error("Use an alphanumeric/hyphen tag")
     root = Path("artifacts/hardware-research")
-    folder = root / "cases/unipolar-coil-v1"
+    folder = root / "cases" / args.tag
     folder.mkdir(parents=True, exist_ok=True)
     sources = {
         "custom": Path("hardware/designs/single-coil-250A/case.mhd.json"),
@@ -52,6 +61,7 @@ def main():
                 fluid_enabled=False, thermal_enabled=False, dt_s=0.5e-6
             )
             project["run"]["prescribed_jet"] = None
+            project["fluid"]["surface"]["enabled"] = False
             project["fluid"]["acceleration_m_s2"] = [0, 0, -9.81]
             # Sparse linear table is exact for these ramps; no AC carrier.
             project["electromagnetics"]["wires"][0]["current"] = {
@@ -65,7 +75,7 @@ def main():
             }
             path = folder / f"{geometry}-{label}-cold-h020.mhd.json"
             save_new_or_identical(path, project)
-            output = root / f"unipolar-coil-v1-{geometry}-{label}-cold-h020"
+            output = root / f"{args.tag}-{geometry}-{label}-cold-h020"
             jobs.append(
                 {
                     "geometry": geometry,
@@ -90,6 +100,7 @@ def main():
                 # Prepared only; choose an actual driven flow after assessing
                 # the cold force, loaded voltage and numerical losses.
                 project["run"]["fluid_enabled"] = True
+                project["fluid"]["surface"]["enabled"] = True
                 project["domain"]["cell_mm"] = 0.1
                 flow_path = folder / f"{geometry}-{label}-flow-h010.mhd.json"
                 save_new_or_identical(flow_path, project)
@@ -108,7 +119,7 @@ def main():
             "No new heater arrangement, wall temperature, winding manufacture, contact angle, oxide or repetition qualification.",
         ],
     }
-    path = root / "unipolar-coil-v1-plan.json"
+    path = root / f"{args.tag}-plan.json"
     save_new_or_identical(path, plan)
     print(path)
 

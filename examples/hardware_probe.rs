@@ -3,7 +3,11 @@
 use mhd_workbench::{domain::GpuDomain, em::CellField, gpu::read_bytes, project, run::RunState};
 use std::{error::Error, path::Path};
 
-fn main() -> Result<(), Box<dyn Error>> {
+pub(crate) fn main() -> Result<(), Box<dyn Error>> {
+    run_with_expected_adapter(None)
+}
+
+pub(crate) fn run_with_expected_adapter(expected: Option<&str>) -> Result<(), Box<dyn Error>> {
     let args: Vec<_> = std::env::args().collect();
     let input = Path::new(
         args.get(1)
@@ -17,14 +21,20 @@ fn main() -> Result<(), Box<dyn Error>> {
         return Err("Invalid probe range".into());
     }
     let p = project::load(input)?;
-    if p.run.fluid_enabled || p.run.thermal_enabled {
-        return Err("Static-label screening requires fluid and thermal disabled".into());
+    if p.run.fluid_enabled || p.run.thermal_enabled || p.fluid.surface.enabled {
+        return Err(
+            "Static-label screening requires fluid, thermal and moving-interface modes disabled"
+                .into(),
+        );
     }
     if let Some(parent) = out.parent() {
         std::fs::create_dir_all(parent)?;
     }
     std::fs::create_dir(out)?;
     let gpu = GpuDomain::new()?;
+    if expected.is_some_and(|name| gpu.name != name) {
+        return Err("Native compute adapter differs from the expected physical device".into());
+    }
     gpu.context.profiler.set_enabled(true);
     let volume = gpu.build(&p.model, &p.settings, &p.materials)?;
     if volume.overlaps > 0 {

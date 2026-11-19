@@ -1,0 +1,91 @@
+{
+  "status": "Independent AMD adapter initialization and native induction checks passed; full-case throughput not yet measured",
+  "inventory": {
+    "default_headless_selected_name": "AMD Radeon Graphics (RADV RENOIR)",
+    "driver_manifest": "/home/geoffrey/Reference/OffTopic/mhd-hardware-study/artifacts/hardware-research/radv-local-26.2.7/radeon-local.json",
+    "scope": "Device initialization/selection only; no simulation dispatches",
+    "vulkan_adapters": [
+      {
+        "backend": "Vulkan",
+        "device": 5688,
+        "device_type": "IntegratedGpu",
+        "driver": "radv",
+        "driver_info": "Mesa 26.2.7-arch1.1",
+        "max_buffer_size": 2147483647,
+        "max_storage_buffer_binding_size": 2147483647,
+        "name": "AMD Radeon Graphics (RADV RENOIR)",
+        "vendor": 4098
+      }
+    ]
+  },
+  "driver": {
+    "source_url": "https://mirror.2degrees.nz/archlinux/extra/os/x86_64/vulkan-radeon-1:26.2.7-1-x86_64.pkg.tar.zst",
+    "sha256": "51f8068a807b0a5cec0de7a2cecaefa503530187cc7f1da4ede137c9a064a7f7",
+    "source_metadata": "/var/lib/pacman/sync/extra.db",
+    "version": "1:26.2.7-1",
+    "manifest": "/home/geoffrey/Reference/OffTopic/mhd-hardware-study/artifacts/hardware-research/radv-local-26.2.7/radeon-local.json",
+    "scope": "Private extracted userspace driver; process-local manifest. No system package installation."
+  },
+  "gpu_tests": [
+    {
+      "name": "em::tests::loop_field_matches_analytic_and_pulse_induces_conserved_currents",
+      "status": "passed"
+    },
+    {
+      "name": "em::tests::implicit_diffusion_matches_discrete_eigenmode_and_time_refines",
+      "status": "passed"
+    },
+    {
+      "name": "em::tests::driven_induction_accounts_external_work_heat_and_backward_euler_loss",
+      "status": "passed"
+    }
+  ],
+  "native_prefix": {
+    "directory": "artifacts/hardware-research/unipolar-amd-prefix-v2-custom-symmetric100-h020",
+    "status": {
+      "ROI_z_m": [
+        0.0,
+        0.009000000000000001
+      ],
+      "accepted_steps": 20,
+      "cell_m": 0.00020000000949949026,
+      "diagnostic": "radial force moment per ROI volume, not a pressure solution or ejection criterion",
+      "dims": [
+        90,
+        90,
+        83
+      ],
+      "origin_m": [
+        -0.009000000543892384,
+        -0.009000000543892384,
+        -0.0020000000949949026
+      ],
+      "status": "complete",
+      "time_s": 1.0000000000000003e-05,
+      "warnings": []
+    },
+    "adapter": {
+      "backend": "Vulkan",
+      "device": 5688,
+      "driver": "radv",
+      "driver_info": "Mesa 26.2.7-arch1.1",
+      "manifest": "/home/geoffrey/Reference/OffTopic/mhd-hardware-study/artifacts/hardware-research/radv-local-26.2.7/radeon-local.json",
+      "method": "Delegate to the unchanged hardware_probe body and normal RunState; no alternate field solver. One compute job per physical adapter.",
+      "name": "AMD Radeon Graphics (RADV RENOIR)",
+      "vendor": 4098
+    },
+    "project_sha256": "3e28b403540870cf1755042be76e5f1168975ed6676d4672a6622c00ac992559"
+  },
+  "setup_error": {
+    "directory": "artifacts/hardware-research/unipolar-amd-prefix-custom-symmetric100-h020",
+    "observed_error": "Moving liquid/air boundaries need an assigned material with liquid density and viscosity",
+    "cause": "The stationaryv1input set fluid_enabledfalse while leaving surface.enabledtrue. No induction timestep was executed. Not an AMD numerical failure.",
+    "correction": "Preservev1inputs/output; preparev2 with surface tracking disabled for cold screens and explicitly enabled for optional coupled flow. Early validation added."
+  },
+  "scheduling_policy": "One solver per physical GPU. The AMD wrapper checks the single exposed Vulkan vendor and checks the native context name before dispatch. Isolated process driver manifest; NVIDIA fine run continues on its original adapter. Separate adapter leases permit overlap across physical devices only.",
+  "limits": [
+    "Passing selected analytical tests and20native steps does not qualify an entire coil waveform, cross-adapter bit identity or a droplet outcome.",
+    "Integrated GPU shares system power and host memory; net throughput must be measured, not assumed.",
+    "No system package installation or global driver settings; private extracted driver lives under ignored research artifacts."
+  ]
+}
