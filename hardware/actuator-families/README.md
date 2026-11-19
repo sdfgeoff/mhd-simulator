@@ -39,3 +39,13 @@ Regenerate with `TMPDIR="$PWD/artifacts/build-temp" uv run --offline --with mani
 ![Signed vertical velocity in matched completed exports](coil-vertical-control.png)
 
 The earlier velocity colour scale was speed magnitude. This image instead shows signed vertical velocity at 2.1 ms for both cases, with equal-length direction arrows. At the first outlet cell plane, liquid-weighted upward velocity is 0.0756 m/s without current and 0.0907 m/s with the pulse. The remaining liquid-section proxies there are only 0.0211 and 0.00933 mm² respectively, compared with 0.1600 mm² initially. These are local cell-centred diagnostics, not whole-pool velocities or exact face fluxes. At 150 µs the driven outlet retraction is slightly slower than the control; the relative response changes with time. Consequently the pulse cannot be identified as the sole cause of the upward retreat. Neither run started from a demonstrated equilibrated meniscus. Render from existing data with `scripts/plot_coil_vertical_control.py`; no new simulation is involved.
+
+## Selected direct-contact run
+
+![CAD, accepted fluid fields and actual current profile](selected-direct-run.png)
+
+Selected as the completed low-current integral circular-nozzle candidate, not the cleanest possible breakup or the lowest current across every design family. The 40 A slit prefix has a lower drive but severe lateral spreading and a failed run. The selected 110 A result completes 3.6 ms on 50 µm cells; a 0.596 mm leading region moves down at 0.889 m/s and a 0.417 mm secondary region moves down at 0.076 m/s, using liquid-fraction threshold 0.5. It is not clean single-drop release. [Accepted refinement evidence](../m6-rooted-flow-refinement-screening.json).
+
+CAD is loaded from the selected run's project. The complete CAD includes the aluminium heater, which was explicitly excluded from the fluid experiment. Contact and magnet planes are perpendicular. Saved fluid fields come from `m6-rooted08-flow110-r25-chargefix-h0050` at steps 600 and 2400. Two central y-cell layers are averaged. Colour is signed vertical velocity, masked to liquid fraction and open fraction above 0.5; blue means downward. The curve uses the commanded and solved terminal current columns from the same run, including the reverse pulse. Ideal liquid/solid electrical contact is assumed; a separate resistance sensitivity removed ejection, and breakup is not grid-converged.
+
+Regenerate from existing data with `TMPDIR="$PWD/artifacts/build-temp" uv run --offline --with manifold3d --with matplotlib python scripts/plot_direct_selected_run.py`. No new experiment is performed.
