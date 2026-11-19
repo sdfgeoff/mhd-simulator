@@ -12,6 +12,7 @@ from pathlib import Path
 
 import numpy as np
 from scipy import ndimage
+from native_field_io import read_native_fields
 
 
 def components(alpha, fields, h, origin, threshold):
@@ -68,9 +69,7 @@ def main():
         nx, ny, nz = m["dims"]
         h = m["cell_m"]
         origin = np.array(m["origin_m"])
-        f = np.memmap(path.parent / "fluid.bin", dtype="<f4", mode="r").reshape(
-            nz, ny, nx, 16
-        )
+        f = read_native_fields(path.parent / "fluid.bin", (nz, ny, nx, 16))
         alpha = f[..., 14]
         z = origin[2] + (np.arange(nz) + 0.5) * h
         if initial_aperture is None:

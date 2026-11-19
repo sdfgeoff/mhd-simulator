@@ -1,0 +1,841 @@
+{
+  "status": "Completed exploratory coarse single pulse; zero-current and refinement controls not yet assessed",
+  "native_run_status": {
+    "accepted_steps": 1200,
+    "contact_resistivity_ohm_m2": 0.0,
+    "error": null,
+    "field_every": 300,
+    "fluid_mechanical_work_J": 2.232425351689717e-06,
+    "frequency_hz": 0.0,
+    "grid": {
+      "cell_m": 0.00010000000474974513,
+      "dims": [
+        76,
+        170,
+        245
+      ]
+    },
+    "joule_generated_J": 0.00450818748443547,
+    "lagged_electrical_work_J": 0.004510279739812009,
+    "lagged_mechanical_work_J": 2.0984351798489607e-06,
+    "limitations": [
+      "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+      "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+      "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+      "New research client; not a GUI electrode feature or frozen-baseline claim."
+    ],
+    "max_terminal_voltage_V": 0.18187156319618225,
+    "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+    "peak_A": 110.0,
+    "periodic_fluid_axes": [
+      false,
+      false,
+      false
+    ],
+    "positive_duration_s": 0.00025,
+    "project": "artifacts/hardware-research/cases/m6-rooted08-flow-vented-tol1e4-h010.mhd.json",
+    "released_static_workspace_bytes": 708290668,
+    "retract_delay_s": 2.5e-05,
+    "retract_fraction": 0.25,
+    "rise_s": 2e-05,
+    "status": "complete",
+    "tail_timestep_s": 3e-06,
+    "tail_transition_not_before_s": 0.00035833333333333333,
+    "time_s": 0.0035999999999999648,
+    "timestep_s": 3e-06,
+    "uniform_acceleration_m_s2": [
+      0.0,
+      0.0,
+      -9.8100004196167
+    ]
+  },
+  "analysis": {
+    "method": "Accepted native exports; six-neighbour components at several alpha thresholds. Component volumes include alpha only above that threshold. Below-tip volume includes all alpha. Exit flux is a cell-centred proxy, not a native MAC-face flux. No convergence or wetting claim.",
+    "initial_aperture_proxy": {
+      "plane_z_mm": 0.050000002374872565,
+      "alpha_area_mm2": 0.12000000663101655,
+      "meaning": "Initial liquid-fraction area at the first cell-centre plane at or above the nominal exit; a voxel-aperture proxy, not the CAD area."
+    },
+    "component_minimum_alpha_weighted_cells": 1,
+    "component_minimum_volume_nl": 1.0000001424923606,
+    "frames": [
+      {
+        "step": 0,
+        "time_us": 0.0,
+        "first_nonnegative_cell_plane_z_mm": 0.050000002374872565,
+        "exit_plane_alpha_area_mm2": 0.12000000663101655,
+        "exit_plane_mean_uz_m_s": 0.0,
+        "exit_plane_mean_pressure_pa": 0.0,
+        "exit_plane_downward_flux_proxy_nl_s": -0.0,
+        "liquid_volume_nl": 26940.00226170938,
+        "minimum_liquid_fraction": 0.0,
+        "maximum_liquid_fraction": 1.0,
+        "below_tip_maximum_liquid_fraction_at_cell_centres": 9.5367431640625e-07,
+        "boundary_maximum_liquid_fraction": {
+          "z_min": 0.0,
+          "z_max": 0.0,
+          "y_min": 0.0,
+          "y_max": 0.0,
+          "x_min": 0.0,
+          "x_max": 0.0
+        },
+        "liquid_touches_domain_boundary_alpha01": false,
+        "below_tip_nl": 1.202524061592914e-05,
+        "below_one_cell_guard_nl": 0.0,
+        "front_z_mm_alpha_half": 0.050000002374872565,
+        "detached_below_tip": [],
+        "connectivity_thresholds": {
+          "0.01": [],
+          "0.25": [],
+          "0.5": [],
+          "0.75": []
+        },
+        "below_tip_change_nl": 0.0,
+        "relative_liquid_volume_change": 0.0
+      },
+      {
+        "step": 300,
+        "time_us": 899.9999999999964,
+        "first_nonnegative_cell_plane_z_mm": 0.050000002374872565,
+        "exit_plane_alpha_area_mm2": 0.12000000663101655,
+        "exit_plane_mean_uz_m_s": -0.8139941519099136,
+        "exit_plane_mean_pressure_pa": 1585.5659911460077,
+        "exit_plane_downward_flux_proxy_nl_s": 97679.30362679833,
+        "liquid_volume_nl": 26940.002595446214,
+        "minimum_liquid_fraction": 0.0,
+        "maximum_liquid_fraction": 1.0,
+        "below_tip_maximum_liquid_fraction_at_cell_centres": 1.0,
+        "boundary_maximum_liquid_fraction": {
+          "z_min": 0.0,
+          "z_max": 0.0,
+          "y_min": 0.0,
+          "y_max": 0.0,
+          "x_min": 0.0,
+          "x_max": 0.0
+        },
+        "liquid_touches_domain_boundary_alpha01": false,
+        "below_tip_nl": 130.91984468128965,
+        "below_one_cell_guard_nl": 118.79030833776667,
+        "front_z_mm_alpha_half": -1.2500000593718141,
+        "detached_below_tip": [],
+        "connectivity_thresholds": {
+          "0.01": [],
+          "0.25": [],
+          "0.5": [],
+          "0.75": []
+        },
+        "below_tip_change_nl": 130.91983265604904,
+        "relative_liquid_volume_change": 1.2388151837683381e-08
+      },
+      {
+        "step": 600,
+        "time_us": 1799.999999999986,
+        "first_nonnegative_cell_plane_z_mm": 0.050000002374872565,
+        "exit_plane_alpha_area_mm2": 0.12000000663101655,
+        "exit_plane_mean_uz_m_s": -0.28250771517585577,
+        "exit_plane_mean_pressure_pa": 2514.9916160500693,
+        "exit_plane_downward_flux_proxy_nl_s": 33900.92769441603,
+        "liquid_volume_nl": 26940.00259699544,
+        "minimum_liquid_fraction": 0.0,
+        "maximum_liquid_fraction": 1.0,
+        "below_tip_maximum_liquid_fraction_at_cell_centres": 1.0,
+        "boundary_maximum_liquid_fraction": {
+          "z_min": 0.0,
+          "z_max": 0.0,
+          "y_min": 0.0,
+          "y_max": 0.0,
+          "x_min": 0.0,
+          "x_max": 0.0
+        },
+        "liquid_touches_domain_boundary_alpha01": false,
+        "below_tip_nl": 186.79946806927444,
+        "below_one_cell_guard_nl": 173.61491394620174,
+        "front_z_mm_alpha_half": -2.1500001021195203,
+        "detached_below_tip": [],
+        "connectivity_thresholds": {
+          "0.01": [],
+          "0.25": [],
+          "0.5": [],
+          "0.75": []
+        },
+        "below_tip_change_nl": 186.79945604403383,
+        "relative_liquid_volume_change": 1.2445658281734495e-08
+      },
+      {
+        "step": 900,
+        "time_us": 2699.9999999999754,
+        "first_nonnegative_cell_plane_z_mm": 0.050000002374872565,
+        "exit_plane_alpha_area_mm2": 0.11999952025706899,
+        "exit_plane_mean_uz_m_s": 0.039696132563616995,
+        "exit_plane_mean_pressure_pa": 2096.3385564037685,
+        "exit_plane_downward_flux_proxy_nl_s": -4763.516863695053,
+        "liquid_volume_nl": 26940.002489015693,
+        "minimum_liquid_fraction": 0.0,
+        "maximum_liquid_fraction": 1.0,
+        "below_tip_maximum_liquid_fraction_at_cell_centres": 1.0,
+        "boundary_maximum_liquid_fraction": {
+          "z_min": 0.0,
+          "z_max": 0.0,
+          "y_min": 0.0,
+          "y_max": 0.0,
+          "x_min": 0.0,
+          "x_max": 0.0
+        },
+        "liquid_touches_domain_boundary_alpha01": false,
+        "below_tip_nl": 198.4300975613919,
+        "below_one_cell_guard_nl": 187.4639703456483,
+        "front_z_mm_alpha_half": -2.850000135367736,
+        "detached_below_tip": [
+          {
+            "volume_nl": 73.5118080818146,
+            "equivalent_diameter_mm": 0.5197400223888747,
+            "cells": 82,
+            "centre_mm": [
+              -8.427411991849409e-07,
+              -3.7925083983265243e-07,
+              -2.6901749083034106
+            ],
+            "velocity_m_s": [
+              1.44322973483213e-06,
+              -1.1029651147964614e-07,
+              -0.9342131018638611
+            ],
+            "touches_domain_boundary": false
+          },
+          {
+            "volume_nl": 1.208944731362654,
+            "equivalent_diameter_mm": 0.1321709286861312,
+            "cells": 2,
+            "centre_mm": [
+              -0.04999988595955074,
+              -0.05000006058253348,
+              -1.592428060161426
+            ],
+            "velocity_m_s": [
+              -0.03935973718762398,
+              -0.15219290554523468,
+              -0.42940765619277954
+            ],
+            "touches_domain_boundary": false
+          },
+          {
+            "volume_nl": 1.2086026602575457,
+            "equivalent_diameter_mm": 0.13215846158173009,
+            "cells": 2,
+            "centre_mm": [
+              0.050000121256050196,
+              0.049999946633058845,
+              -1.5924306585080874
+            ],
+            "velocity_m_s": [
+              0.038995131850242615,
+              0.15260951220989227,
+              -0.42939960956573486
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "connectivity_thresholds": {
+          "0.01": [
+            {
+              "volume_nl": 93.91547257179946,
+              "equivalent_diameter_mm": 0.5639572385040342,
+              "cells": 172,
+              "centre_mm": [
+                -2.017616513040026e-06,
+                -1.4433651637759848e-06,
+                -2.694707901683345
+              ],
+              "velocity_m_s": [
+                2.3159204829426017e-06,
+                4.6613251925009536e-07,
+                -0.9303274750709534
+              ],
+              "touches_domain_boundary": false
+            },
+            {
+              "volume_nl": 2.0112873005931524,
+              "equivalent_diameter_mm": 0.15661204591607167,
+              "cells": 11,
+              "centre_mm": [
+                0.28147418298447024,
+                -0.27371307317115956,
+                -2.1887287842390695
+              ],
+              "velocity_m_s": [
+                0.22522787749767303,
+                -0.21413183212280273,
+                -0.9414024353027344
+              ],
+              "touches_domain_boundary": false
+            },
+            {
+              "volume_nl": 2.011185135423482,
+              "equivalent_diameter_mm": 0.1566093941206829,
+              "cells": 11,
+              "centre_mm": [
+                -0.28148131162999984,
+                0.2737441428750665,
+                -2.1886045764693516
+              ],
+              "velocity_m_s": [
+                -0.22527781128883362,
+                0.21425898373126984,
+                -0.9410942792892456
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.25": [
+            {
+              "volume_nl": 87.1523189156349,
+              "equivalent_diameter_mm": 0.5500811651986203,
+              "cells": 118,
+              "centre_mm": [
+                -1.5531547081985336e-06,
+                -1.1264124215134152e-06,
+                -2.6925657051949603
+              ],
+              "velocity_m_s": [
+                2.2075876131566474e-06,
+                6.027683525644534e-07,
+                -0.9320662021636963
+              ],
+              "touches_domain_boundary": false
+            },
+            {
+              "volume_nl": 1.2539109288233832,
+              "equivalent_diameter_mm": 0.13378970262654288,
+              "cells": 3,
+              "centre_mm": [
+                0.2711027361017134,
+                -0.25000006414014747,
+                -2.177065913754131
+              ],
+              "velocity_m_s": [
+                0.21549586951732635,
+                -0.20936009287834167,
+                -0.9355370998382568
+              ],
+              "touches_domain_boundary": false
+            },
+            {
+              "volume_nl": 1.2540436087815592,
+              "equivalent_diameter_mm": 0.13379442135248407,
+              "cells": 3,
+              "centre_mm": [
+                -0.2711404401661083,
+                0.2499999714904381,
+                -2.1769630496519685
+              ],
+              "velocity_m_s": [
+                -0.21554766595363617,
+                0.2095102220773697,
+                -0.9352326989173889
+              ],
+              "touches_domain_boundary": false
+            },
+            {
+              "volume_nl": 1.521524288498977,
+              "equivalent_diameter_mm": 0.14270091431247145,
+              "cells": 3,
+              "centre_mm": [
+                -0.04999988595955074,
+                -0.05000006058253348,
+                -1.5631678776077826
+              ],
+              "velocity_m_s": [
+                -0.025802580639719963,
+                -0.12427137792110443,
+                -0.30901992321014404
+              ],
+              "touches_domain_boundary": false
+            },
+            {
+              "volume_nl": 1.5212018869294472,
+              "equivalent_diameter_mm": 0.14269083445395706,
+              "cells": 3,
+              "centre_mm": [
+                0.05000012074932939,
+                0.04999994612633981,
+                -1.5631618978642867
+              ],
+              "velocity_m_s": [
+                0.02550017274916172,
+                0.12463688850402832,
+                -0.30897992849349976
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.5": [
+            {
+              "volume_nl": 73.5118080818146,
+              "equivalent_diameter_mm": 0.5197400223888747,
+              "cells": 82,
+              "centre_mm": [
+                -8.427411991849409e-07,
+                -3.7925083983265243e-07,
+                -2.6901749083034106
+              ],
+              "velocity_m_s": [
+                1.44322973483213e-06,
+                -1.1029651147964614e-07,
+                -0.9342131018638611
+              ],
+              "touches_domain_boundary": false
+            },
+            {
+              "volume_nl": 1.208944731362654,
+              "equivalent_diameter_mm": 0.1321709286861312,
+              "cells": 2,
+              "centre_mm": [
+                -0.04999988595955074,
+                -0.05000006058253348,
+                -1.592428060161426
+              ],
+              "velocity_m_s": [
+                -0.03935973718762398,
+                -0.15219290554523468,
+                -0.42940765619277954
+              ],
+              "touches_domain_boundary": false
+            },
+            {
+              "volume_nl": 1.2086026602575457,
+              "equivalent_diameter_mm": 0.13215846158173009,
+              "cells": 2,
+              "centre_mm": [
+                0.050000121256050196,
+                0.049999946633058845,
+                -1.5924306585080874
+              ],
+              "velocity_m_s": [
+                0.038995131850242615,
+                0.15260951220989227,
+                -0.42939960956573486
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.75": [
+            {
+              "volume_nl": 60.4668997856181,
+              "equivalent_diameter_mm": 0.4869746566000256,
+              "cells": 62,
+              "centre_mm": [
+                -5.5399196930230874e-08,
+                -3.489024284775761e-07,
+                -2.689401516909339
+              ],
+              "velocity_m_s": [
+                1.120416868616303e-06,
+                -8.699156524016871e-07,
+                -0.9399273991584778
+              ],
+              "touches_domain_boundary": false
+            }
+          ]
+        },
+        "below_tip_change_nl": 198.4300855361513,
+        "relative_liquid_volume_change": 8.4375015863003e-09
+      },
+      {
+        "step": 1200,
+        "time_us": 3599.999999999965,
+        "first_nonnegative_cell_plane_z_mm": 0.050000002374872565,
+        "exit_plane_alpha_area_mm2": 0.11813072075073855,
+        "exit_plane_mean_uz_m_s": 0.372651076823114,
+        "exit_plane_mean_pressure_pa": 2818.6168633772113,
+        "exit_plane_downward_flux_proxy_nl_s": -44021.5402936533,
+        "liquid_volume_nl": 26940.002437447423,
+        "minimum_liquid_fraction": 0.0,
+        "maximum_liquid_fraction": 1.0,
+        "below_tip_maximum_liquid_fraction_at_cell_centres": 1.0,
+        "boundary_maximum_liquid_fraction": {
+          "z_min": 0.0,
+          "z_max": 0.0,
+          "y_min": 0.0,
+          "y_max": 0.0,
+          "x_min": 0.0,
+          "x_max": 0.0
+        },
+        "liquid_touches_domain_boundary_alpha01": false,
+        "below_tip_nl": 179.39026200768757,
+        "below_one_cell_guard_nl": 169.31276237978423,
+        "front_z_mm_alpha_half": -3.7500001781154424,
+        "detached_below_tip": [
+          {
+            "volume_nl": 81.42197970446357,
+            "equivalent_diameter_mm": 0.5377507339213728,
+            "cells": 96,
+            "centre_mm": [
+              9.328265290001631e-08,
+              -5.14638468469356e-07,
+              -3.5464598936595673
+            ],
+            "velocity_m_s": [
+              -3.451128804954351e-06,
+              4.4129574234830216e-06,
+              -0.9306781888008118
+            ],
+            "touches_domain_boundary": false
+          },
+          {
+            "volume_nl": 43.50883901198556,
+            "equivalent_diameter_mm": 0.4363747611863339,
+            "cells": 56,
+            "centre_mm": [
+              2.3075032307845317e-06,
+              2.7167502325884315e-06,
+              -0.9721184267919637
+            ],
+            "velocity_m_s": [
+              6.953439878998324e-05,
+              4.093391453352524e-06,
+              -0.02970743738114834
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "connectivity_thresholds": {
+          "0.01": [
+            {
+              "volume_nl": 93.87450959514696,
+              "equivalent_diameter_mm": 0.5638752331075078,
+              "cells": 170,
+              "centre_mm": [
+                -5.087587395831602e-07,
+                1.5152334963509495e-07,
+                -3.5427750223922008
+              ],
+              "velocity_m_s": [
+                -3.546806738086161e-06,
+                4.609199095284566e-06,
+                -0.9266576170921326
+              ],
+              "touches_domain_boundary": false
+            },
+            {
+              "volume_nl": 1.9780446520455208,
+              "equivalent_diameter_mm": 0.15574441779297887,
+              "cells": 11,
+              "centre_mm": [
+                0.5717949698421503,
+                -0.5769813100294061,
+                -3.311772953169658
+              ],
+              "velocity_m_s": [
+                0.23328904807567596,
+                -0.19681239128112793,
+                -0.9883352518081665
+              ],
+              "touches_domain_boundary": false
+            },
+            {
+              "volume_nl": 1.9784114618757038,
+              "equivalent_diameter_mm": 0.15575404431184556,
+              "cells": 11,
+              "centre_mm": [
+                -0.5716427110993417,
+                0.5769965728623195,
+                -3.31138712085629
+              ],
+              "velocity_m_s": [
+                -0.2334907203912735,
+                0.19614428281784058,
+                -0.988235354423523
+              ],
+              "touches_domain_boundary": false
+            },
+            {
+              "volume_nl": 1.9270415230070472,
+              "equivalent_diameter_mm": 0.1543941414431261,
+              "cells": 16,
+              "centre_mm": [
+                -4.98798836407596e-06,
+                0.00010524711315678753,
+                -1.9847533624991684
+              ],
+              "velocity_m_s": [
+                -0.0002373192983213812,
+                0.0013306228211149573,
+                -0.1732913702726364
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.25": [
+            {
+              "volume_nl": 88.41665505594287,
+              "equivalent_diameter_mm": 0.5527284504733715,
+              "cells": 116,
+              "centre_mm": [
+                -1.0490777748184065e-06,
+                6.530203657483063e-07,
+                -3.542437252992346
+              ],
+              "velocity_m_s": [
+                -3.5429784475127235e-06,
+                4.454644567886135e-06,
+                -0.9283087253570557
+              ],
+              "touches_domain_boundary": false
+            },
+            {
+              "volume_nl": 1.3003486459640077,
+              "equivalent_diameter_mm": 0.13542132616934938,
+              "cells": 3,
+              "centre_mm": [
+                0.5500001677495199,
+                -0.5704341145422639,
+                -3.3138285895021053
+              ],
+              "velocity_m_s": [
+                0.23262128233909607,
+                -0.17705754935741425,
+                -0.9825344681739807
+              ],
+              "touches_domain_boundary": false
+            },
+            {
+              "volume_nl": 1.300827390539061,
+              "equivalent_diameter_mm": 0.135437943320637,
+              "cells": 3,
+              "centre_mm": [
+                -0.5499998845069679,
+                0.5703794135936063,
+                -3.3135064893274646
+              ],
+              "velocity_m_s": [
+                -0.2330102175474167,
+                0.176474466919899,
+                -0.9824061989784241
+              ],
+              "touches_domain_boundary": false
+            },
+            {
+              "volume_nl": 54.481302871963514,
+              "equivalent_diameter_mm": 0.47034473561011503,
+              "cells": 84,
+              "centre_mm": [
+                1.2265114375954395e-05,
+                -1.6771115639516541e-06,
+                -0.9887807851097887
+              ],
+              "velocity_m_s": [
+                7.283740706043318e-05,
+                8.445432285952847e-06,
+                -0.030430234968662262
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.5": [
+            {
+              "volume_nl": 81.42197970446357,
+              "equivalent_diameter_mm": 0.5377507339213728,
+              "cells": 96,
+              "centre_mm": [
+                9.328265290001631e-08,
+                -5.14638468469356e-07,
+                -3.5464598936595673
+              ],
+              "velocity_m_s": [
+                -3.451128804954351e-06,
+                4.4129574234830216e-06,
+                -0.9306781888008118
+              ],
+              "touches_domain_boundary": false
+            },
+            {
+              "volume_nl": 43.50883901198556,
+              "equivalent_diameter_mm": 0.4363747611863339,
+              "cells": 56,
+              "centre_mm": [
+                2.3075032307845317e-06,
+                2.7167502325884315e-06,
+                -0.9721184267919637
+              ],
+              "velocity_m_s": [
+                6.953439878998324e-05,
+                4.093391453352524e-06,
+                -0.02970743738114834
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.75": [
+            {
+              "volume_nl": 62.4284491683839,
+              "equivalent_diameter_mm": 0.49218454764148856,
+              "cells": 66,
+              "centre_mm": [
+                3.941332079332694e-08,
+                -1.1974242844667404e-07,
+                -3.534403458829205
+              ],
+              "velocity_m_s": [
+                -4.039889972773381e-06,
+                4.519093636190519e-06,
+                -0.9355019330978394
+              ],
+              "touches_domain_boundary": false
+            },
+            {
+              "volume_nl": 25.52205926261348,
+              "equivalent_diameter_mm": 0.36529104870946794,
+              "cells": 28,
+              "centre_mm": [
+                1.6370053974942246e-06,
+                5.933538477481026e-06,
+                -0.9932449976033612
+              ],
+              "velocity_m_s": [
+                2.5635288693592884e-05,
+                2.0043717086082324e-05,
+                -0.049601856619119644
+              ],
+              "touches_domain_boundary": false
+            }
+          ]
+        },
+        "below_tip_change_nl": 179.39024998244696,
+        "relative_liquid_volume_change": 6.523312112705071e-09
+      }
+    ]
+  },
+  "frame_divergence_checks": [
+    {
+      "time_s": 0.0,
+      "all_mobile": {
+        "RMS_divergence_s_inv": 0.0,
+        "max_abs_divergence_s_inv": 0.0
+      },
+      "liquid_alpha_half": {
+        "RMS_divergence_s_inv": 0.0,
+        "max_abs_divergence_s_inv": 0.0
+      }
+    },
+    {
+      "time_s": 0.0008999999999999964,
+      "all_mobile": {
+        "RMS_divergence_s_inv": 9.121895343282002e-05,
+        "max_abs_divergence_s_inv": 0.0036507844924926758
+      },
+      "liquid_alpha_half": {
+        "RMS_divergence_s_inv": 6.054658125144895e-05,
+        "max_abs_divergence_s_inv": 0.001564621925354004
+      }
+    },
+    {
+      "time_s": 0.0017999999999999859,
+      "all_mobile": {
+        "RMS_divergence_s_inv": 0.00018401247473470337,
+        "max_abs_divergence_s_inv": 0.0077858567237854
+      },
+      "liquid_alpha_half": {
+        "RMS_divergence_s_inv": 3.278899043142906e-05,
+        "max_abs_divergence_s_inv": 0.0011920928955078125
+      }
+    },
+    {
+      "time_s": 0.0026999999999999754,
+      "all_mobile": {
+        "RMS_divergence_s_inv": 0.0002800933161285643,
+        "max_abs_divergence_s_inv": 0.018030405044555664
+      },
+      "liquid_alpha_half": {
+        "RMS_divergence_s_inv": 4.8106377766871465e-05,
+        "max_abs_divergence_s_inv": 0.0019371509552001953
+      }
+    },
+    {
+      "time_s": 0.0035999999999999648,
+      "all_mobile": {
+        "RMS_divergence_s_inv": 0.0008198440522502029,
+        "max_abs_divergence_s_inv": 0.03784894943237305
+      },
+      "liquid_alpha_half": {
+        "RMS_divergence_s_inv": 7.476284798045183e-05,
+        "max_abs_divergence_s_inv": 0.0025331974029541016
+      }
+    }
+  ],
+  "final_largest_detached_region_by_threshold": {
+    "0.01": {
+      "volume_nl": 93.87450959514696,
+      "equivalent_diameter_mm": 0.5638752331075078,
+      "cells": 170,
+      "centre_mm": [
+        -5.087587395831602e-07,
+        1.5152334963509495e-07,
+        -3.5427750223922008
+      ],
+      "velocity_m_s": [
+        -3.546806738086161e-06,
+        4.609199095284566e-06,
+        -0.9266576170921326
+      ],
+      "touches_domain_boundary": false
+    },
+    "0.25": {
+      "volume_nl": 88.41665505594287,
+      "equivalent_diameter_mm": 0.5527284504733715,
+      "cells": 116,
+      "centre_mm": [
+        -1.0490777748184065e-06,
+        6.530203657483063e-07,
+        -3.542437252992346
+      ],
+      "velocity_m_s": [
+        -3.5429784475127235e-06,
+        4.454644567886135e-06,
+        -0.9283087253570557
+      ],
+      "touches_domain_boundary": false
+    },
+    "0.5": {
+      "volume_nl": 81.42197970446357,
+      "equivalent_diameter_mm": 0.5377507339213728,
+      "cells": 96,
+      "centre_mm": [
+        9.328265290001631e-08,
+        -5.14638468469356e-07,
+        -3.5464598936595673
+      ],
+      "velocity_m_s": [
+        -3.451128804954351e-06,
+        4.4129574234830216e-06,
+        -0.9306781888008118
+      ],
+      "touches_domain_boundary": false
+    },
+    "0.75": {
+      "volume_nl": 62.4284491683839,
+      "equivalent_diameter_mm": 0.49218454764148856,
+      "cells": 66,
+      "centre_mm": [
+        3.941332079332694e-08,
+        -1.1974242844667404e-07,
+        -3.534403458829205
+      ],
+      "velocity_m_s": [
+        -4.039889972773381e-06,
+        4.519093636190519e-06,
+        -0.9355019330978394
+      ],
+      "touches_domain_boundary": false
+    }
+  },
+  "max_relative_liquid_volume_change": 1.2445658281734495e-08,
+  "electrical_minus_joule_minus_lagged_mechanical_J": -6.179803310055292e-09,
+  "actual_vs_lagged_mechanical_relative_difference": 0.06385242352370435,
+  "interpretation": [
+    "A detached leading region appears by2.7ms atallfouralpha thresholds. Final equivalentdiameter0.49..0.56mm anddownwardspeedabout0.93m/s; these are threshold-dependent coarse metrics, not physical validation.",
+    "Trailingliquid / possible secondary breakup is threshold-sensitive andslow. No cleanone-drop-per-pulse orhundreds-Hz claim.",
+    "100umgridhas4cellsacrossthe0.4mmbore. Knowncapillary/slow-motion errors remain. Zero-drivecontrol, spatial/timestep sensitivity andreturn-to-rest are pending.",
+    "InductionlessimposedPM approximation, fixedmaterialproperties, idealcontacts; no thermal evolution,wirefeed,oxide/contactchemistry,current self-field ordriver switching.",
+    "The0.8mmreplaceablestrip/carrierCAD is a separate geometry branch; it is not the model in this flow result."
+  ]
+}

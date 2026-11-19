@@ -4,6 +4,7 @@ import argparse, json
 from pathlib import Path
 import numpy as np
 from scipy import ndimage
+from native_field_io import read_native_fields
 
 p = argparse.ArgumentParser(description=__doc__)
 p.add_argument("runs", nargs="+", type=Path)
@@ -16,7 +17,7 @@ for run in a.runs:
     nx, ny, nz = m["dims"]
     h = m["cell_m"]
     origin = np.array(m["origin_m"])
-    f = np.memmap(frame / "fluid.bin", mode="r", dtype="<f4").reshape(nz, ny, nx, 16)
+    f = read_native_fields(frame / "fluid.bin", (nz, ny, nx, 16))
     mobile = f[..., 12] > 0.5
     labels, n = ndimage.label(mobile & (f[..., 14] < 0.01))
     _, fluid_n = ndimage.label(mobile)

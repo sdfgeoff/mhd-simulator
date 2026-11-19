@@ -4,6 +4,7 @@ from pathlib import Path
 import json
 import numpy as np
 from scipy import ndimage
+from native_field_io import read_native_fields
 import matplotlib
 
 matplotlib.use("Agg")
@@ -23,7 +24,7 @@ for ax, name, title in zip(
     nx, ny, nz = m["dims"]
     h = m["cell_m"]
     origin = np.array(m["origin_m"])
-    f = np.memmap(p / "fluid.bin", mode="r", dtype="<f4").reshape(nz, ny, nx, 16)
+    f = read_native_fields(p / "fluid.bin", (nz, ny, nx, 16))
     mobile = f[..., 12] > 0.5
     gas = mobile & (f[..., 14] < 0.01)
     labels, n = ndimage.label(gas)
