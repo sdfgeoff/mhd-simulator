@@ -1,0 +1,656 @@
+{
+  "status": "Partial exploratory native trial: accepted300steps/0.9ms; fullrun andzero-currentcontrol not yet assessed",
+  "run": "artifacts/hardware-research/m6-rooted08-flow110-r25-vented-tol1e4-h010",
+  "frame_metadata": {
+    "bodies": [
+      {
+        "name": "Short M6 nozzle stub4 / 0",
+        "simulation": {
+          "fixed_temperature_c": null,
+          "heat_source_w_m3": 0.0,
+          "included": true,
+          "material_id": 14,
+          "temperature_c": 250.0
+        }
+      },
+      {
+        "name": "Liquid solder / 0",
+        "simulation": {
+          "fixed_temperature_c": null,
+          "heat_source_w_m3": 0.0,
+          "included": true,
+          "material_id": 4,
+          "temperature_c": 250.0
+        }
+      },
+      {
+        "name": "Positive copper contact / 0",
+        "simulation": {
+          "fixed_temperature_c": null,
+          "heat_source_w_m3": 0.0,
+          "included": true,
+          "material_id": 16,
+          "temperature_c": 250.0
+        }
+      },
+      {
+        "name": "Negative copper contact / 0",
+        "simulation": {
+          "fixed_temperature_c": null,
+          "heat_source_w_m3": 0.0,
+          "included": true,
+          "material_id": 17,
+          "temperature_c": 250.0
+        }
+      },
+      {
+        "name": "Bias magnet 1 / 0",
+        "simulation": {
+          "fixed_temperature_c": null,
+          "heat_source_w_m3": 0.0,
+          "included": true,
+          "material_id": 18,
+          "temperature_c": 20.0
+        }
+      },
+      {
+        "name": "Bias magnet 2 / 0",
+        "simulation": {
+          "fixed_temperature_c": null,
+          "heat_source_w_m3": 0.0,
+          "included": true,
+          "material_id": 18,
+          "temperature_c": 20.0
+        }
+      },
+      {
+        "name": "Mica electrical insulator -1 / 0",
+        "simulation": {
+          "fixed_temperature_c": null,
+          "heat_source_w_m3": 0.0,
+          "included": true,
+          "material_id": 19,
+          "temperature_c": 250.0
+        }
+      },
+      {
+        "name": "Mica electrical insulator 1 / 0",
+        "simulation": {
+          "fixed_temperature_c": null,
+          "heat_source_w_m3": 0.0,
+          "included": true,
+          "material_id": 19,
+          "temperature_c": 250.0
+        }
+      },
+      {
+        "name": "Heated aluminium block / 0",
+        "simulation": {
+          "fixed_temperature_c": 250.0,
+          "heat_source_w_m3": 0.0,
+          "included": true,
+          "material_id": 8,
+          "temperature_c": 250.0
+        }
+      }
+    ],
+    "byte_order": "little",
+    "cad_curves": [],
+    "cell_m": 0.00010000000474974513,
+    "cell_order": "x fastest, then y, then z",
+    "dims": [
+      76,
+      170,
+      245
+    ],
+    "electromagnetics": {
+      "dt_s": 3e-06,
+      "magnets": [],
+      "max_iterations": 1000,
+      "relative_tolerance": 9.999999747378752e-06,
+      "uniform": [],
+      "wires": []
+    },
+    "energy_j": {
+      "external_work": 2.1958694131016943e-06,
+      "joule": 0.0,
+      "kinetic": 8.964982498582685e-07,
+      "magnetic": 0.0,
+      "thermal": 0.0
+    },
+    "files": [
+      {
+        "bytes": 202585600,
+        "f32_components_per_cell": 16,
+        "file": "fluid.bin",
+        "physics": "fluid"
+      }
+    ],
+    "fluid": {
+      "absolute_divergence_tolerance": 9.999999747378752e-06,
+      "acceleration_m_s2": [
+        0.0,
+        0.0,
+        -9.8100004196167
+      ],
+      "advection": true,
+      "dt_s": 3e-06,
+      "initial_velocity_m_s": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "material_id": 4,
+      "max_iterations": 10000,
+      "max_viscous_substeps": 4096,
+      "mushy_drag_rate_s_inv": 1000000.0,
+      "periodic": [
+        false,
+        false,
+        false
+      ],
+      "relative_tolerance": 9.999999747378752e-05,
+      "surface": {
+        "enabled": true
+      },
+      "use_em_force": true
+    },
+    "forcing_kind": "none",
+    "format_version": 1,
+    "geometry": "/home/geoffrey/Reference/OffTopic/mhd-hardware-study/hardware/designs/rooted08-hot-contact-m6/hot-contact.gltf",
+    "material_volume_m3": 2.6940002229025595e-08,
+    "materials": [
+      {
+        "conductivity_s_m": 0.0,
+        "density_kg_m3": 1.2000000476837158,
+        "dynamic_viscosity_pa_s": 1.8000000636675395e-05,
+        "id": 0,
+        "name": "Air / void",
+        "notes": "EM vacuum/insulator approximation; approximate density and dynamic viscosity near room temperature. Constant properties; temperature dependence is not modeled.",
+        "reference": "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/air-properties-definitions/",
+        "relative_permeability": 1.0,
+        "surface_tension_n_m": null,
+        "thermal": {
+          "conductivity_w_m_k": 0.026000000536441803,
+          "heat_capacity_j_kg_k": 1005.0,
+          "latent_heat_j_kg": null,
+          "liquidus_c": null,
+          "solidus_c": null
+        }
+      },
+      {
+        "conductivity_s_m": null,
+        "density_kg_m3": null,
+        "dynamic_viscosity_pa_s": null,
+        "id": 1,
+        "name": "Unassigned",
+        "notes": "Select a physical material before simulating this component.",
+        "reference": null,
+        "relative_permeability": null,
+        "surface_tension_n_m": null,
+        "thermal": {
+          "conductivity_w_m_k": null,
+          "heat_capacity_j_kg_k": null,
+          "latent_heat_j_kg": null,
+          "liquidus_c": null,
+          "solidus_c": null
+        }
+      },
+      {
+        "conductivity_s_m": 58000000.0,
+        "density_kg_m3": 8890.0,
+        "dynamic_viscosity_pa_s": null,
+        "id": 2,
+        "name": "Copper",
+        "notes": "100% IACS reference conductivity and density at 20 \u00b0C; unit permeability approximation. Temperature dependence is not applied.",
+        "reference": "https://help.copper.fyi/hc/en-us/articles/4410229175442-How-does-copper-set-the-standard-for-electrical-conductivity",
+        "relative_permeability": 1.0,
+        "surface_tension_n_m": null,
+        "thermal": {
+          "conductivity_w_m_k": 394.0,
+          "heat_capacity_j_kg_k": 394.0,
+          "latent_heat_j_kg": null,
+          "liquidus_c": 1084.6199951171875,
+          "solidus_c": 1084.6199951171875
+        }
+      },
+      {
+        "conductivity_s_m": 2000000.0,
+        "density_kg_m3": 7000.0,
+        "dynamic_viscosity_pa_s": 0.0020000000949949026,
+        "id": 3,
+        "name": "Benchmark conducting liquid (uncalibrated)",
+        "notes": "Synthetic EM/fluid nozzle: sigma 2e6 S/m, rho 7000 kg/m3, viscosity 0.002 Pa s, surface tension 0.5 N/m. Constant illustrative liquid properties, not calibrated solder. Five ideal closed current loops; no prescribed fluid force. Isothermal: Joule heat is reported, temperature does not evolve.",
+        "reference": null,
+        "relative_permeability": 1.0,
+        "surface_tension_n_m": 0.5,
+        "thermal": {
+          "conductivity_w_m_k": 49.0,
+          "heat_capacity_j_kg_k": 190.0,
+          "latent_heat_j_kg": 45000.0,
+          "liquidus_c": 190.0,
+          "solidus_c": 183.0
+        }
+      },
+      {
+        "conductivity_s_m": 2200000.0,
+        "density_kg_m3": 7000.0,
+        "dynamic_viscosity_pa_s": 0.0018944733310490847,
+        "id": 4,
+        "name": "Sn99.3Cu0.7 molten research properties",
+        "notes": "Applied at 250.0 C from hardware/solder-properties.json; see its units, sources and limitations. No temperature dependence during this thermal-disabled trial.",
+        "reference": "https://docnum.univ-lorraine.fr/public/UPV-M/Theses/2007/Mhiaou.Souad.SMZ0755.pdf",
+        "relative_permeability": 1.0,
+        "surface_tension_n_m": 0.5299999713897705,
+        "thermal": {
+          "conductivity_w_m_k": 60.5,
+          "heat_capacity_j_kg_k": 214.0,
+          "latent_heat_j_kg": 59000.0,
+          "liquidus_c": 227.0,
+          "solidus_c": 227.0
+        }
+      },
+      {
+        "conductivity_s_m": 625000.0,
+        "density_kg_m3": 7500.0,
+        "dynamic_viscosity_pa_s": null,
+        "id": 5,
+        "name": "Permanent magnet",
+        "notes": "Representative NdFeB: resistivity 160 \u00b5\u03a9\u00b7cm, density 7.5 g/cm\u00b3. The solver uses \u03bcr=1 as an explicit approximation (typical recoil \u03bcr\u22481.05). Set source magnetization separately per CAD body; no temperature dependence or demagnetization model. Thermal conductivity 9 W/(m K) is an illustrative assumption; heat capacity 450 J/(kg K) is within the vendor range.",
+        "reference": "https://www.kjmagnetics.com/neodymium-magnet-specifications.asp",
+        "relative_permeability": 1.0,
+        "surface_tension_n_m": null,
+        "thermal": {
+          "conductivity_w_m_k": 9.0,
+          "heat_capacity_j_kg_k": 450.0,
+          "latent_heat_j_kg": null,
+          "liquidus_c": null,
+          "solidus_c": null
+        }
+      },
+      {
+        "conductivity_s_m": 1333333.25,
+        "density_kg_m3": 8000.0,
+        "dynamic_viscosity_pa_s": null,
+        "id": 6,
+        "name": "316 stainless steel",
+        "notes": "Density and conductivity references at 20 \u00b0C. Unit permeability is an annealed/nonmagnetic approximation; processing can change it. No temperature dependence is applied.",
+        "reference": "https://www.thyssenkrupp-materials.co.uk/stainless-steel-316-14401.html/index.html",
+        "relative_permeability": 1.0,
+        "surface_tension_n_m": null,
+        "thermal": {
+          "conductivity_w_m_k": 15.0,
+          "heat_capacity_j_kg_k": 500.0,
+          "latent_heat_j_kg": null,
+          "liquidus_c": 1400.0,
+          "solidus_c": 1375.0
+        }
+      },
+      {
+        "conductivity_s_m": 0.0,
+        "density_kg_m3": 3900.0,
+        "dynamic_viscosity_pa_s": null,
+        "id": 7,
+        "name": "Alumina",
+        "notes": "Representative CoorsTek AD-995 (99.5%) density. Ideal electrical insulator and unit-permeability approximations; room-temperature resistivity exceeds 10\u00b9\u2074 \u03a9\u00b7cm. Grade and temperature matter; no temperature dependence is applied.",
+        "reference": "https://www2.coorstek.com/media/4235/advanced-alumina.pdf",
+        "relative_permeability": 1.0,
+        "surface_tension_n_m": null,
+        "thermal": {
+          "conductivity_w_m_k": 30.0,
+          "heat_capacity_j_kg_k": 880.0,
+          "latent_heat_j_kg": null,
+          "liquidus_c": null,
+          "solidus_c": null
+        }
+      },
+      {
+        "conductivity_s_m": 25000000.0,
+        "density_kg_m3": 2700.0,
+        "dynamic_viscosity_pa_s": null,
+        "id": 8,
+        "name": "Aluminium 6061 (T6)",
+        "notes": "Representative 6061-T6 room-temperature properties: density 2700 kg/m\u00b3, conductivity 25 MS/m, heat capacity 896 J/(kg K) at 100 \u00b0C, thermal conductivity 167 W/(m K). Melting interval 582\u2013652 \u00b0C. Unit permeability approximation. Temper/temperature dependence is not modeled; latent heat and liquid viscosity remain unknown.",
+        "reference": "https://online.kaiseraluminum.com/depot/PublicProductInformation/Document/1006/Kaiser_Aluminum_Shapes_Soft_Alloy.pdf",
+        "relative_permeability": 1.0,
+        "surface_tension_n_m": null,
+        "thermal": {
+          "conductivity_w_m_k": 167.0,
+          "heat_capacity_j_kg_k": 896.0,
+          "latent_heat_j_kg": null,
+          "liquidus_c": 652.0,
+          "solidus_c": 582.0
+        }
+      },
+      {
+        "conductivity_s_m": 1100000.0,
+        "density_kg_m3": 8000.0,
+        "dynamic_viscosity_pa_s": null,
+        "id": 14,
+        "name": "Thin-wall stainless screening",
+        "notes": "Rounded fixed hot-conductivity sensitivity consistent with manufacturer indicative resistivity curve around250C (~0.9 microohm m). No temperature feedback; other properties unchanged.",
+        "reference": "https://ucpcdn.thyssenkrupp.com/_legacy/UCPthyssenkruppBAMXtkStainless/assets.files/downloads/316_1.pdf, physical-property spread (PDF page4), graph read approximately.",
+        "relative_permeability": 1.0,
+        "surface_tension_n_m": null,
+        "thermal": {
+          "conductivity_w_m_k": 15.0,
+          "heat_capacity_j_kg_k": 500.0,
+          "latent_heat_j_kg": null,
+          "liquidus_c": 1400.0,
+          "solidus_c": 1375.0
+        }
+      },
+      {
+        "conductivity_s_m": 6000000.0,
+        "density_kg_m3": 7420.0,
+        "dynamic_viscosity_pa_s": null,
+        "id": 15,
+        "name": "Fixed solid solder feedstock screening",
+        "notes": "ALPHA VACULOY datasheet defaults: resistivity 11.99 \u00b5\u03a9\u00b7cm and density 7.42 g/cm\u00b3. Unit permeability approximation. Not calibrated molten-metal properties; temperature dependence is not applied. Liquid viscosity 0.002 Pa\u00b7s, surface tension 0.5 N/m and latent heat are illustrative starting assumptions; Sn60Pb40 heat capacity is also an estimate. Replace them with operating-temperature data.",
+        "reference": "https://www.macdermidalpha.com/sites/default/files/2024-04/ALPHA-VACULOY-Sn99.3Cu0.7-Solid-Solder-EN-12Apr24-TB.pdf",
+        "relative_permeability": 1.0,
+        "surface_tension_n_m": null,
+        "thermal": {
+          "conductivity_w_m_k": 60.5,
+          "heat_capacity_j_kg_k": 214.0,
+          "latent_heat_j_kg": 59000.0,
+          "liquidus_c": 227.0,
+          "solidus_c": 227.0
+        }
+      },
+      {
+        "conductivity_s_m": 25000000.0,
+        "density_kg_m3": 8890.0,
+        "dynamic_viscosity_pa_s": null,
+        "id": 16,
+        "name": "Positive copper terminal",
+        "notes": "100% IACS reference conductivity and density at 20 \u00b0C; unit permeability approximation. Temperature dependence is not applied.",
+        "reference": "https://help.copper.fyi/hc/en-us/articles/4410229175442-How-does-copper-set-the-standard-for-electrical-conductivity",
+        "relative_permeability": 1.0,
+        "surface_tension_n_m": null,
+        "thermal": {
+          "conductivity_w_m_k": 394.0,
+          "heat_capacity_j_kg_k": 394.0,
+          "latent_heat_j_kg": null,
+          "liquidus_c": 1084.6199951171875,
+          "solidus_c": 1084.6199951171875
+        }
+      },
+      {
+        "conductivity_s_m": 25000000.0,
+        "density_kg_m3": 8890.0,
+        "dynamic_viscosity_pa_s": null,
+        "id": 17,
+        "name": "Negative copper terminal",
+        "notes": "100% IACS reference conductivity and density at 20 \u00b0C; unit permeability approximation. Temperature dependence is not applied.",
+        "reference": "https://help.copper.fyi/hc/en-us/articles/4410229175442-How-does-copper-set-the-standard-for-electrical-conductivity",
+        "relative_permeability": 1.0,
+        "surface_tension_n_m": null,
+        "thermal": {
+          "conductivity_w_m_k": 394.0,
+          "heat_capacity_j_kg_k": 394.0,
+          "latent_heat_j_kg": null,
+          "liquidus_c": 1084.6199951171875,
+          "solidus_c": 1084.6199951171875
+        }
+      },
+      {
+        "conductivity_s_m": 1100000.0,
+        "density_kg_m3": 8000.0,
+        "dynamic_viscosity_pa_s": null,
+        "id": 18,
+        "name": "SmCo screening assumption",
+        "notes": "Assumed Br and conductivity; grade, temperature, coercivity and cooling must be qualified.",
+        "reference": "https://www.thyssenkrupp-materials.co.uk/stainless-steel-316-14401.html/index.html",
+        "relative_permeability": 1.0,
+        "surface_tension_n_m": null,
+        "thermal": {
+          "conductivity_w_m_k": 15.0,
+          "heat_capacity_j_kg_k": 500.0,
+          "latent_heat_j_kg": null,
+          "liquidus_c": 1400.0,
+          "solidus_c": 1375.0
+        }
+      },
+      {
+        "conductivity_s_m": 0.0,
+        "density_kg_m3": 2900.0,
+        "dynamic_viscosity_pa_s": null,
+        "id": 19,
+        "name": "Mica steady thermal screening",
+        "notes": "Fixed k0.528W/mK from Boyd mica-insulator table at25C; hot-property sensitivity and real contact resistance required. Cp880 retained as an unused screening placeholder; no transient material qualification.",
+        "reference": "https://info.boydcorp.com/hubfs/Thermal/Air-Cooling/Boyd-Board-Level-Heatsinks-Catalog.pdf",
+        "relative_permeability": 1.0,
+        "surface_tension_n_m": null,
+        "thermal": {
+          "conductivity_w_m_k": 0.527999997138977,
+          "heat_capacity_j_kg_k": 880.0,
+          "latent_heat_j_kg": null,
+          "liquidus_c": null,
+          "solidus_c": null
+        }
+      },
+      {
+        "conductivity_s_m": 6671114.0,
+        "density_kg_m3": 8520.0,
+        "dynamic_viscosity_pa_s": 0.0020000000949949026,
+        "id": 9,
+        "name": "Sn60Pb40",
+        "notes": "Bulk solder datasheet defaults: resistivity 14.99 \u00b5\u03a9\u00b7cm and density 8.52 Mg/m\u00b3. Unit permeability approximation. Not calibrated molten-metal properties; temperature dependence is not applied. Liquid viscosity 0.002 Pa\u00b7s, surface tension 0.5 N/m and latent heat are illustrative starting assumptions; Sn60Pb40 heat capacity is also an estimate. Replace them with operating-temperature data.",
+        "reference": "https://www.ametekinterconnect.com/-/media/ametek-ecp/v2/files/cw_datasheets_sds_cfsi/datasheets/sn60pb40%20data%20sheet.pdf?la=en",
+        "relative_permeability": 1.0,
+        "surface_tension_n_m": 0.5,
+        "thermal": {
+          "conductivity_w_m_k": 49.0,
+          "heat_capacity_j_kg_k": 190.0,
+          "latent_heat_j_kg": 45000.0,
+          "liquidus_c": 190.0,
+          "solidus_c": 183.0
+        }
+      },
+      {
+        "conductivity_s_m": 8340284.0,
+        "density_kg_m3": 7420.0,
+        "dynamic_viscosity_pa_s": 0.0020000000949949026,
+        "id": 10,
+        "name": "Sn99.3Cu0.7",
+        "notes": "ALPHA VACULOY datasheet defaults: resistivity 11.99 \u00b5\u03a9\u00b7cm and density 7.42 g/cm\u00b3. Unit permeability approximation. Not calibrated molten-metal properties; temperature dependence is not applied. Liquid viscosity 0.002 Pa\u00b7s, surface tension 0.5 N/m and latent heat are illustrative starting assumptions; Sn60Pb40 heat capacity is also an estimate. Replace them with operating-temperature data.",
+        "reference": "https://www.macdermidalpha.com/sites/default/files/2024-04/ALPHA-VACULOY-Sn99.3Cu0.7-Solid-Solder-EN-12Apr24-TB.pdf",
+        "relative_permeability": 1.0,
+        "surface_tension_n_m": 0.5,
+        "thermal": {
+          "conductivity_w_m_k": 60.5,
+          "heat_capacity_j_kg_k": 214.0,
+          "latent_heat_j_kg": 59000.0,
+          "liquidus_c": 227.0,
+          "solidus_c": 227.0
+        }
+      }
+    ],
+    "moving_interface": true,
+    "origin_m": [
+      -0.003800000064074993,
+      -0.008500000461935997,
+      -0.00800000037997961
+    ],
+    "run": {
+      "dt_s": 3e-06,
+      "fluid_enabled": true,
+      "prescribed_jet": null,
+      "thermal": {
+        "boundaries": [
+          {
+            "kind": "insulated"
+          },
+          {
+            "kind": "insulated"
+          },
+          {
+            "kind": "insulated"
+          },
+          {
+            "kind": "insulated"
+          },
+          {
+            "kind": "insulated"
+          },
+          {
+            "kind": "insulated"
+          }
+        ],
+        "exposed_boundary": {
+          "kind": "insulated"
+        },
+        "initial_temperature_c": 20.0,
+        "max_substeps": 4096
+      },
+      "thermal_enabled": false
+    },
+    "step": 300,
+    "time_s": 0.0008999999999999964
+  },
+  "frame_metrics": {
+    "step": 300,
+    "time_us": 899.9999999999964,
+    "first_nonnegative_cell_plane_z_mm": 0.050000002374872565,
+    "exit_plane_alpha_area_mm2": 0.12000000663101655,
+    "exit_plane_mean_uz_m_s": -0.8139941519099136,
+    "exit_plane_mean_pressure_pa": 1585.5659911460077,
+    "exit_plane_downward_flux_proxy_nl_s": 97679.30362679833,
+    "liquid_volume_nl": 26940.002595446214,
+    "minimum_liquid_fraction": 0.0,
+    "maximum_liquid_fraction": 1.0,
+    "below_tip_maximum_liquid_fraction_at_cell_centres": 1.0,
+    "boundary_maximum_liquid_fraction": {
+      "z_min": 0.0,
+      "z_max": 0.0,
+      "y_min": 0.0,
+      "y_max": 0.0,
+      "x_min": 0.0,
+      "x_max": 0.0
+    },
+    "liquid_touches_domain_boundary_alpha01": false,
+    "below_tip_nl": 130.91984468128965,
+    "below_one_cell_guard_nl": 118.79030833776667,
+    "front_z_mm_alpha_half": -1.2500000593718141,
+    "detached_below_tip": [],
+    "connectivity_thresholds": {
+      "0.01": [],
+      "0.25": [],
+      "0.5": [],
+      "0.75": []
+    },
+    "below_tip_change_nl": 130.91983265604904,
+    "relative_liquid_volume_change": 1.2388151837683381e-08
+  },
+  "divergence_checks": {
+    "all_mobile": {
+      "RMS_divergence_s_inv": 9.121895343282002e-05,
+      "max_abs_divergence_s_inv": 0.0036507844924926758
+    },
+    "liquid_alpha_half": {
+      "RMS_divergence_s_inv": 6.054658125144895e-05,
+      "max_abs_divergence_s_inv": 0.001564621925354004
+    }
+  },
+  "fluid_field_sha256": "8b131d7f28e5c0ce679574f4d79803c1c0c793466b7b1b30626132e757017d5b",
+  "compact_domain_failure": {
+    "accepted_steps": 0,
+    "contact_resistivity_ohm_m2": 0.0,
+    "error": "Fluid pressure solve did not converge after 10000 iterations (true relative residual 1.772e-1, requested 1.000e-5, RMS divergence floor 1.000e-5 s\u207b\u00b9)",
+    "field_every": 200,
+    "fluid_mechanical_work_J": 0.0,
+    "frequency_hz": 0.0,
+    "grid": {
+      "cell_m": 0.00010000000474974513,
+      "dims": [
+        76,
+        76,
+        145
+      ]
+    },
+    "joule_generated_J": 0.0,
+    "lagged_electrical_work_J": 0.0,
+    "lagged_mechanical_work_J": 0.0,
+    "limitations": [
+      "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+      "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+      "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+      "New research client; not a GUI electrode feature or frozen-baseline claim."
+    ],
+    "max_terminal_voltage_V": 0.0,
+    "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+    "peak_A": 110.0,
+    "periodic_fluid_axes": [
+      false,
+      false,
+      false
+    ],
+    "positive_duration_s": 0.00025,
+    "project": "artifacts/hardware-research/cases/m6-rooted08-flow-h010.mhd.json",
+    "released_static_workspace_bytes": 188350052,
+    "retract_delay_s": 2.5e-05,
+    "retract_fraction": 0.25,
+    "rise_s": 2e-05,
+    "status": "failed",
+    "tail_timestep_s": 3e-06,
+    "tail_transition_not_before_s": 0.00035833333333333333,
+    "time_s": 0.0,
+    "timestep_s": 3e-06,
+    "uniform_acceleration_m_s2": [
+      0.0,
+      0.0,
+      -9.8100004196167
+    ]
+  },
+  "vented_strict_failure": {
+    "accepted_steps": 0,
+    "contact_resistivity_ohm_m2": 0.0,
+    "error": "Fluid pressure solve did not converge after 10000 iterations (true relative residual 6.270e-5, requested 1.000e-5, RMS divergence floor 1.000e-5 s\u207b\u00b9)",
+    "field_every": 300,
+    "fluid_mechanical_work_J": 0.0,
+    "frequency_hz": 0.0,
+    "grid": {
+      "cell_m": 0.00010000000474974513,
+      "dims": [
+        76,
+        170,
+        245
+      ]
+    },
+    "joule_generated_J": 0.0,
+    "lagged_electrical_work_J": 0.0,
+    "lagged_mechanical_work_J": 0.0,
+    "limitations": [
+      "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+      "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+      "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+      "New research client; not a GUI electrode feature or frozen-baseline claim."
+    ],
+    "max_terminal_voltage_V": 0.0,
+    "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+    "peak_A": 110.0,
+    "periodic_fluid_axes": [
+      false,
+      false,
+      false
+    ],
+    "positive_duration_s": 0.00025,
+    "project": "artifacts/hardware-research/cases/m6-rooted08-flow-vented-h010.mhd.json",
+    "released_static_workspace_bytes": 708290668,
+    "retract_delay_s": 2.5e-05,
+    "retract_fraction": 0.25,
+    "rise_s": 2e-05,
+    "status": "failed",
+    "tail_timestep_s": 3e-06,
+    "tail_transition_not_before_s": 0.00035833333333333333,
+    "time_s": 0.0,
+    "timestep_s": 3e-06,
+    "uniform_acceleration_m_s2": [
+      0.0,
+      0.0,
+      -9.8100004196167
+    ]
+  },
+  "scope": "Gas pathverified bynativeinitialpackets. 100umgrid/4cellsacrossbore; relativepressuretol1e-4 explicit. Inductionlessresearchclient,gravity/surface tension/movingJ enabled; no thermal/feed/oxide/contactchemistry/self-field. At0.9ms below-tipliquidremainsconnectedatallfouralphathresholds, so nofree-flightdropclaim."
+}
