@@ -1,0 +1,135 @@
+{
+  "status": "Completed native slit diagnostics; not equilibrium or retention qualification",
+  "source": "artifacts/hardware-research/split-slit-steel-zero-xends-h010",
+  "native_run_status": {
+    "accepted_steps": 1667,
+    "charge_potential_representation": "split f32 high/low",
+    "charge_requested_relative_tolerance": 9.999999747378752e-06,
+    "charge_solver": "conservative-split-f32-v1",
+    "contact_resistivity_ohm_m2": 0.0,
+    "electrical_work_definition": "sum terminal phi*I on both ports",
+    "error": null,
+    "field_every": 333,
+    "fluid_mechanical_work_J": -3.642205782549211e-08,
+    "frequency_hz": 0.0,
+    "grid": {
+      "cell_m": 0.00010000000474974513,
+      "dims": [
+        76,
+        76,
+        165
+      ]
+    },
+    "joule_generated_J": 1.933221965646105e-09,
+    "lagged_electrical_work_J": 2.2450648637355444e-18,
+    "lagged_mechanical_work_J": -1.933650201636275e-09,
+    "limitations": [
+      "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+      "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+      "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+      "New research client; not a GUI electrode feature or frozen-baseline claim."
+    ],
+    "max_charge_boundary_current_defect": 3.6817330055782804e-06,
+    "max_terminal_voltage_V": 1.096625692298403e-05,
+    "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+    "peak_A": 0.0,
+    "periodic_fluid_axes": [
+      false,
+      false,
+      false
+    ],
+    "positive_duration_s": 0.001,
+    "project": "artifacts/hardware-research/cases/split-slit-steel-flow-h010.mhd.json",
+    "released_static_workspace_bytes": 214294308,
+    "requested_steps": 1667,
+    "retract_delay_s": 2.4999999999999998e-05,
+    "retract_fraction": 0.25,
+    "rise_s": 2e-05,
+    "status": "complete",
+    "tail_timestep_s": 3e-06,
+    "tail_transition_not_before_s": 0.0013583333333333334,
+    "terminal_boundary": "x-ends",
+    "terminal_x_cell_indices": [
+      0,
+      75
+    ],
+    "time_s": 0.005001000000000106,
+    "timestep_s": 3e-06,
+    "uniform_acceleration_m_s2": [
+      0.0,
+      0.0,
+      -9.8100004196167
+    ]
+  },
+  "method": "Accepted native alpha and cell-centred velocity. Land z0..0.5mm; outside-radius volume uses cell centres r>=0.55mm to avoid initial bore-edge samples. Native signed alpha is retained for volume; RMS and kinetic proxy use alpha clipped0..1 for weights. The kinetic proxy assumes rho7000 and is not the MAC solver energy ledger.",
+  "frames": [
+    {
+      "step": 0,
+      "time_us": 0.0,
+      "metadata_sha256": "0284e3041247ed8347ae8abd495d6b9e8e261a490e32f635d3732b576b1ee6a9",
+      "slot_outside_radius055mm_nl": 0.0,
+      "liquid_weighted_RMS_speed_m_s": 0.0,
+      "land_liquid_weighted_RMS_speed_m_s": 0.0,
+      "kinetic_proxy_J_rho7000": 0.0
+    },
+    {
+      "step": 333,
+      "time_us": 998.9999999999953,
+      "metadata_sha256": "b8765aa1aa67e2d79c9b5648b05a6740cc14b61e1775a0b9d7550df75c2dc4ef",
+      "slot_outside_radius055mm_nl": 16.004474052136967,
+      "liquid_weighted_RMS_speed_m_s": 0.022777815187592896,
+      "land_liquid_weighted_RMS_speed_m_s": 0.13144294333625395,
+      "kinetic_proxy_J_rho7000": 8.17042057949583e-09
+    },
+    {
+      "step": 666,
+      "time_us": 1997.9999999999836,
+      "metadata_sha256": "9d7ac74d01fbb1882e062f976638953400623e59741fea629dd3e24e35995d3b",
+      "slot_outside_radius055mm_nl": 6.801776368898743,
+      "liquid_weighted_RMS_speed_m_s": 0.027909609462803808,
+      "land_liquid_weighted_RMS_speed_m_s": 0.12658833455662266,
+      "kinetic_proxy_J_rho7000": 1.2266701616961205e-08
+    },
+    {
+      "step": 999,
+      "time_us": 2996.999999999972,
+      "metadata_sha256": "2dcf9d0e6c3e9495e68eea82d20c9d65108efda444835cf98d0e519c8aaccc49",
+      "slot_outside_radius055mm_nl": 0.9156433646254394,
+      "liquid_weighted_RMS_speed_m_s": 0.030570687149445615,
+      "land_liquid_weighted_RMS_speed_m_s": 0.14543624222541646,
+      "kinetic_proxy_J_rho7000": 1.4717386111076648e-08
+    },
+    {
+      "step": 1332,
+      "time_us": 3995.9999999999727,
+      "metadata_sha256": "1eb4b976d020a10bbe8477b6293bdb9b02b8043f6b3662c5cfdc56f11bc292b7",
+      "slot_outside_radius055mm_nl": 0.17531311738333516,
+      "liquid_weighted_RMS_speed_m_s": 0.03782192248031325,
+      "land_liquid_weighted_RMS_speed_m_s": 0.130748662489977,
+      "kinetic_proxy_J_rho7000": 2.2527213845038548e-08
+    },
+    {
+      "step": 1665,
+      "time_us": 4995.0000000001055,
+      "metadata_sha256": "15d07356b15c8ec70e42525fd7c8f223e3e37822be2b9c3aecc189b36730b72c",
+      "slot_outside_radius055mm_nl": 3.9369245884940466e-06,
+      "liquid_weighted_RMS_speed_m_s": 0.0395170203617792,
+      "land_liquid_weighted_RMS_speed_m_s": 0.15391951578926802,
+      "kinetic_proxy_J_rho7000": 2.4591706238801198e-08
+    },
+    {
+      "step": 1667,
+      "time_us": 5001.000000000106,
+      "metadata_sha256": "1ac354cd2f5c42a0e04b20b37cec59e946c9e6a134602c58eaa58890af2cf0f7",
+      "slot_outside_radius055mm_nl": 3.919450167826864e-06,
+      "liquid_weighted_RMS_speed_m_s": 0.0395004233321737,
+      "land_liquid_weighted_RMS_speed_m_s": 0.15348598232137847,
+      "kinetic_proxy_J_rho7000": 2.4571053691637093e-08
+    }
+  ],
+  "limits": [
+    "Two100umcells across0.2mm gap; no converged contact-line/spurious-current assessment.",
+    "No calibrated wetting/contact angle, oxide or thermal evolution.",
+    "Persisting motion and increasing cell-velocity kinetic proxy do not establish stationary retention."
+  ]
+}

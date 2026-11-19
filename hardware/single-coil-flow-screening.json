@@ -82,7 +82,7 @@
   "limits": [
     "0.2mm cells give only2.5cells across the0.5mm exit and do not resolve a0.15mm land with a full cell. This is screening, not a converged rejection of induction jetting.",
     "No frozen force: native EM, moving conductivity, fluid/interface share the common clock; thermal evolution disabled.",
-    "Matched zero-current control with identical grid/timestep schedule is running.",
+    "Matched zero-current control with identical grid/timestep schedule completed; comparison is retained below.",
     "Signed below-tip alpha volume contains less than1e-7nL roundoff; use resolved fraction/geometry diagnostics, not a negative physical-volume interpretation."
   ],
   "matched_zero_current_control": {
@@ -539,5 +539,6 @@
       ]
     },
     "interpretation": "Both complete same3500steps through3.597125ms; geometry,staticmask,clocks and material settings match. The driven run creates measurable internal liquid motion but no resolved ejection. Interface difference is small at this200um grid; not proof that all coil geometries fail."
-  }
+  },
+  "untested_waveform_scope": "This record concerns a50kHzACburst, not a single unipolar coil-current pulse. A negative result here does not reject a shaped push/pull pulse. New cold pulse comparisons are prepared by scripts/prepare_unipolar_coil_cases.py; no result yet."
 }
