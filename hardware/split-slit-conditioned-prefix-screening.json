@@ -1,0 +1,322 @@
+{
+  "status": "Zero controlcomplete10.002ms;driven40AfailedCFLat9.999ms. Acceptedexportthrough9.519msispartialonly. No completedpairedqualification.",
+  "runs": [
+    {
+      "source": "artifacts/hardware-research/split-slit-steel-conditioned-0A-xends-h010",
+      "native_status": {
+        "accepted_steps": 3334,
+        "body_acceleration_work_J": -1.6269620685960815e-08,
+        "charge_potential_representation": "split f32 high/low",
+        "charge_requested_relative_tolerance": 9.999999747378752e-06,
+        "charge_solver": "conservative-split-f32-v1",
+        "contact_resistivity_ohm_m2": 0.0,
+        "electrical_work_definition": "sum terminal phi*I on both ports",
+        "error": null,
+        "field_every": 167,
+        "fluid_em_work_J": -3.0919377595944726e-09,
+        "fluid_external_work_J": -1.9361558445555288e-08,
+        "fluid_work_definition": "EM/impressed-force work only; excludes body acceleration",
+        "frequency_hz": 0.0,
+        "grid": {
+          "cell_m": 0.00010000000474974513,
+          "dims": [
+            76,
+            76,
+            165
+          ]
+        },
+        "joule_generated_J": 3.0910866855143297e-09,
+        "lagged_electrical_work_J": 5.922516927492547e-18,
+        "lagged_mechanical_work_J": -3.091310660821468e-09,
+        "limitations": [
+          "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+          "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+          "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+          "New research client; not a GUI electrode feature or frozen-baseline claim."
+        ],
+        "max_charge_boundary_current_defect": 8.135521966323722e-06,
+        "max_terminal_voltage_V": 1.096625692298403e-05,
+        "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+        "peak_A": 0.0,
+        "periodic_fluid_axes": [
+          false,
+          false,
+          false
+        ],
+        "positive_duration_s": 0.001,
+        "project": "artifacts/hardware-research/cases/split-slit-steel-flow-h010.mhd.json",
+        "pulse_start_s": 0.005000999999999999,
+        "released_static_workspace_bytes": 214294308,
+        "requested_steps": 3334,
+        "retract_delay_s": 2.4999999999999998e-05,
+        "retract_fraction": 0.25,
+        "rise_s": 2e-05,
+        "status": "complete",
+        "tail_timestep_s": 3e-06,
+        "tail_transition_not_before_s": 0.006359333333333332,
+        "terminal_boundary": "x-ends",
+        "terminal_x_cell_indices": [
+          0,
+          75
+        ],
+        "time_s": 0.010002000000000138,
+        "timestep_s": 3e-06,
+        "uniform_acceleration_m_s2": [
+          0.0,
+          0.0,
+          -9.8100004196167
+        ]
+      },
+      "final_saved_frame": {
+        "step": 3334,
+        "time_us": 10002.000000000138,
+        "first_nonnegative_cell_plane_z_mm": 0.05000023520551622,
+        "exit_plane_alpha_area_mm2": 5.4352683854366125e-09,
+        "exit_plane_mean_uz_m_s": -0.02982948818686588,
+        "exit_plane_mean_pressure_pa": -0.06439058506512287,
+        "exit_plane_downward_flux_proxy_nl_s": 0.00016213127409582702,
+        "liquid_volume_nl": 4499.375419714749,
+        "minimum_liquid_fraction": -4.223798910629739e-08,
+        "maximum_liquid_fraction": 1.0,
+        "below_tip_maximum_liquid_fraction_at_cell_centres": 1.3243689522823843e-07,
+        "boundary_maximum_liquid_fraction": {
+          "z_min": 0.0,
+          "z_max": 0.0,
+          "y_min": 0.0,
+          "y_max": 0.0,
+          "x_min": 0.0,
+          "x_max": 0.0
+        },
+        "liquid_touches_domain_boundary_alpha01": false,
+        "below_tip_nl": 6.089766359083707e-06,
+        "below_one_cell_guard_nl": 3.47360656733082e-06,
+        "front_z_mm_alpha_half": 0.15000023995526135,
+        "detached_below_tip": [],
+        "connectivity_thresholds": {
+          "0.01": [],
+          "0.25": [],
+          "0.5": [],
+          "0.75": []
+        },
+        "below_tip_change_nl": -1.2864469248960768e-05,
+        "relative_liquid_volume_change": -1.9614948776336405e-08
+      }
+    },
+    {
+      "source": "artifacts/hardware-research/split-slit-steel-conditioned-40A-xends-h010",
+      "native_status": {
+        "accepted_steps": 3333,
+        "body_acceleration_work_J": 1.0297406432777936e-07,
+        "charge_potential_representation": "split f32 high/low",
+        "charge_requested_relative_tolerance": 9.999999747378752e-06,
+        "charge_solver": "conservative-split-f32-v1",
+        "contact_resistivity_ohm_m2": 0.0,
+        "electrical_work_definition": "sum terminal phi*I on both ports",
+        "error": "Moving-interface capillary or conservative CFL limit exceeded; reduce common timestep",
+        "field_every": 167,
+        "fluid_em_work_J": 1.4426668700343862e-06,
+        "fluid_external_work_J": 1.5456409343621656e-06,
+        "fluid_work_definition": "EM/impressed-force work only; excludes body acceleration",
+        "frequency_hz": 0.0,
+        "grid": {
+          "cell_m": 0.00010000000474974513,
+          "dims": [
+            76,
+            76,
+            165
+          ]
+        },
+        "joule_generated_J": 0.0007177848979469032,
+        "lagged_electrical_work_J": 0.0007191456396400905,
+        "lagged_mechanical_work_J": 1.4351250257951173e-06,
+        "limitations": [
+          "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+          "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+          "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+          "New research client; not a GUI electrode feature or frozen-baseline claim."
+        ],
+        "max_charge_boundary_current_defect": 9.991207662096713e-06,
+        "max_terminal_voltage_V": 0.02051009051501751,
+        "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+        "peak_A": 40.0,
+        "periodic_fluid_axes": [
+          false,
+          false,
+          false
+        ],
+        "positive_duration_s": 0.001,
+        "project": "artifacts/hardware-research/cases/split-slit-steel-flow-h010.mhd.json",
+        "pulse_start_s": 0.005000999999999999,
+        "released_static_workspace_bytes": 214294308,
+        "requested_steps": 3334,
+        "retract_delay_s": 2.4999999999999998e-05,
+        "retract_fraction": 0.25,
+        "rise_s": 2e-05,
+        "status": "failed",
+        "tail_timestep_s": 3e-06,
+        "tail_transition_not_before_s": 0.006359333333333332,
+        "terminal_boundary": "x-ends",
+        "terminal_x_cell_indices": [
+          0,
+          75
+        ],
+        "time_s": 0.009999000000000138,
+        "timestep_s": 3e-06,
+        "uniform_acceleration_m_s2": [
+          0.0,
+          0.0,
+          -9.8100004196167
+        ]
+      },
+      "final_saved_frame": {
+        "step": 3173,
+        "time_us": 9519.000000000213,
+        "first_nonnegative_cell_plane_z_mm": 0.05000023520551622,
+        "exit_plane_alpha_area_mm2": 0.3845535252423582,
+        "exit_plane_mean_uz_m_s": 0.03681251774535497,
+        "exit_plane_mean_pressure_pa": 590.5262523078687,
+        "exit_plane_downward_flux_proxy_nl_s": -14156.38347202312,
+        "liquid_volume_nl": 4499.3753694561365,
+        "minimum_liquid_fraction": -2.7668729529750635e-08,
+        "maximum_liquid_fraction": 1.0,
+        "below_tip_maximum_liquid_fraction_at_cell_centres": 0.9999995827674866,
+        "boundary_maximum_liquid_fraction": {
+          "z_min": 0.0,
+          "z_max": 0.0,
+          "y_min": 0.0,
+          "y_max": 0.0,
+          "x_min": 0.0,
+          "x_max": 0.0
+        },
+        "liquid_touches_domain_boundary_alpha01": false,
+        "below_tip_nl": 49.50328623993346,
+        "below_one_cell_guard_nl": 48.922703033174535,
+        "front_z_mm_alpha_half": -3.849999950034544,
+        "detached_below_tip": [
+          {
+            "volume_nl": 35.488361408672084,
+            "equivalent_diameter_mm": 0.4077204000451169,
+            "cells": 42,
+            "centre_mm": [
+              -0.045269217310975766,
+              -0.02137490814730091,
+              -3.693901846939944
+            ],
+            "velocity_m_s": [
+              0.003838475327938795,
+              0.015503966249525547,
+              -0.8999598026275635
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "connectivity_thresholds": {
+          "0.01": [
+            {
+              "volume_nl": 48.783240952375486,
+              "equivalent_diameter_mm": 0.45333996745066074,
+              "cells": 105,
+              "centre_mm": [
+                -0.03927675492710412,
+                -0.014398107093994039,
+                -3.700563483167689
+              ],
+              "velocity_m_s": [
+                0.006927342154085636,
+                0.02184654213488102,
+                -0.9063265919685364
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.25": [
+            {
+              "volume_nl": 45.20277479665715,
+              "equivalent_diameter_mm": 0.44196596279785433,
+              "cells": 70,
+              "centre_mm": [
+                -0.042600213265088394,
+                -0.017374685916195794,
+                -3.7035304465368797
+              ],
+              "velocity_m_s": [
+                0.007836769334971905,
+                0.020820558071136475,
+                -0.9090231657028198
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.5": [
+            {
+              "volume_nl": 35.488361408672084,
+              "equivalent_diameter_mm": 0.4077204000451169,
+              "cells": 42,
+              "centre_mm": [
+                -0.045269217310975766,
+                -0.02137490814730091,
+                -3.693901846939944
+              ],
+              "velocity_m_s": [
+                0.003838475327938795,
+                0.015503966249525547,
+                -0.8999598026275635
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.75": [
+            {
+              "volume_nl": 27.773941898171515,
+              "equivalent_diameter_mm": 0.37573325379291433,
+              "cells": 30,
+              "centre_mm": [
+                -0.03199454010035596,
+                -0.006574920730297049,
+                -3.695283328109635
+              ],
+              "velocity_m_s": [
+                0.004767723847180605,
+                0.0013435749569907784,
+                -0.9047031402587891
+              ],
+              "touches_domain_boundary": false
+            }
+          ]
+        },
+        "below_tip_change_nl": 49.50326728569785,
+        "relative_liquid_volume_change": -3.078507959664023e-08
+      }
+    }
+  ],
+  "conditioning_prefix_comparison": {
+    "time_s": 0.005001000000000106,
+    "fluid_fields_byte_identical": true,
+    "max_alpha_difference": 0.0,
+    "max_cellcentred_velocity_difference_m_s": 0.0,
+    "meaning": "Bothrunsfollowidenticalunpoweredconditioningthrough5.001ms;notanequilibriumclaim.",
+    "both_fluid_bin_sha256": "25c65c8614a1c14fd0296c73d49c4655eafab6c35c5ea53fea1ab2f19849b886"
+  },
+  "interpretation": [
+    "The40Apartialexporthasone0.408mmequivalentcomponentat0.90m/sdown atalpha0.5. It remainsonecomponentatallreportedthresholds,withdiameter0.376..0.453mm.",
+    "No detachedcomponentinthecompletedunpoweredcontrol;masschangeanddomaincontactsremainreportedbutnotproofagainstcutcell/timestepartifacts.",
+    "The2cellsacross0.2mmgapcoarsemesh andlateCFLfailurepreventclaimingcleanhardwarejetting,convergenceor200Hz.",
+    "No physicaloutputwasoverwrittenorrelabeledcomplete. Independentrootedtime/retractstudywasunstartedandconsumesnoslitdata;requeuedafterverifyingfailedprocessesterminal.",
+    "Driven orthogonal sections show liquid spreading along the open slot outside the tube. Region0<=z<0.5mm,cellcentresoutsideborefootprint is reported separately; this is not a sealed-outlet qualification."
+  ],
+  "next_physics_gate": "Repeatwithsmallercommontimestepandrefinethegapbeforeselectingslitdesign. Preservezero/pulsedcontrolsandcheckprefix/force/volume/energy.",
+  "lateral_slot_diagnostic": [
+    {
+      "source": "artifacts/hardware-research/split-slit-steel-conditioned-0A-xends-h010/frame-00003173",
+      "time_us": 9519.000000000213,
+      "slot_liquid_outside_r0.55mm_nl": 0.45345751102308646,
+      "slot_liquid_outside_r1mm_nl": 0.0
+    },
+    {
+      "source": "artifacts/hardware-research/split-slit-steel-conditioned-40A-xends-h010/frame-00003173",
+      "time_us": 9519.000000000213,
+      "slot_liquid_outside_r0.55mm_nl": 189.12657632619917,
+      "slot_liquid_outside_r1mm_nl": 93.38662126581798
+    }
+  ]
+}

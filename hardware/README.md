@@ -641,3 +641,12 @@ are `target/debug/examples/thermal_conductance --check`.
     package. Its19mm winding diameter and roughly2mm return projection are
     geometry estimates before insulation/support/tolerances. See the
     [full package assumptions](lowered-coil-package.json).
+18. The [slit conditioned prefix](split-slit-conditioned-prefix-screening.json)
+    contains a complete10.002ms unpowered control and a driven40A run that
+    failed its CFL guard at9.999ms. Its last accepted export,9.519ms, shows
+    one detached0.408mm component at0.90m/s downward; the unpowered control
+    shows none. Conditioning fields through5.001ms are byte-identical.
+    However, the drive also pushes about189nL into the slot outside the bore
+    footprint, including93nL beyond the tube's outside radius. End confinement,
+    timestep and gap resolution remain unresolved. `plot_slit_matched_views.py`
+    shows both orthogonal sections and the failed-run status.
