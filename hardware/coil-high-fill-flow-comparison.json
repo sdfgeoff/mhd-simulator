@@ -1,0 +1,347 @@
+{
+  "method": "Compare completed, matched-grid native fluid exports without interpolation.\n\nCell-centred alpha/velocity diagnostics only; not an additional fluid solver.\nAlpha L1 is an absolute phase-volume difference, not net mass loss.\n",
+  "comparison_scope": "completed matched runs",
+  "partial_comparison_requested": false,
+  "configuration_comparison_scope": "Exported metadata only. External research electrode waveforms require separate native run-status checks.",
+  "export_matching": "same accepted step",
+  "reference": "artifacts/hardware-research/coil-high-fill-flow-v1-0A-h020",
+  "driven": "artifacts/hardware-research/coil-high-fill-flow-v1-250A-h020",
+  "reference_status": {
+    "accepted_steps": 1800,
+    "electromagnetics": true,
+    "error": null,
+    "field_every": 300,
+    "final_timestep_s": 1.5e-06,
+    "fluids": true,
+    "initial_timestep_s": 5e-07,
+    "meaning": "Normal unified RunState; an explicit timestep schedule does not replace or freeze any physics subsystem.",
+    "project": "artifacts/hardware-research/cases/coil-high-fill-flow-v1/high-fill-0A-flow-h020.mhd.json",
+    "requested_steps": 1800,
+    "status": "complete",
+    "tail_schedule_s": [
+      0.0003,
+      1.5e-06
+    ],
+    "thermal": false,
+    "time_s": 0.0021000000000000038
+  },
+  "driven_status": {
+    "accepted_steps": 1800,
+    "electromagnetics": true,
+    "error": null,
+    "field_every": 300,
+    "final_timestep_s": 1.5e-06,
+    "fluids": true,
+    "initial_timestep_s": 5e-07,
+    "meaning": "Normal unified RunState; an explicit timestep schedule does not replace or freeze any physics subsystem.",
+    "project": "artifacts/hardware-research/cases/coil-high-fill-flow-v1/high-fill-250A-flow-h020.mhd.json",
+    "requested_steps": 1800,
+    "status": "complete",
+    "tail_schedule_s": [
+      0.0003,
+      1.5e-06
+    ],
+    "thermal": false,
+    "time_s": 0.0021000000000000038
+  },
+  "frames": [
+    {
+      "step": 0,
+      "candidate_step": 0,
+      "time_us": 0.0,
+      "comparison_grid": {
+        "dims": [
+          90,
+          90,
+          93
+        ],
+        "origin_m": [
+          -0.009000000543892384,
+          -0.009000000543892384,
+          -0.004000000189989805
+        ],
+        "cell_m": 0.00020000000949949026,
+        "scope": "common aligned native cells; no interpolation"
+      },
+      "exported_configuration_matches_except_wire_currents": true,
+      "alpha_L1_volume_difference_nl": 0.0,
+      "alpha_RMS_difference": 0.0,
+      "common_liquid_weighted_velocity_RMS_difference_m_s": 0.0,
+      "static_open_mask_identical": true,
+      "reference": {
+        "liquid_volume_nl": 168352.02355590567,
+        "whole_domain_liquid_volume_nl": 168352.02355590567,
+        "below_tip_nl": 0.0,
+        "liquid_weighted_RMS_speed_m_s": 0.0,
+        "liquid_centre_z_mm": 3.159076364732304
+      },
+      "driven": {
+        "liquid_volume_nl": 168352.02355590567,
+        "whole_domain_liquid_volume_nl": 168352.02355590567,
+        "below_tip_nl": 0.0,
+        "liquid_weighted_RMS_speed_m_s": 0.0,
+        "liquid_centre_z_mm": 3.159076364732304
+      }
+    },
+    {
+      "step": 300,
+      "candidate_step": 300,
+      "time_us": 150.0000000000004,
+      "comparison_grid": {
+        "dims": [
+          90,
+          90,
+          93
+        ],
+        "origin_m": [
+          -0.009000000543892384,
+          -0.009000000543892384,
+          -0.004000000189989805
+        ],
+        "cell_m": 0.00020000000949949026,
+        "scope": "common aligned native cells; no interpolation"
+      },
+      "exported_configuration_matches_except_wire_currents": true,
+      "alpha_L1_volume_difference_nl": 0.044737959063334366,
+      "alpha_RMS_difference": 1.5738659603946899e-06,
+      "common_liquid_weighted_velocity_RMS_difference_m_s": 0.00017149744888309142,
+      "static_open_mask_identical": true,
+      "reference": {
+        "liquid_volume_nl": 168352.02355972157,
+        "whole_domain_liquid_volume_nl": 168352.02355972157,
+        "below_tip_nl": 0.0055830201462147835,
+        "liquid_weighted_RMS_speed_m_s": 0.0008657915563254504,
+        "liquid_centre_z_mm": 3.1590771776245137
+      },
+      "driven": {
+        "liquid_volume_nl": 168352.02356325331,
+        "whole_domain_liquid_volume_nl": 168352.02356325331,
+        "below_tip_nl": 0.0,
+        "liquid_weighted_RMS_speed_m_s": 0.0008829843203190643,
+        "liquid_centre_z_mm": 3.159078367612589
+      }
+    },
+    {
+      "step": 600,
+      "candidate_step": 600,
+      "time_us": 300.00000000000404,
+      "comparison_grid": {
+        "dims": [
+          90,
+          90,
+          93
+        ],
+        "origin_m": [
+          -0.009000000543892384,
+          -0.009000000543892384,
+          -0.004000000189989805
+        ],
+        "cell_m": 0.00020000000949949026,
+        "scope": "common aligned native cells; no interpolation"
+      },
+      "exported_configuration_matches_except_wire_currents": true,
+      "alpha_L1_volume_difference_nl": 0.058087091391739766,
+      "alpha_RMS_difference": 2.303061155275523e-06,
+      "common_liquid_weighted_velocity_RMS_difference_m_s": 0.00017116821565591,
+      "static_open_mask_identical": true,
+      "reference": {
+        "liquid_volume_nl": 168352.02357688185,
+        "whole_domain_liquid_volume_nl": 168352.02357688185,
+        "below_tip_nl": 0.03324090428951054,
+        "liquid_weighted_RMS_speed_m_s": 0.0013839539980912028,
+        "liquid_centre_z_mm": 3.159078528819264
+      },
+      "driven": {
+        "liquid_volume_nl": 168352.02358188713,
+        "whole_domain_liquid_volume_nl": 168352.02358188713,
+        "below_tip_nl": 0.004203675938925333,
+        "liquid_weighted_RMS_speed_m_s": 0.0013958960132019764,
+        "liquid_centre_z_mm": 3.159080104842487
+      }
+    },
+    {
+      "step": 900,
+      "candidate_step": 900,
+      "time_us": 749.9999999999987,
+      "comparison_grid": {
+        "dims": [
+          90,
+          90,
+          93
+        ],
+        "origin_m": [
+          -0.009000000543892384,
+          -0.009000000543892384,
+          -0.004000000189989805
+        ],
+        "cell_m": 0.00020000000949949026,
+        "scope": "common aligned native cells; no interpolation"
+      },
+      "exported_configuration_matches_except_wire_currents": true,
+      "alpha_L1_volume_difference_nl": 0.0738903895193659,
+      "alpha_RMS_difference": 2.919005166176406e-06,
+      "common_liquid_weighted_velocity_RMS_difference_m_s": 0.00017021004600157647,
+      "static_open_mask_identical": true,
+      "reference": {
+        "liquid_volume_nl": 168352.02345242468,
+        "whole_domain_liquid_volume_nl": 168352.02345242468,
+        "below_tip_nl": 0.35884510821269605,
+        "liquid_weighted_RMS_speed_m_s": 0.0007025690312645668,
+        "liquid_centre_z_mm": 3.159068911845594
+      },
+      "driven": {
+        "liquid_volume_nl": 168352.0234876293,
+        "whole_domain_liquid_volume_nl": 168352.0234876293,
+        "below_tip_nl": 0.3222331830312047,
+        "liquid_weighted_RMS_speed_m_s": 0.0007245448209197194,
+        "liquid_centre_z_mm": 3.1590709107318653
+      }
+    },
+    {
+      "step": 1200,
+      "candidate_step": 1200,
+      "time_us": 1199.9999999999934,
+      "comparison_grid": {
+        "dims": [
+          90,
+          90,
+          93
+        ],
+        "origin_m": [
+          -0.009000000543892384,
+          -0.009000000543892384,
+          -0.004000000189989805
+        ],
+        "cell_m": 0.00020000000949949026,
+        "scope": "common aligned native cells; no interpolation"
+      },
+      "exported_configuration_matches_except_wire_currents": true,
+      "alpha_L1_volume_difference_nl": 0.04735702521940051,
+      "alpha_RMS_difference": 1.9243618313234746e-06,
+      "common_liquid_weighted_velocity_RMS_difference_m_s": 0.00016971881396784597,
+      "static_open_mask_identical": true,
+      "reference": {
+        "liquid_volume_nl": 168352.02343569734,
+        "whole_domain_liquid_volume_nl": 168352.02343569734,
+        "below_tip_nl": 0.8193840818630095,
+        "liquid_weighted_RMS_speed_m_s": 0.0012244431830419479,
+        "liquid_centre_z_mm": 3.1590407822941793
+      },
+      "driven": {
+        "liquid_volume_nl": 168352.02348873907,
+        "whole_domain_liquid_volume_nl": 168352.02348873907,
+        "below_tip_nl": 0.7960908159571425,
+        "liquid_weighted_RMS_speed_m_s": 0.00123825428110709,
+        "liquid_centre_z_mm": 3.159042054841424
+      }
+    },
+    {
+      "step": 1500,
+      "candidate_step": 1500,
+      "time_us": 1649.9999999999882,
+      "comparison_grid": {
+        "dims": [
+          90,
+          90,
+          93
+        ],
+        "origin_m": [
+          -0.009000000543892384,
+          -0.009000000543892384,
+          -0.004000000189989805
+        ],
+        "cell_m": 0.00020000000949949026,
+        "scope": "common aligned native cells; no interpolation"
+      },
+      "exported_configuration_matches_except_wire_currents": true,
+      "alpha_L1_volume_difference_nl": 0.009236702413634414,
+      "alpha_RMS_difference": 3.240315728789684e-07,
+      "common_liquid_weighted_velocity_RMS_difference_m_s": 0.00016915701198912892,
+      "static_open_mask_identical": true,
+      "reference": {
+        "liquid_volume_nl": 168352.0234406784,
+        "whole_domain_liquid_volume_nl": 168352.02344067837,
+        "below_tip_nl": 1.076749653215812,
+        "liquid_weighted_RMS_speed_m_s": 0.0003810164187579105,
+        "liquid_centre_z_mm": 3.159023246526017
+      },
+      "driven": {
+        "liquid_volume_nl": 168352.02348420344,
+        "whole_domain_liquid_volume_nl": 168352.0234842034,
+        "below_tip_nl": 1.0794840820512384,
+        "liquid_weighted_RMS_speed_m_s": 0.00042017080895320275,
+        "liquid_centre_z_mm": 3.159023102972389
+      }
+    },
+    {
+      "step": 1800,
+      "candidate_step": 1800,
+      "time_us": 2100.0000000000036,
+      "comparison_grid": {
+        "dims": [
+          90,
+          90,
+          93
+        ],
+        "origin_m": [
+          -0.009000000543892384,
+          -0.009000000543892384,
+          -0.004000000189989805
+        ],
+        "cell_m": 0.00020000000949949026,
+        "scope": "common aligned native cells; no interpolation"
+      },
+      "exported_configuration_matches_except_wire_currents": true,
+      "alpha_L1_volume_difference_nl": 0.05418461567989926,
+      "alpha_RMS_difference": 2.1697098943306057e-06,
+      "common_liquid_weighted_velocity_RMS_difference_m_s": 0.00016817016887160242,
+      "static_open_mask_identical": true,
+      "reference": {
+        "liquid_volume_nl": 168352.0233665725,
+        "whole_domain_liquid_volume_nl": 168352.0233665725,
+        "below_tip_nl": 1.0331577616181364,
+        "liquid_weighted_RMS_speed_m_s": 0.0012351316726379304,
+        "liquid_centre_z_mm": 3.159026262319781
+      },
+      "driven": {
+        "liquid_volume_nl": 168352.02339976822,
+        "whole_domain_liquid_volume_nl": 168352.02339976822,
+        "below_tip_nl": 1.0602570171994679,
+        "liquid_weighted_RMS_speed_m_s": 0.0012463206003234517,
+        "liquid_centre_z_mm": 3.159024786061121
+      }
+    }
+  ],
+  "final_field_sha256": {
+    "artifacts/hardware-research/coil-high-fill-flow-v1-0A-h020/frame-00001800/fluid.bin": "01198757dcd6f959aab0e30e8ac60bae93c5b1042a75fd260e73134caf25f200",
+    "artifacts/hardware-research/coil-high-fill-flow-v1-250A-h020/frame-00001800/fluid.bin": "f295c32435128ad562d7541945f1270b84ad0ed19dc77a58dfbd12f02052ac4d"
+  },
+  "limits": [
+    "Cell-centred diagnostics are not the solver's discrete face kinetic energy.",
+    "Comparisons do not establish grid convergence, driver feasibility or repetitive jetting."
+  ],
+  "saved_interface_evidence": {
+    "0A": {
+      "flow_analysis_sha256": "975c3794c1b5d121f38b4a128b4ebb02624d7bf87d089866b588eccb46978952",
+      "any_saved_detached_region_at_reported_thresholds": false,
+      "any_saved_liquid_boundary_contact": false,
+      "max_absolute_relative_liquid_volume_drift": 1.1246266140574335e-09,
+      "final_exit_plane_alpha_area_mm2": 0.15999992936848814,
+      "final_exit_plane_mean_uz_m_s": 0.0025838443434744534
+    },
+    "250A": {
+      "flow_analysis_sha256": "a9d12efba47bd2b6b54a43bcf97074da8aad4b6174d0997814dba3c0fe69508a",
+      "any_saved_detached_region_at_reported_thresholds": false,
+      "any_saved_liquid_boundary_contact": false,
+      "max_absolute_relative_liquid_volume_drift": 9.274462309249998e-10,
+      "final_exit_plane_alpha_area_mm2": 0.15999995797872038,
+      "final_exit_plane_mean_uz_m_s": 0.002326633274487385
+    }
+  },
+  "interpretation": [
+    "Both cases complete1800steps through2.1ms, with no detached region at any reported threshold in any saved frame.",
+    "Final absolute alpha redistribution difference0.0542nL is much smaller than8nL percell; common-liquid velocity RMS difference0.000168m/s. This is a weak resolved interface response, not a physical rejection of coil jetting.",
+    "The200um mesh has2.5cells across the outlet and a one-cell radial liquid gap around the upper feed wire. Initial equilibrium and breakup timing are not qualified.",
+    "No new experiments were launched for this assessment. Thermal evolution, calibrated wetting, oxidation and repetition remain absent."
+  ]
+}
