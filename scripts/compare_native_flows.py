@@ -14,9 +14,11 @@ import numpy as np
 from native_field_io import read_native_fields
 
 
-def frames(directory):
-    status = json.loads((directory / "run-status.json").read_text())
-    if status["status"] != "complete":
+def frames(directory, available=False):
+    status_path = directory / "run-status.json"
+    status = (json.loads(status_path.read_text()) if status_path.exists()
+              else {"status": "unfinished", "scope": "No terminal run status exists"})
+    if not available and status["status"] != "complete":
         raise ValueError(f"Comparison requires a completed run: {directory}")
     result = {}
     for path in directory.glob("frame-*/metadata.json"):
@@ -69,9 +71,15 @@ def main():
         action="store_true",
         help="Compare only common aligned cells of different-size domains",
     )
+    parser.add_argument("--available", action="store_true",
+                        help="Explicit partial comparison of shared accepted exports; permits unfinished/failed runs")
     args = parser.parse_args()
-    reference_status, reference = frames(args.reference)
-    driven_status, driven = frames(args.driven)
+    reference_status, reference = frames(args.reference, args.available)
+    driven_status, driven = frames(args.driven, args.available)
+    if args.available:
+        common = reference.keys() & driven.keys()
+        reference = {k: reference[k] for k in common}
+        driven = {k: driven[k] for k in common}
     if not reference or reference.keys() != driven.keys():
         raise ValueError("Require the same set of accepted exported steps")
     rows = []
@@ -153,6 +161,8 @@ def main():
         rows.append(row)
     result = {
         "method": __doc__,
+        "comparison_scope": "shared accepted exports only; partial run comparison" if args.available else "completed matched runs",
+        "partial_comparison_requested": args.available,
         "reference": str(args.reference),
         "driven": str(args.driven),
         "reference_status": reference_status,

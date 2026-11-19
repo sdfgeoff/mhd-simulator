@@ -1,0 +1,121 @@
+{
+  "method": "Compare completed, matched-grid native fluid exports without interpolation.\n\nCell-centred alpha/velocity diagnostics only; not an additional fluid solver.\nAlpha L1 is an absolute phase-volume difference, not net mass loss.\n",
+  "comparison_scope": "shared accepted exports only; partial run comparison",
+  "partial_comparison_requested": true,
+  "reference": "artifacts/hardware-research/coil-low-fill-flow-v1-0A-h020",
+  "driven": "artifacts/hardware-research/coil-low-fill-flow-v1-250A-h020",
+  "reference_status": {
+    "accepted_steps": 1800,
+    "electromagnetics": true,
+    "error": null,
+    "field_every": 300,
+    "final_timestep_s": 1.5e-06,
+    "fluids": true,
+    "initial_timestep_s": 5e-07,
+    "meaning": "Normal unified RunState; an explicit timestep schedule does not replace or freeze any physics subsystem.",
+    "project": "artifacts/hardware-research/cases/coil-low-fill-flow-v1/low-fill-0A-flow-h020.mhd.json",
+    "requested_steps": 1800,
+    "status": "complete",
+    "tail_schedule_s": [
+      0.0003,
+      1.5e-06
+    ],
+    "thermal": false,
+    "time_s": 0.0021000000000000038
+  },
+  "driven_status": {
+    "status": "unfinished",
+    "scope": "No terminal run status exists"
+  },
+  "frames": [
+    {
+      "step": 0,
+      "time_us": 0.0,
+      "comparison_grid": {
+        "dims": [
+          90,
+          90,
+          93
+        ],
+        "origin_m": [
+          -0.009000000543892384,
+          -0.009000000543892384,
+          -0.004000000189989805
+        ],
+        "cell_m": 0.00020000000949949026,
+        "scope": "common aligned native cells; no interpolation"
+      },
+      "exported_configuration_matches_except_wire_currents": true,
+      "alpha_L1_volume_difference_nl": 0.0,
+      "alpha_RMS_difference": 0.0,
+      "common_liquid_weighted_velocity_RMS_difference_m_s": 0.0,
+      "static_open_mask_identical": true,
+      "reference": {
+        "liquid_volume_nl": 154688.01646477007,
+        "whole_domain_liquid_volume_nl": 154688.01646477007,
+        "below_tip_nl": 0.0,
+        "liquid_weighted_RMS_speed_m_s": 0.0,
+        "liquid_centre_z_mm": 2.899420817032331
+      },
+      "driven": {
+        "liquid_volume_nl": 154688.01646477007,
+        "whole_domain_liquid_volume_nl": 154688.01646477007,
+        "below_tip_nl": 0.0,
+        "liquid_weighted_RMS_speed_m_s": 0.0,
+        "liquid_centre_z_mm": 2.899420817032331
+      }
+    },
+    {
+      "step": 300,
+      "time_us": 150.0000000000004,
+      "comparison_grid": {
+        "dims": [
+          90,
+          90,
+          93
+        ],
+        "origin_m": [
+          -0.009000000543892384,
+          -0.009000000543892384,
+          -0.004000000189989805
+        ],
+        "cell_m": 0.00020000000949949026,
+        "scope": "common aligned native cells; no interpolation"
+      },
+      "exported_configuration_matches_except_wire_currents": true,
+      "alpha_L1_volume_difference_nl": 17.44039076900349,
+      "alpha_RMS_difference": 0.00011020329537364701,
+      "common_liquid_weighted_velocity_RMS_difference_m_s": 0.0009227561365422909,
+      "static_open_mask_identical": true,
+      "reference": {
+        "liquid_volume_nl": 154688.01646042307,
+        "whole_domain_liquid_volume_nl": 154688.01646042307,
+        "below_tip_nl": 0.0,
+        "liquid_weighted_RMS_speed_m_s": 0.002422334951126207,
+        "liquid_centre_z_mm": 2.8994322992154298
+      },
+      "driven": {
+        "liquid_volume_nl": 154688.02343314182,
+        "whole_domain_liquid_volume_nl": 154688.02343314182,
+        "below_tip_nl": 9.43113826062486e-06,
+        "liquid_weighted_RMS_speed_m_s": 0.002577373577441504,
+        "liquid_centre_z_mm": 2.8994354979408716
+      }
+    }
+  ],
+  "final_field_sha256": {
+    "artifacts/hardware-research/coil-low-fill-flow-v1-0A-h020/frame-00000300/fluid.bin": "4aa392d3d349ca64631d6044cf7a0edfdce152113c34d811e0927ab0f16e056c",
+    "artifacts/hardware-research/coil-low-fill-flow-v1-250A-h020/frame-00000300/fluid.bin": "9f98fa2f6f0301287db339cc7602f0d5d6be3bf9085cd531bedce143f27d6ce4"
+  },
+  "limits": [
+    "Cell-centred diagnostics are not the solver's discrete face kinetic energy.",
+    "Comparisons do not establish grid convergence, driver feasibility or repetitive jetting.",
+    "200 um spacing gives only 2.5 cells across the 0.5 mm outlet.",
+    "This 10-turn winding intersects the nominal standard heater envelope; it is a mechanism control, not a qualified assembly."
+  ],
+  "interpretation": [
+    "At the shared 150 us export, the driven case has essentially no liquid below the outlet (9.43e-6 nL). The unpowered control has zero.",
+    "Common-liquid velocity RMS difference is 0.000923 m/s. This is a whole-pool metric, not outlet speed.",
+    "The driven run is still computing. This partial result does not decide delayed ejection, grid convergence or the coil approach generally."
+  ]
+}
