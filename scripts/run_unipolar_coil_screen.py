@@ -18,6 +18,18 @@ def sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+def isolated_amd_process(line, manifest):
+    # Only exempt our verified process-local Radeon manifest. A generic native
+    # process without this evidence remains a conflict for the default queue.
+    try:
+        pid = int(line.split(maxsplit=1)[0])
+        entries = Path(f"/proc/{pid}/environ").read_bytes().split(b"\0")
+        wanted = b"VK_DRIVER_FILES=" + str(manifest.resolve()).encode()
+        return wanted in entries
+    except (OSError, ValueError, IndexError):
+        return False
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--after-state", type=Path)
@@ -49,6 +61,9 @@ def main():
     if args.probe_binary is not None:
         binary = args.probe_binary
     hashes = {str(plan_path): sha(plan_path), str(binary): sha(binary)}
+    if args.adapter == "default":
+        inventory = Path("target/debug/examples/adapter_inventory")
+        hashes[str(inventory)] = sha(inventory)
     for job in plan["jobs"]:
         if sha(job["project"]) != job["project_sha256"] or job["command"][0] != str(
             original_binary
@@ -141,6 +156,15 @@ def main():
     )
     with lease_path.open("a") as lease:
         fcntl.flock(lease, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        if args.adapter == "default":
+            if sha(inventory) != hashes[str(inventory)]:
+                raise RuntimeError("Frozen adapter inventory changed")
+            selected = json.loads(subprocess.check_output([str(inventory)], env=env, text=True))
+            if "NVIDIA" not in selected["default_headless_selected_name"]:
+                record(stage="failed", error="Expected NVIDIA", adapter_preflight=selected)
+                raise RuntimeError("Unexpected default physical adapter")
+            env["MHD_EXPECT_ADAPTER"] = selected["default_headless_selected_name"]
+            record(stage="ready", adapter_preflight=selected)
         for index, job in enumerate(jobs):
             processes = subprocess.run(
                 ["ps", "-eo", "pid=,args="], capture_output=True, text=True, check=True
@@ -148,13 +172,14 @@ def main():
             pattern = (
                 r"^\s*\d+\s+(?:\S*/)?target/(?:debug|release)/examples/amd_hardware_probe(?:_tail)?\s"
                 if args.adapter == "amd"
-                else r"^\s*\d+\s+(?:\S*/)?target/(?:debug|release)/(?:examples/(?:conduction_flow(?:_precision|_current_tolerance)?|conduction_probe|applied_probe|hardware_probe)\s|mhd-workbench\s+--run-check\s)"
+                else r"^\s*\d+\s+(?:\S*/)?target/(?:debug|release)/(?:examples/(?:conduction_flow(?:_precision|_current_tolerance)?|conduction_probe|applied_probe|hardware_probe(?:_tail)?)\s|mhd-workbench\s+--run-check\s)"
             )
             if any(
                 re.search(
                     pattern,
                     line,
-                )
+                ) and not (args.adapter == "default" and isolated_amd_process(
+                    line, root / "radv-local-26.2.7/radeon-local.json"))
                 for line in processes.splitlines()
             ):
                 raise RuntimeError("Another solver on this physical adapter is active")
