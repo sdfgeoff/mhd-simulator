@@ -1,0 +1,30 @@
+{
+  "status": "Reloaded CAD closed-mesh and nonliquid conductor topology checks passed",
+  "scope": "Exact CAD connectivity only, not contact resistance, voxel connectivity or physics validation",
+  "cases": [
+    {
+      "label": "alumina",
+      "closed_exported_bodies": 10,
+      "nonliquid_holder_electrode_conductor_components": 3,
+      "conductive_chamber_connects_electrodes_without_liquid": false
+    },
+    {
+      "label": "steel",
+      "closed_exported_bodies": 10,
+      "nonliquid_holder_electrode_conductor_components": 1,
+      "conductive_chamber_connects_electrodes_without_liquid": true
+    },
+    {
+      "label": "steel_touch",
+      "closed_exported_bodies": 10,
+      "nonliquid_holder_electrode_conductor_components": 1,
+      "conductive_chamber_connects_electrodes_without_liquid": true
+    },
+    {
+      "label": "alumina_touch",
+      "closed_exported_bodies": 10,
+      "nonliquid_holder_electrode_conductor_components": 1,
+      "conductive_chamber_connects_electrodes_without_liquid": true
+    }
+  ]
+}

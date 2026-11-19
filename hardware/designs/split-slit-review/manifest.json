@@ -1,0 +1,81 @@
+{
+  "status": "Nominal split-slit comparison CAD; no physics qualification",
+  "cases": [
+    {
+      "label": "alumina",
+      "project": "hardware/designs/split-slit-review/alumina-charge.mhd.json",
+      "tube_material_id": 7,
+      "plate_to_holder_bridge": false,
+      "slit_gap_mm": 0.2,
+      "slit_max_length_mm": 1.0,
+      "plate_thickness_mm": 0.5,
+      "tube_OD_ID_length_mm": [
+        2,
+        1,
+        9.5
+      ],
+      "pool_top_z_mm": 6,
+      "liquid_volume_mm3": 4.415900569985931,
+      "nominal_exit_area_mm2": 0.19858808435353748,
+      "scope": "Tube contacts plates directly; normal case has0.5mm clearance between metal holder and plates. Touch case bridges that clearance. Alumina_touch deliberately tests a metal-holder shunt despite insulating chamber. Mechanical mounting/clamps absent; no sealing or current result yet."
+    },
+    {
+      "label": "steel",
+      "project": "hardware/designs/split-slit-review/steel-charge.mhd.json",
+      "tube_material_id": 14,
+      "plate_to_holder_bridge": false,
+      "slit_gap_mm": 0.2,
+      "slit_max_length_mm": 1.0,
+      "plate_thickness_mm": 0.5,
+      "tube_OD_ID_length_mm": [
+        2,
+        1,
+        9.5
+      ],
+      "pool_top_z_mm": 6,
+      "liquid_volume_mm3": 4.415900569985931,
+      "nominal_exit_area_mm2": 0.19858808435353748,
+      "scope": "Tube contacts plates directly; normal case has0.5mm clearance between metal holder and plates. Touch case bridges that clearance. Alumina_touch deliberately tests a metal-holder shunt despite insulating chamber. Mechanical mounting/clamps absent; no sealing or current result yet."
+    },
+    {
+      "label": "steel_touch",
+      "project": "hardware/designs/split-slit-review/steel_touch-charge.mhd.json",
+      "tube_material_id": 14,
+      "plate_to_holder_bridge": true,
+      "slit_gap_mm": 0.2,
+      "slit_max_length_mm": 1.0,
+      "plate_thickness_mm": 0.5,
+      "tube_OD_ID_length_mm": [
+        2,
+        1,
+        9.5
+      ],
+      "pool_top_z_mm": 6,
+      "liquid_volume_mm3": 4.415900569985931,
+      "nominal_exit_area_mm2": 0.19858808435353748,
+      "scope": "Tube contacts plates directly; normal case has0.5mm clearance between metal holder and plates. Touch case bridges that clearance. Alumina_touch deliberately tests a metal-holder shunt despite insulating chamber. Mechanical mounting/clamps absent; no sealing or current result yet."
+    },
+    {
+      "label": "alumina_touch",
+      "project": "hardware/designs/split-slit-review/alumina_touch-charge.mhd.json",
+      "tube_material_id": 7,
+      "plate_to_holder_bridge": true,
+      "slit_gap_mm": 0.2,
+      "slit_max_length_mm": 1.0,
+      "plate_thickness_mm": 0.5,
+      "tube_OD_ID_length_mm": [
+        2,
+        1,
+        9.5
+      ],
+      "pool_top_z_mm": 6,
+      "liquid_volume_mm3": 4.415900569985931,
+      "nominal_exit_area_mm2": 0.19858808435353748,
+      "scope": "Tube contacts plates directly; normal case has0.5mm clearance between metal holder and plates. Touch case bridges that clearance. Alumina_touch deliberately tests a metal-holder shunt despite insulating chamber. Mechanical mounting/clamps absent; no sealing or current result yet."
+    }
+  ],
+  "source_sketch_attachment": "6a29e1d4-df86-44e8-a193-1bd473c76918",
+  "tube_stock_reference": "https://almathcrucibles.com/product/alm21/",
+  "stock_scope": "Manufacturer lists2mmOD/1mmID99.7%alumina tube; cut/lap short length, dimensions/fits and thermal contact not qualified.",
+  "conductivity_scope": "Initial geometry cases use existing fixedCu25MS/m,SS1.1MS/m,liquid2.2MS/m andidealinterfaces. Aluminium bar conductivity needs a separately documented sensitivity; it is not silently assumed superior."
+}
