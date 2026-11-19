@@ -65,6 +65,8 @@ for ax, (name, label, version) in zip(axes, cases):
     regions = analysis["frames"][-1]["connectivity_thresholds"]["0.5"]
     description = "\n".join(f"D = {r['equivalent_diameter_mm']:.3f} mm; "
                             f"down = {-r['velocity_m_s'][2]:.3f} m/s" for r in regions)
+    if not description:
+        description = "No detached region at α ≥ 0.5"
     ax.text(.5, -.17, description, transform=ax.transAxes, ha="center", va="top", fontsize=9)
     del f
 titles = {"timestep": "Same 110 A pulse at 3.6 ms — isolate timestep before grid refinement",

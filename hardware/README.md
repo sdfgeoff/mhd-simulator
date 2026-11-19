@@ -630,7 +630,9 @@ are `target/debug/examples/thermal_conductance --check`.
     [V6-like flow pair](coil-v6-flow-plan.json) use the normal unified CLI for
     matched unpowered/driven controls. The lower-fill unpowered case is complete;
     its driven case is now complete without a resolved detached drop. The V6 pair
-    has started. These are mechanism tests,
+    [also completes without a detached region](coil-v6-flow-comparison.json).
+    Its unpowered and driven outlet-section proxies both retract to numerical
+    noise by1.2ms; final alpha-L1 difference is0.614nL. These are mechanism tests,
     with no single-pulse jetting result yet. The200µm startup mesh does not resolve breakup. These encircling
     coils also clash with a conventional heater block; alternate heating or
     coil placement remains a packaging requirement.
@@ -660,6 +662,13 @@ are `target/debug/examples/thermal_conductance --check`.
     [comparison](rooted-delay-field-comparison.json) gives132.6nL liquid-fraction
     redistribution difference, so the small leading-diameter change is not
     evidence of unchanged flow.
+    The [liquid/solid interface-resistivity sensitivity](rooted-interface-screening.json)
+    is more consequential: at an assumed10⁻⁹Ωm² there are no detached regions
+    in any saved frame through3.6ms, despite the same110A waveform. It applies
+    to every conducting liquid/solid face, including feedstock, and is not a
+    measured contact value or a Cu/SS dry-joint model. Current transfer and
+    assembled-heater bypass need checking before choosing an ideal-contact
+    pulse as a hardware operating point.
 16. The [rooted-tip self-field diagnostic](m6-rooted-self-field-screening.json)
     postprocesses the earlier native cold current at110A. The local omitted
     self-force is about6% of applied-force L2 in the liquid/outlet regions.
