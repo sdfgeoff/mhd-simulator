@@ -28,7 +28,7 @@ a proposed ±300 A peak / 100 A RMS bipolar current driver on 24/48 V.
 
 | Candidate | Latest accepted evidence | Decision still open |
 | --- | --- | --- |
-| One-piece rooted stainless M6 tip, external contacts and permanent magnets | 110 A pulse: 50 µm / 1.5 µs run completes 3.6 ms with 0.596 and 0.417 mm detached regions. Fixed-grid 100 µm timestep halving changes the leading diameter only 0.12%, but both runs retain a second region and its slow motion changes. | No clean, converged single-drop setting. The 55 A counterpulse completes but retains a dense trailing region; a 110 A counterpulse is the next comparison. [Reverse-current assessment](rooted-retract-screening.json). [Timestep assessment](rooted-timestep-screening.json), [field comparison](rooted-timestep-field-comparison.json), [fine result](m6-rooted-flow-refinement-screening.json). |
+| One-piece rooted stainless M6 tip, external contacts and permanent magnets | 110 A pulse: 50 µm / 1.5 µs run completes 3.6 ms with 0.596 and 0.417 mm detached regions. Fixed-grid 100 µm timestep halving changes the leading diameter only 0.12%, but both runs retain a second region and its slow motion changes. | No clean, converged single-drop setting. The 55 A counterpulse completes but retains a dense trailing region; the completed 110 A counterpulse gives a 0.480 mm leading region and an upward-moving 0.418 mm secondary region. [110 A result](rooted-retract100-screening.json). [Reverse-current assessment](rooted-retract-screening.json). [Timestep assessment](rooted-timestep-screening.json), [field comparison](rooted-timestep-field-comparison.json), [fine result](m6-rooted-flow-refinement-screening.json). |
 | Earlier ten-turn single coil | Six stationary nonnegative pulse cases complete with energy/decay checks. The 250 A, 10 µs rise / 100 µs fall cases give about 29 V interval terminal estimates. Lower-fill unpowered flow completes 2.1 ms without a detached drop; matched powered flow is still running. | No single-pulse coil jetting result. The winding clashes with the nominal standard heater; coarse 200 µm flow cannot settle breakup. [Stationary comparison](unipolar-coil-fast10-v2-comparison.json), [flow plan](coil-low-fill-flow-plan.json). |
 | Stainless tube and split copper slit plates | Unpowered conditioned control completes 10.002 ms. Driven 40 A case fails at 9.999 ms; its last saved 9.519 ms export has one 0.408 mm region moving down at 0.90 m/s, plus substantial lateral spreading. | Failed coarse result is provisional. End confinement, timestep, gap resolution and hot sealing remain open. [Accepted-prefix evidence](split-slit-conditioned-prefix-screening.json), [unrun end-stop CAD](designs/split-slit-endstop-review/README.md). |
 | Compact twelve-turn coil below a drawing-based heater | CPU-validated CAD; nominal return projection approximately 2 mm. Unloaded 250 A / 15 µs rise estimate approximately 36 V. | No native shielding, loaded voltage, flow or temperature result. Heater inclusion tests are queued after a native decay-step reference validation. [Package](lowered-coil-package.json), [guarded test plan](lowered-coil-cold-plan.json). |
@@ -647,8 +647,9 @@ are `target/debug/examples/thermal_conductance --check`.
     timestep, then increase reverse-current magnitude with geometry held fixed.
     The [fixed-grid timestep assessment](rooted-timestep-screening.json) is now
     complete. The [27.5/55 A reversal comparison](rooted-retract-screening.json)
-    also completes, with threshold-sensitive trailing liquid; a larger counterpulse
-    is the next comparison.
+    also completes, with threshold-sensitive trailing liquid. The [110 A counterpulse](rooted-retract100-screening.json)
+    leaves two regions across all thresholds, with the secondary moving upward;
+    this does not establish recovery or clean release.
 16. The [rooted-tip self-field diagnostic](m6-rooted-self-field-screening.json)
     postprocesses the earlier native cold current at110A. The local omitted
     self-force is about6% of applied-force L2 in the liquid/outlet regions.

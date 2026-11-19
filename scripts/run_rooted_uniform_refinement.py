@@ -26,6 +26,7 @@ parser.add_argument("--state", type=Path, help="Fresh state path for an explicit
 parser.add_argument("--motion-absolute-tolerance-a", type=float, default=0.,
                     help="Explicit dimensional floor for the motional basis; unit-current gate remains strict")
 parser.add_argument("--single-retract", type=float, help="One explicit reverse/forward amplitude ratio at fixed100um/1.5us")
+parser.add_argument("--single-delay-us", type=float, default=25., help="Explicit counterpulse delay for a single reversal case")
 args = parser.parse_args()
 if not math.isfinite(args.motion_absolute_tolerance_a) or args.motion_absolute_tolerance_a < 0:
     parser.error("Choose a finite nonnegative motional current tolerance")
@@ -33,6 +34,8 @@ if args.motion_absolute_tolerance_a > 0 and args.study != "precision-temporal-re
     parser.error("Dimensional tolerance requires the fresh precision-temporal-retract study")
 if args.single_retract is not None and (args.study != "precision-temporal-retract" or args.motion_absolute_tolerance_a <= 0 or not math.isfinite(args.single_retract) or not 0 <= args.single_retract <= 2.5):
     parser.error("Single reversal requires precision study, explicit motion tolerance, and ratio0..2.5")
+if not math.isfinite(args.single_delay_us) or args.single_delay_us < 0 or (args.single_retract is None and args.single_delay_us != 25):
+    parser.error("A finite nonnegative custom delay requires a single reversal case")
 if (args.after_state is None) != (args.after_pid is None):
     parser.error("Supply both predecessor state and controller PID")
 state = args.state or root / {"uniform": "rooted-uniform-refinement-state.json",
@@ -60,7 +63,8 @@ if args.study == "precision-temporal-retract":
 if args.single_retract is not None:
     ratio = args.single_retract
     specs = [("h010", "1.5", "2400", "600", str(ratio),
-              f"m6-rooted08-flow110-r{ratio*100:g}-precisionv2-h010-dt1p5")]
+              f"m6-rooted08-flow110-r{ratio*100:g}-precisionv2-h010-dt1p5"
+              + (f"-delay{args.single_delay_us:g}us" if args.single_delay_us != 25 else ""))]
 for grid, dt, steps, every, retract, name in specs:
     if args.motion_absolute_tolerance_a > 0:
         name = name.replace("precisionv2", f"motionabs{args.motion_absolute_tolerance_a:g}A")
@@ -82,7 +86,7 @@ for grid, dt, steps, every, retract, name in specs:
                 "0",
                 every,
                 dt,
-                "25",
+                str(args.single_delay_us) if args.single_retract is not None else "25",
                 "body",
             ],
         }
@@ -118,6 +122,7 @@ def record(**values):
                 "controller_pid": os.getpid(),
                 "study": args.study,
                 "single_retract_fraction": args.single_retract,
+                "single_retract_delay_us": args.single_delay_us,
                 "jobs": jobs,
                 "predecessor_state": str(args.after_state),
                 "predecessor_pid": args.after_pid,
