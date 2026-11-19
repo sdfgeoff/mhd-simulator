@@ -33,3 +33,9 @@ The CAD comes from the exact geometry referenced by `artifacts/hardware-research
 The velocity colour scale is shared by both fluid panels. Solid mask, velocity and liquid fraction are averaged over the two central y-cell layers. Liquid speed is shown only above liquid fraction 0.5 and open fraction 0.5. Geometry lines and coil envelopes are in the CAD panel; the simulation panels preserve the coarse native grid. [Matched-control assessment](../coil-low-fill-flow-comparison.json).
 
 Regenerate with `TMPDIR="$PWD/artifacts/build-temp" uv run --offline --with manifold3d --with matplotlib python scripts/plot_coil_selected_run.py`. This reads saved data and performs no new simulation.
+
+### Direction of flow versus the unpowered control
+
+![Signed vertical velocity in matched completed exports](coil-vertical-control.png)
+
+The earlier velocity colour scale was speed magnitude. This image instead shows signed vertical velocity at 2.1 ms for both cases, with equal-length direction arrows. At the first outlet cell plane, liquid-weighted upward velocity is 0.0756 m/s without current and 0.0907 m/s with the pulse. The remaining liquid-section proxies there are only 0.0211 and 0.00933 mm² respectively, compared with 0.1600 mm² initially. These are local cell-centred diagnostics, not whole-pool velocities or exact face fluxes. At 150 µs the driven outlet retraction is slightly slower than the control; the relative response changes with time. Consequently the pulse cannot be identified as the sole cause of the upward retreat. Neither run started from a demonstrated equilibrated meniscus. Render from existing data with `scripts/plot_coil_vertical_control.py`; no new simulation is involved.
