@@ -8,14 +8,16 @@ from pathlib import Path
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--study", choices=["timestep", "retract"], default="timestep")
+parser.add_argument("--reference-retract", type=float, default=.25)
+parser.add_argument("--candidate-retract", type=float, default=.5)
 parser.add_argument("--output", type=Path)
 args = parser.parse_args()
 root = Path("artifacts/hardware-research")
 names = ["m6-rooted08-flow110-r25-motionabs1e-06A-h010-dt3",
          "m6-rooted08-flow110-r25-motionabs1e-06A-h010-dt1p5"]
 if args.study == "retract":
-    names = ["m6-rooted08-flow110-r25-motionabs1e-06A-h010-dt1p5",
-             "m6-rooted08-flow110-r50-motionabs1e-06A-h010-dt1p5"]
+    names = [f"m6-rooted08-flow110-r{r*100:g}-motionabs1e-06A-h010-dt1p5"
+             for r in [args.reference_retract, args.candidate_retract]]
 summaries = []
 statuses = []
 for name in names:
@@ -70,8 +72,8 @@ if args.study == "timestep":
     if abs(statuses[1]["timestep_s"] / statuses[0]["timestep_s"] - .5) > 1e-8:
         raise ValueError("Expected timestep halving")
 else:
-    if statuses[0]["timestep_s"] != statuses[1]["timestep_s"] or [s["retract_fraction"] for s in statuses] != [.25, .5]:
-        raise ValueError("Expected matched timestep and .25/.5 reversal")
+    if statuses[0]["timestep_s"] != statuses[1]["timestep_s"] or [s["retract_fraction"] for s in statuses] != [args.reference_retract, args.candidate_retract]:
+        raise ValueError("Expected matched timestep and requested reversal amplitudes")
 comparisons = []
 for threshold in ["0.01", "0.25", "0.5", "0.75"]:
     regions = [s["final_regions_by_alpha"][threshold] for s in summaries]

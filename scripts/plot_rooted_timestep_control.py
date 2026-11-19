@@ -12,6 +12,8 @@ from native_field_io import read_native_fields
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--study", choices=["timestep", "retract"], default="timestep")
+parser.add_argument("--reference-retract", type=float, default=.25)
+parser.add_argument("--candidate-retract", type=float, default=.5)
 parser.add_argument("--output", type=Path, required=True)
 args = parser.parse_args()
 root = Path("artifacts/hardware-research")
@@ -21,10 +23,9 @@ cases = [
     ("m6-rooted08-flow110-r25-chargefix-h0050", "50 µm · 1.5 µs", "earlier v1, relative-only gate"),
 ]
 if args.study == "retract":
-    cases = [
-        ("m6-rooted08-flow110-r25-motionabs1e-06A-h010-dt1p5", "Reverse: 27.5 A", "100 µm · 1.5 µs"),
-        ("m6-rooted08-flow110-r50-motionabs1e-06A-h010-dt1p5", "Reverse: 55 A", "100 µm · 1.5 µs"),
-    ]
+    cases = [(f"m6-rooted08-flow110-r{r*100:g}-motionabs1e-06A-h010-dt1p5",
+              f"Reverse: {110*r:g} A", "100 µm · 1.5 µs")
+             for r in [args.reference_retract, args.candidate_retract]]
 fig, axes = plt.subplots(1, len(cases), figsize=(10 if len(cases) == 3 else 7.5, 7.8))
 fig.subplots_adjust(top=.84, bottom=.28, left=.07, right=.88, wspace=.32)
 for ax, (name, label, version) in zip(axes, cases):

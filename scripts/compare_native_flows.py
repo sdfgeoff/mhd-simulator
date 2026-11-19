@@ -174,6 +174,7 @@ def main():
         "method": __doc__,
         "comparison_scope": "shared accepted exports only; partial run comparison" if args.available else "completed matched runs",
         "partial_comparison_requested": args.available,
+        "configuration_comparison_scope": "Exported metadata only. External research electrode waveforms require separate native run-status checks.",
         "export_matching": "physical time within1ps" if args.match_time else "same accepted step",
         "reference": str(args.reference),
         "driven": str(args.driven),
