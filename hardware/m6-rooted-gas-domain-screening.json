@@ -1,0 +1,319 @@
+{
+  "status": "passed",
+  "reference": "artifacts/hardware-research/m6-rooted08-flow110-r25-vented-tol1e4-h010",
+  "candidate": "artifacts/hardware-research/m6-rooted08-flow110-r25-compactgas-h010",
+  "checks": [
+    {
+      "metric": "initial_liquid_volume",
+      "absolute_relative_difference": 0.0,
+      "limit": 1e-06,
+      "pass": true
+    },
+    {
+      "metric": "900us_below_tip_volume",
+      "absolute_relative_difference": 0.00014156954545008205,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "900us_total_volume_drift",
+      "absolute_relative_difference": 1.6402256663994308e-08,
+      "limit": 1e-05,
+      "pass": true
+    },
+    {
+      "metric": "900us_early_detachment_0.01",
+      "pass": true
+    },
+    {
+      "metric": "900us_early_detachment_0.25",
+      "pass": true
+    },
+    {
+      "metric": "900us_early_detachment_0.5",
+      "pass": true
+    },
+    {
+      "metric": "900us_early_detachment_0.75",
+      "pass": true
+    },
+    {
+      "metric": "1800us_below_tip_volume",
+      "absolute_relative_difference": 0.0001323591213120423,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "1800us_total_volume_drift",
+      "absolute_relative_difference": 1.750590561400145e-08,
+      "limit": 1e-05,
+      "pass": true
+    },
+    {
+      "metric": "1800us_early_detachment_0.01",
+      "pass": true
+    },
+    {
+      "metric": "1800us_early_detachment_0.25",
+      "pass": true
+    },
+    {
+      "metric": "1800us_early_detachment_0.5",
+      "pass": true
+    },
+    {
+      "metric": "1800us_early_detachment_0.75",
+      "pass": true
+    },
+    {
+      "metric": "2700us_below_tip_volume",
+      "absolute_relative_difference": 0.0001442631180648135,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "2700us_total_volume_drift",
+      "absolute_relative_difference": 1.5645687412302323e-08,
+      "limit": 1e-05,
+      "pass": true
+    },
+    {
+      "metric": "2700us_volume_nl_0.01",
+      "absolute_relative_difference": 0.00015962673864211574,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "2700us_equivalent_diameter_mm_0.01",
+      "absolute_relative_difference": 5.321174432038056e-05,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "2700us_centre_mm_0.01",
+      "absolute_relative_difference": 0.0003335128418571198,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "2700us_velocity_m_s_0.01",
+      "absolute_relative_difference": 8.995211203255415e-05,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "2700us_volume_nl_0.25",
+      "absolute_relative_difference": 0.0004490672226310499,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "2700us_equivalent_diameter_mm_0.25",
+      "absolute_relative_difference": 0.00014971148662101808,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "2700us_centre_mm_0.25",
+      "absolute_relative_difference": 0.0002205137321547035,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "2700us_velocity_m_s_0.25",
+      "absolute_relative_difference": 7.315758630099811e-05,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "2700us_volume_nl_0.5",
+      "absolute_relative_difference": 0.0008271910489403567,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "2700us_equivalent_diameter_mm_0.5",
+      "absolute_relative_difference": 0.0002758064118301151,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "2700us_centre_mm_0.5",
+      "absolute_relative_difference": 0.0001263577110757197,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "2700us_velocity_m_s_0.5",
+      "absolute_relative_difference": 0.00020461294688900455,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "2700us_volume_nl_0.75",
+      "absolute_relative_difference": 2.607282801925237e-05,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "2700us_equivalent_diameter_mm_0.75",
+      "absolute_relative_difference": 8.690867141725178e-06,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "2700us_centre_mm_0.75",
+      "absolute_relative_difference": 3.835380483208084e-05,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "2700us_velocity_m_s_0.75",
+      "absolute_relative_difference": 3.7350901574084716e-05,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "3600us_below_tip_volume",
+      "absolute_relative_difference": 0.00011350204391225027,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "3600us_total_volume_drift",
+      "absolute_relative_difference": 1.591658449484612e-08,
+      "limit": 1e-05,
+      "pass": true
+    },
+    {
+      "metric": "3600us_volume_nl_0.01",
+      "absolute_relative_difference": 0.00030976035424090664,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "3600us_equivalent_diameter_mm_0.01",
+      "absolute_relative_difference": 0.00010326411452388218,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "3600us_centre_mm_0.01",
+      "absolute_relative_difference": 0.00029070727135138696,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "3600us_velocity_m_s_0.01",
+      "absolute_relative_difference": 0.00016016224628523368,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "3600us_volume_nl_0.25",
+      "absolute_relative_difference": 0.0004839535572294107,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "3600us_equivalent_diameter_mm_0.25",
+      "absolute_relative_difference": 0.00016134388285837797,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "3600us_centre_mm_0.25",
+      "absolute_relative_difference": 0.00020819913638958631,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "3600us_velocity_m_s_0.25",
+      "absolute_relative_difference": 0.00010427343885832663,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "3600us_volume_nl_0.5",
+      "absolute_relative_difference": 0.0007551979239031059,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "3600us_equivalent_diameter_mm_0.5",
+      "absolute_relative_difference": 0.0002516692985516933,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "3600us_centre_mm_0.5",
+      "absolute_relative_difference": 0.0001428017251574598,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "3600us_velocity_m_s_0.5",
+      "absolute_relative_difference": 0.0002123709403030194,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "3600us_volume_nl_0.75",
+      "absolute_relative_difference": 0.024634890541498256,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "3600us_equivalent_diameter_mm_0.75",
+      "absolute_relative_difference": 0.008279999348572264,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "3600us_centre_mm_0.75",
+      "absolute_relative_difference": 0.0013630395514534488,
+      "limit": 0.05,
+      "pass": true
+    },
+    {
+      "metric": "3600us_velocity_m_s_0.75",
+      "absolute_relative_difference": 0.0012354160064295128,
+      "limit": 0.05,
+      "pass": true
+    }
+  ],
+  "scope": "Explicit5%coarse primary-metric gate for omitting exterior heater from gas geometry; not validation of complete fields,thermal paths orsatellitecounts. Fine compact-gas screen may proceed only onpass; its spatial/timestep controls remain separate.",
+  "source_geometry_and_materials_unchanged": true,
+  "fluid_and_magnet_settings_unchanged": true,
+  "body_change": "Only exterior heater body8 excluded in candidate; source nozzle/liquid/contacts unchanged. Candidate gas can pass around the upper nozzle without the exterior heater obstacle.",
+  "reference_domain": {
+    "min_mm": [
+      -3.8,
+      -8.5,
+      -8
+    ],
+    "max_mm": [
+      3.8,
+      8.5,
+      16.5
+    ],
+    "cell_mm": 0.1
+  },
+  "candidate_domain": {
+    "min_mm": [
+      -3.8,
+      -3.8,
+      -8
+    ],
+    "max_mm": [
+      3.8,
+      3.8,
+      10.5
+    ],
+    "cell_mm": 0.1
+  },
+  "max_primary_diameter_relative_difference": 0.008279999348572264,
+  "max_primary_volume_relative_difference": 0.024634890541498256,
+  "max_primary_velocity_relative_difference": 0.0012354160064295128,
+  "fine_scope": "Permits a smaller exterior-gas approximation for the fine single-pulse screen, not for thermal or full-field claims. Fine run also halves forcing timestep to1.5us with3ustail; final3.6015ms. Finer physics outcome still pending."
+}
