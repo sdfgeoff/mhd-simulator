@@ -1,0 +1,140 @@
+{
+  "status": "Analytic electrical budget; proposed plateau waveform has no native field/flow result",
+  "native_triangular_source": "hardware/unipolar-coil-fast10-v2-comparison.json",
+  "source_sha256": "f5a6496b8dd0be8e8a7525b63105f62bf6772e602dab2dfb8d8543f9fbd15faf",
+  "same_waveform_amplitude_envelopes": [
+    {
+      "geometry": "custom",
+      "same_waveform_envelopes": [
+        {
+          "rail_V": 24.0,
+          "chosen_reserve_V": 0.0,
+          "peak_A_capped_at300": 206.7157987978867,
+          "RMS_A_at_assumed200Hz": 17.702083421622653,
+          "observed_stationary_voltage_range_scaled_V": [
+            -2.1137674745588675,
+            24.0
+          ],
+          "force_and_heat_scale_for_same_waveform_only": 0.6837027435623739
+        },
+        {
+          "rail_V": 24.0,
+          "chosen_reserve_V": 5.0,
+          "peak_A_capped_at300": 163.6500073816603,
+          "RMS_A_at_assumed200Hz": 14.014149375451268,
+          "observed_stationary_voltage_range_scaled_V": [
+            -1.673399250692437,
+            19.0
+          ],
+          "force_and_heat_scale_for_same_waveform_only": 0.42850119865627956
+        },
+        {
+          "rail_V": 48.0,
+          "chosen_reserve_V": 0.0,
+          "peak_A_capped_at300": 300.0,
+          "RMS_A_at_assumed200Hz": 25.690465157330237,
+          "observed_stationary_voltage_range_scaled_V": [
+            -3.067642850983401,
+            34.83042922635871
+          ],
+          "force_and_heat_scale_for_same_waveform_only": 1.44
+        },
+        {
+          "rail_V": 48.0,
+          "chosen_reserve_V": 5.0,
+          "peak_A_capped_at300": 300.0,
+          "RMS_A_at_assumed200Hz": 25.690465157330237,
+          "observed_stationary_voltage_range_scaled_V": [
+            -3.067642850983401,
+            34.83042922635871
+          ],
+          "force_and_heat_scale_for_same_waveform_only": 1.44
+        }
+      ]
+    },
+    {
+      "geometry": "v6",
+      "same_waveform_envelopes": [
+        {
+          "rail_V": 24.0,
+          "chosen_reserve_V": 0.0,
+          "peak_A_capped_at300": 205.33260634157054,
+          "RMS_A_at_assumed200Hz": 17.58363389627308,
+          "observed_stationary_voltage_range_scaled_V": [
+            -2.099628155032381,
+            24.0
+          ],
+          "force_and_heat_scale_for_same_waveform_only": 0.6745836676323581
+        },
+        {
+          "rail_V": 24.0,
+          "chosen_reserve_V": 5.0,
+          "peak_A_capped_at300": 162.55498002041003,
+          "RMS_A_at_assumed200Hz": 13.920376834549522,
+          "observed_stationary_voltage_range_scaled_V": [
+            -1.6622056227339685,
+            19.0
+          ],
+          "force_and_heat_scale_for_same_waveform_only": 0.42278594447097445
+        },
+        {
+          "rail_V": 48.0,
+          "chosen_reserve_V": 0.0,
+          "peak_A_capped_at300": 300.0,
+          "RMS_A_at_assumed200Hz": 25.690465157330237,
+          "observed_stationary_voltage_range_scaled_V": [
+            -3.0676493993452536,
+            35.06505921433057
+          ],
+          "force_and_heat_scale_for_same_waveform_only": 1.44
+        },
+        {
+          "rail_V": 48.0,
+          "chosen_reserve_V": 5.0,
+          "peak_A_capped_at300": 300.0,
+          "RMS_A_at_assumed200Hz": 25.690465157330237,
+          "observed_stationary_voltage_range_scaled_V": [
+            -3.0676493993452536,
+            35.06505921433057
+          ],
+          "force_and_heat_scale_for_same_waveform_only": 1.44
+        }
+      ]
+    }
+  ],
+  "proposed_single_plateau_pulse": {
+    "samples_us_A": [
+      [
+        0,
+        0
+      ],
+      [
+        10,
+        250
+      ],
+      [
+        40,
+        250
+      ],
+      [
+        140,
+        0
+      ]
+    ],
+    "hold_us": 30.0,
+    "I2dt_A2s": 4.166666666666666,
+    "RMS_A_at_assumed200Hz": 28.867513459481287,
+    "maximum_hold_us_at250A_30Arms_assumed200Hz": 35.333333333333336,
+    "rationale": "Delay the falling-edge force while preserving one nonnegative pulse and the current-dose target. Constant coil current does not maintain eddy-current force after magnetic diffusion; no sustained-pressure assumption is made.",
+    "loaded_voltage": "Unknown for this changed waveform; requires native linkage/energy analysis.",
+    "ejection": "Unknown; requires a matched moving-interface control."
+  },
+  "limits": [
+    "The 300A planning cap and 5V reserve are explicit design choices, not component ratings or measured overshoot.",
+    "Amplitude scaling is exact only for the stated stationary linear material model and same waveform. It does not scale moving-fluid or hot-material response.",
+    "The earlier10-turn coil intersects the nominal standard heater envelope. Its voltage record does not qualify the revised12-turn package.",
+    "RMS arithmetic at200Hz does not establish repetition, temperature, feed rate or a current driver's ability to generate the waveform.",
+    "No new native test is queued by this script. Do not increase drive solely from this budget.",
+    "Negative terminal voltage during the positive-current falling edge requires controlled recovery or a clamp; a positive supply rail alone does not describe a suitable driver."
+  ]
+}
