@@ -1,0 +1,47 @@
+{
+  "package": "hardware/designs/dogbone-strip-review",
+  "source": "artifacts/hardware-research/cases/m6-dogbone-strip-package-v1",
+  "regenerated_existing_inputs_byte_identical": true,
+  "files": [
+    {
+      "file": "assembly.bin",
+      "sha256": "4c935dd3bf9d687080fafcab723f4ece686f6e026d2c6c049846b4571943d295",
+      "source_identical": true
+    },
+    {
+      "file": "assembly.gltf",
+      "sha256": "8871d122ab5f94993b10c0667e9cdf0886fa5bbcff58f2428846e73ed9f0bf0d",
+      "source_identical": true
+    },
+    {
+      "file": "assembly.mhd.json",
+      "sha256": "eda14197ce9d817f3516ad6057a4bc230bc24da71eeaf701f7874b4b49c46413",
+      "source_identical": true
+    },
+    {
+      "file": "charge.mhd.json",
+      "sha256": "a8a81650142b335982e3b019c52b90b0c184a5b1751caedfe1d4ee27cb5ec4ed",
+      "source_identical": true
+    },
+    {
+      "file": "observer.mhd.json",
+      "sha256": "7662446a679d73e15d3cc915f8e7442e9c75377127e4df8f67af4252048e486e",
+      "source_identical": true
+    },
+    {
+      "file": "thermal-h010.mhd.json",
+      "sha256": "346cfd2dbc33e1115185dc6f2b5ad09d9e1e5d2bff0d729d953c5561fed48e02",
+      "source_identical": true
+    },
+    {
+      "file": "charge-h010.mhd.json",
+      "sha256": "3f108bfb1e0ffce372834801c08ed54ae46f904a7c87c83856b8859cb69230a3",
+      "source_identical": true
+    },
+    {
+      "file": "observer-h010.mhd.json",
+      "sha256": "aca644977b5bc4ebefd39b7ef14da0b964f3db449b5aae4a918a50f57f37d0c2",
+      "source_identical": true
+    }
+  ]
+}

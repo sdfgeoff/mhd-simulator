@@ -4,6 +4,7 @@ import argparse
 import json
 from pathlib import Path
 import numpy as np
+from native_field_io import read_native_fields
 
 root = Path("artifacts/hardware-research")
 parser = argparse.ArgumentParser(description=__doc__)
@@ -20,7 +21,7 @@ for row in manifest["cases"]:
     grid = json.loads((path / "grid.json").read_text())
     nx, ny, nz = grid["dims"]
     h = grid["cell_m"]
-    f = np.memmap(path / "em.bin", mode="r", dtype="<f4").reshape(nz, ny, nx, 16)
+    f = read_native_fields(path / "em.bin", (nz, ny, nx, 16))
     ids = np.memmap(path / "material-ids.bin", mode="r", dtype="<u4").reshape(
         nz, ny, nx
     )

@@ -100,3 +100,7 @@ They do not substitute for the separate fine-grid and full-domain gravity checks
 10. `strip-tip-review`: matched replaceable copper/stainless orifice-strip screens,
     including 0.5 and 0.1 mm thicknesses. Continuous copper bypasses substantial
     liquid current in these geometries; sealing and contact life remain unqualified.
+
+11. `dogbone-strip-review`: full 16 mm replaceable stainless strip with M2 bolted
+    copper contacts, 4.6 mm pole gap and separate current/thermal screens.
+    Preload, sealing, anchor clamps and adapted carriers remain unresolved.

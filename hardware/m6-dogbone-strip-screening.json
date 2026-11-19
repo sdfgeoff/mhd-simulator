@@ -1,0 +1,308 @@
+{
+  "status": "Exploratory native full-strip screen; no seal, waveform or jetting qualification",
+  "meets_previous_001_percent_conservation_gate": false,
+  "current_balance_relative_error": 0.0002964019775390625,
+  "conservation_gate_for_this_screen": 0.001,
+  "previous_strict_gate": 0.0001,
+  "outlet_force_N_at30A": 0.001774342496487219,
+  "outlet_mean_liquid_By_T": -0.40226424547533196,
+  "cold_force_ratio_to_rooted_integral_tip": 0.8102444251662031,
+  "peak_A_matching_rooted110A_cold_force": 135.76150181772127,
+  "assumed_RMS_A_at200Hz_same_pulse_shape": 28.919111957787834,
+  "cropped_terminal_R_ohm": 0.006535522639751434,
+  "charge_report": {
+    "contact_resistivity_ohm_m2": 0.0,
+    "current_A": 30.0,
+    "iterations": 1088,
+    "joule_power_W": 5.883086204528809,
+    "limitations": [
+      "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+      "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+      "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+      "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+      "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+    ],
+    "liquid_force_N": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "liquid_joule_power_W": 0.14265845674494865,
+    "liquid_mean_By_T": 0.0,
+    "mean_liquid_current_over_x_plus_minus_2mm_A": 2.0953893613812222,
+    "mean_wall_current_over_x_plus_minus_2mm_A": 27.81252890485972,
+    "midplane_adjacent_cell_liquid_current_A": 20.002130909958808,
+    "midplane_adjacent_cell_wall_current_A": 9.90433079840689,
+    "power_relative_defect": 0.00018966197967529297,
+    "project": "artifacts/hardware-research/cases/m6-dogbone-strip-shortneck-v1/charge.mhd.json",
+    "released_static_workspace_bytes": 0,
+    "requested_relative_tolerance": 1.9999999949504854e-06,
+    "return_current_A": -30.008892059326172,
+    "source_power_W": 5.881970405578613,
+    "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+    "terminal_boundary": "x-ends",
+    "terminal_voltage_V": 0.19606567919254303,
+    "terminal_x_cell_indices": [
+      0,
+      399
+    ],
+    "true_relative_residual": 1.8664777599042282e-06
+  },
+  "scope": "Full16mm stainless strip with0.8mm waist andboltedCu contacts. Polesgap4.6mm,0.2mm lower. Native J computed in cropped20mm electricaldomain; outer anchors/leads omitted from its resistance. Nativeq4 B fromcompletePMCAD, composedonly onalignedliquidROI0..0.6mm. Fixedproperties,idealjoints,zero velocity, no hot recoil,currentfeedback,sealorwaveformqualification.",
+  "separate_stationary_thermal": {
+    "cold_boundary_cells": 200,
+    "cold_return_W": -0.013724444434046745,
+    "conductance_W_K": 0.01372225396335125,
+    "copper_k_W_m_K_if_used": 394.0,
+    "grid": {
+      "cell_m": 0.00010000000474974513,
+      "dims": [
+        1210,
+        108,
+        127
+      ],
+      "origin_m": [
+        -0.06050000339746475,
+        -0.005400000140070915,
+        -0.0022000002209097147
+      ]
+    },
+    "heat_return_relative_error": 0.00015962906763888896,
+    "heater_start_mm": 4.0,
+    "hot_boundary_cells": 1430780,
+    "isothermal_pool_cells": 0,
+    "iterations": 1632,
+    "limits": [
+      "Steady conduction screen; fixed k, ideal interfaces. Pool/leads modes fix outer M6 skin; anchors mode fixes whole aluminium heater. Thread helix/root/contact resistance unresolved.",
+      "Air and magnets thermally omitted. Copper omitted in pool mode; included in leads/anchors modes. Anchors mode adds fixed167W/mK heater and requested effective-k mica with ideal interfaces; reducing k can represent extra sheet/interface resistance. No feed advection, wire melting, latent heat, transient heat capacity, Joule heating, external convection or radiation.",
+      "Pool mode assumes isothermal liquid. Leads mode instead solves stationary liquid/steel/copper temperature with fixed cold outer copper planes; it omits Joule heat, external losses and feeding, and uses fixed liquid k even if temperatures indicate freezing. Neither is a complete operation model."
+    ],
+    "liquid_k_W_m_K": 60.5,
+    "liquid_min_location_m": [
+      0.00014999881386756897,
+      -4.9999915063381195e-05,
+      4.9999915063381195e-05
+    ],
+    "liquid_min_unit_potential": 0.46642112731933594,
+    "method": "Existing native GPU scalar finite-volume operator with conductivity k. Entire aluminium heater (ID8) fixed at +0.5 K; outer copper planes fixed at -0.5 K; mica/steel/liquid/copper unknown. No new PDE solver.",
+    "mica_effective_k_W_m_K": 0.10000000149011612,
+    "mode": "anchors",
+    "power_identity_relative_error": 7.557868957519531e-05,
+    "project": "artifacts/hardware-research/cases/m6-dogbone-strip-shortneck-v1/thermal-h010.mhd.json",
+    "requested_relative_tolerance": 1.9999999949504854e-06,
+    "steel_k_W_m_K": 15.0,
+    "temperature_cases": [
+      {
+        "cold_boundary_C": 25.0,
+        "heat_draw_W": 3.0875072479248047,
+        "heater_C": 250.0,
+        "liquid_min_C": 242.4447479248047
+      },
+      {
+        "cold_boundary_C": 100.0,
+        "heat_draw_W": 2.058338165283203,
+        "heater_C": 250.0,
+        "liquid_min_C": 244.96316528320312
+      },
+      {
+        "cold_boundary_C": 150.0,
+        "heat_draw_W": 1.3722254037857056,
+        "heater_C": 250.0,
+        "liquid_min_C": 246.64212036132812
+      },
+      {
+        "cold_boundary_C": 200.0,
+        "heat_draw_W": 0.6861127018928528,
+        "heater_C": 250.0,
+        "liquid_min_C": 248.32106018066406
+      },
+      {
+        "cold_boundary_C": 220.0,
+        "heat_draw_W": 0.4116676151752472,
+        "heater_C": 250.0,
+        "liquid_min_C": 248.9926300048828
+      },
+      {
+        "cold_boundary_C": 230.0,
+        "heat_draw_W": 0.2744450867176056,
+        "heater_C": 250.0,
+        "liquid_min_C": 249.32843017578125
+      },
+      {
+        "cold_boundary_C": 240.0,
+        "heat_draw_W": 0.1372225433588028,
+        "heater_C": 250.0,
+        "liquid_min_C": 249.66421508789062
+      }
+    ],
+    "temperature_difference_K": 1.0,
+    "thermal_resistance_K_W": 72.87432861328125,
+    "true_relative_residual": 1.9873336896125693e-06,
+    "unit_energy_identity_value": 0.013723290525376797
+  },
+  "coarse100um_control": {
+    "status": "Exploratory full-strip screen; does not meet earlier0.01% balance gate, tighter solve stalls in f32; not qualified",
+    "current_balance_relative_error": 3.1789075162979408e-06,
+    "conservation_gate_for_this_screen": 0.001,
+    "previous_strict_gate": 0.0001,
+    "outlet_force_N_at30A": 0.001662575897808582,
+    "outlet_mean_liquid_By_T": -0.4022851751910316,
+    "cold_force_ratio_to_rooted_integral_tip": 0.7592067795716022,
+    "peak_A_matching_rooted110A_cold_force": 144.88806338382506,
+    "assumed_RMS_A_at200Hz_same_pulse_shape": 30.863198110238947,
+    "cropped_terminal_R_ohm": 0.00667679257323281,
+    "charge_report": {
+      "contact_resistivity_ohm_m2": 0.0,
+      "current_A": 30.000064849853516,
+      "iterations": 576,
+      "joule_power_W": 6.009304523468018,
+      "limitations": [
+        "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+        "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+        "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+        "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+        "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+      ],
+      "liquid_force_N": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "liquid_joule_power_W": 0.13691327794697974,
+      "liquid_mean_By_T": 0.0,
+      "mean_liquid_current_over_x_plus_minus_2mm_A": 1.9087215057451257,
+      "mean_wall_current_over_x_plus_minus_2mm_A": 28.0132792161254,
+      "midplane_adjacent_cell_liquid_current_A": 19.398977821219418,
+      "midplane_adjacent_cell_wall_current_A": 10.52251022485791,
+      "power_relative_defect": 2.753734588623047e-05,
+      "project": "artifacts/hardware-research/cases/m6-dogbone-strip-shortneck-v1/charge-h010.mhd.json",
+      "released_static_workspace_bytes": 0,
+      "requested_relative_tolerance": 1.9999999949504854e-06,
+      "return_current_A": -29.999969482421875,
+      "source_power_W": 6.009139060974121,
+      "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+      "terminal_boundary": "x-ends",
+      "terminal_voltage_V": 0.20030421018600464,
+      "terminal_x_cell_indices": [
+        0,
+        199
+      ],
+      "true_relative_residual": 1.643943846829643e-06
+    },
+    "scope": "Full16mm stainless strip with0.8mm waist andboltedCu contacts. Polesgap4.6mm,0.2mm lower. Native J computed in cropped20mm electricaldomain; outer anchors/leads omitted from its resistance. Nativeq4 B fromcompletePMCAD, composedonly onalignedliquidROI0..0.6mm. Fixedproperties,idealjoints,zero velocity, no hot recoil,currentfeedback,sealorwaveformqualification.",
+    "separate_stationary_thermal": {
+      "cold_boundary_cells": 200,
+      "cold_return_W": -0.013724444434046745,
+      "conductance_W_K": 0.01372225396335125,
+      "copper_k_W_m_K_if_used": 394.0,
+      "grid": {
+        "cell_m": 0.00010000000474974513,
+        "dims": [
+          1210,
+          108,
+          127
+        ],
+        "origin_m": [
+          -0.06050000339746475,
+          -0.005400000140070915,
+          -0.0022000002209097147
+        ]
+      },
+      "heat_return_relative_error": 0.00015962906763888896,
+      "heater_start_mm": 4.0,
+      "hot_boundary_cells": 1430780,
+      "isothermal_pool_cells": 0,
+      "iterations": 1632,
+      "limits": [
+        "Steady conduction screen; fixed k, ideal interfaces. Pool/leads modes fix outer M6 skin; anchors mode fixes whole aluminium heater. Thread helix/root/contact resistance unresolved.",
+        "Air and magnets thermally omitted. Copper omitted in pool mode; included in leads/anchors modes. Anchors mode adds fixed167W/mK heater and requested effective-k mica with ideal interfaces; reducing k can represent extra sheet/interface resistance. No feed advection, wire melting, latent heat, transient heat capacity, Joule heating, external convection or radiation.",
+        "Pool mode assumes isothermal liquid. Leads mode instead solves stationary liquid/steel/copper temperature with fixed cold outer copper planes; it omits Joule heat, external losses and feeding, and uses fixed liquid k even if temperatures indicate freezing. Neither is a complete operation model."
+      ],
+      "liquid_k_W_m_K": 60.5,
+      "liquid_min_location_m": [
+        0.00014999881386756897,
+        -4.9999915063381195e-05,
+        4.9999915063381195e-05
+      ],
+      "liquid_min_unit_potential": 0.46642112731933594,
+      "method": "Existing native GPU scalar finite-volume operator with conductivity k. Entire aluminium heater (ID8) fixed at +0.5 K; outer copper planes fixed at -0.5 K; mica/steel/liquid/copper unknown. No new PDE solver.",
+      "mica_effective_k_W_m_K": 0.10000000149011612,
+      "mode": "anchors",
+      "power_identity_relative_error": 7.557868957519531e-05,
+      "project": "artifacts/hardware-research/cases/m6-dogbone-strip-shortneck-v1/thermal-h010.mhd.json",
+      "requested_relative_tolerance": 1.9999999949504854e-06,
+      "steel_k_W_m_K": 15.0,
+      "temperature_cases": [
+        {
+          "cold_boundary_C": 25.0,
+          "heat_draw_W": 3.0875072479248047,
+          "heater_C": 250.0,
+          "liquid_min_C": 242.4447479248047
+        },
+        {
+          "cold_boundary_C": 100.0,
+          "heat_draw_W": 2.058338165283203,
+          "heater_C": 250.0,
+          "liquid_min_C": 244.96316528320312
+        },
+        {
+          "cold_boundary_C": 150.0,
+          "heat_draw_W": 1.3722254037857056,
+          "heater_C": 250.0,
+          "liquid_min_C": 246.64212036132812
+        },
+        {
+          "cold_boundary_C": 200.0,
+          "heat_draw_W": 0.6861127018928528,
+          "heater_C": 250.0,
+          "liquid_min_C": 248.32106018066406
+        },
+        {
+          "cold_boundary_C": 220.0,
+          "heat_draw_W": 0.4116676151752472,
+          "heater_C": 250.0,
+          "liquid_min_C": 248.9926300048828
+        },
+        {
+          "cold_boundary_C": 230.0,
+          "heat_draw_W": 0.2744450867176056,
+          "heater_C": 250.0,
+          "liquid_min_C": 249.32843017578125
+        },
+        {
+          "cold_boundary_C": 240.0,
+          "heat_draw_W": 0.1372225433588028,
+          "heater_C": 250.0,
+          "liquid_min_C": 249.66421508789062
+        }
+      ],
+      "temperature_difference_K": 1.0,
+      "thermal_resistance_K_W": 72.87432861328125,
+      "true_relative_residual": 1.9873336896125693e-06,
+      "unit_energy_identity_value": 0.013723290525376797
+    }
+  },
+  "force_relative_change_50um_to100um": 0.06722496027156111,
+  "R_relative_change_50um_to100um": -0.021158352896527788,
+  "rejected_tighter_solve": {
+    "requested_tolerance": 5e-07,
+    "iterations": 4000,
+    "true_residual": 1.4574412e-06,
+    "case": "long-neck50um",
+    "disposition": "Not accepted. Accepted2e-6 result has0.039%current imbalance. These screens use an explicit0.1%conservation criterion, not the earlier0.01%criterion; mesh-force change is6.7%, much larger. No sub-percent performance claim."
+  },
+  "thermal_setup_failure": {
+    "dispatch_workgroups_x": 66031,
+    "adapter_limit": 65535,
+    "remedy": "Thermal descriptor Ypadding5.5\u21925.4mm retains all unknown Cu/steel/liquid/mica; cropped heater is an explicitly fixed reservoir. No physics kernel changed."
+  },
+  "conditional_seat_preload_screen": {
+    "assumptions": "Simply supported SS strip at\u00b13.2mm under central point load. Actual dogbone width profile,0.5mm thickness. Room-temperature E193GPa is illustrative, not a hot allowable. No joint/contact/FEM qualification.",
+    "max_bending_stress_MPa_per_N": 48.0,
+    "centre_deflection_mm_per_N": 0.0019895074761500015,
+    "nominal_sealing_land_mm2": 0.5143362938564084,
+    "nominal_seal_pressure_MPa_per_N": 1.944253228762383,
+    "interpretation": "Control seat preload.10N gives about480MPa nominal bending stress in this model. Do not infer a torque or leak-tightness. Contact screws clamp tabs, not the nozzle seat."
+  },
+  "resistance_ratio_short_to_long_waist_50um": 0.7499774978017253
+}

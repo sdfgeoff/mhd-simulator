@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 import numpy as np
+from native_field_io import read_native_fields
 import matplotlib
 
 matplotlib.use("Agg")
@@ -22,7 +23,7 @@ for ax, row in zip(axes.flat, record["cases"]):
     h = g["cell_m"]
     origin = np.array(g["origin_m"])
     z = round((0.00025 - origin[2]) / h - 0.5)
-    fields = np.memmap(path / "em.bin", dtype="<f4", mode="r").reshape(nz, ny, nx, 16)
+    fields = read_native_fields(path / "em.bin", (nz, ny, nx, 16))
     ids = np.memmap(path / "material-ids.bin", dtype="<u4", mode="r").reshape(
         nz, ny, nx
     )

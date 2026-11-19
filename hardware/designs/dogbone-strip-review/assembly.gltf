@@ -1,0 +1,471 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "MHD hardware study; E3D dimension-based simplified CAD"
+  },
+  "buffers": [
+    {
+      "uri": "assembly.bin",
+      "byteLength": 317376
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 98784
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 98784,
+      "byteLength": 41328
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 140112,
+      "byteLength": 16272
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 156384,
+      "byteLength": 16416
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 172800,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 173232,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 173664,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 174096,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 174528,
+      "byteLength": 14976
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 189504,
+      "byteLength": 43488
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 232992,
+      "byteLength": 42192
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 275184,
+      "byteLength": 42192
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 8232,
+      "type": "VEC3",
+      "min": [
+        -0.0035,
+        -0.003,
+        0.0005
+      ],
+      "max": [
+        0.0035,
+        0.003,
+        0.01
+      ]
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 3444,
+      "type": "VEC3",
+      "min": [
+        -0.0015999999046325685,
+        -0.0015999999046325685,
+        0.0
+      ],
+      "max": [
+        0.0015999999046325685,
+        0.0015999999046325685,
+        0.006
+      ]
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 1356,
+      "type": "VEC3",
+      "min": [
+        -0.06,
+        -0.005,
+        0.0005
+      ],
+      "max": [
+        -0.003200000047683716,
+        0.005,
+        0.0039000000953674317
+      ]
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 1368,
+      "type": "VEC3",
+      "min": [
+        0.003200000047683716,
+        -0.005,
+        0.0005
+      ],
+      "max": [
+        0.06,
+        0.005,
+        0.0039000000953674317
+      ]
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.0125,
+        -0.012300000190734864,
+        -0.002200000047683716
+      ],
+      "max": [
+        0.0125,
+        -0.002299999952316284,
+        0.002799999952316284
+      ]
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.0125,
+        0.002299999952316284,
+        -0.002200000047683716
+      ],
+      "max": [
+        0.0125,
+        0.012300000190734864,
+        0.002799999952316284
+      ]
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.01,
+        -0.005,
+        0.0039000000953674317
+      ],
+      "max": [
+        -0.004,
+        0.005,
+        0.004
+      ]
+    },
+    {
+      "bufferView": 7,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        0.004,
+        -0.005,
+        0.0039000000953674317
+      ],
+      "max": [
+        0.01,
+        0.005,
+        0.004
+      ]
+    },
+    {
+      "bufferView": 8,
+      "componentType": 5126,
+      "count": 1248,
+      "type": "VEC3",
+      "min": [
+        -0.0115,
+        -0.008,
+        0.004
+      ],
+      "max": [
+        0.0115,
+        0.008,
+        0.0155
+      ]
+    },
+    {
+      "bufferView": 9,
+      "componentType": 5126,
+      "count": 3624,
+      "type": "VEC3",
+      "min": [
+        -0.008,
+        -0.002,
+        0.0
+      ],
+      "max": [
+        0.008,
+        0.002,
+        0.0005
+      ]
+    },
+    {
+      "bufferView": 10,
+      "componentType": 5126,
+      "count": 3516,
+      "type": "VEC3",
+      "min": [
+        -0.007809401035308838,
+        -0.002,
+        -0.002
+      ],
+      "max": [
+        -0.0031905989646911622,
+        0.002,
+        0.003
+      ]
+    },
+    {
+      "bufferView": 11,
+      "componentType": 5126,
+      "count": 3516,
+      "type": "VEC3",
+      "min": [
+        0.0031905989646911622,
+        -0.002,
+        -0.002
+      ],
+      "max": [
+        0.007809401035308838,
+        0.002,
+        0.003
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Upper stainless nozzle with flat strip seat",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Liquid solder",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Positive copper contact",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 2
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Negative copper contact",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 3
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Bias magnet 1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 4
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Bias magnet 2",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 5
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Mica electrical insulator -1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 6
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Mica electrical insulator 1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 7
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Heated aluminium block",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 8
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Replaceable stainless dogbone strip",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 9
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "M2x3 screw and nut envelope -1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 10
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "M2x3 screw and nut envelope 1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 11
+          },
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "Upper stainless nozzle with flat strip seat"
+    },
+    {
+      "mesh": 1,
+      "name": "Liquid solder"
+    },
+    {
+      "mesh": 2,
+      "name": "Positive copper contact"
+    },
+    {
+      "mesh": 3,
+      "name": "Negative copper contact"
+    },
+    {
+      "mesh": 4,
+      "name": "Bias magnet 1"
+    },
+    {
+      "mesh": 5,
+      "name": "Bias magnet 2"
+    },
+    {
+      "mesh": 6,
+      "name": "Mica electrical insulator -1"
+    },
+    {
+      "mesh": 7,
+      "name": "Mica electrical insulator 1"
+    },
+    {
+      "mesh": 8,
+      "name": "Heated aluminium block"
+    },
+    {
+      "mesh": 9,
+      "name": "Replaceable stainless dogbone strip"
+    },
+    {
+      "mesh": 10,
+      "name": "M2x3 screw and nut envelope -1"
+    },
+    {
+      "mesh": 11,
+      "name": "M2x3 screw and nut envelope 1"
+    }
+  ],
+  "scenes": [
+    {
+      "nodes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ]
+    }
+  ],
+  "scene": 0
+}
