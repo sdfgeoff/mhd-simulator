@@ -11,6 +11,7 @@ import numpy as np
 from native_field_io import read_native_fields
 
 parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--study", choices=["timestep", "retract"], default="timestep")
 parser.add_argument("--output", type=Path, required=True)
 args = parser.parse_args()
 root = Path("artifacts/hardware-research")
@@ -19,7 +20,12 @@ cases = [
     ("m6-rooted08-flow110-r25-motionabs1e-06A-h010-dt1p5", "100 µm · 1.5 µs", "v2 + 1 µA motion allowance"),
     ("m6-rooted08-flow110-r25-chargefix-h0050", "50 µm · 1.5 µs", "earlier v1, relative-only gate"),
 ]
-fig, axes = plt.subplots(1, 3, figsize=(10, 7.8))
+if args.study == "retract":
+    cases = [
+        ("m6-rooted08-flow110-r25-motionabs1e-06A-h010-dt1p5", "Reverse: 27.5 A", "100 µm · 1.5 µs"),
+        ("m6-rooted08-flow110-r50-motionabs1e-06A-h010-dt1p5", "Reverse: 55 A", "100 µm · 1.5 µs"),
+    ]
+fig, axes = plt.subplots(1, len(cases), figsize=(10 if len(cases) == 3 else 7.5, 7.8))
 fig.subplots_adjust(top=.84, bottom=.28, left=.07, right=.88, wspace=.32)
 for ax, (name, label, version) in zip(axes, cases):
     directory = root / name
@@ -52,11 +58,11 @@ for ax, (name, label, version) in zip(axes, cases):
                             f"down = {-r['velocity_m_s'][2]:.2f} m/s" for r in regions)
     ax.text(.5, -.17, description, transform=ax.transAxes, ha="center", va="top", fontsize=9)
     del f
-fig.suptitle("Same 110 A pulse at 3.6 ms — isolate timestep before grid refinement", fontsize=14)
+fig.suptitle("Same 110 A pulse at 3.6 ms — isolate timestep before grid refinement" if args.study == "timestep" else "Stronger reverse-current pullback — accepted state at 3.6 ms", fontsize=14)
 color = fig.add_axes([.91, .28, .018, .43])
 fig.colorbar(picture, cax=color, label="Liquid fraction")
-fig.text(.5, .07, "Left pair: only the timestep changes. Right: finer grid at matched timestep, with an earlier charge solver.\n"
-         "Two central XZ slices averaged; grey = solid, orange = exit. Diameters use 3D α ≥ 0.5 connectivity.\n"
+caption = "Left pair: only the timestep changes. Right: finer grid at matched timestep, with an earlier charge solver.\n" if args.study == "timestep" else "Same geometry and forward pulse; reverse amplitude changes.\n"
+fig.text(.5, .07, caption + "Two central XZ slices averaged; grey = solid, orange = exit. Diameters use 3D α ≥ 0.5 connectivity.\n"
          "One pulse only; no claim of converged breakup or repetitive hardware performance.", ha="center", fontsize=9)
 args.output.parent.mkdir(parents=True, exist_ok=True)
 fig.savefig(args.output, dpi=160)

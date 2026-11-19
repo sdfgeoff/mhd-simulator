@@ -25,11 +25,14 @@ parser.add_argument("--after-pid", type=int)
 parser.add_argument("--state", type=Path, help="Fresh state path for an explicitly reviewed unstarted study")
 parser.add_argument("--motion-absolute-tolerance-a", type=float, default=0.,
                     help="Explicit dimensional floor for the motional basis; unit-current gate remains strict")
+parser.add_argument("--single-retract", type=float, help="One explicit reverse/forward amplitude ratio at fixed100um/1.5us")
 args = parser.parse_args()
 if not math.isfinite(args.motion_absolute_tolerance_a) or args.motion_absolute_tolerance_a < 0:
     parser.error("Choose a finite nonnegative motional current tolerance")
 if args.motion_absolute_tolerance_a > 0 and args.study != "precision-temporal-retract":
     parser.error("Dimensional tolerance requires the fresh precision-temporal-retract study")
+if args.single_retract is not None and (args.study != "precision-temporal-retract" or args.motion_absolute_tolerance_a <= 0 or not math.isfinite(args.single_retract) or not 0 <= args.single_retract <= 2.5):
+    parser.error("Single reversal requires precision study, explicit motion tolerance, and ratio0..2.5")
 if (args.after_state is None) != (args.after_pid is None):
     parser.error("Supply both predecessor state and controller PID")
 state = args.state or root / {"uniform": "rooted-uniform-refinement-state.json",
@@ -54,6 +57,10 @@ if args.study == "precision-temporal-retract":
         ("h010", "1.5", "2400", "600", ".25", "m6-rooted08-flow110-r25-precisionv2-h010-dt1p5"),
         ("h010", "1.5", "2400", "600", ".5", "m6-rooted08-flow110-r50-precisionv2-h010-dt1p5"),
     ]
+if args.single_retract is not None:
+    ratio = args.single_retract
+    specs = [("h010", "1.5", "2400", "600", str(ratio),
+              f"m6-rooted08-flow110-r{ratio*100:g}-precisionv2-h010-dt1p5")]
 for grid, dt, steps, every, retract, name in specs:
     if args.motion_absolute_tolerance_a > 0:
         name = name.replace("precisionv2", f"motionabs{args.motion_absolute_tolerance_a:g}A")
@@ -110,6 +117,7 @@ def record(**values):
                 "input_sha256": hashes,
                 "controller_pid": os.getpid(),
                 "study": args.study,
+                "single_retract_fraction": args.single_retract,
                 "jobs": jobs,
                 "predecessor_state": str(args.after_state),
                 "predecessor_pid": args.after_pid,
