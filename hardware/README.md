@@ -661,8 +661,13 @@ are `target/debug/examples/thermal_conductance --check`.
     addresses the heater clash with a shorter, wider twelve-turn winding below
     a drawing-based heater. Nominal round-wire clearances are checked and both
     projects pass the actual CPU-only project loader. Heater-included/excluded
-    EM inputs are prepared; no field, fluid or thermal result exists for this
-    package. Its19mm winding diameter and roughly2mm return projection are
+    stationary EM comparison now [completes through5.001ms](lowered-coil-cold-comparison.json).
+    Adding the simplified heater reduces peak inward force moment by65.5%
+    at the same250A; its loaded interval voltage is−4.31 to32.03V.
+    [Assessment](lowered-coil-heater-assessment.json) records the substantial
+    axial-force change and unchanged energy/decay gates. This is not a moving-fluid
+    or thermal result; the nominally non-overlapping package still needs work.
+    Its19mm winding diameter and roughly2mm return projection are
     geometry estimates before insulation/support/tolerances. See the
     [full package assumptions](lowered-coil-package.json).
 18. The [slit conditioned prefix](split-slit-conditioned-prefix-screening.json)

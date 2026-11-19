@@ -19,12 +19,16 @@
    Heater/sensor inserts, clamp slot, fasteners, thread helix and heatbreak
    are omitted. Aluminium conductivity15MS/m is an explicit sensitivity,
    not a calibrated hot-material curve. `heater-off.mhd.json` differs only
-   by excluding this heater body, so a future native comparison can isolate
-   this simplified body's effect. Neither case has run yet.
+   by excluding this heater body. The [completed stationary comparison](../../lowered-coil-cold-comparison.json)
+   isolates its inclusion: peak inward force moment falls65.5% at250A and the
+   axial-force history changes substantially. Both work/decay checks pass.
+   This simplified result does not bound shielding in an assembled heater.
 6. Checked thin-wire air inductance is about1.661µH. With explicit25MS/m
    winding copper and2mΩ/0.2µH series assumptions,250A with15µs rise/100µs
    fall needs about36.2V unloaded and gives21.9A RMS at an assumed200Hz.
-   Metal reaction, switching overshoot, cooling and repetition remain unqualified.
+   With the modeled heater included, native reaction gives−4.31 to32.03V
+   interval voltage. Switching overshoot, cooling and repetition remain unqualified.
+   See the [assessment and physical limits](../../lowered-coil-heater-assessment.json).
 7. Generation: `scripts/prepare_lower_coil_package.py`. Loading validation:
    `examples/validate_project.rs`. Circuit parameter check:
    `scripts/winding_inductance.py`. Full assumptions, file hashes and limitations

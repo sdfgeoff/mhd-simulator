@@ -1,0 +1,27 @@
+{
+  "status": "Completed stationary heater-inclusion control; no fluid or jetting result",
+  "source_comparison_sha256": "6713f6df0293848108993b596687ad7e5608f796d04fdd3b032ee210a2c05bd3",
+  "source": "artifacts/hardware-research/lowered-coil-cold-v2-nvidia-comparison.json",
+  "only_project_difference": "Body3 heater simulation.included false -> true; winding, liquid ROI, materials and domain unchanged",
+  "peak_inward_moment_ratio_on_over_off": 0.34488613632725007,
+  "peak_inward_moment_reduction_fraction": 0.6551138636727499,
+  "metal_heat_increase_J_per_pulse": 0.007586446538970754,
+  "extra_metal_heat_W_at_assumed200Hz": 1.5172893077941507,
+  "restore_heater_off_peak_moment_stationary_scaling_only": {
+    "current_multiplier": 1.7027940794711405,
+    "peak_A": 425.69851986778514,
+    "RMS_A_at_assumed200Hz": 37.27395107185089,
+    "terminal_interval_voltage_range_V": [
+      -7.333431013441669,
+      54.545100157727234
+    ],
+    "scope": "Same waveform and fixed conductivity, force scales with I squared. Matching the heater-off moment is not a required pressure, droplet criterion or validated driver setting."
+  },
+  "axial_force_interpretation": "Positive z is up. Heater-off rise impulse is up and fall impulse down; heater-on net force integrals in both phases are up. Whole-liquid force integral is not the momentum imparted to an expelled drop: pressure, wall reaction and evolving free interfaces matter.",
+  "limits": [
+    "Simplified empty-bore heater at fixed15MS/m; clamp slot, inserts, heatbreak and conductive contact paths absent. This is neither assembled-hardware prediction nor a strict shielding bound.",
+    "200um spatial grid,0.5us pulse steps then3us decay; no grid/time convergence for this package.",
+    "Single prescribed250A15/100us pulse; no thermal evolution, winding cooling, switching or repeated-drop qualification.",
+    "This compact winding avoids nominal block overlap but is not yet a recommended jetting head. Assess practical heater interruption/placement and moving fluid before selecting it."
+  ]
+}
