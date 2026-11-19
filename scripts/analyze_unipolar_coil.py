@@ -15,6 +15,21 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def reaction_sample(row):
+    value = row.get("reaction_linkage_Wb")
+    if value not in [None, ""]:
+        return float(value)
+    if (
+        int(row["step"]) == 0
+        and float(row["time_s"]) == 0
+        and float(row["coil_current_A"]) == 0
+        and float(row["reaction_magnetic_J"]) == 0
+    ):
+        # The native initially-zero state has no accepted-step linkage packet.
+        return 0.0
+    raise ValueError("Missing native reaction linkage after the initial zero state")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--plan", type=Path)
@@ -70,7 +85,7 @@ def main():
         for a, b in zip(rows, rows[1:]):
             t0, t1 = float(a["time_s"]), float(b["time_s"])
             i0, i1 = float(a["coil_current_A"]), float(b["coil_current_A"])
-            old, new = float(a["reaction_linkage_Wb"]), float(b["reaction_linkage_Wb"])
+            old, new = reaction_sample(a), reaction_sample(b)
             if (
                 not all(math.isfinite(x) for x in [t0, t1, i0, i1, old, new])
                 or t1 <= t0

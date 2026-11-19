@@ -74,7 +74,14 @@
       "name": "AMD Radeon Graphics (RADV RENOIR)",
       "vendor": 4098
     },
-    "project_sha256": "3e28b403540870cf1755042be76e5f1168975ed6676d4672a6622c00ac992559"
+    "project_sha256": "3e28b403540870cf1755042be76e5f1168975ed6676d4672a6622c00ac992559",
+    "backward_Euler_work_identity": {
+      "source_J": 2.621077857867249e-05,
+      "metal_heat_J": 2.058122381498606e-05,
+      "numerical_BE_loss_J": 4.2379099296496747e-07,
+      "final_reaction_energy_J": 5.205771230976097e-06,
+      "relative_defect": -2.846253685483356e-07
+    }
   },
   "setup_error": {
     "directory": "artifacts/hardware-research/unipolar-amd-prefix-custom-symmetric100-h020",
