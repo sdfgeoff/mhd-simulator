@@ -173,12 +173,115 @@
         "fraction": 0.00011083881451296203
       }
     ],
+    "late_after300us_host_wall_s_by_stage": {
+      "Other": 18.09705731299996,
+      "EM preparation": 0.22430700599999995,
+      "Applied sources": 0.15439652699999998,
+      "EM coefficients": 3.997325328000001,
+      "EM solve": 66.49187455000003,
+      "EM output": 20.575430620000002,
+      "Fluid transport/output": 25.99805631799999,
+      "Viscous stress": 0.20067046299999994,
+      "Pressure solve": 1197.3247058920008,
+      "Interface/heat transport": 102.72352850500016,
+      "Phase/topology": 21.848120967000014,
+      "Energy accounting": 15.63688202399999
+    },
+    "late_EM_solve_fraction_of_total_wall": 0.031097804817918785,
+    "maximum_magnetic_energy_after300us_J": 0.0,
+    "maximum_B_after300us_T": 0.0,
     "timing_csv_sha256": "1b083a7556bd8d6ee116008cbfb286c9f35b125b58e7823b1044327cb7556863"
+  },
+  "powered_coil_control": {
+    "source": "artifacts/hardware-research/coil-low-fill-flow-v1-250A-h020",
+    "adapter": "AMD RADV RENOIR",
+    "accepted_steps": 1800,
+    "profiled_host_wall_s": 6445.061357660002,
+    "stages": [
+      {
+        "stage": "EM solve",
+        "host_wall_s": 4429.994589198001,
+        "fraction": 0.6873471551877347
+      },
+      {
+        "stage": "Pressure solve",
+        "host_wall_s": 1697.3652852640002,
+        "fraction": 0.2633590575901453
+      },
+      {
+        "stage": "Interface/heat transport",
+        "host_wall_s": 154.75538663299972,
+        "fraction": 0.024011468323582648
+      },
+      {
+        "stage": "Fluid transport/output",
+        "host_wall_s": 39.57837095800002,
+        "fraction": 0.006140883501591625
+      },
+      {
+        "stage": "Phase/topology",
+        "host_wall_s": 33.19376764299998,
+        "fraction": 0.005150264024026544
+      },
+      {
+        "stage": "EM output",
+        "host_wall_s": 31.462444292999987,
+        "fraction": 0.004881636115939633
+      },
+      {
+        "stage": "Other",
+        "host_wall_s": 27.797378601000023,
+        "fraction": 0.004312973462690567
+      },
+      {
+        "stage": "Energy accounting",
+        "host_wall_s": 23.88716065199998,
+        "fraction": 0.0037062735832002467
+      },
+      {
+        "stage": "EM coefficients",
+        "host_wall_s": 6.028845864000002,
+        "fraction": 0.0009354210192017296
+      },
+      {
+        "stage": "Applied sources",
+        "host_wall_s": 0.36295722100000005,
+        "fraction": 5.631555711546839e-05
+      },
+      {
+        "stage": "EM preparation",
+        "host_wall_s": 0.3308971509999999,
+        "fraction": 5.134119485250924e-05
+      },
+      {
+        "stage": "Viscous stress",
+        "host_wall_s": 0.30427418200000017,
+        "fraction": 4.7210439918988225e-05
+      }
+    ],
+    "late_after300us_host_wall_s_by_stage": {
+      "Other": 18.773564342999997,
+      "EM preparation": 0.21558716299999944,
+      "Applied sources": 0.14202090699999997,
+      "EM coefficients": 4.024506182999998,
+      "EM solve": 3523.954575914,
+      "EM output": 21.226441517000012,
+      "Fluid transport/output": 26.63983527000001,
+      "Viscous stress": 0.1987424800000004,
+      "Pressure solve": 1225.2437550199995,
+      "Interface/heat transport": 103.78065957400001,
+      "Phase/topology": 22.381984697000025,
+      "Energy accounting": 16.133180763000023
+    },
+    "late_EM_solve_fraction_of_total_wall": 0.5467681966635981,
+    "maximum_magnetic_energy_after300us_J": 4.807868080133992e-20,
+    "maximum_B_after300us_T": 2.9545186e-08,
+    "timing_csv_sha256": "37a9125fbe45de4f09ad4824aa5745ac057ebf351e845b91617f8a81f75ff2e2"
   },
   "inferences": [
     "Direct-contact fluid work dominates the saved charge-plus-fluid wall time; finer-grid planning must allow about2hours of measured solver-stage time for the existing50um case.",
-    "Pressure projection dominates the unpowered AMD control. This does not establish the bottleneck in the still-running powered coil case.",
-    "A low-amplitude induction tail may offer savings, but iteration count alone is insufficient evidence to remove it. Require complete powered-case timings and physical error/energy checks first."
+    "Pressure projection dominates the unpowered control, while induction solves dominate the completed powered control. Use the measured stage split rather than assuming one bottleneck for both.",
+    "The powered source-free tail consumes substantial EM solve wall time while stored field energy is tiny. An explicit, default-off energy-floor approximation could be assessed against an unchanged native baseline; no such cutoff is implemented or validated here."
   ],
   "limits": [
     "Host wall time includes waiting for GPU work; it does not identify CPU computation as the bottleneck.",
