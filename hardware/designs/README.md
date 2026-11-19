@@ -104,3 +104,7 @@ They do not substitute for the separate fine-grid and full-domain gravity checks
 11. `dogbone-strip-review`: full 16 mm replaceable stainless strip with M2 bolted
     copper contacts, 4.6 mm pole gap and separate current/thermal screens.
     Preload, sealing, anchor clamps and adapted carriers remain unresolved.
+
+12. `dogbone-thick08-carrier-review`: stiffer 0.8 mm strip and adapted pole carriers,
+    2.4 mm nominal projection and verified 0.2 mm contact-head clearance. Geometry
+    only: new thickness and complete thermal assembly have no qualified physics result.

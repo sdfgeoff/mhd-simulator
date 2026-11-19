@@ -13,12 +13,22 @@ from make_hardware import emit, orient
 p = argparse.ArgumentParser(description=__doc__)
 p.add_argument("output", type=Path)
 p.add_argument("--magnet-drop-mm", type=float, default=0.2)
+p.add_argument(
+    "--source-project",
+    type=Path,
+    default=Path("hardware/designs/rooted08-hot-contact-m6/hot-contact.mhd.json"),
+)
+p.add_argument("--floor-inner-mm", type=float)
+p.add_argument("--floor-end-chamfer-mm", type=float, default=0.0)
 a = p.parse_args()
 drop = a.magnet_drop_mm
 if not 0 <= drop <= 1:
     p.error("Drop must be0..1mm")
+if not math.isfinite(a.floor_end_chamfer_mm) or not 0 <= a.floor_end_chamfer_mm <= 0.2:
+    p.error("Floor end chamfer must be0..0.2mm")
 a.output.mkdir(parents=True, exist_ok=False)
-base, _ = load("hardware/designs/rooted08-hot-contact-m6/hot-contact.gltf")
+project = json.loads(a.source_project.read_text())
+base, _ = load(str(a.source_project.parent / project["geometry"]))
 for i in [4, 5]:
     name, faces, solid = base[i]
     faces = [
@@ -31,34 +41,65 @@ for i in [4, 5]:
         for triangle in faces
     ]
     base[i] = (name, faces, solid.translate([0, 0, -drop]))
+# The source may already have wider or lowered poles. Round imported f32
+# coordinates far below machining tolerances before constructing touching faces.
+positive_pole = [point for tri in base[5][1] for point in tri]
+y_offset = round(min(pt[1] for pt in positive_pole) - 1.7, 6)
+carrier_drop = round(-min(pt[2] for pt in positive_pole) - 2.0, 6)
+outlet_z = round(float(min(pt[2] for tri in base[1][1] for pt in tri)), 6)
+floor_inner = 1.18 + y_offset if a.floor_inner_mm is None else a.floor_inner_mm
+if not 0 < floor_inner < 12.32 + y_offset:
+    p.error("Floor inner edge must lie inside the outer floor edge")
 new = []
 for sy in [-1, 1]:
     # Floor below the bars, back wall, and end walls with inward locating lips.
-    body = box([35.4, 11.14, 0.5], [0, sy * 6.75, -2.25 - drop])
-    body = body + box([35.4, 1.5, 5.7], [0, sy * 13.05, 0.35 - drop])
+    floor_inner_unshifted = floor_inner - y_offset
+    body = box(
+        [35.4, 12.32 - floor_inner_unshifted, 0.5],
+        [0, sy * (12.32 + floor_inner_unshifted) / 2, -2.25 - carrier_drop],
+    )
+    body = body + box([35.4, 1.5, 5.7], [0, sy * 13.05, 0.35 - carrier_drop])
     for sx in [-1, 1]:
-        body = body + box([5.0, 10.6, 5.7], [sx * 15.2, sy * 7.0, 0.35 - drop])
-        body = body + box([7.2, 0.5, 5.7], [sx * 14.1, sy * 1.45, 0.35 - drop])
-        body = body + box([5.0, 0.55, 5.7], [sx * 15.2, sy * 1.475, 0.35 - drop])
+        body = body + box([5.0, 10.6, 5.7], [sx * 15.2, sy * 7.0, 0.35 - carrier_drop])
+        body = body + box([7.2, 0.5, 5.7], [sx * 14.1, sy * 1.45, 0.35 - carrier_drop])
+        body = body + box(
+            [5.0, 0.55, 5.7], [sx * 15.2, sy * 1.475, 0.35 - carrier_drop]
+        )
         body = body + box([5.0, 4.0, 21.2], [sx * 14.5, sy * 14.3, 10.6])
         body = body + box([8.0, 8.0, 3.0], [sx * 14.5, sy * 14.3, 19.7])
         # M3 tapped-envelope pilot at the cold mounting tab.
         body = body - cylinder(1.25, 6.2, [sx * 14.5, sy * 14.3, 18.2])
         for y in [4.2, 9.2]:
-            body = body - cylinder(0.8, 4.0, [sx * 15.2, sy * y, 1.4 - drop])
-    new.append((f"Aluminium pole carrier {sy}", body, 8))
+            body = body - cylinder(0.8, 4.0, [sx * 15.2, sy * y, 1.4 - carrier_drop])
+    if a.floor_end_chamfer_mm:
+        offset = (-17.7 - 2.5 - carrier_drop + a.floor_end_chamfer_mm) / math.sqrt(2)
+        for sx in [-1, 1]:
+            body = body.trim_by_plane([-sx, 0, 1], offset)
+    new.append(
+        (f"Aluminium pole carrier {sy}", body.translate([0, sy * y_offset, 0]), 8)
+    )
     for sx in [-1, 1]:
         # Keepers are above the bars with0.2mm lift clearance; their inner edge
         # clears the 2.5mm-wide supply foil by0.25mm in Y.
-        keeper = box([7.2, 10.35, 0.5], [sx * 14.1, sy * 6.925, 3.45 - drop])
+        keeper = box([7.2, 10.35, 0.5], [sx * 14.1, sy * 6.925, 3.45 - carrier_drop])
         for y in [4.2, 9.2]:
-            keeper = keeper - cylinder(1.1, 1.0, [sx * 15.2, sy * y, 3.45 - drop])
-        new.append((f"Aluminium keeper {sy} {sx}", keeper, 8))
-        for y in [4.2, 9.2]:
-            screw = cylinder(1.0, 4.0, [sx * 15.2, sy * y, 1.7 - drop]) + cylinder(
-                1.9, 2.0, [sx * 15.2, sy * y, 4.7 - drop]
+            keeper = keeper - cylinder(
+                1.1, 1.0, [sx * 15.2, sy * y, 3.45 - carrier_drop]
             )
-            new.append((f"M2 keeper screw envelope {sy} {sx} {y}", screw, 6))
+        new.append(
+            (f"Aluminium keeper {sy} {sx}", keeper.translate([0, sy * y_offset, 0]), 8)
+        )
+        for y in [4.2, 9.2]:
+            screw = cylinder(
+                1.0, 4.0, [sx * 15.2, sy * y, 1.7 - carrier_drop]
+            ) + cylinder(1.9, 2.0, [sx * 15.2, sy * y, 4.7 - carrier_drop])
+            new.append(
+                (
+                    f"M2 keeper screw envelope {sy} {sx} {y}",
+                    screw.translate([0, sy * y_offset, 0]),
+                    6,
+                )
+            )
 # Model screws pass through pilot bores as if threaded. Their radial engagement
 # is intentional and listed separately from forbidden solid-body interference.
 checks = []
@@ -105,9 +146,6 @@ for name, s, _ in new:
     parts.append((name, faces))
 emit(a.output / "assembly.gltf", parts, None)
 emit(a.output / "carrier-only.gltf", parts[len(base) :], None)
-project = json.loads(
-    Path("hardware/designs/rooted08-hot-contact-m6/hot-contact.mhd.json").read_text()
-)
 project["geometry"] = "assembly.gltf"
 for (name, solid, mid), (_, faces) in zip(new, parts[len(base) :]):
     body = copy.deepcopy(project["bodies"][0])
@@ -149,20 +187,26 @@ for _, faces in parts[len(base) :]:
                 maxs[axis] = max(maxs[axis], pt[axis])
 record = {
     "status": "Nominal carrier review CAD; not a manufacturing or physics qualification",
-    "source_case": "hardware/designs/rooted08-hot-contact-m6",
+    "source_case": str(a.source_project.parent),
+    "source_project": str(a.source_project),
+    "base_body_count": len(base),
+    "carrier_y_offset_mm": y_offset,
+    "carrier_placement_drop_mm": carrier_drop,
+    "outlet_z_mm": outlet_z,
+    "floor_end_chamfer_mm": a.floor_end_chamfer_mm,
     "parts": len(new),
     "new_part_bounds_mm": {
         "min": mins,
         "max": maxs,
         "size": [b - a for a, b in zip(mins, maxs)],
     },
-    "modeled_standoff_below_outlet_mm": -mins[2],
-    "magnet_only_projection_mm": 2.0 + drop,
+    "modeled_standoff_below_outlet_mm": outlet_z - mins[2],
+    "magnet_only_projection_mm": round(outlet_z + 2 + carrier_drop, 6),
     "magnet_drop_mm": drop,
     "floor_thickness_mm": 0.5,
-    "nominal_keeper_to_copper_Y_clearance_mm": 0.5,
+    "nominal_keeper_to_copper_Y_clearance_mm": 0.5 + y_offset,
     "nominal_keeper_to_copper_X_clearance_mm": 0.5,
-    "nominal_keeper_to_heater_Z_clearance_mm": 0.3 + drop,
+    "nominal_keeper_to_heater_Z_clearance_mm": 0.3 + carrier_drop,
     "nominal_magnet_lift_clearance_mm": 0.2,
     "carrier_arm_section_mm": [5.0, 4.0],
     "unsupported_length_mm": 15.0,
@@ -189,7 +233,7 @@ record["part_files"] = [
     }
     for i, (name, solid, mid) in enumerate(new)
 ]
-record["floor_central_opening_mm"] = 2.36
+record["floor_central_opening_mm"] = 2 * floor_inner
 record["upper_keepout_mm"] = {
     "diameter": 28.0,
     "z_min": 16.0,

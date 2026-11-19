@@ -1,5 +1,6 @@
 """Actual assembled/exploded carrier CAD and sectioned clearance views."""
 
+import argparse, json
 from pathlib import Path
 import matplotlib
 
@@ -10,7 +11,22 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from matplotlib.patches import Patch
 from draw_hardware_layouts import COLORS, category, load, section, label
 
-parts, _ = load("m6-carrier-review-wide-stops/assembly")
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--case", default="m6-carrier-review-wide-stops")
+parser.add_argument(
+    "--output",
+    type=Path,
+    default=Path("artifacts/hardware-research/diagrams/m6-pole-carrier-assembly.png"),
+)
+parser.add_argument("--contact-section", action="store_true")
+args = parser.parse_args()
+root = Path("artifacts/hardware-research/cases") / args.case
+manifest = json.loads((root / "manifest.json").read_text())
+parts, _ = load(str(root / "assembly.gltf"))
+base_count = manifest.get("base_body_count", 9)
+outlet = manifest.get("outlet_z_mm", 0)
+projection = manifest["modeled_standoff_below_outlet_mm"]
+size = manifest["new_part_bounds_mm"]["size"]
 
 
 def clipped(tri):
@@ -29,9 +45,11 @@ def clipped(tri):
 
 
 def view(ax, only_carrier=False):
-    for name, faces, _ in parts:
+    for index, (name, faces, _) in enumerate(parts):
         kind = category(name)
-        if only_carrier and kind not in ["carrier", "screw", "magnet"]:
+        if only_carrier and not (
+            kind == "magnet" or (index >= base_count and kind in ["carrier", "screw"])
+        ):
             continue
         faces = np.asarray(faces).copy()
         if only_carrier:
@@ -98,19 +116,32 @@ b.set_title("Pole carriers, bars and lifted keepers", fontsize=11)
 c = fig.add_subplot(223)
 section(c, parts, "yz")
 c.set(xlim=(-20, 20), ylim=(-3.3, 6.5), title="Central YZ section at x = 0 mm")
-label(c, "0.5 mm floor sets\n2.7 mm projection", (8, -2.7), (-19, 5.2))
+label(
+    c,
+    f"0.5 mm floor sets\n{projection:.1f} mm projection",
+    (8, manifest["new_part_bounds_mm"]["min"][2]),
+    (-19, 5.2),
+)
 label(c, "Open droplet corridor", (0, -2.25), (-19, 2.7))
-c.axhline(0, color="#27735b", ls=":", lw=0.8)
+c.axhline(outlet, color="#27735b", ls=":", lw=0.8)
 c.text(6, 0.4, "N", ha="center", fontsize=13, color="#243f5b")
 c.text(-6, 0.4, "S", ha="center", fontsize=13, color="#243f5b")
 d = fig.add_subplot(224)
-section(d, parts, "yz", height=15.2)
-d.set(xlim=(-19, 19), ylim=(-3.3, 23), title="End section at x = 15.2 mm")
-label(d, "Cold-carriage mounting\nM3 pilot envelopes", (14.3, 20), (-18, 20.8))
-label(d, "Copper supply foil\nclears keeper by 0.5 mm", (1.25, 3.7), (-18, 11))
-label(d, "M2 keeper screw\nhead/shaft envelope", (4.2, 4.5), (-18, 6.8))
+if args.contact_section:
+    section(d, parts, "yz", height=5.5)
+    d.set(xlim=(-15, 15), ylim=(-3.3, 6.5), title="Contact section at x = 5.5 mm")
+    label(d, "0.2 mm head-to-floor gap", (2.0, -2.25), (5, 4.6))
+    label(d, "M2 terminal bolt", (0, -1.3), (-14, -2.5))
+    label(d, "Stainless strip / Cu contact", (1, 0.5), (-14, 4.6))
+    d.axhline(outlet, color="#27735b", ls=":", lw=0.8)
+else:
+    section(d, parts, "yz", height=15.2)
+    d.set(xlim=(-19, 19), ylim=(-3.3, 23), title="End section at x = 15.2 mm")
+    label(d, "Cold-carriage mounting\nM3 pilot envelopes", (14.3, 20), (-18, 20.8))
+    label(d, "Copper supply foil\nclears keeper by 0.5 mm", (1.25, 3.7), (-18, 11))
+    label(d, "M2 keeper screw\nhead/shaft envelope", (4.2, 4.5), (-18, 6.8))
 fig.suptitle(
-    "Independent aluminium carriers retain the poles without loading the nozzle\nActual nominal CAD: 37 × 36.6 mm carrier envelope; 2.7 mm lowest projection",
+    f"Independent aluminium carriers retain the poles without loading the nozzle\nActual nominal CAD: {size[0]:.0f} × {size[1]:.1f} mm carrier envelope; {projection:.1f} mm lowest projection",
     fontsize=15,
 )
 fig.legend(
@@ -122,7 +153,7 @@ fig.legend(
             ("heater", "Heater"),
             ("copper", "Copper"),
             ("mica", "Mica"),
-            ("steel", "Stainless nozzle"),
+            ("steel", "Stainless nozzle / strip"),
         ]
     ],
     loc="lower center",
@@ -144,6 +175,4 @@ fig.text(
     ha="center",
     fontsize=9,
 )
-fig.savefig(
-    Path("artifacts/hardware-research/diagrams/m6-pole-carrier-assembly.png"), dpi=160
-)
+fig.savefig(args.output, dpi=160)

@@ -1,0 +1,368 @@
+{
+  "status": "Completed nominal CAD interference, distance and STL checks; not qualified hardware",
+  "manifest": {
+    "status": "Nominal carrier review CAD; not a manufacturing or physics qualification",
+    "source_case": "artifacts/hardware-research/cases/m6-dogbone-strip-thick08-v4",
+    "source_project": "artifacts/hardware-research/cases/m6-dogbone-strip-thick08-v4/assembly.mhd.json",
+    "base_body_count": 12,
+    "carrier_y_offset_mm": 0.6,
+    "carrier_placement_drop_mm": 0.2,
+    "outlet_z_mm": -0.3,
+    "floor_end_chamfer_mm": 0.1,
+    "parts": 14,
+    "new_part_bounds_mm": {
+      "min": [
+        -18.5,
+        -18.899999618530273,
+        -2.700000047683716
+      ],
+      "max": [
+        18.5,
+        18.899999618530273,
+        21.200000762939453
+      ],
+      "size": [
+        37.0,
+        37.79999923706055,
+        23.90000081062317
+      ]
+    },
+    "modeled_standoff_below_outlet_mm": 2.400000047683716,
+    "magnet_only_projection_mm": 1.9,
+    "magnet_drop_mm": 0.0,
+    "floor_thickness_mm": 0.5,
+    "nominal_keeper_to_copper_Y_clearance_mm": 1.1,
+    "nominal_keeper_to_copper_X_clearance_mm": 0.5,
+    "nominal_keeper_to_heater_Z_clearance_mm": 0.5,
+    "nominal_magnet_lift_clearance_mm": 0.2,
+    "carrier_arm_section_mm": [
+      5.0,
+      4.0
+    ],
+    "unsupported_length_mm": 15.0,
+    "mount_pilot_diameter_mm": 2.5,
+    "mount_pilot_depth_mm": 6.0,
+    "keeper_pilot_diameter_mm": 1.6,
+    "keeper_screw_nominal": "M2x4 shaft/head envelopes; threads/socket omitted",
+    "central_heatbreak_keepout_diameter_mm": 6.4,
+    "checks": [
+      {
+        "part": "Aluminium pole carrier -1",
+        "base_overlap_mm3": 0.0
+      },
+      {
+        "part": "Aluminium keeper -1 -1",
+        "base_overlap_mm3": 0.0
+      },
+      {
+        "part": "M2 keeper screw envelope -1 -1 4.2",
+        "base_overlap_mm3": 0.0
+      },
+      {
+        "part": "M2 keeper screw envelope -1 -1 9.2",
+        "base_overlap_mm3": 0.0
+      },
+      {
+        "part": "Aluminium keeper -1 1",
+        "base_overlap_mm3": 0.0
+      },
+      {
+        "part": "M2 keeper screw envelope -1 1 4.2",
+        "base_overlap_mm3": 0.0
+      },
+      {
+        "part": "M2 keeper screw envelope -1 1 9.2",
+        "base_overlap_mm3": 0.0
+      },
+      {
+        "part": "Aluminium pole carrier 1",
+        "base_overlap_mm3": 0.0
+      },
+      {
+        "part": "Aluminium keeper 1 -1",
+        "base_overlap_mm3": 0.0
+      },
+      {
+        "part": "M2 keeper screw envelope 1 -1 4.2",
+        "base_overlap_mm3": 0.0
+      },
+      {
+        "part": "M2 keeper screw envelope 1 -1 9.2",
+        "base_overlap_mm3": 0.0
+      },
+      {
+        "part": "Aluminium keeper 1 1",
+        "base_overlap_mm3": 0.0
+      },
+      {
+        "part": "M2 keeper screw envelope 1 1 4.2",
+        "base_overlap_mm3": 0.0
+      },
+      {
+        "part": "M2 keeper screw envelope 1 1 9.2",
+        "base_overlap_mm3": 0.0
+      },
+      {
+        "parts": [
+          "Aluminium pole carrier -1",
+          "M2 keeper screw envelope -1 -1 4.2"
+        ],
+        "intentional_pilot_thread_engagement_mm3": 3.9555812558390473
+      },
+      {
+        "parts": [
+          "Aluminium pole carrier -1",
+          "M2 keeper screw envelope -1 -1 9.2"
+        ],
+        "intentional_pilot_thread_engagement_mm3": 3.9555812558390464
+      },
+      {
+        "parts": [
+          "Aluminium pole carrier -1",
+          "M2 keeper screw envelope -1 1 4.2"
+        ],
+        "intentional_pilot_thread_engagement_mm3": 3.9555812558390473
+      },
+      {
+        "parts": [
+          "Aluminium pole carrier -1",
+          "M2 keeper screw envelope -1 1 9.2"
+        ],
+        "intentional_pilot_thread_engagement_mm3": 3.955581255839046
+      },
+      {
+        "parts": [
+          "Aluminium pole carrier 1",
+          "M2 keeper screw envelope 1 -1 4.2"
+        ],
+        "intentional_pilot_thread_engagement_mm3": 3.9555812558390477
+      },
+      {
+        "parts": [
+          "Aluminium pole carrier 1",
+          "M2 keeper screw envelope 1 -1 9.2"
+        ],
+        "intentional_pilot_thread_engagement_mm3": 3.9555812558390464
+      },
+      {
+        "parts": [
+          "Aluminium pole carrier 1",
+          "M2 keeper screw envelope 1 1 4.2"
+        ],
+        "intentional_pilot_thread_engagement_mm3": 3.9555812558390477
+      },
+      {
+        "parts": [
+          "Aluminium pole carrier 1",
+          "M2 keeper screw envelope 1 1 9.2"
+        ],
+        "intentional_pilot_thread_engagement_mm3": 3.955581255839046
+      }
+    ],
+    "limits": [
+      "New carrier/keeper/screw bodies excluded from simulation; old electrical/thermal fields do not qualify their heat paths, eddy losses or contact bridges.",
+      "Nominal clearance only; tolerances, corner reliefs, real thread roots, preload, contact stresses and thermal distortion absent.",
+      "Monolithic CAD may be split into tray/end supports for machining; no fabrication process or cold-carriage interface is released.",
+      "Cold-carriage mounting screws and machine structure are absent. Actual lowest assembly feature and clearance margin must be verified."
+    ],
+    "part_files": [
+      {
+        "index": 0,
+        "name": "Aluminium pole carrier -1",
+        "material_id": 8,
+        "stl": "part-00.stl",
+        "volume_mm3": 2061.120537979179
+      },
+      {
+        "index": 1,
+        "name": "Aluminium keeper -1 -1",
+        "material_id": 8,
+        "stl": "part-01.stl",
+        "volume_mm3": 33.46138625431329
+      },
+      {
+        "index": 2,
+        "name": "M2 keeper screw envelope -1 -1 4.2",
+        "material_id": 6,
+        "stl": null,
+        "volume_mm3": 35.22350927818584
+      },
+      {
+        "index": 3,
+        "name": "M2 keeper screw envelope -1 -1 9.2",
+        "material_id": 6,
+        "stl": null,
+        "volume_mm3": 35.223509278185844
+      },
+      {
+        "index": 4,
+        "name": "Aluminium keeper -1 1",
+        "material_id": 8,
+        "stl": "part-04.stl",
+        "volume_mm3": 33.46138625431328
+      },
+      {
+        "index": 5,
+        "name": "M2 keeper screw envelope -1 1 4.2",
+        "material_id": 6,
+        "stl": null,
+        "volume_mm3": 35.22350927818584
+      },
+      {
+        "index": 6,
+        "name": "M2 keeper screw envelope -1 1 9.2",
+        "material_id": 6,
+        "stl": null,
+        "volume_mm3": 35.223509278185844
+      },
+      {
+        "index": 7,
+        "name": "Aluminium pole carrier 1",
+        "material_id": 8,
+        "stl": "part-07.stl",
+        "volume_mm3": 2061.1205379791795
+      },
+      {
+        "index": 8,
+        "name": "Aluminium keeper 1 -1",
+        "material_id": 8,
+        "stl": "part-08.stl",
+        "volume_mm3": 33.46138625431328
+      },
+      {
+        "index": 9,
+        "name": "M2 keeper screw envelope 1 -1 4.2",
+        "material_id": 6,
+        "stl": null,
+        "volume_mm3": 35.22350927818584
+      },
+      {
+        "index": 10,
+        "name": "M2 keeper screw envelope 1 -1 9.2",
+        "material_id": 6,
+        "stl": null,
+        "volume_mm3": 35.223509278185844
+      },
+      {
+        "index": 11,
+        "name": "Aluminium keeper 1 1",
+        "material_id": 8,
+        "stl": "part-11.stl",
+        "volume_mm3": 33.46138625431329
+      },
+      {
+        "index": 12,
+        "name": "M2 keeper screw envelope 1 1 4.2",
+        "material_id": 6,
+        "stl": null,
+        "volume_mm3": 35.22350927818584
+      },
+      {
+        "index": 13,
+        "name": "M2 keeper screw envelope 1 1 9.2",
+        "material_id": 6,
+        "stl": null,
+        "volume_mm3": 35.223509278185844
+      }
+    ],
+    "floor_central_opening_mm": 4.2,
+    "upper_keepout_mm": {
+      "diameter": 28.0,
+      "z_min": 16.0,
+      "z_max": 40.0,
+      "scope": "Abstract clear envelope; actual heatsink/carriage interface not supplied."
+    },
+    "keeper_screw_head_mm": {
+      "diameter": 3.8,
+      "height": 2.0
+    },
+    "screw_dimension_reference": "https://www.annapol.eu/documents/6ee345428db47b168b9ffe8bc9f44571/BN610-DE.pdf"
+  },
+  "measured_mesh_gaps": {
+    "copper": {
+      "minimum_gap_mm": 0.5,
+      "fixture_part": "Aluminium keeper -1 -1",
+      "target_part": "Positive copper contact",
+      "search_cap_mm": 10.0
+    },
+    "heater": {
+      "minimum_gap_mm": 0.5,
+      "fixture_part": "Aluminium keeper -1 -1",
+      "target_part": "Heated aluminium block",
+      "search_cap_mm": 10.0
+    },
+    "nozzle": {
+      "minimum_gap_mm": 2.886173989974863,
+      "fixture_part": "Aluminium pole carrier -1",
+      "target_part": "Upper stainless nozzle with flat strip seat",
+      "search_cap_mm": 10.0
+    },
+    "mica": {
+      "minimum_gap_mm": 0.6403124833188515,
+      "fixture_part": "Aluminium keeper -1 -1",
+      "target_part": "Mica electrical insulator -1",
+      "search_cap_mm": 10.0
+    },
+    "contact_fasteners": {
+      "minimum_gap_mm": 0.19999992847442627,
+      "fixture_part": "Aluminium pole carrier -1",
+      "target_part": "M2x3 screw and nut envelope -1",
+      "search_cap_mm": 10.0
+    }
+  },
+  "STL_roundtrips": [
+    {
+      "file": "part-00.stl",
+      "triangles": 2540,
+      "closed_manifold": true,
+      "volume_relative_difference": 6.863729651307438e-08
+    },
+    {
+      "file": "part-01.stl",
+      "triangles": 788,
+      "closed_manifold": true,
+      "volume_relative_difference": 1.0772542102799321e-07
+    },
+    {
+      "file": "part-04.stl",
+      "triangles": 788,
+      "closed_manifold": true,
+      "volume_relative_difference": 1.0772542125003781e-07
+    },
+    {
+      "file": "part-07.stl",
+      "triangles": 2544,
+      "closed_manifold": true,
+      "volume_relative_difference": 6.863729629102977e-08
+    },
+    {
+      "file": "part-08.stl",
+      "triangles": 788,
+      "closed_manifold": true,
+      "volume_relative_difference": 1.0772542125003781e-07
+    },
+    {
+      "file": "part-11.stl",
+      "triangles": 788,
+      "closed_manifold": true,
+      "volume_relative_difference": 1.0772542102799321e-07
+    }
+  ],
+  "mass_g_assumed_solid_materials": 13.745738470438047,
+  "scope": "Fixed nominal geometry. The eight screw/pilot radial intersections represent intended thread engagement. Other carrier-part intersections and all new-part/source-model intersections are rejected by generator. No preload, tolerances, thread roots, thermal distortion or physics inclusion.",
+  "conditional_beam_screen": {
+    "pole_load_N": 20.0,
+    "load_per_support_N": 10.0,
+    "unsupported_length_mm": 18.2,
+    "section_mm": [
+      5,
+      4
+    ],
+    "subtracted_full_length_hole_diameter_mm": 3,
+    "second_moment_mm4": 22.690588464467087,
+    "assumed_E_MPa": 69000.0,
+    "elastic_gap_closure_um": 25.67012922897022,
+    "nominal_root_stress_MPa": 16.04189334137434,
+    "scope": "Uniform cantilevers clamped at upper tabs; full hole subtracted throughout. Excludes joint compliance, local stresses, preload and thermal motion."
+  }
+}

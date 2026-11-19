@@ -1,0 +1,545 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "MHD hardware study; E3D dimension-based simplified CAD"
+  },
+  "buffers": [
+    {
+      "uri": "carrier-only.bin",
+      "byteLength": 516528
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 91440
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 91440,
+      "byteLength": 28368
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 119808,
+      "byteLength": 27504
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 147312,
+      "byteLength": 27504
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 174816,
+      "byteLength": 28368
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 203184,
+      "byteLength": 27504
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 230688,
+      "byteLength": 27504
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 258192,
+      "byteLength": 91584
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 349776,
+      "byteLength": 28368
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 378144,
+      "byteLength": 27504
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 405648,
+      "byteLength": 27504
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 433152,
+      "byteLength": 28368
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 461520,
+      "byteLength": 27504
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 489024,
+      "byteLength": 27504
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 7620,
+      "type": "VEC3",
+      "min": [
+        -0.0185,
+        -0.018899999618530273,
+        -0.002700000047683716
+      ],
+      "max": [
+        0.0185,
+        -0.0017999999523162843,
+        0.021200000762939455
+      ]
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 2364,
+      "type": "VEC3",
+      "min": [
+        -0.017700000762939455,
+        -0.012699999809265138,
+        0.003
+      ],
+      "max": [
+        -0.0105,
+        -0.0023499999046325683,
+        0.0035
+      ]
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 2292,
+      "type": "VEC3",
+      "min": [
+        -0.017100000381469728,
+        -0.0066999998092651366,
+        -0.0005
+      ],
+      "max": [
+        -0.013300000190734863,
+        -0.0029000000953674316,
+        0.0055
+      ]
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 2292,
+      "type": "VEC3",
+      "min": [
+        -0.017100000381469728,
+        -0.011699999809265137,
+        -0.0005
+      ],
+      "max": [
+        -0.013300000190734863,
+        -0.007900000095367432,
+        0.0055
+      ]
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 2364,
+      "type": "VEC3",
+      "min": [
+        0.0105,
+        -0.012699999809265138,
+        0.003
+      ],
+      "max": [
+        0.017700000762939455,
+        -0.0023499999046325683,
+        0.0035
+      ]
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 2292,
+      "type": "VEC3",
+      "min": [
+        0.013300000190734863,
+        -0.0066999998092651366,
+        -0.0005
+      ],
+      "max": [
+        0.017100000381469728,
+        -0.0029000000953674316,
+        0.0055
+      ]
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5126,
+      "count": 2292,
+      "type": "VEC3",
+      "min": [
+        0.013300000190734863,
+        -0.011699999809265137,
+        -0.0005
+      ],
+      "max": [
+        0.017100000381469728,
+        -0.007900000095367432,
+        0.0055
+      ]
+    },
+    {
+      "bufferView": 7,
+      "componentType": 5126,
+      "count": 7632,
+      "type": "VEC3",
+      "min": [
+        -0.0185,
+        0.0017999999523162843,
+        -0.002700000047683716
+      ],
+      "max": [
+        0.0185,
+        0.018899999618530273,
+        0.021200000762939455
+      ]
+    },
+    {
+      "bufferView": 8,
+      "componentType": 5126,
+      "count": 2364,
+      "type": "VEC3",
+      "min": [
+        -0.017700000762939455,
+        0.0023499999046325683,
+        0.003
+      ],
+      "max": [
+        -0.0105,
+        0.012699999809265138,
+        0.0035
+      ]
+    },
+    {
+      "bufferView": 9,
+      "componentType": 5126,
+      "count": 2292,
+      "type": "VEC3",
+      "min": [
+        -0.017100000381469728,
+        0.0029000000953674316,
+        -0.0005
+      ],
+      "max": [
+        -0.013300000190734863,
+        0.0066999998092651366,
+        0.0055
+      ]
+    },
+    {
+      "bufferView": 10,
+      "componentType": 5126,
+      "count": 2292,
+      "type": "VEC3",
+      "min": [
+        -0.017100000381469728,
+        0.007900000095367432,
+        -0.0005
+      ],
+      "max": [
+        -0.013300000190734863,
+        0.011699999809265137,
+        0.0055
+      ]
+    },
+    {
+      "bufferView": 11,
+      "componentType": 5126,
+      "count": 2364,
+      "type": "VEC3",
+      "min": [
+        0.0105,
+        0.0023499999046325683,
+        0.003
+      ],
+      "max": [
+        0.017700000762939455,
+        0.012699999809265138,
+        0.0035
+      ]
+    },
+    {
+      "bufferView": 12,
+      "componentType": 5126,
+      "count": 2292,
+      "type": "VEC3",
+      "min": [
+        0.013300000190734863,
+        0.0029000000953674316,
+        -0.0005
+      ],
+      "max": [
+        0.017100000381469728,
+        0.0066999998092651366,
+        0.0055
+      ]
+    },
+    {
+      "bufferView": 13,
+      "componentType": 5126,
+      "count": 2292,
+      "type": "VEC3",
+      "min": [
+        0.013300000190734863,
+        0.007900000095367432,
+        -0.0005
+      ],
+      "max": [
+        0.017100000381469728,
+        0.011699999809265137,
+        0.0055
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Aluminium pole carrier -1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Aluminium keeper -1 -1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "M2 keeper screw envelope -1 -1 4.2",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 2
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "M2 keeper screw envelope -1 -1 9.2",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 3
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Aluminium keeper -1 1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 4
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "M2 keeper screw envelope -1 1 4.2",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 5
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "M2 keeper screw envelope -1 1 9.2",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 6
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Aluminium pole carrier 1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 7
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Aluminium keeper 1 -1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 8
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "M2 keeper screw envelope 1 -1 4.2",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 9
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "M2 keeper screw envelope 1 -1 9.2",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 10
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Aluminium keeper 1 1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 11
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "M2 keeper screw envelope 1 1 4.2",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 12
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "M2 keeper screw envelope 1 1 9.2",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 13
+          },
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "Aluminium pole carrier -1"
+    },
+    {
+      "mesh": 1,
+      "name": "Aluminium keeper -1 -1"
+    },
+    {
+      "mesh": 2,
+      "name": "M2 keeper screw envelope -1 -1 4.2"
+    },
+    {
+      "mesh": 3,
+      "name": "M2 keeper screw envelope -1 -1 9.2"
+    },
+    {
+      "mesh": 4,
+      "name": "Aluminium keeper -1 1"
+    },
+    {
+      "mesh": 5,
+      "name": "M2 keeper screw envelope -1 1 4.2"
+    },
+    {
+      "mesh": 6,
+      "name": "M2 keeper screw envelope -1 1 9.2"
+    },
+    {
+      "mesh": 7,
+      "name": "Aluminium pole carrier 1"
+    },
+    {
+      "mesh": 8,
+      "name": "Aluminium keeper 1 -1"
+    },
+    {
+      "mesh": 9,
+      "name": "M2 keeper screw envelope 1 -1 4.2"
+    },
+    {
+      "mesh": 10,
+      "name": "M2 keeper screw envelope 1 -1 9.2"
+    },
+    {
+      "mesh": 11,
+      "name": "Aluminium keeper 1 1"
+    },
+    {
+      "mesh": 12,
+      "name": "M2 keeper screw envelope 1 1 4.2"
+    },
+    {
+      "mesh": 13,
+      "name": "M2 keeper screw envelope 1 1 9.2"
+    }
+  ],
+  "scenes": [
+    {
+      "nodes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ]
+    }
+  ],
+  "scene": 0
+}

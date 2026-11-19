@@ -1,0 +1,989 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "MHD hardware study; E3D dimension-based simplified CAD"
+  },
+  "buffers": [
+    {
+      "uri": "assembly.bin",
+      "byteLength": 833904
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 98784
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 98784,
+      "byteLength": 41328
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 140112,
+      "byteLength": 16272
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 156384,
+      "byteLength": 16416
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 172800,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 173232,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 173664,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 174096,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 174528,
+      "byteLength": 14976
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 189504,
+      "byteLength": 43488
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 232992,
+      "byteLength": 42192
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 275184,
+      "byteLength": 42192
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 317376,
+      "byteLength": 91440
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 408816,
+      "byteLength": 28368
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 437184,
+      "byteLength": 27504
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 464688,
+      "byteLength": 27504
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 492192,
+      "byteLength": 28368
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 520560,
+      "byteLength": 27504
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 548064,
+      "byteLength": 27504
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 575568,
+      "byteLength": 91584
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 667152,
+      "byteLength": 28368
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 695520,
+      "byteLength": 27504
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 723024,
+      "byteLength": 27504
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 750528,
+      "byteLength": 28368
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 778896,
+      "byteLength": 27504
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 806400,
+      "byteLength": 27504
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 8232,
+      "type": "VEC3",
+      "min": [
+        -0.0035,
+        -0.003,
+        0.0005
+      ],
+      "max": [
+        0.0035,
+        0.003,
+        0.01
+      ]
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 3444,
+      "type": "VEC3",
+      "min": [
+        -0.0015999999046325685,
+        -0.0015999999046325685,
+        -0.00030000001192092895
+      ],
+      "max": [
+        0.0015999999046325685,
+        0.0015999999046325685,
+        0.006
+      ]
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 1356,
+      "type": "VEC3",
+      "min": [
+        -0.06,
+        -0.005,
+        0.0005
+      ],
+      "max": [
+        -0.003200000047683716,
+        0.005,
+        0.0039000000953674317
+      ]
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 1368,
+      "type": "VEC3",
+      "min": [
+        0.003200000047683716,
+        -0.005,
+        0.0005
+      ],
+      "max": [
+        0.06,
+        0.005,
+        0.0039000000953674317
+      ]
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.0125,
+        -0.012300000190734864,
+        -0.002200000047683716
+      ],
+      "max": [
+        0.0125,
+        -0.002299999952316284,
+        0.002799999952316284
+      ]
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.0125,
+        0.002299999952316284,
+        -0.002200000047683716
+      ],
+      "max": [
+        0.0125,
+        0.012300000190734864,
+        0.002799999952316284
+      ]
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.01,
+        -0.005,
+        0.0039000000953674317
+      ],
+      "max": [
+        -0.004,
+        0.005,
+        0.004
+      ]
+    },
+    {
+      "bufferView": 7,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        0.004,
+        -0.005,
+        0.0039000000953674317
+      ],
+      "max": [
+        0.01,
+        0.005,
+        0.004
+      ]
+    },
+    {
+      "bufferView": 8,
+      "componentType": 5126,
+      "count": 1248,
+      "type": "VEC3",
+      "min": [
+        -0.0115,
+        -0.008,
+        0.004
+      ],
+      "max": [
+        0.0115,
+        0.008,
+        0.0155
+      ]
+    },
+    {
+      "bufferView": 9,
+      "componentType": 5126,
+      "count": 3624,
+      "type": "VEC3",
+      "min": [
+        -0.008,
+        -0.002,
+        -0.00030000001192092895
+      ],
+      "max": [
+        0.008,
+        0.002,
+        0.0005
+      ]
+    },
+    {
+      "bufferView": 10,
+      "componentType": 5126,
+      "count": 3516,
+      "type": "VEC3",
+      "min": [
+        -0.007809401035308838,
+        -0.002,
+        -0.002299999952316284
+      ],
+      "max": [
+        -0.0031905989646911622,
+        0.002,
+        0.002700000047683716
+      ]
+    },
+    {
+      "bufferView": 11,
+      "componentType": 5126,
+      "count": 3516,
+      "type": "VEC3",
+      "min": [
+        0.0031905989646911622,
+        -0.002,
+        -0.002299999952316284
+      ],
+      "max": [
+        0.007809401035308838,
+        0.002,
+        0.002700000047683716
+      ]
+    },
+    {
+      "bufferView": 12,
+      "componentType": 5126,
+      "count": 7620,
+      "type": "VEC3",
+      "min": [
+        -0.0185,
+        -0.018899999618530273,
+        -0.002700000047683716
+      ],
+      "max": [
+        0.0185,
+        -0.0017999999523162843,
+        0.021200000762939455
+      ]
+    },
+    {
+      "bufferView": 13,
+      "componentType": 5126,
+      "count": 2364,
+      "type": "VEC3",
+      "min": [
+        -0.017700000762939455,
+        -0.012699999809265138,
+        0.003
+      ],
+      "max": [
+        -0.0105,
+        -0.0023499999046325683,
+        0.0035
+      ]
+    },
+    {
+      "bufferView": 14,
+      "componentType": 5126,
+      "count": 2292,
+      "type": "VEC3",
+      "min": [
+        -0.017100000381469728,
+        -0.0066999998092651366,
+        -0.0005
+      ],
+      "max": [
+        -0.013300000190734863,
+        -0.0029000000953674316,
+        0.0055
+      ]
+    },
+    {
+      "bufferView": 15,
+      "componentType": 5126,
+      "count": 2292,
+      "type": "VEC3",
+      "min": [
+        -0.017100000381469728,
+        -0.011699999809265137,
+        -0.0005
+      ],
+      "max": [
+        -0.013300000190734863,
+        -0.007900000095367432,
+        0.0055
+      ]
+    },
+    {
+      "bufferView": 16,
+      "componentType": 5126,
+      "count": 2364,
+      "type": "VEC3",
+      "min": [
+        0.0105,
+        -0.012699999809265138,
+        0.003
+      ],
+      "max": [
+        0.017700000762939455,
+        -0.0023499999046325683,
+        0.0035
+      ]
+    },
+    {
+      "bufferView": 17,
+      "componentType": 5126,
+      "count": 2292,
+      "type": "VEC3",
+      "min": [
+        0.013300000190734863,
+        -0.0066999998092651366,
+        -0.0005
+      ],
+      "max": [
+        0.017100000381469728,
+        -0.0029000000953674316,
+        0.0055
+      ]
+    },
+    {
+      "bufferView": 18,
+      "componentType": 5126,
+      "count": 2292,
+      "type": "VEC3",
+      "min": [
+        0.013300000190734863,
+        -0.011699999809265137,
+        -0.0005
+      ],
+      "max": [
+        0.017100000381469728,
+        -0.007900000095367432,
+        0.0055
+      ]
+    },
+    {
+      "bufferView": 19,
+      "componentType": 5126,
+      "count": 7632,
+      "type": "VEC3",
+      "min": [
+        -0.0185,
+        0.0017999999523162843,
+        -0.002700000047683716
+      ],
+      "max": [
+        0.0185,
+        0.018899999618530273,
+        0.021200000762939455
+      ]
+    },
+    {
+      "bufferView": 20,
+      "componentType": 5126,
+      "count": 2364,
+      "type": "VEC3",
+      "min": [
+        -0.017700000762939455,
+        0.0023499999046325683,
+        0.003
+      ],
+      "max": [
+        -0.0105,
+        0.012699999809265138,
+        0.0035
+      ]
+    },
+    {
+      "bufferView": 21,
+      "componentType": 5126,
+      "count": 2292,
+      "type": "VEC3",
+      "min": [
+        -0.017100000381469728,
+        0.0029000000953674316,
+        -0.0005
+      ],
+      "max": [
+        -0.013300000190734863,
+        0.0066999998092651366,
+        0.0055
+      ]
+    },
+    {
+      "bufferView": 22,
+      "componentType": 5126,
+      "count": 2292,
+      "type": "VEC3",
+      "min": [
+        -0.017100000381469728,
+        0.007900000095367432,
+        -0.0005
+      ],
+      "max": [
+        -0.013300000190734863,
+        0.011699999809265137,
+        0.0055
+      ]
+    },
+    {
+      "bufferView": 23,
+      "componentType": 5126,
+      "count": 2364,
+      "type": "VEC3",
+      "min": [
+        0.0105,
+        0.0023499999046325683,
+        0.003
+      ],
+      "max": [
+        0.017700000762939455,
+        0.012699999809265138,
+        0.0035
+      ]
+    },
+    {
+      "bufferView": 24,
+      "componentType": 5126,
+      "count": 2292,
+      "type": "VEC3",
+      "min": [
+        0.013300000190734863,
+        0.0029000000953674316,
+        -0.0005
+      ],
+      "max": [
+        0.017100000381469728,
+        0.0066999998092651366,
+        0.0055
+      ]
+    },
+    {
+      "bufferView": 25,
+      "componentType": 5126,
+      "count": 2292,
+      "type": "VEC3",
+      "min": [
+        0.013300000190734863,
+        0.007900000095367432,
+        -0.0005
+      ],
+      "max": [
+        0.017100000381469728,
+        0.011699999809265137,
+        0.0055
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Upper stainless nozzle with flat strip seat",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Liquid solder",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Positive copper contact",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 2
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Negative copper contact",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 3
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Bias magnet 1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 4
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Bias magnet 2",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 5
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Mica electrical insulator -1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 6
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Mica electrical insulator 1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 7
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Heated aluminium block",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 8
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Replaceable stainless dogbone strip",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 9
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "M2x3 screw and nut envelope -1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 10
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "M2x3 screw and nut envelope 1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 11
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Aluminium pole carrier -1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 12
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Aluminium keeper -1 -1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 13
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "M2 keeper screw envelope -1 -1 4.2",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 14
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "M2 keeper screw envelope -1 -1 9.2",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 15
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Aluminium keeper -1 1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 16
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "M2 keeper screw envelope -1 1 4.2",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 17
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "M2 keeper screw envelope -1 1 9.2",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 18
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Aluminium pole carrier 1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 19
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Aluminium keeper 1 -1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 20
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "M2 keeper screw envelope 1 -1 4.2",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 21
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "M2 keeper screw envelope 1 -1 9.2",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 22
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Aluminium keeper 1 1",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 23
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "M2 keeper screw envelope 1 1 4.2",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 24
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "M2 keeper screw envelope 1 1 9.2",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 25
+          },
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "Upper stainless nozzle with flat strip seat"
+    },
+    {
+      "mesh": 1,
+      "name": "Liquid solder"
+    },
+    {
+      "mesh": 2,
+      "name": "Positive copper contact"
+    },
+    {
+      "mesh": 3,
+      "name": "Negative copper contact"
+    },
+    {
+      "mesh": 4,
+      "name": "Bias magnet 1"
+    },
+    {
+      "mesh": 5,
+      "name": "Bias magnet 2"
+    },
+    {
+      "mesh": 6,
+      "name": "Mica electrical insulator -1"
+    },
+    {
+      "mesh": 7,
+      "name": "Mica electrical insulator 1"
+    },
+    {
+      "mesh": 8,
+      "name": "Heated aluminium block"
+    },
+    {
+      "mesh": 9,
+      "name": "Replaceable stainless dogbone strip"
+    },
+    {
+      "mesh": 10,
+      "name": "M2x3 screw and nut envelope -1"
+    },
+    {
+      "mesh": 11,
+      "name": "M2x3 screw and nut envelope 1"
+    },
+    {
+      "mesh": 12,
+      "name": "Aluminium pole carrier -1"
+    },
+    {
+      "mesh": 13,
+      "name": "Aluminium keeper -1 -1"
+    },
+    {
+      "mesh": 14,
+      "name": "M2 keeper screw envelope -1 -1 4.2"
+    },
+    {
+      "mesh": 15,
+      "name": "M2 keeper screw envelope -1 -1 9.2"
+    },
+    {
+      "mesh": 16,
+      "name": "Aluminium keeper -1 1"
+    },
+    {
+      "mesh": 17,
+      "name": "M2 keeper screw envelope -1 1 4.2"
+    },
+    {
+      "mesh": 18,
+      "name": "M2 keeper screw envelope -1 1 9.2"
+    },
+    {
+      "mesh": 19,
+      "name": "Aluminium pole carrier 1"
+    },
+    {
+      "mesh": 20,
+      "name": "Aluminium keeper 1 -1"
+    },
+    {
+      "mesh": 21,
+      "name": "M2 keeper screw envelope 1 -1 4.2"
+    },
+    {
+      "mesh": 22,
+      "name": "M2 keeper screw envelope 1 -1 9.2"
+    },
+    {
+      "mesh": 23,
+      "name": "Aluminium keeper 1 1"
+    },
+    {
+      "mesh": 24,
+      "name": "M2 keeper screw envelope 1 1 4.2"
+    },
+    {
+      "mesh": 25,
+      "name": "M2 keeper screw envelope 1 1 9.2"
+    }
+  ],
+  "scenes": [
+    {
+      "nodes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25
+      ]
+    }
+  ],
+  "scene": 0
+}

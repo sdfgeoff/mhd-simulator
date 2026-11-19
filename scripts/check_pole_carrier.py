@@ -15,7 +15,8 @@ args = parser.parse_args()
 root = Path("artifacts/hardware-research/cases") / args.case
 manifest = json.loads((root / "manifest.json").read_text())
 parts, _ = load(args.case + "/assembly")
-fixtures = parts[9:]
+base_count = manifest.get("base_body_count", 9)
+fixtures = parts[base_count:]
 gaps = {}
 for label, targets in [
     ("copper", parts[2:4]),
@@ -38,7 +39,6 @@ for label, targets in [
 expected_copper = min(
     manifest["nominal_keeper_to_copper_Y_clearance_mm"],
     manifest["nominal_keeper_to_copper_X_clearance_mm"],
-    0.3 + manifest.get("magnet_drop_mm", 0.0),
 )
 if abs(gaps["copper"]["minimum_gap_mm"] - expected_copper) > 1e-4:
     raise ValueError("Unexpected copper gap")
@@ -50,6 +50,21 @@ if (
     > 1e-4
 ):
     raise ValueError("Unexpected heater gap")
+fasteners = [part for part in parts[:base_count] if "M2x3 screw and nut" in part[0]]
+if fasteners:
+    value, name, other = min(
+        (float(a.min_gap(b, 10.0)), name, other)
+        for name, _, a in fixtures
+        for other, _, b in fasteners
+    )
+    gaps["contact_fasteners"] = {
+        "minimum_gap_mm": value,
+        "fixture_part": name,
+        "target_part": other,
+        "search_cap_mm": 10.0,
+    }
+    if value < 0.19:
+        raise ValueError("Contact fastener clearance below0.19mm review threshold")
 roundtrips = []
 for part in manifest["part_files"]:
     if part["stl"] is None:

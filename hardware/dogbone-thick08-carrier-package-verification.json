@@ -1,0 +1,72 @@
+{
+  "package": "hardware/designs/dogbone-thick08-carrier-review",
+  "source": "artifacts/hardware-research/cases/m6-dogbone-thick08-carrier-review",
+  "files": [
+    {
+      "file": "assembly.bin",
+      "sha256": "3d4aec7833a9cd61ff7ce80c486eb2206ba2619a63de736746785f3a5b58292b",
+      "source_identical": true
+    },
+    {
+      "file": "assembly.gltf",
+      "sha256": "84a5399c509c7127ae67966e6e7d6add7a77e271e3621c00e826a30f6c47c8f8",
+      "source_identical": true
+    },
+    {
+      "file": "carrier-only.bin",
+      "sha256": "bde168ed2f6cd74fd74381356d98db2518da1d6593c6d05394c6b82337a10bc9",
+      "source_identical": true
+    },
+    {
+      "file": "carrier-only.gltf",
+      "sha256": "d2fec2f3fedb415dc36b91469e84c3255ea8ba8f39f5152c1c13bc8a15572788",
+      "source_identical": true
+    },
+    {
+      "file": "assembly.inspection.mhd.json",
+      "sha256": "5499a9ee5c201b8d88a52eb8a4496e462536e9c5dc083c575aaba0dbc4500b62",
+      "source_identical": true
+    },
+    {
+      "file": "part-00.stl",
+      "sha256": "068f863a44c1f0cbac368b77150b7e898e2cebf8e02b1bfc023c0c595b9c0973",
+      "source_identical": true
+    },
+    {
+      "file": "part-01.stl",
+      "sha256": "2e6ae526b5f249166d4107cf3897747ec7f2b453adb4d98756ec3756d151d9b0",
+      "source_identical": true
+    },
+    {
+      "file": "part-04.stl",
+      "sha256": "7896ef30d113f8bcae45fc6af42d4e830f28b809f71a837481f3e4bc8d2c239a",
+      "source_identical": true
+    },
+    {
+      "file": "part-07.stl",
+      "sha256": "f1a95e3db70f59f98d35b8ecdccd92981d92c527bed78c6846af587fd4209a47",
+      "source_identical": true
+    },
+    {
+      "file": "part-08.stl",
+      "sha256": "6685d7d21149479610f2af2f4046651438c7a78dbe231ea4a026549ed761d1ff",
+      "source_identical": true
+    },
+    {
+      "file": "part-11.stl",
+      "sha256": "28aadf371eb13245cbaa126a5e1868a96d2153b29bfd2cf5f1ba4754d477b826",
+      "source_identical": true
+    },
+    {
+      "file": "manifest.json",
+      "sha256": "4650cb2df59c9bee94301e403c34d86dccf940310d285ff801d2581c8add2f5c",
+      "source_identical": true
+    },
+    {
+      "file": "strip-mm.stl",
+      "sha256": "1fef437ba36fa0e82678fc2c48e7608c804d7eb8a578ec78d5e24535b85b7e92",
+      "source_identical": true
+    }
+  ],
+  "default_carrier_regression": "Original carrier glTF/bin/project and six STLs remain byte-identical with default generator options."
+}
