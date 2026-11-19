@@ -552,7 +552,7 @@ are `target/debug/examples/thermal_conductance --check`.
    no new coil jetting result is available. Version-1 preparation accidentally
    retained surface tracking in stationary mode and was rejected before any
    timesteps. Its inputs and failed setup are retained separately.
-5. `analyze_unipolar_coil.py` will combine native reaction linkage with checked
+5. `analyze_unipolar_coil.py` combines native reaction linkage with checked
    air inductance and explicit winding/lead assumptions. It does not infer
    voltage compliance from air inductance alone. Thermal and circuit estimates
    remain separate from moving-fluid and repetition qualification.
@@ -588,3 +588,18 @@ are `target/debug/examples/thermal_conductance --check`.
    full batch uses `run_unipolar_coil_screen.py --adapter amd` and version-2 inputs;
    `analyze_unipolar_coil.py` reads the same plan. Net throughput remains to be
    measured. The driver is process-local; system packages are unchanged.
+10. The [first completed unipolar case](unipolar-coil-v2-first-result.json)
+    records only one of four stationary cases: custom chamber,250A peak,
+    100µs rise/100µs fall. Estimated terminal compliance is−2.6..+6.3V under
+    its explicit winding/lead assumptions. This is neither switching-node
+    qualification nor a moving-fluid result. Use `--available` for an explicitly
+    partial analysis while the batch runs; `plot_unipolar_native.py` plots it.
+11. The [free-level control](coil-fill-control-v1.json) prepares matched high/low
+    fills with identical solid and coil accessor bytes. Lowering the surface
+    from9mm to5.6mm removes the liquid column in the narrow feed annulus.
+    A geometric plug-flow estimate gives equivalent outlet slug lengths1.128mm
+    and0.188mm. It does not establish a pressure or droplet benefit: conducting
+    volume, free surface and force also change. No native run has been performed.
+    `prepare_coil_fill_control.py` creates fresh inputs and verifies closed
+    geometry, liquid volume and unchanged solid/coil payloads. It deliberately
+    refuses to overwrite an existing control folder.
