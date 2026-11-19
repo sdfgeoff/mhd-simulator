@@ -67,6 +67,23 @@ for row in rows:
     row["force_ratio_to_same_width_steel"] = (
         row["outlet_force_N_at30A"] / reference["outlet_force_N_at30A"]
     )
+if all(row["insulating_separation_mm"] == 0 for row in rows):
+    isolated = json.loads(Path("hardware/m6-strip-tip-screening.json").read_text())[
+        "cases"
+    ]
+    for row in rows:
+        reference = next(
+            a
+            for a in isolated
+            if a["strip_width_mm"] == row["strip_width_mm"]
+            and a["strip_material"] == row["strip_material"]
+        )
+        row["force_ratio_direct_to_isolated"] = (
+            row["outlet_force_N_at30A"] / reference["outlet_force_N_at30A"]
+        )
+        row["same_force_current_ratio_direct_to_isolated"] = (
+            1 / row["force_ratio_direct_to_isolated"]
+        )
 record = {
     "status": "Completed matched 50um native current and applied field comparison; not a seal or jetting qualification",
     "cases": rows,

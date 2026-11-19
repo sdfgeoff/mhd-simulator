@@ -31,3 +31,12 @@
    Neither sealing, hot resistance, electrode recession nor mechanical mounting
    has been qualified. Literature and coupon-test concerns are recorded in
    `hardware/strip-contact-materials-screening.json`.
+
+7. The `steel08s0` and `steel28s0` cases instead seat the stainless strip directly
+   against the upper stainless body, with an ideal metal interface. They give
+   2.126 and 0.806 mN at 30 A: 75% and 89% of their isolated counterparts.
+   The narrow case is within 3% of the prior integral rooted-boss force metric.
+   Electrical isolation of this strip/body joint is therefore not essential to
+   retain comparable cold force in that narrow geometry. It is still not a seal
+   qualification. The small upper-body sealing footprint, access for clamps and
+   contacts, surface finish and actual interface resistance remain unresolved.

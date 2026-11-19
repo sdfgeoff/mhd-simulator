@@ -120,6 +120,36 @@
       "file": "copper28t01.mhd.json",
       "sha256": "2b4a9d89e926753badf942109228f990bdcdcb44b818358e7bedb0146b0a1d87",
       "source_identical": true
+    },
+    {
+      "file": "steel08s0.bin",
+      "sha256": "98a775c406037c7456af6b6f7b244a3dd07c7ea68b7c9dba7ed6bff0f62cb0cd",
+      "source_identical": true
+    },
+    {
+      "file": "steel08s0.gltf",
+      "sha256": "4e0fb11be4562d389c3a71c810863147915b53df8becacfc4fc737166b44f6dc",
+      "source_identical": true
+    },
+    {
+      "file": "steel08s0.mhd.json",
+      "sha256": "edf32be24f79efd6efd3d4264f2c9fb13805b5576cee214d9f285c35504c25d9",
+      "source_identical": true
+    },
+    {
+      "file": "steel28s0.bin",
+      "sha256": "8a2a4deef112778a2eaf017a43ef9f8584331893613b697046a9ccfd06eaa687",
+      "source_identical": true
+    },
+    {
+      "file": "steel28s0.gltf",
+      "sha256": "8d86f9eaf0c3c491710da57fac83deb46ee4716739c9c42760dbdcb2027a4c0a",
+      "source_identical": true
+    },
+    {
+      "file": "steel28s0.mhd.json",
+      "sha256": "183eb3f868c5c36f08f04757f21a1296d9599a09702123aedabc475363a91e76",
+      "source_identical": true
     }
   ]
 }

@@ -15,6 +15,10 @@ parser.add_argument(
     default=Path("artifacts/hardware-research/cases/m6-strip-tip-v1"),
 )
 parser.add_argument("--thickness-mm", type=float, default=0.5)
+parser.add_argument("--separation-mm", type=float, choices=[0.0, 0.1], default=0.1)
+parser.add_argument(
+    "--materials", nargs="+", choices=["steel", "copper"], default=["steel", "copper"]
+)
 args = parser.parse_args()
 if args.thickness_mm not in [0.1, 0.2, 0.5]:
     parser.error("Supported thicknesses: .1, .2, .5mm")
@@ -26,16 +30,21 @@ base = json.loads(source.read_text())
 parts, _ = load("m6-rooted08-v1/stub4")
 rows = []
 for width in [0.8, 2.8]:
-    for material in ["steel", "copper"]:
+    for material in args.materials:
         label = (
             material
             + str(width).replace(".", "")
             + ("t" + str(t).replace(".", "") if t != 0.5 else "")
+            + ("s0" if args.separation_mm == 0 else "")
         )
         # Existing raised pool, bore and magnets. Remove integral lower boss;
         # a 0.1mm insulating separation is an electrical assumption, not a seal.
         solids = [
-            parts[0][2] - box([40, 40, 10 + t + 0.1], [0, 0, (t + 0.1 - 10) / 2]),
+            parts[0][2]
+            - box(
+                [40, 40, 10 + t + args.separation_mm],
+                [0, 0, (t + args.separation_mm - 10) / 2],
+            ),
             parts[1][2],
         ]
         names = ["Stainless upper nozzle", "Molten solder"]
@@ -91,7 +100,7 @@ for width in [0.8, 2.8]:
                 "strip_width_mm": width,
                 "strip_thickness_mm": t,
                 "bore_mm": 0.4,
-                "insulating_separation_mm": 0.1,
+                "insulating_separation_mm": args.separation_mm,
                 "strip_material": material,
             }
         )
@@ -99,7 +108,7 @@ for width in [0.8, 2.8]:
     json.dumps(
         {
             "cases": rows,
-            "scope": "Cold fixed-property current-sharing comparison. Whole strip represented by three touching material regions to supply terminals. Ideal joints, no gasket/clamp/seal qualification, hot properties, motion or lifetime. Existing liquid geometry retained, including 0.1mm neck between strip and upper steel.",
+            "scope": "Cold fixed-property current-sharing comparison. Whole strip represented by three touching material regions to supply terminals. Ideal joints, no gasket/clamp/seal qualification, hot properties, motion or lifetime. Existing liquid geometry retained. Separation is per case: zero assumes an ideal metal joint, positive assumes an electrically insulating gap around the retained liquid neck.",
         },
         indent=2,
     )
