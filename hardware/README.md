@@ -548,7 +548,10 @@ are `target/debug/examples/thermal_conductance --check`.
    burst. It does not test a single unipolar coil-current pulse. The new
    `prepare_unipolar_coil_cases.py` prepares 250 A triangular pulses with
    100/100 µs and 50/250 µs rise/fall times in the custom and V6-like chambers.
-   Cold comparisons are queued; no new coil jetting result is available.
+   Corrected version-2 stationary comparisons run on an isolated AMD adapter;
+   no new coil jetting result is available. Version-1 preparation accidentally
+   retained surface tracking in stationary mode and was rejected before any
+   timesteps. Its inputs and failed setup are retained separately.
 5. `analyze_unipolar_coil.py` will combine native reaction linkage with checked
    air inductance and explicit winding/lead assumptions. It does not infer
    voltage compliance from air inductance alone. Thermal and circuit estimates
@@ -577,3 +580,11 @@ are `target/debug/examples/thermal_conductance --check`.
    single-pulse outcomes do not establish the target repetition rate. The cited
    nozzle study assumes pinned contact lines; its fitted rates are not applied
    to these free-level and slit geometries.
+9. [Independent-adapter checks](dual-adapter-screening.json) record the privately
+   extracted RADV driver, verified AMD selection, three native induction tests
+   and a completed 20-step case. `amd_hardware_probe` delegates to the same native
+   probe body and checks its actual adapter before dispatch. One solver per
+   physical device permits AMD stationary screens alongside NVIDIA flow. The
+   full batch uses `run_unipolar_coil_screen.py --adapter amd` and version-2 inputs;
+   `analyze_unipolar_coil.py` reads the same plan. Net throughput remains to be
+   measured. The driver is process-local; system packages are unchanged.
