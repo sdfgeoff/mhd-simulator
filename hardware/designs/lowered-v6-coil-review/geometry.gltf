@@ -1,0 +1,233 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "MHD hardware study; E3D dimension-based simplified CAD"
+  },
+  "buffers": [
+    {
+      "uri": "geometry.bin",
+      "byteLength": 247416
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 89856
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 89856,
+      "byteLength": 41472
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 131328,
+      "byteLength": 13824
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 145152,
+      "byteLength": 2952
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 148104,
+      "byteLength": 3552
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 151656,
+      "byteLength": 95760
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 7488,
+      "type": "VEC3",
+      "min": [
+        -0.0035000000000000005,
+        -0.004041451884327379,
+        0.0
+      ],
+      "max": [
+        0.0035000000000000005,
+        0.00404145188432738,
+        0.0125
+      ]
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 3456,
+      "type": "VEC3",
+      "min": [
+        -0.0016,
+        -0.0016,
+        0.0
+      ],
+      "max": [
+        0.0016,
+        0.0016,
+        0.009000000000000001
+      ]
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 1152,
+      "type": "VEC3",
+      "min": [
+        -0.0004,
+        -0.0004,
+        0.0055
+      ],
+      "max": [
+        0.0004,
+        0.0004,
+        0.011
+      ]
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 246,
+      "type": "VEC3",
+      "min": [
+        -0.00624399995803833,
+        -0.00624399995803833,
+        0.0007600000500679016
+      ],
+      "max": [
+        0.009892000198364259,
+        0.00624399995803833,
+        0.009239999771118165
+      ]
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 296,
+      "type": "VEC3",
+      "min": [
+        -0.008836,
+        -0.008836,
+        -0.001444
+      ],
+      "max": [
+        0.010736,
+        0.008836,
+        0.0039440000000000005
+      ]
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 7980,
+      "type": "VEC3",
+      "min": [
+        -0.015,
+        -0.008,
+        0.0055
+      ],
+      "max": [
+        0.008,
+        0.008,
+        0.017
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Stainless nozzle",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Liquid solder",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Fixed feed wire",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 2
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Lower12turn4layercoil",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 4
+          },
+          "mode": 3
+        }
+      ]
+    },
+    {
+      "name": "Drawing-based heater with empty cartridge and sensor bores",
+      "primitives": [
+        {
+          "mode": 4,
+          "attributes": {
+            "POSITION": 5
+          }
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "Stainless nozzle"
+    },
+    {
+      "mesh": 1,
+      "name": "Liquid solder"
+    },
+    {
+      "mesh": 2,
+      "name": "Fixed feed wire"
+    },
+    {
+      "mesh": 3,
+      "name": "Lower12turn4layercoil"
+    },
+    {
+      "name": "Drawing-based heater with empty cartridge and sensor bores",
+      "mesh": 4
+    }
+  ],
+  "scenes": [
+    {
+      "nodes": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    }
+  ],
+  "scene": 0
+}

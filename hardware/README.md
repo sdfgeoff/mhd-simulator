@@ -548,8 +548,9 @@ are `target/debug/examples/thermal_conductance --check`.
    burst. It does not test a single unipolar coil-current pulse. The new
    `prepare_unipolar_coil_cases.py` prepares 250 A triangular pulses with
    100/100 µs and 50/250 µs rise/fall times in the custom and V6-like chambers.
-   Corrected version-2 stationary comparisons run on an isolated AMD adapter;
-   no new coil jetting result is available. Version-1 preparation accidentally
+   Corrected version-2 stationary comparisons completed on an isolated AMD
+   adapter; the [full four-case result](unipolar-coil-v2-comparison.json) remains
+   a stationary screen with no new coil jetting result. Version-1 preparation accidentally
    retained surface tracking in stationary mode and was rejected before any
    timesteps. Its inputs and failed setup are retained separately.
 5. `analyze_unipolar_coil.py` combines native reaction linkage with checked
@@ -632,3 +633,11 @@ are `target/debug/examples/thermal_conductance --check`.
     self-force is about6% of applied-force L2 in the liquid/outlet regions.
     External current outside that electrical crop is missing, so this is not
     a complete-circuit error bound or a correction to the moving-fluid results.
+17. The [lower-coil review package](designs/lowered-v6-coil-review/README.md)
+    addresses the heater clash with a shorter, wider twelve-turn winding below
+    a drawing-based heater. Nominal round-wire clearances are checked and both
+    projects pass the actual CPU-only project loader. Heater-included/excluded
+    EM inputs are prepared; no field, fluid or thermal result exists for this
+    package. Its19mm winding diameter and roughly2mm return projection are
+    geometry estimates before insulation/support/tolerances. See the
+    [full package assumptions](lowered-coil-package.json).

@@ -1,0 +1,127 @@
+{
+  "status": "Prepared packaging/cold-EM controls; no GPU force, voltage or jetting result",
+  "source_project": "artifacts/hardware-research/cases/unipolar-coil-v2/v6-symmetric100-cold-h020.mhd.json",
+  "source_sha256": "261ec880d4fabbd8db1f065b666b0f75acb27e3bc012940257b76aba4d7a0da3",
+  "source_geometry_sha256": "3c0004021fe2c42c7ae90c787f3500dc94f817d51b6f67de3c5c6c7be9038026",
+  "source_binary_sha256": "c201d76446c1c7b3713fc87c4e1e1cca556bc77581441fae638420bcbc1725af",
+  "unchanged_solid_checks": [
+    {
+      "mesh": "Stainless nozzle",
+      "unchanged_sha256": "b50ec3b811b8c5d38bd2035ca5bfc34e7d7c2ea18870979a3a01fe89d7a41497"
+    },
+    {
+      "mesh": "Liquid solder",
+      "unchanged_sha256": "1f5b605b7eea853661f2e7ce557ee926c89b4ff3c02ea92f4f278befea476386"
+    },
+    {
+      "mesh": "Fixed feed wire",
+      "unchanged_sha256": "135d51ea554e7e69c0a86e38eb6a6e7f6cadb53a730ffa0e0f782a7897b2c58c"
+    }
+  ],
+  "coil": {
+    "wire_diameter_mm": 1.2,
+    "turns_per_layer": 3,
+    "layers": 4,
+    "inner_radius_mm": 4.3,
+    "outer_diameter_mm": 18.968,
+    "turns": 12,
+    "centre_z_mm": 2,
+    "bare_wire_radius_mm": 0.6,
+    "bare_winding_outer_diameter_mm": 18.872,
+    "including_return_min_z_mm": -2.044,
+    "including_return_max_z_mm": 4.544,
+    "heater_vertical_clearance_mm": 0.9560000000000004,
+    "nozzle_hex_circumscribed_radial_clearance_mm": 0.3065481156726202
+  },
+  "heater": {
+    "bounds_mm": [
+      [
+        -15,
+        -8,
+        5.5
+      ],
+      [
+        8,
+        8,
+        17.0
+      ]
+    ],
+    "nozzle_overlap_mm3": 8.168080984770049e-07,
+    "fixed_conductivity_S_m": 15000000.0,
+    "cases": [
+      {
+        "heater_included": false,
+        "project": "artifacts/hardware-research/cases/lowered-coil-package-v2/heater-off.mhd.json",
+        "sha256": "e6136af40048fdef8b9084dfe9887e93c2b2a7f525bc07446393799c3d4dd864"
+      },
+      {
+        "heater_included": true,
+        "project": "artifacts/hardware-research/cases/lowered-coil-package-v2/heater-on.mhd.json",
+        "sha256": "65a86787b4703ff0cab957b17790737cc3ed4cf4bdf5054a0ce07da7d6be91fa"
+      }
+    ]
+  },
+  "sources": [
+    {
+      "url": "https://cdn03.plentyone.com/ioseuwg7moqp/propertyItems/4488763/V6Datasheet_2019%5B1%5D.pdf",
+      "author": "E3D",
+      "page": 7,
+      "local_sha256": "aebd2154e1f6c50ca813148966a457b3b3cc1383220a5767fa6b7a8bc01e296b",
+      "use": "Heater envelope and bore locations. The0.5mm assembly gap is our explicit assumption."
+    }
+  ],
+  "limits": [
+    "Round-wire bounds use bare1.2mm copper; enamel, bobbin, tolerance, hot deformation and winding retention not qualified.",
+    "Thread helix, heater clamp slot, fasteners, thermistor/heater inserts, heatbreak and leads beyond the modeled return are omitted. Empty bores are not an assembled heater.",
+    "Al15MS/m is a sensitivity only. Heater-on/off isolates inclusion of this simplified metal body, not a calibrated heater or strict shielding bound.",
+    "12turns and coilposition change together versus older10turns; no matched-turn or force equivalence is implied.",
+    "Source V6-like0.5mm outlet is not a verified catalogue stainless SKU. No thermal or single-pulse fluid result for this package.",
+    "The return's nominal2.04mm projection is not final surface stand-off; support and insulation must count too."
+  ],
+  "unloaded_circuit_estimate": {
+    "method": "Independent checked thin-wireairL plus2mohm/0.2uHseries andexplicit25MS/mroundcopperwinding. No nativeheater/metalreaction orswitch-nodeovershoot.",
+    "wire_length_m": 0.5329822824490242,
+    "winding_R_ohm": 0.018850392184925104,
+    "air_L_H": 1.6607184803478321e-06,
+    "rise_us": 15,
+    "fall_us": 100,
+    "peak_A": 250,
+    "unloaded_rise_voltage_max_V": 36.22457271869514,
+    "rms_A_at_assumed200Hz": 21.88987589427283,
+    "air_inductance_record": {
+      "project": "artifacts/hardware-research/cases/lowered-coil-package-v2/heater-on.mhd.json",
+      "method": "Independent thin round-wire Neumann energy estimate for generated CAD coils.\n\nThis is a lumped circuit parameter estimate, not a volumetric EM solver.\nThe softened filament uses a*exp(-1/4), matching low-frequency internal\ninductance of a round, uniform-current wire. Skin/proximity corrections and\nfinite cross-section errors are not resolved. Compare discretizations and\nthe thin circular-loop asymptote before using circuit voltage estimates.\n",
+      "winding": [
+        {
+          "maximum_segment_m": 0.0006,
+          "segments": 1037,
+          "inductance_h": 1.6620905296691334e-06
+        },
+        {
+          "maximum_segment_m": 0.0003,
+          "segments": 1926,
+          "inductance_h": 1.6609240695514835e-06
+        },
+        {
+          "maximum_segment_m": 0.00015,
+          "segments": 3701,
+          "inductance_h": 1.6607184803478321e-06
+        }
+      ],
+      "circle_check": {
+        "computed_h": 6.201111455725317e-08,
+        "thin_loop_asymptote_h": 6.201015980783838e-08,
+        "relative_error": 1.5396661091404695e-05
+      },
+      "warning": "Discretization agreement does not bound cross-section, skin, proximity, lead routing or conductor-reaction errors."
+    }
+  },
+  "review_package": "hardware/designs/lowered-v6-coil-review",
+  "review_files_sha256": {
+    "geometry.gltf": "b48c8e73b70f0f12162f44fa5f5f6c640f10414d907823151dbc8b180b235701",
+    "geometry.bin": "32cb84c3e8d4997e6f842ae770db3edf46d94a487c55267d5aa8a5cfec686102",
+    "heater-on.mhd.json": "65a86787b4703ff0cab957b17790737cc3ed4cf4bdf5054a0ce07da7d6be91fa",
+    "heater-off.mhd.json": "e6136af40048fdef8b9084dfe9887e93c2b2a7f525bc07446393799c3d4dd864"
+  },
+  "CPU_validation": "Bothprojectsloadedbyexamples/validate_project.rs throughactualproject::load withoutGPUinitialization."
+}
