@@ -94,8 +94,18 @@ def main():
             "high_equivalent_length_mm": high, "low_equivalent_length_mm": low,
             "ratio_high_over_low": high / low,
         },
+        "free_surface_geometry": {
+            "high_free_level_mm": 9., "high_annulus_outer_inner_radii_mm": [.6, .4],
+            "high_free_annulus_area_mm2": math.pi*(.6**2-.4**2),
+            "low_free_level_mm": 5.6, "low_annulus_outer_inner_radii_mm": [3., .4],
+            "low_free_annulus_area_mm2": math.pi*(3.**2-.4**2),
+            "low_over_high_free_area_ratio": (3.**2-.4**2)/(.6**2-.4**2),
+            "scope": "Exact circular-profile areas before polygonal/voxel discretization. Lower fill is below the6mm chamber roof, outside the feed neck.",
+        },
+        "interpretation_correction": "Sixfold plug-flow inertia reduction does not predict better actuation. Upper free-interface area changes44.2fold and magnetic forcing also changes; compare resolved native upper/lower flow paths.",
         "limits": [
             "Lower free level changes conducting volume, free surface and force as well as hydraulic inertia; force is not assumed unchanged.",
+            "Feed-neck radial gap0.2mm is onlyone200um/two100um cells; return-flow resistance needs refinement.",
             "0.1mm wire immersion is only one100um cell. Refine/inspect voxelization before treating wire contact as resolved.",
             "Original bottle-shaped chamber requires a joined cap or other manufacturing process; not a claimed one-piece bored part.",
             "100um flow inputs have onlyfivecells across outlet. No calibrated wetting, oxide, repetition or thermal qualification.",

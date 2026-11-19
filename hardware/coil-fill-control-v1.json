@@ -44,6 +44,24 @@
     "Lower free level changes conducting volume, free surface and force as well as hydraulic inertia; force is not assumed unchanged.",
     "0.1mm wire immersion is only one100um cell. Refine/inspect voxelization before treating wire contact as resolved.",
     "Original bottle-shaped chamber requires a joined cap or other manufacturing process; not a claimed one-piece bored part.",
-    "100um flow inputs have onlyfivecells across outlet. No calibrated wetting, oxide, repetition or thermal qualification."
-  ]
+    "100um flow inputs have onlyfivecells across outlet. No calibrated wetting, oxide, repetition or thermal qualification.",
+    "At200um the nominal0.2mm feed-neck radial gap is only one cell; at100um it is two. A high/low-fill comparison requires discretization checks and cannot certify the physical return-flow resistance."
+  ],
+  "free_surface_geometry": {
+    "high_free_level_mm": 9.0,
+    "high_annulus_outer_inner_radii_mm": [
+      0.6,
+      0.4
+    ],
+    "high_free_annulus_area_mm2": 0.6283185307179585,
+    "low_free_level_mm": 5.6,
+    "low_annulus_outer_inner_radii_mm": [
+      3.0,
+      0.4
+    ],
+    "low_free_annulus_area_mm2": 27.77167905773377,
+    "low_over_high_free_area_ratio": 44.20000000000001,
+    "scope": "Exact circular-profile areas, before polygonal/voxel discretization. Lower fill is below the 6mm chamber roof, not inside the narrow feed neck."
+  },
+  "interpretation_correction": "The sixfold plug-flow inertia reduction is not an actuation-efficiency prediction. The upper free-interface area changes44.2fold and magnetic forcing/conducting volume also change. A transient with an upper free interface cannot be reduced to one throughflow inertia to select fill level; compare resolved native upper/lower flow paths."
 }
