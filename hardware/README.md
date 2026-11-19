@@ -1,7 +1,7 @@
 # Solder jetter hardware study
 
 Research branch: `research/hardware-design-20261118`. Frozen application baseline:
-`simulator-baseline-2026-11-18`. Current evidence below is from 19 November 2026.
+`simulator-baseline-2026-11-18`. Latest assessment: 20 November 2026 (NZDT). Older sections retain their dated comparison context.
 **No design has demonstrated sustained 200 Hz jetting or been qualified for
 manufacture.** The target remains 0.4–0.6 mm solder drops, 24/48 V supply and
 actuator currents below a few hundred amps, using accessible parts. Following
@@ -23,6 +23,21 @@ running merely because an older paragraph below describes its initial prefix.
 
 The circuit-design handoff is [pulse-generator-handoff.md](pulse-generator-handoff.md):
 a proposed ±300 A peak / 100 A RMS bipolar current driver on 24/48 V.
+
+## Current evidence
+
+| Candidate | Latest accepted evidence | Decision still open |
+| --- | --- | --- |
+| One-piece rooted stainless M6 tip, external contacts and permanent magnets | 110 A pulse: 50 µm / 1.5 µs run completes 3.6 ms with 0.596 and 0.417 mm detached regions. Fixed-grid 100 µm timestep halving changes the leading diameter only 0.12%, but both runs retain a second region and its slow motion changes. | No clean, converged single-drop setting. Stronger reverse-current pullback is running. [Timestep assessment](rooted-timestep-screening.json), [field comparison](rooted-timestep-field-comparison.json), [fine result](m6-rooted-flow-refinement-screening.json). |
+| Earlier ten-turn single coil | Six stationary nonnegative pulse cases complete with energy/decay checks. The 250 A, 10 µs rise / 100 µs fall cases give about 29 V interval terminal estimates. Lower-fill unpowered flow completes 2.1 ms without a detached drop; matched powered flow is still running. | No single-pulse coil jetting result. The winding clashes with the nominal standard heater; coarse 200 µm flow cannot settle breakup. [Stationary comparison](unipolar-coil-fast10-v2-comparison.json), [flow plan](coil-low-fill-flow-plan.json). |
+| Stainless tube and split copper slit plates | Unpowered conditioned control completes 10.002 ms. Driven 40 A case fails at 9.999 ms; its last saved 9.519 ms export has one 0.408 mm region moving down at 0.90 m/s, plus substantial lateral spreading. | Failed coarse result is provisional. End confinement, timestep, gap resolution and hot sealing remain open. [Accepted-prefix evidence](split-slit-conditioned-prefix-screening.json), [unrun end-stop CAD](designs/split-slit-endstop-review/README.md). |
+| Compact twelve-turn coil below a drawing-based heater | CPU-validated CAD; nominal return projection approximately 2 mm. Unloaded 250 A / 15 µs rise estimate approximately 36 V. | No native shielding, loaded voltage, flow or temperature result. Heater inclusion tests are queued after a native decay-step reference validation. [Package](lowered-coil-package.json), [guarded test plan](lowered-coil-cold-plan.json). |
+
+1. Current coupled comparisons use the [Sn99.3Cu0.7 research properties](solder-properties.json) at 250 °C, with thermal evolution disabled. They do not qualify Sn60Pb40 or hot contact chemistry by transfer. Current density, surface tension, viscosity and conductivity remain material/temperature assumptions with the recorded source limitations.
+2. Coil flow uses the normal unified `--run-check` path. The electrode-driven cases use the research `conduction_flow` client and the same `RunState` fluid/interface engine, with conductivity updated from liquid fraction and motional EMF. Electrode setup is a research CLI feature, not a GUI electrode-control feature. Its imposed permanent field omits induction/self-field reaction; the field-export postprocessing is not an additional fluid solver.
+3. The [explicit current criterion](conduction-dimensional-current-screening.json) keeps strict 10 ppm unit-voltage conservation and the local residual gate. Its optional motion-only 1 µA allowance passes a completed matched baseline comparison; it is an explicitly changed numerical criterion, not a new physical current source.
+4. The [free-level control](coil-fill-control-v1.json) changes the upper free-interface area by 44.2 times as well as throughflow inertia and forcing. Its smaller inertia is not evidence of better jetting. The [plateau-pulse budget](single-pulse-headroom-screening.json) identifies a possible 250 A / 30 µs hold within approximately 28.9 A RMS at assumed 200 Hz; that changed waveform has no native field or flow result and is not queued.
+5. All frequency/RMS figures are arithmetic operating targets. Stable repeated breakup, feed replenishment, thermal management, wetting/oxide control and real driver behavior remain unqualified. The frozen application baseline is unchanged.
 
 ## Earlier candidates and completed controls
 
@@ -600,7 +615,7 @@ are `target/debug/examples/thermal_conductance --check`.
     from9mm to5.6mm removes the liquid column in the narrow feed annulus.
     A geometric plug-flow estimate gives equivalent outlet slug lengths1.128mm
     and0.188mm. It does not establish a pressure or droplet benefit: conducting
-    volume, free surface and force also change. No native run has been performed.
+    volume, free surface and force also change. The newer lower-fill flow control is underway; see the current-evidence table.
     `prepare_coil_fill_control.py` creates fresh inputs and verifies closed
     geometry, liquid volume and unchanged solid/coil payloads. It deliberately
     refuses to overwrite an existing control folder.
@@ -611,8 +626,9 @@ are `target/debug/examples/thermal_conductance --check`.
     negligible-field tail, with an explicit final field-energy/heat gate.
 13. The [lower-fill flow pair](coil-low-fill-flow-plan.json) and
     [V6-like flow pair](coil-v6-flow-plan.json) use the normal unified CLI for
-    matched unpowered/driven controls. They are queued mechanism tests, not
-    results. The200µm startup mesh does not resolve breakup. These encircling
+    matched unpowered/driven controls. The lower-fill unpowered case is complete;
+    its driven case is active and the V6 pair is queued. These are mechanism tests,
+    with no single-pulse jetting result yet. The200µm startup mesh does not resolve breakup. These encircling
     coils also clash with a conventional heater block; alternate heating or
     coil placement remains a packaging requirement.
 14. The [winding cooling budget](coil-winding-thermal-budget.json) separates
@@ -628,6 +644,8 @@ are `target/debug/examples/thermal_conductance --check`.
     Leading diameter changes11% and volume36% with joint refinement. The
     [follow-up controls](rooted-temporal-retract-plan.json) isolate the coarse
     timestep, then increase reverse-current magnitude with geometry held fixed.
+    The [fixed-grid timestep assessment](rooted-timestep-screening.json) is now
+    complete; stronger reversal remains in progress.
 16. The [rooted-tip self-field diagnostic](m6-rooted-self-field-screening.json)
     postprocesses the earlier native cold current at110A. The local omitted
     self-force is about6% of applied-force L2 in the liquid/outlet regions.
