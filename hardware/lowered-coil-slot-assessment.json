@@ -1,0 +1,105 @@
+{
+  "status": "Assessment of the already-completed heater-slot experiment; no additional test",
+  "native_comparison_source": "artifacts/hardware-research/lowered-coil-slotted-heater-v1-comparison.json",
+  "native_case": {
+    "geometry": "lowered-v6-heater-slotted08",
+    "shape": "single15-100",
+    "source": "artifacts/hardware-research/lowered-coil-slotted-heater-v1-nvidia",
+    "diagnostics_sha256": "f687f6f22b8bb21294ca7a38141190d5c0a48fd22dc5e6256184b475a88a6eeb",
+    "I2dt_A2s": 2.395833333169439,
+    "rms_A_at_assumed200Hz": 21.889875893524106,
+    "round_wire_assumption": {
+      "radius_m": 0.0006,
+      "length_m_including_CAD_return": 0.5329822824490242,
+      "conductivity_S_m": 25000000.0,
+      "resistance_ohm": 0.018850392184925104
+    },
+    "series_assumption": {
+      "resistance_ohm": 0.002,
+      "inductance_H": 2e-07
+    },
+    "loaded_terminal_interval_mean_voltage_range_V": [
+      -4.5004160096966395,
+      33.13505607824603
+    ],
+    "winding_heat_J": 0.04516239793996025,
+    "metal_heat_J": 0.009025874730532523,
+    "winding_plus_metal_heat_W_at_assumed200Hz": 10.837654534098554,
+    "midpoint_terminal_net_work_J": 0.05897523517647867,
+    "backward_Euler_metal_source_work_J": 0.009348785249181028,
+    "metal_work_balance_relative_defect": 9.000276357446353e-05,
+    "metal_work_balance_gate_1e_minus3_passed": true,
+    "reaction_backward_Euler_loss_J": 0.0003220691021400148,
+    "final_reaction_field_energy_J": 4.711615013572881e-23,
+    "final_reaction_energy_over_generated_heat": 5.220120103854906e-21,
+    "final_reaction_energy_fraction_gate_1e_minus8_passed": true,
+    "radial_force_moment_over_ROI_volume_Pa_range": [
+      -199.2251948948524,
+      1488.937244421224
+    ],
+    "liquid_axial_force_N_range": [
+      -0.0007791316506790978,
+      0.01535952793070924
+    ],
+    "native_force_integrals": {
+      "phases": {
+        "rise": {
+          "axial_force_impulse_N_s_positive_up": 8.113939672673274e-08,
+          "radial_moment_integral_Pa_s": 0.007893251221529726
+        },
+        "fall": {
+          "axial_force_impulse_N_s_positive_up": 1.2182024012257783e-07,
+          "radial_moment_integral_Pa_s": -0.003565628809422261
+        },
+        "zero_current_decay": {
+          "axial_force_impulse_N_s_positive_up": 1.8974336438009806e-08,
+          "radial_moment_integral_Pa_s": -0.00023978963814909375
+        }
+      },
+      "total_axial_impulse_N_s_positive_up": 2.219339732873201e-07,
+      "scope": "Trapezoidal integration of stationary liquid ROI forces. Neither a wall-pressure solution nor the impulse delivered to an expelled drop. Rise/fall cancellation can change when the interface moves."
+    },
+    "stationary_current_projections": {
+      "at_200A_working_target": {
+        "peak_A": 200.0,
+        "rms_A_at_assumed200Hz": 17.511900714819287,
+        "loaded_terminal_interval_mean_voltage_range_V": [
+          -3.6003328077573116,
+          26.508044862596826
+        ],
+        "winding_metal_and_series_resistive_heat_W_at_assumed200Hz": 7.549432235114453,
+        "radial_force_moment_over_ROI_volume_Pa_range": [
+          -127.50412473270556,
+          952.9198364295836
+        ],
+        "liquid_axial_force_N_range": [
+          -0.0004986442564346227,
+          0.009830097875653915
+        ]
+      },
+      "capped_at_tested_peak_and30Arms200Hz": {
+        "peak_A": 250.0,
+        "rms_A_at_assumed200Hz": 21.889875893524106,
+        "loaded_terminal_interval_mean_voltage_range_V": [
+          -4.5004160096966395,
+          33.13505607824603
+        ],
+        "winding_metal_and_series_resistive_heat_W_at_assumed200Hz": 11.79598786736633,
+        "radial_force_moment_over_ROI_volume_Pa_range": [
+          -199.2251948948524,
+          1488.937244421224
+        ],
+        "liquid_axial_force_N_range": [
+          -0.0007791316506790978,
+          0.01535952793070924
+        ]
+      },
+      "scope": "Same waveform, geometry and fixed conductivity/permeability: field/linkage/voltage scale with I; force/Joule heat with I\u00b2. Reuses the native stationary solution, not another field solver. No thermal, moving-interface or droplet scaling is inferred."
+    },
+    "scope": "Static liquid force moment is not nozzle pressure or a droplet criterion. Rate200Hz is arithmetic only, not demonstrated repetition."
+  },
+  "peak_inward_moment_ratio_vs_unslotted_heater": 1.6239268220875112,
+  "peak_inward_moment_ratio_vs_heater_absent": 0.5600698473479514,
+  "interpretation": "Slot partly restores the stationary inward force moment, but changes axial force as well. This is not pressure, nozzle impulse or a demonstrated jetting improvement. No moving fluid, calibrated hot aluminium, assembled inserts/threads or thermal qualification.",
+  "user_hold": "User772 requests design discussion before any more tests. Only currently running high-fill250A flow is allowed to finish."
+}
