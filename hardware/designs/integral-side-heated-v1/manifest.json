@@ -1,0 +1,24 @@
+{
+  "concept": "side-heated",
+  "folder": "hardware/designs/integral-side-heated-v1",
+  "solid_components": 1,
+  "solid_volume_mm3": 1066.0288302841282,
+  "pool_volume_mm3": 16.142526263086815,
+  "CPU_overlaps": [],
+  "terminal_partition": "Virtual subregions of the SAME stainless solid, same1.1MS/m conductivity; no physical terminal joint or copper busbar",
+  "minimum_bridge_nominal_mm": [
+    3,
+    2
+  ],
+  "window_root_radius_mm": 1,
+  "outlet_mm": 0.4,
+  "land_mm": 0.6,
+  "chamber_mm": 2,
+  "fill_mm": 6,
+  "heater_envelope_mm": [
+    3.1,
+    20
+  ],
+  "heater_bore_mm": 3.2,
+  "scope": "CPU CAD only. Complete stainless body+heater/sensor sheaths and magnet geometry. Fasteners, carrier, wires and heater internal insulation not yet defined; no assembly/thermal/jetting claim."
+}

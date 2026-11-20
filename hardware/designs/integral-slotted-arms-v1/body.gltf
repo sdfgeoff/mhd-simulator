@@ -1,0 +1,323 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "MHD hardware study; E3D dimension-based simplified CAD"
+  },
+  "buffers": [
+    {
+      "uri": "body.bin",
+      "byteLength": 187848
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 103176
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 103176,
+      "byteLength": 27648
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 130824,
+      "byteLength": 14400
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 145224,
+      "byteLength": 14400
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 159624,
+      "byteLength": 13680
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 173304,
+      "byteLength": 13680
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 186984,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 187416,
+      "byteLength": 432
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 8598,
+      "type": "VEC3",
+      "min": [
+        -0.01,
+        -0.006,
+        0.0
+      ],
+      "max": [
+        0.01,
+        0.006,
+        0.019
+      ]
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 2304,
+      "type": "VEC3",
+      "min": [
+        -0.001,
+        -0.001,
+        0.0
+      ],
+      "max": [
+        0.001,
+        0.001,
+        0.006
+      ]
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 1200,
+      "type": "VEC3",
+      "min": [
+        -0.01,
+        -0.004,
+        0.006
+      ],
+      "max": [
+        -0.009000000000000001,
+        0.004,
+        0.011
+      ]
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 1200,
+      "type": "VEC3",
+      "min": [
+        0.009000000000000001,
+        -0.004,
+        0.006
+      ],
+      "max": [
+        0.01,
+        0.004,
+        0.011
+      ]
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 1140,
+      "type": "VEC3",
+      "min": [
+        -0.006550000190734863,
+        -0.01,
+        0.014449999809265137
+      ],
+      "max": [
+        -0.003450000047683716,
+        0.01,
+        0.01754999923706055
+      ]
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 1140,
+      "type": "VEC3",
+      "min": [
+        -0.003,
+        -0.01,
+        0.0155
+      ],
+      "max": [
+        -0.002,
+        0.01,
+        0.0165
+      ]
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.0125,
+        -0.012,
+        0.0
+      ],
+      "max": [
+        0.0125,
+        -0.002,
+        0.005
+      ]
+    },
+    {
+      "bufferView": 7,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.0125,
+        0.002,
+        0.0
+      ],
+      "max": [
+        0.0125,
+        0.012,
+        0.005
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Integral stainless main body",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Liquid solder",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Positive stainless terminal region",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 2
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Negative stainless terminal region",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 3
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Heater sheath envelope",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 4
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Sensor sheath envelope",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 5
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Front SmCo magnet stack",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 6
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Rear SmCo magnet stack",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 7
+          },
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "Integral stainless main body"
+    },
+    {
+      "mesh": 1,
+      "name": "Liquid solder"
+    },
+    {
+      "mesh": 2,
+      "name": "Positive stainless terminal region"
+    },
+    {
+      "mesh": 3,
+      "name": "Negative stainless terminal region"
+    },
+    {
+      "mesh": 4,
+      "name": "Heater sheath envelope"
+    },
+    {
+      "mesh": 5,
+      "name": "Sensor sheath envelope"
+    },
+    {
+      "mesh": 6,
+      "name": "Front SmCo magnet stack"
+    },
+    {
+      "mesh": 7,
+      "name": "Rear SmCo magnet stack"
+    }
+  ],
+  "scenes": [
+    {
+      "nodes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    }
+  ],
+  "scene": 0
+}
