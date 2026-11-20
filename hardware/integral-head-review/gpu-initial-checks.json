@@ -1,26 +1,37 @@
 {
+  "status": "Actual compact-domain preflights used by completed V2 electrical screens",
   "cases": [
     {
-      "adapter": "NVIDIA GeForce RTX 3060 Laptop GPU",
-      "cells": [],
-      "dims": [
-        260,
-        260,
-        210
-      ],
-      "method": "Initial GPU voxelization only; no fluid/electrical timestep",
-      "overlaps": 0
+      "concept": "slotted-arms",
+      "project": "hardware/designs/integral-slotted-arms-v1/electrical-h0100-compact.mhd.json",
+      "native_report": "artifacts/hardware-research/integral-slotted-arms-v2-initial-grid.json",
+      "grid": {
+        "adapter": "NVIDIA GeForce RTX 3060 Laptop GPU",
+        "cells": [],
+        "dims": [
+          204,
+          204,
+          195
+        ],
+        "method": "Initial GPU voxelization only; no fluid/electrical timestep",
+        "overlaps": 0
+      }
     },
     {
-      "adapter": "NVIDIA GeForce RTX 3060 Laptop GPU",
-      "cells": [],
-      "dims": [
-        260,
-        260,
-        210
-      ],
-      "method": "Initial GPU voxelization only; no fluid/electrical timestep",
-      "overlaps": 0
+      "concept": "side-heated",
+      "project": "hardware/designs/integral-side-heated-v1/electrical-h0100-compact.mhd.json",
+      "native_report": "artifacts/hardware-research/integral-side-heated-v2-initial-grid.json",
+      "grid": {
+        "adapter": "NVIDIA GeForce RTX 3060 Laptop GPU",
+        "cells": [],
+        "dims": [
+          204,
+          204,
+          195
+        ],
+        "method": "Initial GPU voxelization only; no fluid/electrical timestep",
+        "overlaps": 0
+      }
     }
   ]
 }
