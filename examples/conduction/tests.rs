@@ -504,3 +504,80 @@ fn detached_translating_conductor_does_not_keep_current_from_its_old_bridge() {
         "Spurious magnetic acceleration of detached conductor: {force:?}"
     );
 }
+
+#[test]
+fn tagged_pair_contact_matches_series_law_and_leaves_other_interface_ideal() {
+    let context = GpuContext::headless().unwrap();
+    let n = 32;
+    let bias = context
+        .device
+        .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Tagged-interface analytic zero field"),
+            contents: bytemuck::cast_slice(&vec![CellField::default(); n]),
+            usage: wgpu::BufferUsages::STORAGE,
+        });
+    // All phases deliberately have identical conductivity. Selection must use
+    // group tags, not conductivity values or liquid/metal flag differences.
+    for (conductivity, h, resistance) in [(1e6_f32, 1e-4_f32, 5e-9_f32), (15., 1e-3, 1e-3)] {
+        let cells: Vec<_> = (0..n)
+            .map(|i| {
+                [
+                    conductivity / 1e6,
+                    if i == 0 {
+                        0.5
+                    } else if i == n - 1 {
+                        -0.5
+                    } else {
+                        2.
+                    },
+                ]
+            })
+            .collect();
+        let groups: Vec<_> = (0..n)
+            .map(|i| {
+                if i < 8 {
+                    14
+                } else if i < 16 {
+                    20
+                } else {
+                    4
+                }
+            })
+            .collect();
+        for (a, b, r) in [(14, 20, resistance), (20, 14, resistance), (14, 20, 0.)] {
+            let mut solver = Conduction::new_with_groups(
+                context.clone(),
+                [n as u32, 1, 1],
+                h,
+                &cells,
+                &bias,
+                Some(&groups),
+            )
+            .unwrap();
+            solver.set_pair_resistivity(a, b, r).unwrap();
+            solver.set_relative_tolerance(1e-7).unwrap();
+            solver.solve().unwrap();
+            let stats = solver.fields(1.).unwrap();
+            let area = f64::from(h).powi(2);
+            let expected_r = (n - 1) as f64 * f64::from(h) / (f64::from(conductivity) * area)
+                + f64::from(r) / area;
+            assert!(
+                (f64::from(stats[0]) * expected_r - 1.).abs() < 2e-5,
+                "{stats:?}, expectedR{expected_r}"
+            );
+            assert!((stats[2] / stats[0] - 1.).abs() < 2e-5, "{stats:?}");
+            assert!(solver.boundary_current_defect <= 1e-5);
+            let phi = solver.read_scalar_solution().unwrap();
+            let face_bulk = f64::from(h) / (f64::from(conductivity) * area);
+            let expected_jump = (face_bulk + f64::from(r) / area) / expected_r;
+            assert!((f64::from(phi[7] - phi[8]) - expected_jump).abs() < 2e-5);
+            assert!((f64::from(phi[15] - phi[16]) - face_bulk / expected_r).abs() < 2e-5);
+        }
+    }
+    let cells = vec![[1., 2.]; n];
+    let mut cells = cells;
+    cells[0][1] = 0.5;
+    cells[n - 1][1] = -0.5;
+    let mut untagged = Conduction::new(context, [n as u32, 1, 1], 1e-4, &cells, &bias).unwrap();
+    assert!(untagged.set_pair_resistivity(14, 20, 1e-9).is_err());
+}

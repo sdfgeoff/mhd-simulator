@@ -1,6 +1,6 @@
 // Research DC conduction: cell-centred finite volumes, insulated exterior,
 // Dirichlet terminal cells, harmonic face conductivity. No CPU field solver.
-struct Params {dims:vec4<u32>,physical:vec4<f32>,control:vec4<u32>,extra:vec4<f32>}
+struct Params {dims:vec4<u32>,physical:vec4<f32>,control:vec4<u32>,extra:vec4<f32>,pair_contact:vec4<f32>}
 struct Field {b:vec4<f32>,j:vec4<f32>,force_heat:vec4<f32>,applied:vec4<f32>}
 @group(0) @binding(0) var<uniform> cfg:Params;
 // x = sigma / 1e6, y = terminal voltage or 2 for an unknown potential.
@@ -19,16 +19,25 @@ fn groups()->u32{return (cfg.dims.w+255u)/256u;}
 fn xyz(i:u32)->vec3<i32>{return vec3<i32>(vec3<u32>(i%cfg.dims.x,(i/cfg.dims.x)%cfg.dims.y,i/(cfg.dims.x*cfg.dims.y)));}
 fn index(q:vec3<i32>)->u32{return u32(q.x)+cfg.dims.x*(u32(q.y)+cfg.dims.y*u32(q.z));}
 fn valid(q:vec3<i32>)->bool{return all(q>=vec3<i32>(0))&&all(q<vec3<i32>(cfg.dims.xyz));}
-fn unknown(i:u32)->bool{return cells[i].x>0.0&&cells[i].y>1.0;}
-fn contact(i:u32,j:u32)->f32{if (cells[i].y==3.0)!=(cells[j].y==3.0){return cfg.physical.w;}return 0.0;}
+// Flags are discrete half/integer values; their low16 mantissa bits carry
+// material group tags without adding a storage buffer or growing each cell.
+fn flag(i:u32)->f32{return bitcast<f32>(bitcast<u32>(cells[i].y)&0xffff0000u);}
+fn material_group(i:u32)->u32{return bitcast<u32>(cells[i].y)&0x0000ffffu;}
+fn unknown(i:u32)->bool{return cells[i].x>0.0&&flag(i)>1.0;}
+fn contact(i:u32,j:u32)->f32{
+ var r=0.0;if (flag(i)==3.0)!=(flag(j)==3.0){r=cfg.physical.w;}
+ if cfg.pair_contact.w!=0.0{let a=material_group(i);let b=material_group(j);let ca=u32(cfg.pair_contact.x);let cb=u32(cfg.pair_contact.y);
+  if (a==ca&&b==cb)||(a==cb&&b==ca){r+=cfg.pair_contact.z;}
+ }return r;
+}
 fn coefficient(i:u32,j:u32)->f32{let a=cells[i].x;let b=cells[j].x;if a<=0.0||b<=0.0{return 0.0;}return 2.0*a*b/(a+b+2.0*contact(i,j)*1e6/cfg.physical.x*a*b);}
-fn terminal(i:u32)->f32{if cfg.control.x==0u{return cells[i].y;}return 0.0;}
+fn terminal(i:u32)->f32{if cfg.control.x==0u{return flag(i);}return 0.0;}
 fn emf(i:u32)->vec3<f32>{if cfg.control.y==0u||cfg.control.x==0u{return vec3<f32>(0.0);}return cross(flow[i].b.xyz,bias[i].b.xyz);}
 fn correction(i:u32)->f32{return unit_potential[i][cfg.control.x+2u];}
 fn raw_difference(i:u32,j:u32)->f32{return (work[i].x-work[j].x)+(correction(i)-correction(j));}
 fn potential_difference(i:u32,j:u32)->f32{let d=raw_difference(i,j);if cfg.control.x==0u{return d*cfg.physical.y;}return d+cfg.physical.y*((unit_potential[i].x-unit_potential[j].x)+(unit_potential[i].z-unit_potential[j].z));}
 @compute @workgroup_size(256)
-fn update_phase(@builtin(global_invocation_id) g:vec3<u32>){let i=g.x;if i<cfg.dims.w&&cfg.control.y!=0u&&cells[i].y==3.0{cells[i].x=clamp(flow[i].applied.z,0.0,1.0)*cfg.extra.x;}}
+fn update_phase(@builtin(global_invocation_id) g:vec3<u32>){let i=g.x;if i<cfg.dims.w&&cfg.control.y!=0u&&flag(i)==3.0{cells[i].x=clamp(flow[i].applied.z,0.0,1.0)*cfg.extra.x;}}
 @compute @workgroup_size(256)
 fn initial_guess(@builtin(global_invocation_id) g:vec3<u32>){let i=g.x;if i<cfg.dims.w{var x=0.0;if unknown(i)&&cfg.control.z!=0u{x=unit_potential[i][cfg.control.x];}else{unit_potential[i][cfg.control.x+2u]=0.0;if cells[i].x>0.0&&!unknown(i){x=terminal(i);}}work[i]=vec4<f32>(x,0.0,0.0,0.0);}}
 @compute @workgroup_size(256)
@@ -44,7 +53,7 @@ fn diagonal(i:u32)->f32{
 }
 fn rhs(i:u32)->f32{
  if !unknown(i){return 0.0;}let q=xyz(i);var b=0.0;
- for(var a=0u;a<3u;a++){for(var sign=-1;sign<=1;sign+=2){var n=q;n[a]+=sign;if valid(n){let j=index(n);if cells[j].y<=1.0{b+=coefficient(i,j)*terminal(j);}b-=cfg.physical.x*coefficient(i,j)*0.5*(emf(i)[a]+emf(j)[a])*f32(sign);}}}
+ for(var a=0u;a<3u;a++){for(var sign=-1;sign<=1;sign+=2){var n=q;n[a]+=sign;if valid(n){let j=index(n);if flag(j)<=1.0{b+=coefficient(i,j)*terminal(j);}b-=cfg.physical.x*coefficient(i,j)*0.5*(emf(i)[a]+emf(j)[a])*f32(sign);}}}
  return b;
 }
 fn matrix_value(i:u32,component:u32)->f32{
@@ -113,7 +122,7 @@ fn collect_fields(@builtin(global_invocation_id) g:vec3<u32>,@builtin(local_invo
  let i=g.x;var stats=vec4<f32>(0.0);if i<cfg.dims.w{
   let h=cfg.physical.x;let scale=cfg.physical.y;var jvec=vec3<f32>(0.0);var power=0.0;var divergence=0.0;let q=xyz(i);
   if cells[i].x>0.0{
-   for(var a=0u;a<3u;a++){for(var sign=-1;sign<=1;sign+=2){var n=q;n[a]+=sign;if valid(n){let k=index(n);let sigma=coefficient(i,k)*1e6;let diff=potential_difference(i,k);let electric=diff/h+0.5*(emf(i)[a]+emf(k)[a])*f32(sign);let outward=sigma*electric;jvec[a]+=0.5*f32(sign)*outward;divergence+=outward/h;power+=0.5*outward*outward*(h*h*h/(cells[i].x*1e6)+h*h*contact(i,k));if cells[i].y==0.5{stats.x+=outward*h*h;}if cells[i].y== -0.5{stats.y+=outward*h*h;}}}}
+   for(var a=0u;a<3u;a++){for(var sign=-1;sign<=1;sign+=2){var n=q;n[a]+=sign;if valid(n){let k=index(n);let sigma=coefficient(i,k)*1e6;let diff=potential_difference(i,k);let electric=diff/h+0.5*(emf(i)[a]+emf(k)[a])*f32(sign);let outward=sigma*electric;jvec[a]+=0.5*f32(sign)*outward;divergence+=outward/h;power+=0.5*outward*outward*(h*h*h/(cells[i].x*1e6)+h*h*contact(i,k));if flag(i)==0.5{stats.x+=outward*h*h;}if flag(i)== -0.5{stats.y+=outward*h*h;}}}}
   }
   let b=bias[i].b;output[i]=Field(b,vec4<f32>(jvec,divergence),vec4<f32>(cross(jvec,b.xyz),power/(h*h*h)),bias[i].applied);stats.z=power;stats.w= -dot(jvec,emf(i))*h*h*h;
  }reduce(stats,l,group.x);

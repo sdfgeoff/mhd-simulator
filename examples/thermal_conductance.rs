@@ -16,13 +16,27 @@ fn solve(
     cells: &[[f32; 2]],
     tol: f32,
 ) -> Result<([f32; 4], Vec<f32>, f32, u32), String> {
+    solve_with_pair(context, dims, h, cells, tol, None)
+}
+fn solve_with_pair(
+    context: GpuContext,
+    dims: [u32; 3],
+    h: f32,
+    cells: &[[f32; 2]],
+    tol: f32,
+    pair: Option<(&[u32], u32, u32, f32)>,
+) -> Result<([f32; 4], Vec<f32>, f32, u32), String> {
     let zero = context.device.create_buffer(&wgpu::BufferDescriptor {
         label: Some("No magnetic or flow field in thermal conduction analogy"),
         size: cells.len() as u64 * 64,
         usage: wgpu::BufferUsages::STORAGE,
         mapped_at_creation: false,
     });
-    let mut solver = conduction::Conduction::new(context, dims, h, cells, &zero)?;
+    let mut solver =
+        conduction::Conduction::new_with_groups(context, dims, h, cells, &zero, pair.map(|v| v.0))?;
+    if let Some((_, a, b, r)) = pair {
+        solver.set_pair_resistivity(a, b, r)?;
+    }
     solver.set_relative_tolerance(tol)?;
     solver.solve()?;
     let stats = solver.fields(1.)?;
@@ -313,6 +327,13 @@ impl BoreBoundary {
     }
 }
 #[derive(serde::Deserialize, serde::Serialize)]
+struct PairContact {
+    group_a: u32,
+    group_b: u32,
+    resistance_m2_k_w: f32,
+    material_groups: std::collections::BTreeMap<u32, u32>,
+}
+#[derive(serde::Deserialize, serde::Serialize)]
 struct IntegralBoundary {
     heater: BoreBoundary,
     sensor: BoreBoundary,
@@ -321,6 +342,8 @@ struct IntegralBoundary {
     label: String,
     #[serde(default)]
     conductivity_by_material_w_m_k: Option<std::collections::BTreeMap<u32, f32>>,
+    #[serde(default)]
+    pair_contact: Option<PairContact>,
 }
 
 // Optimistic bulk-metal heat-delivery screen. The actual heater interface and
@@ -361,6 +384,7 @@ fn integral_pool(args: &[String], gpu: GpuDomain) -> Result<(), Box<dyn Error>> 
                 hot_span_mm: [-5.8, 5.8],
                 label: "Legacy ideal transverse bore wall".into(),
                 conductivity_by_material_w_m_k: None,
+                pair_contact: None,
             },
             5,
             8,
@@ -466,12 +490,26 @@ fn integral_pool(args: &[String], gpu: GpuDomain) -> Result<(), Box<dyn Error>> 
     if hot == 0 || cold == 0 {
         return Err("Missing heater-wall or pool boundary".into());
     }
-    let (stats, potential, residual, iterations) = solve(
+    let groups: Vec<_> = ids
+        .iter()
+        .map(|id| {
+            boundary
+                .pair_contact
+                .as_ref()
+                .and_then(|p| p.material_groups.get(id).copied())
+                .unwrap_or(*id)
+        })
+        .collect();
+    let (stats, potential, residual, iterations) = solve_with_pair(
         gpu.context.clone(),
         grid.dims,
         grid.cell_m,
         &cells,
         tolerance,
+        boundary
+            .pair_contact
+            .as_ref()
+            .map(|p| (groups.as_slice(), p.group_a, p.group_b, p.resistance_m2_k_w)),
     )?;
     let return_error = (stats[0] + stats[1]).abs() / stats[0];
     let energy_error = stats[2] / stats[0] - 1.;

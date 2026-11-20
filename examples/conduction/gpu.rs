@@ -7,7 +7,7 @@ use mhd_workbench::{
 use std::collections::HashMap;
 use wgpu::util::DeviceExt;
 
-pub const SOLVER_VERSION: &str = "conservative-split-f32-v2";
+pub const SOLVER_VERSION: &str = "conservative-split-f32-pair-interface-v3";
 
 #[repr(C)]
 #[derive(Clone, Copy, Pod, Zeroable)]
@@ -16,6 +16,7 @@ struct Params {
     physical: [f32; 4],
     control: [u32; 4],
     extra: [f32; 4],
+    interface: [f32; 4],
 }
 
 pub struct Conduction {
@@ -35,6 +36,7 @@ pub struct Conduction {
     pub unit_boundary_current_defect: f32,
     pub motional_boundary_current_imbalance_a: f32,
     motion_boundary_absolute_tolerance_a: f32,
+    has_material_groups: bool,
 }
 impl Conduction {
     pub fn new(
@@ -44,6 +46,19 @@ impl Conduction {
         cells: &[[f32; 2]],
         bias: &wgpu::Buffer,
     ) -> Result<Self, String> {
+        Self::new_with_groups(context, dims, h, cells, bias, None)
+    }
+    /// Material groups are packed in the unused low16 mantissa bits of the
+    /// discrete flag word. No extra GPU storage/binding is required. Legacy
+    /// callers retain byte-identical cell data and use group zero.
+    pub fn new_with_groups(
+        context: GpuContext,
+        dims: [u32; 3],
+        h: f32,
+        cells: &[[f32; 2]],
+        bias: &wgpu::Buffer,
+        groups: Option<&[u32]>,
+    ) -> Result<Self, String> {
         let n = dims.iter().product::<u32>();
         if cells.len() != n as usize || !h.is_finite() || h <= 0. {
             return Err("Invalid conduction grid".into());
@@ -51,10 +66,28 @@ impl Conduction {
         if !cells.iter().any(|v| v[1] == 0.5) || !cells.iter().any(|v| v[1] == -0.5) {
             return Err("Both terminal regions are required".into());
         }
+        let packed;
+        let properties_cells = if let Some(groups) = groups {
+            if groups.len() != cells.len()
+                || groups.iter().any(|&g| g > 65535)
+                || cells.iter().any(|c| c[1].to_bits() & 0xffff != 0)
+            {
+                return Err("Invalid material groups or non-discrete cell flags".into());
+            }
+            packed = cells
+                .iter()
+                .zip(groups)
+                .map(|(c, g)| [c[0], f32::from_bits(c[1].to_bits() | g)])
+                .collect::<Vec<_>>();
+            &packed[..]
+        } else {
+            cells
+        };
         let params = Params {
             dims: [dims[0], dims[1], dims[2], n],
             physical: [h, 1., 1e-5, 0.],
             control: [0, 0, 1, 0],
+            interface: [0.; 4],
             extra: [
                 cells
                     .iter()
@@ -77,7 +110,7 @@ impl Conduction {
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("DC conductivity and terminals"),
-                contents: bytemuck::cast_slice(cells),
+                contents: bytemuck::cast_slice(properties_cells),
                 usage: wgpu::BufferUsages::STORAGE,
             });
         let storage = |label, size| {
@@ -210,6 +243,7 @@ impl Conduction {
             unit_boundary_current_defect: f32::INFINITY,
             motional_boundary_current_imbalance_a: f32::INFINITY,
             motion_boundary_absolute_tolerance_a: 0.,
+            has_material_groups: groups.is_some(),
         })
     }
     fn dispatch(&self, commands: &[(&str, u32)]) {
@@ -361,6 +395,25 @@ impl Conduction {
             return Err("Invalid contact resistivity".into());
         }
         self.params.physical[3] = resistance_ohm_m2;
+        self.write_params();
+        Ok(())
+    }
+    /// Add an area-specific resistance on faces between just these groups.
+    /// Units are ohm*m² electrically, or m²*K/W in the thermal analogy.
+    /// Liquid/metal resistance remains a separate, additive legacy control.
+    pub fn set_pair_resistivity(&mut self, a: u32, b: u32, value: f32) -> Result<(), String> {
+        if !self.has_material_groups
+            || a == b
+            || a == 0
+            || b == 0
+            || a > 65535
+            || b > 65535
+            || !value.is_finite()
+            || value < 0.
+        {
+            return Err("Invalid pair resistance or missing material groups".into());
+        }
+        self.params.interface = [a as f32, b as f32, value, 1.];
         self.write_params();
         Ok(())
     }

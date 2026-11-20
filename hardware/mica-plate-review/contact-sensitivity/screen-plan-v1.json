@@ -1,0 +1,113 @@
+{
+  "binary": "target/debug/examples/conduction_probe",
+  "binary_sha256": "e6f666949d1631c86395f8745fbba940bdeddf8f49369b6a049037e4c5db6cba",
+  "expected_binary_hashes": {
+    "target/debug/examples/conduction_probe": "e6f666949d1631c86395f8745fbba940bdeddf8f49369b6a049037e4c5db6cba",
+    "target/debug/examples/thermal_conductance": "6a61c63fc2683c5b866e1dee3634f368c300a87c336d9d15cbe90781f9b4952e"
+  },
+  "screen": "mixed",
+  "authorization_replies": [
+    824,
+    836,
+    838,
+    842,
+    851
+  ],
+  "status": "Pair interface analyticGPUchecks and alllegacytestsPASS. ExactexistingCAD, no newgeometry. Zero controls must match priorideal nativefields/metrics before sensitivity conclusions.",
+  "jobs": [
+    {
+      "screen": "electrical",
+      "project": "hardware/designs/mica-flat-plate-head-v1/assembly-h0100.mhd.json",
+      "output": "artifacts/hardware-research/mica-pair-contact-v1-electrical-zero",
+      "command": [
+        "target/debug/examples/conduction_probe",
+        "hardware/designs/mica-flat-plate-head-v1/assembly-h0100.mhd.json",
+        "100",
+        "artifacts/hardware-research/mica-pair-contact-v1-electrical-zero",
+        "0",
+        "body",
+        "1e-7",
+        "0"
+      ]
+    },
+    {
+      "screen": "electrical",
+      "project": "hardware/designs/mica-flat-plate-head-v1/assembly-h0100.mhd.json",
+      "output": "artifacts/hardware-research/mica-pair-contact-v1-electrical-low",
+      "command": [
+        "target/debug/examples/conduction_probe",
+        "hardware/designs/mica-flat-plate-head-v1/assembly-h0100.mhd.json",
+        "100",
+        "artifacts/hardware-research/mica-pair-contact-v1-electrical-low",
+        "0",
+        "body",
+        "1e-7",
+        "3e-09"
+      ]
+    },
+    {
+      "screen": "electrical",
+      "project": "hardware/designs/mica-flat-plate-head-v1/assembly-h0100.mhd.json",
+      "output": "artifacts/hardware-research/mica-pair-contact-v1-electrical-high",
+      "command": [
+        "target/debug/examples/conduction_probe",
+        "hardware/designs/mica-flat-plate-head-v1/assembly-h0100.mhd.json",
+        "100",
+        "artifacts/hardware-research/mica-pair-contact-v1-electrical-high",
+        "0",
+        "body",
+        "1e-7",
+        "3e-08"
+      ]
+    },
+    {
+      "screen": "thermal",
+      "project": "hardware/designs/mica-flat-plate-head-v1/assembly-h0100.mhd.json",
+      "output": "artifacts/hardware-research/mica-pair-contact-v1-thermal-zero",
+      "extra_inputs": [
+        "hardware/mica-plate-review/contact-sensitivity/thermal-zero.json"
+      ],
+      "command": [
+        "target/debug/examples/thermal_conductance",
+        "--integral-pool-config",
+        "hardware/designs/mica-flat-plate-head-v1/assembly-h0100.mhd.json",
+        "hardware/mica-plate-review/contact-sensitivity/thermal-zero.json",
+        "artifacts/hardware-research/mica-pair-contact-v1-thermal-zero",
+        "1e-7"
+      ]
+    },
+    {
+      "screen": "thermal",
+      "project": "hardware/designs/mica-flat-plate-head-v1/assembly-h0100.mhd.json",
+      "output": "artifacts/hardware-research/mica-pair-contact-v1-thermal-low",
+      "extra_inputs": [
+        "hardware/mica-plate-review/contact-sensitivity/thermal-low.json"
+      ],
+      "command": [
+        "target/debug/examples/thermal_conductance",
+        "--integral-pool-config",
+        "hardware/designs/mica-flat-plate-head-v1/assembly-h0100.mhd.json",
+        "hardware/mica-plate-review/contact-sensitivity/thermal-low.json",
+        "artifacts/hardware-research/mica-pair-contact-v1-thermal-low",
+        "1e-7"
+      ]
+    },
+    {
+      "screen": "thermal",
+      "project": "hardware/designs/mica-flat-plate-head-v1/assembly-h0100.mhd.json",
+      "output": "artifacts/hardware-research/mica-pair-contact-v1-thermal-high",
+      "extra_inputs": [
+        "hardware/mica-plate-review/contact-sensitivity/thermal-high.json"
+      ],
+      "command": [
+        "target/debug/examples/thermal_conductance",
+        "--integral-pool-config",
+        "hardware/designs/mica-flat-plate-head-v1/assembly-h0100.mhd.json",
+        "hardware/mica-plate-review/contact-sensitivity/thermal-high.json",
+        "artifacts/hardware-research/mica-pair-contact-v1-thermal-high",
+        "1e-7"
+      ]
+    }
+  ],
+  "limits": "Electricalrho3e-9/3e-8ohm*m2 andthermalR1e-4/1e-3m2K/W are independent sensitivity parameters, NOT measured CuSSjoint ranges. Same exposed face discretization, includesCuSSscrewcontacts, no added resistance atCuportpartitions or liquidmetal. Mica-interface contacts remain ideal; no preload/contact law/temperature/jetting prediction."
+}

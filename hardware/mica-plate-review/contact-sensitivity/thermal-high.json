@@ -1,0 +1,55 @@
+{
+  "heater": {
+    "axis": 0,
+    "centre_mm": [
+      0,
+      5,
+      16
+    ],
+    "void_radius_mm": 1.6,
+    "void_span_mm": [
+      -12.7,
+      12.7
+    ]
+  },
+  "sensor": {
+    "axis": 0,
+    "centre_mm": [
+      0,
+      8.5,
+      19
+    ],
+    "void_radius_mm": 0.6,
+    "void_span_mm": [
+      -12.7,
+      12.7
+    ]
+  },
+  "hot_radius_band_mm": [
+    1.6,
+    1.75
+  ],
+  "hot_span_mm": [
+    -6.7,
+    4.7
+  ],
+  "label": "CuSS thermal interface sensitivity high; parameter study, not measured joint property",
+  "conductivity_by_material_w_m_k": {
+    "14": 15,
+    "16": 394,
+    "17": 394,
+    "19": 0.528,
+    "20": 394,
+    "21": 25
+  },
+  "pair_contact": {
+    "group_a": 14,
+    "group_b": 20,
+    "resistance_m2_k_w": 0.001,
+    "material_groups": {
+      "16": 20,
+      "17": 20,
+      "20": 20
+    }
+  }
+}

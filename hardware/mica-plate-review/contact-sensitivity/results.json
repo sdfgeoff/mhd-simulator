@@ -1,0 +1,469 @@
+{
+  "status": "Allsix nativecasescomplete; fixedCAD/100A electrical; independent thermal interface sensitivity",
+  "all_frozen_hashes_match": true,
+  "zero_control": {
+    "electrical_all_saved_field_words_identical": true,
+    "material_mask_identical": true,
+    "thermal_all_saved_potential_words_identical": true
+  },
+  "electrical": [
+    {
+      "rho_ohm_m2": 0,
+      "native": {
+        "boundary_current_defect": 6.99334705700494e-08,
+        "contact_resistivity_ohm_m2": 0.0,
+        "cu_ss_contact_resistivity_ohm_m2": 0.0,
+        "current_A": 99.99999237060547,
+        "iterations": 1440,
+        "joule_power_W": 8.380677223205566,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          -1.4057391451923057e-06,
+          -0.0002602483307595981,
+          -0.025048940012965627
+        ],
+        "liquid_joule_power_W": 0.2386301512435406,
+        "liquid_mean_By_T": -0.29052280638176864,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 19.313994478178515,
+        "mean_wall_current_over_x_plus_minus_2mm_A": 80.68659089119456,
+        "midplane_adjacent_cell_liquid_current_A": 49.557102298921805,
+        "midplane_adjacent_cell_wall_current_A": 50.443517581876684,
+        "midplane_x_cell_index": 102,
+        "midplane_x_m": 5.000011879019439e-05,
+        "potential_representation": "split f32 high/low",
+        "power_definition": "sum terminal phi*I on both ports",
+        "power_relative_defect": 5.4836273193359375e-06,
+        "project": "hardware/designs/mica-flat-plate-head-v1/assembly-h0100.mhd.json",
+        "released_static_workspace_bytes": 2273866376,
+        "requested_relative_tolerance": 1.0000000116860974e-07,
+        "return_current_A": -99.9999771118164,
+        "solver_version": "conservative-split-f32-pair-interface-v3",
+        "source_power_W": 8.380631446838379,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_boundary": "body",
+        "terminal_voltage_V": 0.08380632847547531,
+        "terminal_x_cell_indices": [
+          10,
+          193
+        ],
+        "true_relative_residual": 9.944838730291394e-09
+      }
+    },
+    {
+      "rho_ohm_m2": 3e-09,
+      "native": {
+        "boundary_current_defect": 8.350448155169943e-08,
+        "contact_resistivity_ohm_m2": 0.0,
+        "cu_ss_contact_resistivity_ohm_m2": 3.000000026176508e-09,
+        "current_A": 99.99999237060547,
+        "iterations": 1472,
+        "joule_power_W": 10.377676010131836,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          -1.360177432481412e-06,
+          -0.0002581036758554871,
+          -0.02447077712490619
+        ],
+        "liquid_joule_power_W": 0.22741227739698458,
+        "liquid_mean_By_T": -0.29052280638176864,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 18.861423348534167,
+        "mean_wall_current_over_x_plus_minus_2mm_A": 81.1396200390431,
+        "midplane_adjacent_cell_liquid_current_A": 48.37903949763676,
+        "midplane_adjacent_cell_wall_current_A": 51.62198349038765,
+        "midplane_x_cell_index": 102,
+        "midplane_x_m": 5.000011879019439e-05,
+        "potential_representation": "split f32 high/low",
+        "power_definition": "sum terminal phi*I on both ports",
+        "power_relative_defect": 1.0013580322265625e-05,
+        "project": "hardware/designs/mica-flat-plate-head-v1/assembly-h0100.mhd.json",
+        "released_static_workspace_bytes": 2273866376,
+        "requested_relative_tolerance": 1.0000000116860974e-07,
+        "return_current_A": -99.99996948242188,
+        "solver_version": "conservative-split-f32-pair-interface-v3",
+        "source_power_W": 10.377572059631348,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_boundary": "body",
+        "terminal_voltage_V": 0.1037757396697998,
+        "terminal_x_cell_indices": [
+          10,
+          193
+        ],
+        "true_relative_residual": 9.74039870982324e-09
+      }
+    },
+    {
+      "rho_ohm_m2": 3e-08,
+      "native": {
+        "boundary_current_defect": 3.764033706943337e-08,
+        "contact_resistivity_ohm_m2": 0.0,
+        "cu_ss_contact_resistivity_ohm_m2": 2.999999892949745e-08,
+        "current_A": 100.0,
+        "iterations": 1472,
+        "joule_power_W": 20.620750427246094,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          -1.3379012074558634e-06,
+          -0.0002562518634262165,
+          -0.02416104782506112
+        ],
+        "liquid_joule_power_W": 0.22157809125336073,
+        "liquid_mean_By_T": -0.29052280638176864,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 18.61995394756027,
+        "mean_wall_current_over_x_plus_minus_2mm_A": 81.38175349607782,
+        "midplane_adjacent_cell_liquid_current_A": 47.754111737646895,
+        "midplane_adjacent_cell_wall_current_A": 52.247547102468886,
+        "midplane_x_cell_index": 102,
+        "midplane_x_m": 5.000011879019439e-05,
+        "potential_representation": "split f32 high/low",
+        "power_definition": "sum terminal phi*I on both ports",
+        "power_relative_defect": 1.6450881958007812e-05,
+        "project": "hardware/designs/mica-flat-plate-head-v1/assembly-h0100.mhd.json",
+        "released_static_workspace_bytes": 2273866376,
+        "requested_relative_tolerance": 1.0000000116860974e-07,
+        "return_current_A": -100.00001525878906,
+        "solver_version": "conservative-split-f32-pair-interface-v3",
+        "source_power_W": 20.620410919189453,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_boundary": "body",
+        "terminal_voltage_V": 0.20620408654212952,
+        "terminal_x_cell_indices": [
+          10,
+          193
+        ],
+        "true_relative_residual": 9.941400591628735e-09
+      }
+    }
+  ],
+  "thermal": [
+    {
+      "resistance_m2_K_W": 0,
+      "native": {
+        "adapter": "NVIDIA GeForce RTX 3060 Laptop GPU",
+        "boundary_geometry": {
+          "conductivity_by_material_w_m_k": {
+            "14": 15.0,
+            "16": 394.0,
+            "17": 394.0,
+            "19": 0.527999997138977,
+            "20": 394.0,
+            "21": 25.0
+          },
+          "heater": {
+            "axis": 0,
+            "centre_mm": [
+              0.0,
+              5.0,
+              16.0
+            ],
+            "void_radius_mm": 1.6,
+            "void_span_mm": [
+              -12.7,
+              12.7
+            ]
+          },
+          "hot_radius_band_mm": [
+            1.6,
+            1.75
+          ],
+          "hot_span_mm": [
+            -6.7,
+            4.7
+          ],
+          "label": "CuSS thermal interface sensitivity zero; parameter study, not measured joint property",
+          "pair_contact": {
+            "group_a": 14,
+            "group_b": 20,
+            "material_groups": {
+              "16": 20,
+              "17": 20,
+              "20": 20
+            },
+            "resistance_m2_k_w": 0.0
+          },
+          "sensor": {
+            "axis": 0,
+            "centre_mm": [
+              0.0,
+              8.5,
+              19.0
+            ],
+            "void_radius_mm": 0.6,
+            "void_span_mm": [
+              -12.7,
+              12.7
+            ]
+          }
+        },
+        "conductance_W_K": 0.05309333652257919,
+        "energy_identity_relative_error": 1.1920928955078125e-07,
+        "heater_centre_xz_mm": [
+          0.0,
+          16.0
+        ],
+        "hot_cells": 15960,
+        "iterations": 2496,
+        "legacy_steel_k_W_m_K": 15.0,
+        "limits": [
+          "Ideal prescribed-temperature bore-wall layer and isothermal pool; optimistic bulk-metal delivery only, not operating temperatures or finite heater power.",
+          "No heater contact/interface resistance, external losses, cable/mount cooling, wire-feed melting, phase change, convection, transient heat capacity or Joule heat.",
+          "Fixed k and one0.1mm grid. Assumed pool loads illustrate thermal resistance; no actual feed demand has been established.",
+          "Air, magnets and floating heater/sensor sheaths are thermally omitted. Temperature is prescribed directly in the steel bore-wall layer; no sheath/interface contact is inferred from sub-cell gaps."
+        ],
+        "liquid_k_W_m_K": 60.5,
+        "method": "Existing GPU finite-volume scalar operator with k; selected heater-bore wall cells +0.5K, entire liquid pool -0.5K, other exterior adiabatic. Optional explicit material k table retained in boundary_geometry.",
+        "pool_boundary_cells": 16228,
+        "project": "hardware/designs/mica-flat-plate-head-v1/assembly-h0100.mhd.json",
+        "requested_relative_tolerance": 1.0000000116860974e-07,
+        "required_delta_K_at_assumed_pool_loads_W": [
+          {
+            "delta_K": 18.834754943847656,
+            "pool_W": 1.0
+          },
+          {
+            "delta_K": 94.17377471923828,
+            "pool_W": 5.0
+          },
+          {
+            "delta_K": 188.34754943847656,
+            "pool_W": 10.0
+          }
+        ],
+        "return_relative_error": 1.403298597324465e-07,
+        "sensor_centre_xz_mm": [
+          0.0,
+          19.0
+        ],
+        "thermal_resistance_K_W": 18.834754943847656,
+        "true_relative_residual": 1.1026382473744434e-08
+      }
+    },
+    {
+      "resistance_m2_K_W": 0.0001,
+      "native": {
+        "adapter": "NVIDIA GeForce RTX 3060 Laptop GPU",
+        "boundary_geometry": {
+          "conductivity_by_material_w_m_k": {
+            "14": 15.0,
+            "16": 394.0,
+            "17": 394.0,
+            "19": 0.527999997138977,
+            "20": 394.0,
+            "21": 25.0
+          },
+          "heater": {
+            "axis": 0,
+            "centre_mm": [
+              0.0,
+              5.0,
+              16.0
+            ],
+            "void_radius_mm": 1.6,
+            "void_span_mm": [
+              -12.7,
+              12.7
+            ]
+          },
+          "hot_radius_band_mm": [
+            1.6,
+            1.75
+          ],
+          "hot_span_mm": [
+            -6.7,
+            4.7
+          ],
+          "label": "CuSS thermal interface sensitivity low; parameter study, not measured joint property",
+          "pair_contact": {
+            "group_a": 14,
+            "group_b": 20,
+            "material_groups": {
+              "16": 20,
+              "17": 20,
+              "20": 20
+            },
+            "resistance_m2_k_w": 9.999999747378752e-05
+          },
+          "sensor": {
+            "axis": 0,
+            "centre_mm": [
+              0.0,
+              8.5,
+              19.0
+            ],
+            "void_radius_mm": 0.6,
+            "void_span_mm": [
+              -12.7,
+              12.7
+            ]
+          }
+        },
+        "conductance_W_K": 0.04855233430862427,
+        "energy_identity_relative_error": 1.1920928955078125e-07,
+        "heater_centre_xz_mm": [
+          0.0,
+          16.0
+        ],
+        "hot_cells": 15960,
+        "iterations": 2528,
+        "legacy_steel_k_W_m_K": 15.0,
+        "limits": [
+          "Ideal prescribed-temperature bore-wall layer and isothermal pool; optimistic bulk-metal delivery only, not operating temperatures or finite heater power.",
+          "No heater contact/interface resistance, external losses, cable/mount cooling, wire-feed melting, phase change, convection, transient heat capacity or Joule heat.",
+          "Fixed k and one0.1mm grid. Assumed pool loads illustrate thermal resistance; no actual feed demand has been established.",
+          "Air, magnets and floating heater/sensor sheaths are thermally omitted. Temperature is prescribed directly in the steel bore-wall layer; no sheath/interface contact is inferred from sub-cell gaps."
+        ],
+        "liquid_k_W_m_K": 60.5,
+        "method": "Existing GPU finite-volume scalar operator with k; selected heater-bore wall cells +0.5K, entire liquid pool -0.5K, other exterior adiabatic. Optional explicit material k table retained in boundary_geometry.",
+        "pool_boundary_cells": 16228,
+        "project": "hardware/designs/mica-flat-plate-head-v1/assembly-h0100.mhd.json",
+        "requested_relative_tolerance": 1.0000000116860974e-07,
+        "required_delta_K_at_assumed_pool_loads_W": [
+          {
+            "delta_K": 20.596332550048828,
+            "pool_W": 1.0
+          },
+          {
+            "delta_K": 102.98165893554688,
+            "pool_W": 5.0
+          },
+          {
+            "delta_K": 205.96331787109375,
+            "pool_W": 10.0
+          }
+        ],
+        "return_relative_error": 0.0,
+        "sensor_centre_xz_mm": [
+          0.0,
+          19.0
+        ],
+        "thermal_resistance_K_W": 20.596332550048828,
+        "true_relative_residual": 1.0912821757358415e-08
+      }
+    },
+    {
+      "resistance_m2_K_W": 0.001,
+      "native": {
+        "adapter": "NVIDIA GeForce RTX 3060 Laptop GPU",
+        "boundary_geometry": {
+          "conductivity_by_material_w_m_k": {
+            "14": 15.0,
+            "16": 394.0,
+            "17": 394.0,
+            "19": 0.527999997138977,
+            "20": 394.0,
+            "21": 25.0
+          },
+          "heater": {
+            "axis": 0,
+            "centre_mm": [
+              0.0,
+              5.0,
+              16.0
+            ],
+            "void_radius_mm": 1.6,
+            "void_span_mm": [
+              -12.7,
+              12.7
+            ]
+          },
+          "hot_radius_band_mm": [
+            1.6,
+            1.75
+          ],
+          "hot_span_mm": [
+            -6.7,
+            4.7
+          ],
+          "label": "CuSS thermal interface sensitivity high; parameter study, not measured joint property",
+          "pair_contact": {
+            "group_a": 14,
+            "group_b": 20,
+            "material_groups": {
+              "16": 20,
+              "17": 20,
+              "20": 20
+            },
+            "resistance_m2_k_w": 0.0010000000474974513
+          },
+          "sensor": {
+            "axis": 0,
+            "centre_mm": [
+              0.0,
+              8.5,
+              19.0
+            ],
+            "void_radius_mm": 0.6,
+            "void_span_mm": [
+              -12.7,
+              12.7
+            ]
+          }
+        },
+        "conductance_W_K": 0.04038998857140541,
+        "energy_identity_relative_error": 1.1920928955078125e-07,
+        "heater_centre_xz_mm": [
+          0.0,
+          16.0
+        ],
+        "hot_cells": 15960,
+        "iterations": 2528,
+        "legacy_steel_k_W_m_K": 15.0,
+        "limits": [
+          "Ideal prescribed-temperature bore-wall layer and isothermal pool; optimistic bulk-metal delivery only, not operating temperatures or finite heater power.",
+          "No heater contact/interface resistance, external losses, cable/mount cooling, wire-feed melting, phase change, convection, transient heat capacity or Joule heat.",
+          "Fixed k and one0.1mm grid. Assumed pool loads illustrate thermal resistance; no actual feed demand has been established.",
+          "Air, magnets and floating heater/sensor sheaths are thermally omitted. Temperature is prescribed directly in the steel bore-wall layer; no sheath/interface contact is inferred from sub-cell gaps."
+        ],
+        "liquid_k_W_m_K": 60.5,
+        "method": "Existing GPU finite-volume scalar operator with k; selected heater-bore wall cells +0.5K, entire liquid pool -0.5K, other exterior adiabatic. Optional explicit material k table retained in boundary_geometry.",
+        "pool_boundary_cells": 16228,
+        "project": "hardware/designs/mica-flat-plate-head-v1/assembly-h0100.mhd.json",
+        "requested_relative_tolerance": 1.0000000116860974e-07,
+        "required_delta_K_at_assumed_pool_loads_W": [
+          {
+            "delta_K": 24.758609771728516,
+            "pool_W": 1.0
+          },
+          {
+            "delta_K": 123.79305267333984,
+            "pool_W": 5.0
+          },
+          {
+            "delta_K": 247.5861053466797,
+            "pool_W": 10.0
+          }
+        ],
+        "return_relative_error": 9.223300878602458e-08,
+        "sensor_centre_xz_mm": [
+          0.0,
+          19.0
+        ],
+        "thermal_resistance_K_W": 24.758609771728516,
+        "true_relative_residual": 1.0525702087704758e-08
+      }
+    }
+  ],
+  "limits": [
+    "Resistance values are sensitivity parameters, not measured hotjoint ranges or preload/oxide law.",
+    "Selectedfaces only: stainlessgroup14 to coppergroup20(includingports16/17). Mica/steel and mica/copper interfacecontacts remain ideal; finite mica bulk resistance included.",
+    "Contactpower is included in nativeJouleheat/energyidentity. Totalpowerchange also includesredistribution ofbulkcurrent, notpurejointheat.",
+    "No transientthermal/fluid/jetting/operatingtemperature result."
+  ]
+}

@@ -1,0 +1,185 @@
+{
+  "scale_assumption": "0.1mm per Blenderunit inferred from mica/Cu object names; actualsceneunits are meters, not used as manufacturingdimensions",
+  "parts": [
+    {
+      "name": "HeatBlock Stainless Steel",
+      "bounds_mm": [
+        [
+          -2.0,
+          -8.0,
+          -0.5
+        ],
+        [
+          2.0,
+          8.0,
+          4.7
+        ]
+      ],
+      "volume_mm3": 241.9935787157027,
+      "status": "Error.NoError",
+      "triangles": 616
+    },
+    {
+      "name": "Molten Tin",
+      "bounds_mm": [
+        [
+          -1.5,
+          -1.5,
+          -0.5
+        ],
+        [
+          1.5,
+          1.5,
+          3.7
+        ]
+      ],
+      "volume_mm3": 22.761574556820335,
+      "status": "Error.NoError",
+      "triangles": 320
+    },
+    {
+      "name": "Magnet",
+      "bounds_mm": [
+        [
+          -7.0,
+          -2.5,
+          -2.5
+        ],
+        [
+          -2.0,
+          2.5,
+          2.5
+        ]
+      ],
+      "volume_mm3": 125.0,
+      "status": "Error.NoError",
+      "triangles": 12
+    },
+    {
+      "name": "Magnet2",
+      "bounds_mm": [
+        [
+          2.0,
+          -2.5,
+          -2.5
+        ],
+        [
+          7.0,
+          2.5,
+          2.5
+        ]
+      ],
+      "volume_mm3": 125.0,
+      "status": "Error.NoError",
+      "triangles": 12
+    },
+    {
+      "name": "0.1mm Mica Sheet",
+      "bounds_mm": [
+        [
+          -1.5,
+          -8.4,
+          -0.10000001192092896
+        ],
+        [
+          1.5,
+          -0.4,
+          1.1920928955078126e-08
+        ]
+      ],
+      "volume_mm3": 2.0878553191919655,
+      "status": "Error.NoError",
+      "triangles": 144
+    },
+    {
+      "name": "0.1mm Mica Sheet.001",
+      "bounds_mm": [
+        [
+          -1.5,
+          0.4,
+          -0.10000001192092896
+        ],
+        [
+          1.5,
+          8.4,
+          1.1920928955078126e-08
+        ]
+      ],
+      "volume_mm3": 2.0878553191919655,
+      "status": "Error.NoError",
+      "triangles": 144
+    },
+    {
+      "name": "0.4mmm Copper Sheet",
+      "bounds_mm": [
+        [
+          -1.5,
+          0.4,
+          -0.5
+        ],
+        [
+          1.5,
+          8.4,
+          -0.1
+        ]
+      ],
+      "volume_mm3": 8.351421467919394,
+      "status": "Error.NoError",
+      "triangles": 144
+    },
+    {
+      "name": "0.4mmm Copper Sheet.001",
+      "bounds_mm": [
+        [
+          -1.5,
+          -8.4,
+          -0.5
+        ],
+        [
+          1.5,
+          -0.4,
+          -0.1
+        ]
+      ],
+      "volume_mm3": 8.351421467919394,
+      "status": "Error.NoError",
+      "triangles": 144
+    },
+    {
+      "name": "M2Bolt",
+      "bounds_mm": [
+        [
+          -1.8,
+          2.199999237060547,
+          -1.80000057220459
+        ],
+        [
+          1.8,
+          5.799999618530274,
+          3.7
+        ]
+      ],
+      "volume_mm3": 26.257601101334846,
+      "status": "Error.NoError",
+      "triangles": 252
+    },
+    {
+      "name": "M2Bolt.001",
+      "bounds_mm": [
+        [
+          -1.8,
+          -5.800000762939454,
+          -1.80000057220459
+        ],
+        [
+          1.8,
+          -2.2000003814697267,
+          3.7
+        ]
+      ],
+      "volume_mm3": 26.25760046094201,
+      "status": "Error.NoError",
+      "triangles": 252
+    }
+  ]
+}
