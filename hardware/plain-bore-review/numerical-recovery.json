@@ -1,0 +1,20 @@
+{
+  "status": "Failed V2 attempt preserved; numerical V3 uses existing tested solver repair, not changed physical parameters",
+  "failure": {
+    "status": "failed",
+    "accepted_steps": 1775,
+    "time_s": 0.0026625000000000745,
+    "error": "DC solve did not converge after 4000 iterations, true residual 0.0000001625009, boundary current defect 0.000031455336",
+    "charge_solver": "conservative-split-f32-v1",
+    "charge_requested_relative_tolerance": 9.999999747378752e-06
+  },
+  "scope": "Failure basis not distinguished by old executable; signature matches known split-potential/near-zero-current issues. Do not claim exact failure basis confirmed.",
+  "earlier_validation": [
+    "hardware/conduction-potential-precision-screening.json",
+    "hardware/conduction-dimensional-current-screening.json",
+    "hardware/rooted-motion-current-baseline-comparison.json"
+  ],
+  "new_solver_sha256": "05500946e657ccd44c9bc032612e3951635974b001c57a8df126354f63a5bac2",
+  "new_plan": "hardware/plain-bore-review/simulation-plan-numerical-v3.json",
+  "repeat_scope": "Only requested2/3mm pair; no new geometry, current, timestep or grid sweep"
+}

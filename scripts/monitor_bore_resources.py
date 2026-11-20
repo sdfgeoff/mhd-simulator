@@ -1,5 +1,6 @@
 """Read-only, one-minute resource snapshots while the approved pair runs."""
 from datetime import datetime
+import argparse
 import json
 from pathlib import Path
 import shutil
@@ -7,8 +8,12 @@ import subprocess
 import time
 
 root=Path('artifacts/hardware-research')
-state=root/'plain-bore-v2-state.json'
-log=root/'plain-bore-v2-resources.jsonl'
+parser=argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--state',type=Path,default=root/'plain-bore-v2-state.json')
+parser.add_argument('--log',type=Path,default=root/'plain-bore-v2-resources.jsonl')
+args=parser.parse_args()
+state=args.state
+log=args.log
 while True:
     row={'time':datetime.now().astimezone().isoformat()}
     try:

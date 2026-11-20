@@ -1,0 +1,62 @@
+{
+  "status": "Same approved pair, numerical recovery with existing validated precision/current-criteria solver",
+  "authorization_reply": 805,
+  "binary": "target/debug/examples/conduction_flow_current_tolerance",
+  "expected_binary_sha256": "05500946e657ccd44c9bc032612e3951635974b001c57a8df126354f63a5bac2",
+  "baseline": "Same executable as completed fine110A rooted reference; no rebuild",
+  "jobs": [
+    {
+      "bore_mm": 2,
+      "output": "artifacts/hardware-research/plain-bore-v3-2mm-flow110-r25-h0050",
+      "command": [
+        "target/debug/examples/conduction_flow_current_tolerance",
+        "hardware/designs/plain-bore-2mm/flow-h0050.mhd.json",
+        "110",
+        "250",
+        "2400",
+        "artifacts/hardware-research/plain-bore-v3-2mm-flow110-r25-h0050",
+        "0",
+        ".25",
+        "1.5",
+        "0",
+        "600",
+        "1.5",
+        "25",
+        "body",
+        "0",
+        "1e-6"
+      ]
+    },
+    {
+      "bore_mm": 3,
+      "output": "artifacts/hardware-research/plain-bore-v3-3mm-flow110-r25-h0050",
+      "command": [
+        "target/debug/examples/conduction_flow_current_tolerance",
+        "hardware/designs/plain-bore-3mm/flow-h0050.mhd.json",
+        "110",
+        "250",
+        "2400",
+        "artifacts/hardware-research/plain-bore-v3-3mm-flow110-r25-h0050",
+        "0",
+        ".25",
+        "1.5",
+        "0",
+        "600",
+        "1.5",
+        "25",
+        "body",
+        "0",
+        "1e-6"
+      ]
+    }
+  ],
+  "scope": "Only this pair authorized; wider research remains paused. These are custom M6-compatible shapes, not stock-subtractive conversions.",
+  "recovery_of_state": "artifacts/hardware-research/plain-bore-v2-state.json",
+  "numerical_change": {
+    "precision": "20 high-word mantissa bits rather than10; previously validated regression fix",
+    "unit_voltage_gate": "unchanged strict10ppm relative",
+    "motional_gate": "relative10ppm plus explicit1uA absolute allowance; previously tested for near-zero current",
+    "local_residual_tolerance": "unchanged",
+    "physical_model_grid_timestep_waveform_geometry": "unchanged"
+  }
+}
