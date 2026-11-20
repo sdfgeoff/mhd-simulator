@@ -1,0 +1,161 @@
+{
+  "status": "Mechanical CAD draft; not a qualified assembly or solver input",
+  "units": "mm",
+  "parts": [
+    {
+      "name": "Turned stainless cartridge",
+      "material": "316 stainless",
+      "volume_mm3": 119.63436814347781
+    },
+    {
+      "name": "Liquid solder",
+      "material": "Sn99.3Cu0.7",
+      "volume_mm3": 16.142526263086815
+    },
+    {
+      "name": "Positive copper clamp jaw",
+      "material": "Copper",
+      "volume_mm3": 1140.5433994146242
+    },
+    {
+      "name": "Left heater sheath envelope",
+      "material": "Heater sheath; internal electrical insulation not yet meshed",
+      "volume_mm3": 150.84577725640196
+    },
+    {
+      "name": "Left sensor sheath envelope",
+      "material": "Sensor sheath; connection/isolation requires selection",
+      "volume_mm3": 15.696751015234334
+    },
+    {
+      "name": "Left copper ring terminal envelope",
+      "material": "Copper ring lug; cable not modeled",
+      "volume_mm3": 5.79210112462147
+    },
+    {
+      "name": "Left terminal screw envelope",
+      "material": "Stainless M3 threaded joint envelope",
+      "volume_mm3": 56.704513042534046
+    },
+    {
+      "name": "Negative copper clamp jaw",
+      "material": "Copper",
+      "volume_mm3": 1140.5433994146242
+    },
+    {
+      "name": "Right heater sheath envelope",
+      "material": "Heater sheath; internal electrical insulation not yet meshed",
+      "volume_mm3": 150.84577725640196
+    },
+    {
+      "name": "Right sensor sheath envelope",
+      "material": "Sensor sheath; connection/isolation requires selection",
+      "volume_mm3": 15.696751015234334
+    },
+    {
+      "name": "Right copper ring terminal envelope",
+      "material": "Copper ring lug; cable not modeled",
+      "volume_mm3": 5.79210112462147
+    },
+    {
+      "name": "Right terminal screw envelope",
+      "material": "Stainless M3 threaded joint envelope",
+      "volume_mm3": 56.704513042534046
+    },
+    {
+      "name": "Clamp 1 ceramic sleeve",
+      "material": "Alumina stock tube envelope; source dimensions pending",
+      "volume_mm3": 64.64549938114104
+    },
+    {
+      "name": "Clamp 1 ceramic washer -1",
+      "material": "Alumina insulating washer envelope",
+      "volume_mm3": 7.911162511678105
+    },
+    {
+      "name": "Clamp 1 ceramic washer 1",
+      "material": "Alumina insulating washer envelope",
+      "volume_mm3": 7.911162511678104
+    },
+    {
+      "name": "Clamp 1 metal bolt and nut envelope",
+      "material": "Stainless fastener",
+      "volume_mm3": 99.18384547751194
+    },
+    {
+      "name": "Clamp 2 ceramic sleeve",
+      "material": "Alumina stock tube envelope; source dimensions pending",
+      "volume_mm3": 64.64549938114104
+    },
+    {
+      "name": "Clamp 2 ceramic washer -1",
+      "material": "Alumina insulating washer envelope",
+      "volume_mm3": 7.911162511678105
+    },
+    {
+      "name": "Clamp 2 ceramic washer 1",
+      "material": "Alumina insulating washer envelope",
+      "volume_mm3": 7.911162511678104
+    },
+    {
+      "name": "Clamp 2 metal bolt and nut envelope",
+      "material": "Stainless fastener",
+      "volume_mm3": 99.18384547751194
+    },
+    {
+      "name": "Front SmCo magnet pole stack",
+      "material": "SmCo; two25x5x5 bars per stack",
+      "volume_mm3": 1250.0
+    },
+    {
+      "name": "Rear SmCo magnet pole stack",
+      "material": "SmCo; two25x5x5 bars per stack",
+      "volume_mm3": 1250.0
+    },
+    {
+      "name": "Aluminium magnet carrier frame",
+      "material": "Aluminium; mounting connection intentionally common within frame",
+      "volume_mm3": 3905.790916869792
+    },
+    {
+      "name": "Mica collar insulating ring",
+      "material": "Mica sheet",
+      "volume_mm3": 1.9181429740616616
+    }
+  ],
+  "overlaps": [],
+  "nominal": {
+    "stem_OD": 3,
+    "chamber_ID": 2,
+    "outlet_ID": 0.4,
+    "outlet_land": 0.6,
+    "collar_z": [
+      17,
+      19
+    ],
+    "jaw_contact_z": [
+      1.3,
+      3.3
+    ],
+    "heater_diameter": 3.1,
+    "heater_length": 20,
+    "bolt": "M2 envelope, y\u00b17 z12.5",
+    "ceramic_sleeve_OD_ID_length": [
+      3,
+      2.2,
+      19.8
+    ],
+    "magnet_gap": 4,
+    "lowest_frame_z": -1.5
+  },
+  "unresolved": [
+    "Carriers represented as a monolithic electrical envelope; machine as rails/end plates with fastened joints, detailed joints/bolt holes pending.",
+    "Heater/sensor solid sheath envelopes have no element/internal insulation model or selected part.",
+    "Insulating sleeve/washer stock dimensions and hot compression limits must be sourced.",
+    "Clamp preload and elastic contact not simulated; current contact resistance pending.",
+    "Top collar is seated via mica; axial retainer and mounting screw details pending.",
+    "Ring lugs and terminal screws are envelopes; lug cable routing, thread contact and actual selected parts pending.",
+    "Manufacturing tolerance and assembly clearance checks require selected parts.",
+    "No electrical, thermal, field or jetting calculation for this assembly."
+  ]
+}
