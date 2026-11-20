@@ -1,14 +1,16 @@
 """Assess ideal bore-wall-to-pool conductance; no operating-temperature calculation."""
-import json
+import argparse,json
 from pathlib import Path
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-out=Path('hardware/integral-head-review');cases=[]
+parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--study',choices=['initial','near'],default='initial');args=parser.parse_args()
+out=Path('hardware/integral-head-review')/('near-heater' if args.study=='near' else '');cases=[]
+inputs=[(k,Path(f'artifacts/hardware-research/integral-{k}-v2-thermal-wall-pool-h0100')) for k in ['slotted-arms','side-heated']] if args.study=='initial' else [('side-heated',Path('artifacts/hardware-research/integral-side-heated-v2-thermal-wall-pool-h0100')),('side-heated-near',Path('artifacts/hardware-research/integral-side-heated-near-v2-thermal-wall-pool-h0100'))]
 fig,axes=plt.subplots(1,2,figsize=(12,8));fig.subplots_adjust(left=.06,right=.90,top=.85,bottom=.25,wspace=.30)
-for ax,kind in zip(axes,['slotted-arms','side-heated']):
-    run=Path(f'artifacts/hardware-research/integral-{kind}-v2-thermal-wall-pool-h0100');r=json.loads((run/'report.json').read_text());g=json.loads((run/'grid.json').read_text());nx,ny,nz=g['dims'];h=g['cell_m'];origin=np.array(g['origin_m']);f=np.memmap(run/'potential.bin',dtype='<f4',mode='r',shape=(nz,ny,nx));ids=np.memmap(run/'material-ids.bin',dtype='<u4',mode='r',shape=(nz,ny,nx));x=(origin[0]+(np.arange(nx)+.5)*h)*1000;z=(origin[2]+(np.arange(nz)+.5)*h)*1000;hx,hz=r['heater_centre_xz_mm'];X,Z=np.meshgrid(x,z);excluded=(np.hypot(X-hx,Z-hz)<1.6)|(np.hypot(X-(hx+2.5),Z-hz)<.6)
+for ax,(kind,run) in zip(axes,inputs):
+    r=json.loads((run/'report.json').read_text());g=json.loads((run/'grid.json').read_text());nx,ny,nz=g['dims'];h=g['cell_m'];origin=np.array(g['origin_m']);f=np.memmap(run/'potential.bin',dtype='<f4',mode='r',shape=(nz,ny,nx));ids=np.memmap(run/'material-ids.bin',dtype='<u4',mode='r',shape=(nz,ny,nx));x=(origin[0]+(np.arange(nx)+.5)*h)*1000;z=(origin[2]+(np.arange(nz)+.5)*h)*1000;hx,hz=r['heater_centre_xz_mm'];X,Z=np.meshgrid(x,z);sx,sz=r.get('sensor_centre_xz_mm',[hx+2.5,hz]);excluded=(np.hypot(X-hx,Z-hz)<1.6)|(np.hypot(X-sx,Z-sz)<.6)
     lo=1.;hi=0.
     for k in range(nz):
         mask=np.isin(ids[k],[4,14,16,17])&~excluded[k][None,:];v=f[k][mask]+.5
@@ -23,7 +25,7 @@ for ax,kind in zip(axes,['slotted-arms','side-heated']):
 cax=fig.add_axes([.92,.30,.018,.48]);fig.colorbar(im,cax=cax,label='(T − Tpool) / (Theater wall − Tpool)')
 fig.suptitle('Optimistic heat delivery through the stainless body',fontsize=17,y=.97)
 fig.text(.5,.90,'Prescribed bore-wall temperature · isothermal pool · adiabatic exterior · fixed steel k = 15 W/(m K)',ha='center',fontsize=11)
-fig.text(.5,.12,'Each 1 W delivered to the pool requires about 96.5 K / 15.0 K wall-to-pool difference, respectively.\nThese are unit-conductance fields, not predicted operating temperatures or demonstrated heater powers.\nHeater/interface resistance, external losses, Joule heat, feed melting and magnet thermal paths are omitted.',ha='center',fontsize=10)
+fig.text(.5,.12,f'Each 1 W delivered to the pool requires about {cases[0]["native"]["thermal_resistance_K_W"]:.1f} K / {cases[1]["native"]["thermal_resistance_K_W"]:.1f} K wall-to-pool difference, respectively.\nThese are unit-conductance fields, not predicted operating temperatures or demonstrated heater powers.\nHeater/interface resistance, external losses, Joule heat, feed melting and magnet thermal paths are omitted.',ha='center',fontsize=10)
 fig.text(.5,.025,'Ideal body-wall boundary avoids assuming thermal contact across sub-cell heater/sensor gaps; floating sheaths are omitted from this thermal screen.',ha='center',fontsize=9)
 fig.savefig(out/'thermal-results.png',dpi=160);plt.close(fig)
 (out/'thermal-results.json').write_text(json.dumps({'status':'Completed optimistic bulk-metal conduction screens; not full heat balance','cases':cases},indent=2)+'\n');print(json.dumps([{'concept':c['concept'],'R_K_W':c['native']['thermal_resistance_K_W'],'range':c['normalized_body_temperature_range']} for c in cases],indent=2))

@@ -1,0 +1,33 @@
+{
+  "binary": "target/debug/examples/conduction_probe",
+  "binary_sha256": "556fd2025833dda765387e91f60ec64d3c411ce3a6fcb67a191be185a0fb6b8a",
+  "expected_binary_hashes": {
+    "target/debug/examples/conduction_probe": "556fd2025833dda765387e91f60ec64d3c411ce3a6fcb67a191be185a0fb6b8a",
+    "target/debug/examples/thermal_conductance": "76d39f27a757b294df1c79e407b7ab6301694ea5032a77230bcfb37f536919fa"
+  },
+  "screen": "mixed",
+  "status": "GPU preflight zero overlaps; compare whole revised layout at100A plus ideal wall-to-pool conductance",
+  "jobs": [
+    {
+      "screen": "electrical",
+      "project": "hardware/designs/integral-side-heated-near-v1/electrical-h0100-compact.mhd.json",
+      "output": "artifacts/hardware-research/integral-side-heated-near-v1-cold100-h0100"
+    },
+    {
+      "screen": "thermal",
+      "project": "hardware/designs/integral-side-heated-near-v1/electrical-h0100-compact.mhd.json",
+      "output": "artifacts/hardware-research/integral-side-heated-near-v1-thermal-wall-pool-h0100",
+      "command": [
+        "target/debug/examples/thermal_conductance",
+        "--integral-pool",
+        "hardware/designs/integral-side-heated-near-v1/electrical-h0100-compact.mhd.json",
+        "-4",
+        "8.5",
+        "artifacts/hardware-research/integral-side-heated-near-v1-thermal-wall-pool-h0100",
+        "-7",
+        "8.5"
+      ]
+    }
+  ],
+  "limits": "Staticonegrid, idealcontinuity; thermalunitconductanceomitsJoule/feed/contacts/losses, notoperatingtemps. Terminal/sensor/returnpadchangescoupled."
+}

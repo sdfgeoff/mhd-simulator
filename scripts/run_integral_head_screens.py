@@ -14,7 +14,10 @@ for proc in Path('/proc').iterdir():
     if re.fullmatch(r'(?:.*/)?(?:conduction_flow(?:_precision|_current_tolerance|_energy)?|hardware_probe(?:_tail|_decay)?|conduction_probe|applied_probe|thermal_conductance)',arg):raise RuntimeError('Existing native compute '+proc.name)
 plan=json.loads(args.plan.read_text());assert hashlib.sha256(Path(plan['binary']).read_bytes()).hexdigest()==plan['binary_sha256'],'Binary differs from plan'
 paths=[Path(__file__),args.plan,Path(plan['binary']),Path('target/debug/examples/adapter_inventory'),Path(env['VK_DRIVER_FILES'])]
+for path,digest in plan.get('expected_binary_hashes',{}).items():
+    assert hashlib.sha256(Path(path).read_bytes()).hexdigest()==digest,'Binary differs from plan: '+path
 for job in plan['jobs']:
+    paths.append(Path(job.get('command',[plan['binary']])[0]))
     p=Path(job['project']);g=Path(json.loads(p.read_text())['geometry']);paths.extend([p,g,*[g.parent/b['uri'] for b in json.loads(g.read_text())['buffers']]])
     assert not Path(job['output']).exists() and not Path(job['output']+'.log').exists(),'Existing result'
 hashes={str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}
@@ -35,8 +38,8 @@ try:
             code=native.wait()
         if code:raise RuntimeError(f'Native exit {code}; preserve failure')
         r=json.loads((Path(job['output'])/'report.json').read_text())
-        assert r['true_relative_residual']<=1.1e-6
-        if plan.get('screen','electrical')=='thermal':
+        assert r['true_relative_residual']<=1.1*r.get('requested_relative_tolerance',1e-6)
+        if job.get('screen',plan.get('screen','electrical'))=='thermal':
             assert r['conductance_W_K']>0 and r['return_relative_error']<=1e-5 and abs(r['energy_identity_relative_error'])<=1e-4
         else:
             assert abs(r['current_A']/100-1)<1e-4 and r['boundary_current_defect']<=1e-5 and abs(r['power_relative_defect'])<=1e-4

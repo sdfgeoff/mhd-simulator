@@ -1,0 +1,27 @@
+{
+  "binary": "target/debug/examples/thermal_conductance",
+  "binary_sha256": "d03d9b8ecb77367f99c4067c9932fcba4f0e8ddad158191054934433e9971619",
+  "expected_binary_hashes": {
+    "target/debug/examples/thermal_conductance": "d03d9b8ecb77367f99c4067c9932fcba4f0e8ddad158191054934433e9971619"
+  },
+  "screen": "thermal",
+  "jobs": [
+    {
+      "screen": "thermal",
+      "project": "hardware/designs/integral-side-heated-near-v1/electrical-h0100-compact.mhd.json",
+      "output": "artifacts/hardware-research/integral-side-heated-near-v2-thermal-wall-pool-h0100",
+      "command": [
+        "target/debug/examples/thermal_conductance",
+        "--integral-pool",
+        "hardware/designs/integral-side-heated-near-v1/electrical-h0100-compact.mhd.json",
+        "-4",
+        "8.5",
+        "artifacts/hardware-research/integral-side-heated-near-v2-thermal-wall-pool-h0100",
+        "-7",
+        "8.5",
+        "1e-7"
+      ]
+    }
+  ],
+  "recovery": "V1electricalcompleted and remainsvalid; V1thermal missedUNCHANGEDone-port10ppmheatgateat11.405ppm. Re-runTHERMALONLY withtightertrueresidual1e-7, samePDE/grid/CAD/boundaries/no gate relaxation; freshoutputs."
+}

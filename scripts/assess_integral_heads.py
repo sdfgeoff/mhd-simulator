@@ -1,15 +1,17 @@
 """Read completed native static fields; current/force/Joule diagnostics, no field solver."""
-import json,hashlib
+import argparse,json,hashlib
 from pathlib import Path
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
-root=Path('artifacts/hardware-research');out=Path('hardware/integral-head-review');cases=[]
+parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--study',choices=['initial','near'],default='initial');args=parser.parse_args()
+root=Path('artifacts/hardware-research');out=Path('hardware/integral-head-review')/('near-heater' if args.study=='near' else '');cases=[]
+inputs=[(k,root/f'integral-{k}-v2-cold100-h0100') for k in ['slotted-arms','side-heated']] if args.study=='initial' else [('side-heated',root/'integral-side-heated-v2-cold100-h0100'),('side-heated-near',root/'integral-side-heated-near-v1-cold100-h0100')]
 fig,axes=plt.subplots(2,3,figsize=(14,10));fig.subplots_adjust(left=.06,right=.94,top=.87,bottom=.15,wspace=.4,hspace=.35)
-for row,kind in enumerate(['slotted-arms','side-heated']):
-    run=root/f'integral-{kind}-v2-cold100-h0100';report=json.loads((run/'report.json').read_text());grid=json.loads((run/'grid.json').read_text());nx,ny,nz=grid['dims'];h=grid['cell_m'];origin=np.array(grid['origin_m']);field=np.memmap(run/'em.bin',dtype='<f4',mode='r',shape=(nz,ny,nx,16));ids=np.memmap(run/'material-ids.bin',dtype='<u4',mode='r',shape=(nz,ny,nx))
+for row,(kind,run) in enumerate(inputs):
+    report=json.loads((run/'report.json').read_text());grid=json.loads((run/'grid.json').read_text());nx,ny,nz=grid['dims'];h=grid['cell_m'];origin=np.array(grid['origin_m']);field=np.memmap(run/'em.bin',dtype='<f4',mode='r',shape=(nz,ny,nx,16));ids=np.memmap(run/'material-ids.bin',dtype='<u4',mode='r',shape=(nz,ny,nx))
     assert report['boundary_current_defect']<=1e-5 and abs(report['power_relative_defect'])<=1e-4
     sums={};maximums={}
     for mid in [4,14,16,17,18]:

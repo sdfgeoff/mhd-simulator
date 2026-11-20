@@ -1,4 +1,27 @@
-# Side-heated body with the heater closer to the pool
+# Nearer-heater revision: completed initial screens
+
+| Quantity at stationary 100 A | Original side-heated | Revised layout |
+|---|---:|---:|
+| Head voltage | 0.1775 V | 0.1817 V |
+| Instantaneous Joule heat | 17.75 W | 18.17 W |
+| Sampled centre-plane liquid current | 63.40 A | 63.05 A |
+| Downward integrated liquid force | 38.34 mN | 38.15 mN |
+| Lateral integrated force magnitude | 30.76 mN | 31.05 mN |
+| Optimistic wall-to-pool thermal resistance | 14.99 K/W | 12.45 K/W |
+
+1. Moving the heat source nearer improves ideal conductance by about 20%, or reduces resistance by about 17%. Electrical behavior is similar, with slightly greater resistive loss in the revised machining layout. The asymmetric liquid forcing remains. This is not a jetting result.
+2. Both calculations retain the complete current-carrying body and the full prescribed magnet sources. All original screen assumptions and omissions still apply. The thermal result is an ideal body-wall-to-isothermal-pool conductance, not an operating temperature or finite-power/feed calculation.
+3. The first revised thermal attempt returned a one-port heat imbalance of 11.405 ppm, exceeding the unchanged 10 ppm acceptance gate. It is preserved as a failed attempt. Re-running only the thermal solve at tighter true-residual tolerance (1e-7 instead of 1e-6), with the same geometry/PDE/boundaries and unchanged gate, passed at about 0.278 ppm heat imbalance. The completed electrical result was reused, not repeated. [Recovery plan](thermal-recovery-plan-v2.json).
+4. Both exported normalized thermal fields obey the maximum principle; electrical Joule integration and energy checks pass. Results are from one 0.1 mm grid. No driver transient, moving-fluid, feed, magnet-temperature or repeated-operation qualification is claimed.
+
+![Native current/heat/force comparison](electrical-results.png)
+
+![Optimistic conductance comparison](thermal-results.png)
+
+[Electrical metrics](electrical-results.json), [thermal metrics](thermal-results.json). The moderate heat-delivery improvement does not remove the stainless bottleneck; next assess broad flat copper plates mounted through mica, without bent fingers or separate heated jaws.
+
+## CAD and machining revision
+
 
 Manufacture-first revision under topic 25 replies 842/838. The nominal electrical screen remains 100 A. No copper busbars are added.
 

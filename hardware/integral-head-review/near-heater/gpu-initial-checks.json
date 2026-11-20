@@ -1,0 +1,11 @@
+{
+  "adapter": "NVIDIA GeForce RTX 3060 Laptop GPU",
+  "cells": [],
+  "dims": [
+    204,
+    204,
+    195
+  ],
+  "method": "Initial GPU voxelization only; no fluid/electrical timestep",
+  "overlaps": 0
+}

@@ -291,6 +291,7 @@ fn integral_pool(args: &[String], gpu: GpuDomain) -> Result<(), Box<dyn Error>> 
         .transpose()?
         .unwrap_or(hx + 2.5);
     let sz: f64 = args.get(7).map(|v| v.parse()).transpose()?.unwrap_or(hz);
+    let tolerance: f32 = args.get(8).map(|v| v.parse()).transpose()?.unwrap_or(1e-6);
     if !hx.is_finite() || !hz.is_finite() || !sx.is_finite() || !sz.is_finite() {
         return Err("Finite heater centre required".into());
     }
@@ -362,12 +363,17 @@ fn integral_pool(args: &[String], gpu: GpuDomain) -> Result<(), Box<dyn Error>> 
     if hot == 0 || cold == 0 {
         return Err("Missing heater-wall or pool boundary".into());
     }
-    let (stats, potential, residual, iterations) =
-        solve(gpu.context.clone(), grid.dims, grid.cell_m, &cells, 1e-6)?;
+    let (stats, potential, residual, iterations) = solve(
+        gpu.context.clone(),
+        grid.dims,
+        grid.cell_m,
+        &cells,
+        tolerance,
+    )?;
     let return_error = (stats[0] + stats[1]).abs() / stats[0];
     let energy_error = stats[2] / stats[0] - 1.;
     if stats[0] <= 0. || return_error > 1e-5 || energy_error.abs() > 1e-4 {
-        return Err(format!("Thermal conductance checks failed: {stats:?}, return={return_error}, energy={energy_error}").into());
+        return Err(format!("Thermal conductance checks failed: {stats:?}, return={return_error}, energy={energy_error}, true_residual={residual}, iterations={iterations}").into());
     }
     let assumed_loads =
         [1_f32, 5., 10.].map(|w| serde_json::json!({"pool_W":w,"delta_K":w/stats[0]}));
@@ -378,6 +384,7 @@ fn integral_pool(args: &[String], gpu: GpuDomain) -> Result<(), Box<dyn Error>> 
         "hot_cells":hot,"pool_boundary_cells":cold,"steel_k_W_m_K":15.,"liquid_k_W_m_K":liquid_k,
         "conductance_W_K":stats[0],"thermal_resistance_K_W":1./stats[0],"return_relative_error":return_error,
         "energy_identity_relative_error":energy_error,"true_relative_residual":residual,"iterations":iterations,
+        "requested_relative_tolerance":tolerance,
         "required_delta_K_at_assumed_pool_loads_W": assumed_loads,
         "limits":["Ideal prescribed-temperature bore-wall layer and isothermal pool; optimistic bulk-metal delivery only, not operating temperatures or finite heater power.","No heater contact/interface resistance, external losses, cable/mount cooling, wire-feed melting, phase change, convection, transient heat capacity or Joule heat.","Fixed k and one0.1mm grid. Assumed pool loads illustrate thermal resistance; no actual feed demand has been established.","Air, magnets and floating heater/sensor sheaths are thermally omitted. Temperature is prescribed directly in the steel bore-wall layer; no sheath/interface contact is inferred from sub-cell gaps."]
     });
