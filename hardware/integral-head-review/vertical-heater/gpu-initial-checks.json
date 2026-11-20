@@ -1,0 +1,17 @@
+{
+  "GPU_initial_report": {
+    "adapter": "NVIDIA GeForce RTX 3060 Laptop GPU",
+    "cells": [],
+    "dims": [
+      214,
+      124,
+      285
+    ],
+    "method": "Initial GPU voxelization only; no fluid/electrical timestep",
+    "overlaps": 0
+  },
+  "CPU_loader_passed": true,
+  "thermal_GPU_analytic_checks": "k15/k30uniform rods and metal/mica/metal series passed",
+  "thermal_geometry_unit_checks": "axis permutation invariant; finite vertical span retains drill floor, excludes floating sheath; invalid axis rejected",
+  "domain_scope": "Full connected steel and pool. Only isolated outer magnet/sensor occupancy cropped; all PM source surfaces retained."
+}

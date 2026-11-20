@@ -18,11 +18,12 @@ for path,digest in plan.get('expected_binary_hashes',{}).items():
     assert hashlib.sha256(Path(path).read_bytes()).hexdigest()==digest,'Binary differs from plan: '+path
 for job in plan['jobs']:
     paths.append(Path(job.get('command',[plan['binary']])[0]))
+    paths.extend(Path(p) for p in job.get('extra_inputs',[]))
     p=Path(job['project']);g=Path(json.loads(p.read_text())['geometry']);paths.extend([p,g,*[g.parent/b['uri'] for b in json.loads(g.read_text())['buffers']]])
     assert not Path(job['output']).exists() and not Path(job['output']+'.log').exists(),'Existing result'
 hashes={str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}
 def record(**values):
-    p=state.with_suffix('.new');p.write_text(json.dumps({'time':datetime.now().astimezone().isoformat(),'controller_pid':os.getpid(),'authorization_replies':[824,838,842],'hashes':hashes,'plan':str(args.plan),**values},indent=2)+'\n');p.replace(state)
+    p=state.with_suffix('.new');p.write_text(json.dumps({'time':datetime.now().astimezone().isoformat(),'controller_pid':os.getpid(),'authorization_replies':plan.get('authorization_replies',[824,838,842]),'hashes':hashes,'plan':str(args.plan),**values},indent=2)+'\n');p.replace(state)
 record(stage='preflight')
 try:
     inv=json.loads(subprocess.check_output(['target/debug/examples/adapter_inventory'],env=env,text=True));assert len(inv['vulkan_adapters'])==1 and inv['vulkan_adapters'][0]['vendor']==0x10de

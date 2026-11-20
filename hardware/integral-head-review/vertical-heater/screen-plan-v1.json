@@ -1,0 +1,57 @@
+{
+  "binary": "target/debug/examples/conduction_probe",
+  "binary_sha256": "556fd2025833dda765387e91f60ec64d3c411ce3a6fcb67a191be185a0fb6b8a",
+  "expected_binary_hashes": {
+    "target/debug/examples/conduction_probe": "556fd2025833dda765387e91f60ec64d3c411ce3a6fcb67a191be185a0fb6b8a",
+    "target/debug/examples/thermal_conductance": "69de7c00ab473a9effa497c2b4613286ab85a7460c3d1f435fa08b8850d3f98f"
+  },
+  "screen": "mixed",
+  "authorization_replies": [
+    824,
+    836,
+    838,
+    842,
+    848
+  ],
+  "status": "Actual project loader passes, GPU voxel overlaps0; nominal100A electrical and ideal/active-span wall conductance controls",
+  "jobs": [
+    {
+      "screen": "electrical",
+      "project": "hardware/designs/integral-vertical-heater-v2/electrical-h0100-compact.mhd.json",
+      "output": "artifacts/hardware-research/integral-vertical-heater-v2-cold100-h0100"
+    },
+    {
+      "screen": "thermal",
+      "project": "hardware/designs/integral-vertical-heater-v2/electrical-h0100-compact.mhd.json",
+      "output": "artifacts/hardware-research/integral-vertical-heater-v2-thermal-ideal-h0100",
+      "extra_inputs": [
+        "hardware/integral-head-review/vertical-heater/thermal-boundary-ideal.json"
+      ],
+      "command": [
+        "target/debug/examples/thermal_conductance",
+        "--integral-pool-config",
+        "hardware/designs/integral-vertical-heater-v2/electrical-h0100-compact.mhd.json",
+        "hardware/integral-head-review/vertical-heater/thermal-boundary-ideal.json",
+        "artifacts/hardware-research/integral-vertical-heater-v2-thermal-ideal-h0100",
+        "1e-7"
+      ]
+    },
+    {
+      "screen": "thermal",
+      "project": "hardware/designs/integral-vertical-heater-v2/electrical-h0100-compact.mhd.json",
+      "output": "artifacts/hardware-research/integral-vertical-heater-v2-thermal-active-span-h0100",
+      "extra_inputs": [
+        "hardware/integral-head-review/vertical-heater/thermal-boundary-active-span.json"
+      ],
+      "command": [
+        "target/debug/examples/thermal_conductance",
+        "--integral-pool-config",
+        "hardware/designs/integral-vertical-heater-v2/electrical-h0100-compact.mhd.json",
+        "hardware/integral-head-review/vertical-heater/thermal-boundary-active-span.json",
+        "artifacts/hardware-research/integral-vertical-heater-v2-thermal-active-span-h0100",
+        "1e-7"
+      ]
+    }
+  ],
+  "limits": "Stationary0.1mm grid; full connected steel and full magnet sources. Active-span control prescribes steel wall temperature only; no cartridge internal conduction/contact/power/heat balance. No fluid time integration."
+}

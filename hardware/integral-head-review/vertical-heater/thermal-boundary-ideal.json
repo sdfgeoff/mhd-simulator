@@ -1,0 +1,37 @@
+{
+  "heater": {
+    "axis": 2,
+    "centre_mm": [
+      -4,
+      0,
+      0
+    ],
+    "void_radius_mm": 1.6,
+    "void_span_mm": [
+      2.4,
+      28.1
+    ]
+  },
+  "sensor": {
+    "axis": 1,
+    "centre_mm": [
+      -7,
+      0,
+      8.5
+    ],
+    "void_radius_mm": 0.6,
+    "void_span_mm": [
+      -10,
+      10
+    ]
+  },
+  "hot_radius_band_mm": [
+    1.6,
+    1.75
+  ],
+  "hot_span_mm": [
+    2.6,
+    27.8
+  ],
+  "label": "ideal vertical prescribed bore-wall temperature, not finite heater model"
+}

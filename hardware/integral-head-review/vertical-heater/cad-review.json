@@ -1,0 +1,51 @@
+{
+  "concept": "vertical-heater",
+  "solid_components": 1,
+  "solid_volume_mm3": 2827.2057555293923,
+  "pool_volume_mm3": 16.142526263086815,
+  "CPU_overlaps": 0,
+  "heater_axis": "z",
+  "heater_centre_xy_mm": [
+    -4,
+    0
+  ],
+  "heater_sheath_span_z_mm": [
+    2.6,
+    28.0
+  ],
+  "heater_bore_radius_mm": 1.6,
+  "heater_bore_straight_bottom_z_mm": 2.4,
+  "drill_tip_bottom_z_mm": 1.4386230095559034,
+  "bottom_floor_min_mm": 1.0386230095559035,
+  "inter_bore_min_wall_mm": 1.4,
+  "lower_side_wall_mm": 0.9,
+  "heater_to_left_terminal_drill_point_gap_mm": 1.5489242262155507,
+  "sensor_axis": "y",
+  "sensor_centre_xz_mm": [
+    -7,
+    8.5
+  ],
+  "pole_gap_mm": 6,
+  "heater_source": "https://www.hotset.com/wp-content/uploads/2024/09/hotrod-hhp_09_2024_EN_web.pdf",
+  "heater_family_nominal_mm": [
+    3.1,
+    25.4
+  ],
+  "unheated_tip_mm": 6,
+  "unheated_lead_end_mm": 8,
+  "nominal_winding_span_z_mm": [
+    8.6,
+    20.0
+  ],
+  "pool_span_z_mm": [
+    0,
+    6
+  ],
+  "central_feed_bore_top_mm": 14,
+  "outer_body_span_mm": [
+    21,
+    12,
+    28
+  ],
+  "scope": "CPU CAD only. Catalogue family envelope, not selected stock part or winding-tolerance qualification. Terminal threads, heater retention, leads, carriers and mounts not detailed. Nominal1.04mm drill floor/1.55mm terminal drill clearance need tolerance review. Cropped only isolated sheath/magnet occupancy; full connected current-carrying steel retained. PM source geometry complete. No jetting/operating-temperature claim."
+}

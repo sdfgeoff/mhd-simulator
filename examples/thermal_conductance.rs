@@ -124,7 +124,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         );
         return Ok(());
     }
-    if args.get(1).is_some_and(|x| x == "--integral-pool") {
+    if args
+        .get(1)
+        .is_some_and(|x| x == "--integral-pool" || x == "--integral-pool-config")
+    {
         return integral_pool(&args, gpu);
     }
     let p = project::load(Path::new(args.get(1).ok_or(
@@ -277,25 +280,110 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+#[derive(Clone, serde::Deserialize, serde::Serialize)]
+struct BoreBoundary {
+    axis: usize,
+    centre_mm: [f64; 3],
+    void_radius_mm: f64,
+    void_span_mm: [f64; 2],
+}
+impl BoreBoundary {
+    fn validate(&self) -> Result<(), Box<dyn Error>> {
+        if self.axis > 2
+            || !self.centre_mm.iter().all(|v| v.is_finite())
+            || !self.void_radius_mm.is_finite()
+            || self.void_radius_mm <= 0.
+            || !self.void_span_mm.iter().all(|v| v.is_finite())
+            || self.void_span_mm[0] >= self.void_span_mm[1]
+        {
+            return Err("Invalid bore boundary geometry".into());
+        }
+        Ok(())
+    }
+    fn radial(&self, xyz: &[f64]) -> f64 {
+        (0..3)
+            .filter(|&j| j != self.axis)
+            .map(|j| (xyz[j] - self.centre_mm[j]).powi(2))
+            .sum::<f64>()
+            .sqrt()
+    }
+    fn excludes(&self, xyz: &[f64]) -> bool {
+        self.radial(xyz) < self.void_radius_mm
+            && (self.void_span_mm[0]..=self.void_span_mm[1]).contains(&xyz[self.axis])
+    }
+}
+#[derive(serde::Deserialize, serde::Serialize)]
+struct IntegralBoundary {
+    heater: BoreBoundary,
+    sensor: BoreBoundary,
+    hot_radius_band_mm: [f64; 2],
+    hot_span_mm: [f64; 2],
+    label: String,
+}
+
 // Optimistic bulk-metal heat-delivery screen. The actual heater interface and
 // exterior losses are deliberately excluded and stated in the output.
 fn integral_pool(args: &[String], gpu: GpuDomain) -> Result<(), Box<dyn Error>> {
     let path = args
         .get(2)
         .ok_or("--integral-pool PROJECT HX_MM HZ_MM OUTPUT_DIR [SX_MM SZ_MM]")?;
-    let hx: f64 = args.get(3).ok_or("Missing heater x")?.parse()?;
-    let hz: f64 = args.get(4).ok_or("Missing heater z")?.parse()?;
-    let sx: f64 = args
-        .get(6)
+    let configured = args[1] == "--integral-pool-config";
+    let (boundary, output_index, tolerance_index) = if configured {
+        let cfg: IntegralBoundary =
+            serde_json::from_slice(&std::fs::read(args.get(3).ok_or("Missing boundary JSON")?)?)?;
+        (cfg, 4, 5)
+    } else {
+        let hx: f64 = args.get(3).ok_or("Missing heater x")?.parse()?;
+        let hz: f64 = args.get(4).ok_or("Missing heater z")?.parse()?;
+        let sx: f64 = args
+            .get(6)
+            .map(|v| v.parse())
+            .transpose()?
+            .unwrap_or(hx + 2.5);
+        let sz: f64 = args.get(7).map(|v| v.parse()).transpose()?.unwrap_or(hz);
+        (
+            IntegralBoundary {
+                heater: BoreBoundary {
+                    axis: 1,
+                    centre_mm: [hx, 0., hz],
+                    void_radius_mm: 1.6,
+                    void_span_mm: [-1e6, 1e6],
+                },
+                sensor: BoreBoundary {
+                    axis: 1,
+                    centre_mm: [sx, 0., sz],
+                    void_radius_mm: 0.6,
+                    void_span_mm: [-1e6, 1e6],
+                },
+                hot_radius_band_mm: [1.6, 1.75],
+                hot_span_mm: [-5.8, 5.8],
+                label: "Legacy ideal transverse bore wall".into(),
+            },
+            5,
+            8,
+        )
+    };
+    boundary.heater.validate()?;
+    boundary.sensor.validate()?;
+    if !boundary
+        .hot_radius_band_mm
+        .iter()
+        .chain(&boundary.hot_span_mm)
+        .all(|v| v.is_finite())
+        || boundary.hot_radius_band_mm[0] < boundary.heater.void_radius_mm
+        || boundary.hot_radius_band_mm[1] <= boundary.hot_radius_band_mm[0]
+        || boundary.hot_span_mm[0] >= boundary.hot_span_mm[1]
+        || boundary.hot_span_mm[0] < boundary.heater.void_span_mm[0]
+        || boundary.hot_span_mm[1] > boundary.heater.void_span_mm[1]
+    {
+        return Err("Invalid hot wall span or radius band".into());
+    }
+    let tolerance: f32 = args
+        .get(tolerance_index)
         .map(|v| v.parse())
         .transpose()?
-        .unwrap_or(hx + 2.5);
-    let sz: f64 = args.get(7).map(|v| v.parse()).transpose()?.unwrap_or(hz);
-    let tolerance: f32 = args.get(8).map(|v| v.parse()).transpose()?.unwrap_or(1e-6);
-    if !hx.is_finite() || !hz.is_finite() || !sx.is_finite() || !sz.is_finite() {
-        return Err("Finite heater centre required".into());
-    }
-    let output = Path::new(args.get(5).ok_or("Missing output directory")?);
+        .unwrap_or(1e-6);
+    let output = Path::new(args.get(output_index).ok_or("Missing output directory")?);
     std::fs::create_dir(output)?;
     let p = project::load(Path::new(path))?;
     let volume = gpu.build(&p.model, &p.settings, &p.materials)?;
@@ -343,15 +431,15 @@ fn integral_pool(args: &[String], gpu: GpuDomain) -> Result<(), Box<dyn Error>> 
                         * 1000.
                 })
                 .collect();
-            let r = ((xyz[0] - hx).powi(2) + (xyz[2] - hz).powi(2)).sqrt();
-            let sensor_r = ((xyz[0] - sx).powi(2) + (xyz[2] - sz).powi(2)).sqrt();
-            // The boundary is on the body wall. Omit floating sheaths inside
-            // the bores rather than assigning them arbitrary temperatures or
-            // allowing sub-cell gaps to imply a thermal contact.
-            if r < 1.6 || sensor_r < 0.6 {
+            let r = boundary.heater.radial(&xyz);
+            // Omit floating sheaths only within their actual axial void spans.
+            if boundary.heater.excludes(&xyz) || boundary.sensor.excludes(&xyz) {
                 return [0., 2.];
             }
-            let flag = if xyz[1].abs() <= 5.8 && (1.6..=1.75).contains(&r) {
+            let flag = if (boundary.hot_span_mm[0]..=boundary.hot_span_mm[1])
+                .contains(&xyz[boundary.heater.axis])
+                && (boundary.hot_radius_band_mm[0]..=boundary.hot_radius_band_mm[1]).contains(&r)
+            {
                 hot += 1;
                 0.5
             } else {
@@ -379,8 +467,9 @@ fn integral_pool(args: &[String], gpu: GpuDomain) -> Result<(), Box<dyn Error>> 
         [1_f32, 5., 10.].map(|w| serde_json::json!({"pool_W":w,"delta_K":w/stats[0]}));
     let report = serde_json::json!({
         "project":path,"adapter":gpu.name,"method":"Existing GPU finite-volume scalar operator with k; selected steel heater-bore wall cells +0.5K, entire liquid pool -0.5K, other exterior adiabatic",
-        "heater_centre_xz_mm":[hx,hz],"hot_wall_radius_band_mm":[1.6,1.75],"hot_wall_abs_y_max_mm":5.8,
-        "sensor_centre_xz_mm":[sx,sz],
+        "boundary_geometry":boundary,
+        "heater_centre_xz_mm":[boundary.heater.centre_mm[0],boundary.heater.centre_mm[2]],
+        "sensor_centre_xz_mm":[boundary.sensor.centre_mm[0],boundary.sensor.centre_mm[2]],
         "hot_cells":hot,"pool_boundary_cells":cold,"steel_k_W_m_K":15.,"liquid_k_W_m_K":liquid_k,
         "conductance_W_K":stats[0],"thermal_resistance_K_W":1./stats[0],"return_relative_error":return_error,
         "energy_identity_relative_error":energy_error,"true_relative_residual":residual,"iterations":iterations,
@@ -405,4 +494,51 @@ fn integral_pool(args: &[String], gpu: GpuDomain) -> Result<(), Box<dyn Error>> 
     )?;
     println!("{}", serde_json::to_string_pretty(&report)?);
     Ok(())
+}
+
+#[cfg(test)]
+mod boundary_tests {
+    use super::*;
+
+    #[test]
+    fn bore_selection_is_invariant_under_axis_permutation() {
+        let transverse = BoreBoundary {
+            axis: 1,
+            centre_mm: [-4., 0., 8.5],
+            void_radius_mm: 1.6,
+            void_span_mm: [-6., 6.],
+        };
+        let vertical = BoreBoundary {
+            axis: 2,
+            centre_mm: [-4., 8.5, 0.],
+            void_radius_mm: 1.6,
+            void_span_mm: [-6., 6.],
+        };
+        for x in [-6., -4., -2.] {
+            for y in [-7., 0., 5.] {
+                for z in [7., 8.5, 10.] {
+                    let a = [x, y, z];
+                    let b = [x, z, y];
+                    assert_eq!(transverse.radial(&a), vertical.radial(&b));
+                    assert_eq!(transverse.excludes(&a), vertical.excludes(&b));
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn finite_bore_keeps_drill_floor_and_omits_sheath() {
+        let bore = BoreBoundary {
+            axis: 2,
+            centre_mm: [-4., 0., 0.],
+            void_radius_mm: 1.6,
+            void_span_mm: [2.4, 28.1],
+        };
+        bore.validate().unwrap();
+        assert!(!bore.excludes(&[-4., 0., 1.0]));
+        assert!(bore.excludes(&[-4., 0., 3.0]));
+        assert!(!bore.excludes(&[-2., 0., 3.0]));
+        let invalid = BoreBoundary { axis: 3, ..bore };
+        assert!(invalid.validate().is_err());
+    }
 }
