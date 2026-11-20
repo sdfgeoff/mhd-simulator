@@ -1,5 +1,5 @@
 {
-  "status": "CAD prepared for user review; no GPU simulation started",
+  "status": "Custom M6-compatible CAD draft; not a verified subtractive stock-V6 conversion; no GPU simulation started",
   "requested_by": [
     797,
     798,
@@ -31,10 +31,12 @@
   "configuration_identical_except_geometry_and_two_triangle_counts": true,
   "heater_excluded_from_flow": true,
   "limits": [
+    "10mm body and stockier lower nose are not a verified subtractive conversion of a12.5mm stockV6; do not launch as a stock-conversion experiment.",
     "New shared wider neck and pole gap differ from historical110A candidate.",
     "Same fill height, not equal molten volume.",
     "Drill taper length changes with bore diameter at fixed118degree drill point.",
     "Exterior and magnets are common between the requested pair; old narrow-neck result is not a single-variable control.",
     "All other research assumptions retained: ideal interfaces, static applied field, no thermal evolution."
-  ]
+  ],
+  "verified_subtractive_from_stock_v6": false
 }

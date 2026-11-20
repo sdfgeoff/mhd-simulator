@@ -36,7 +36,8 @@ for j in [a,b]:
     j.pop('geometry')
     for body in j['bodies'][:2]:body.pop('triangles')
 assert a==b,'Unexpected configuration difference'
-manifest={'status':'CAD prepared for user review; no GPU simulation started',
+manifest={'status':'Custom M6-compatible CAD draft; not a verified subtractive stock-V6 conversion; no GPU simulation started',
+          'verified_subtractive_from_stock_v6':False,
           'requested_by':[797,798,799,801], 'topic':25,
           'baseline_project':str(baseline),'cell_um':50,'fill_height_mm':6,
           'bores_mm':[2,3],'shared_neck_width_mm':3.4,'shared_pole_gap_mm':4,
@@ -45,7 +46,8 @@ manifest={'status':'CAD prepared for user review; no GPU simulation started',
           'gap_us':25,'dt_us':1.5,'steps':2400,'end_ms':3.6,
           'non_bore_mesh_payloads_identical':True,'configuration_identical_except_geometry_and_two_triangle_counts':True,
           'heater_excluded_from_flow':True,
-          'limits':['New shared wider neck and pole gap differ from historical110A candidate.',
+          'limits':['10mm body and stockier lower nose are not a verified subtractive conversion of a12.5mm stockV6; do not launch as a stock-conversion experiment.',
+                    'New shared wider neck and pole gap differ from historical110A candidate.',
                     'Same fill height, not equal molten volume.',
                     'Drill taper length changes with bore diameter at fixed118degree drill point.',
                     'Exterior and magnets are common between the requested pair; old narrow-neck result is not a single-variable control.',

@@ -2,6 +2,8 @@
 
 Requested in topic 25, replies 797–801. **No GPU simulation has started.** The user requested seeing the CAD before launch.
 
+**Manufacturing correction, reply 804:** these drafts are custom M6-compatible shapes, not subtractive conversions verified against a stock V6 solid. Their 10 mm body and stockier lower nose differ from a standard 12.5 mm V6. Closed meshes and absence of overlaps do not establish stock containment. Do not launch these drafts as a stock-V6 conversion test. A subtractive-only revision must preserve the stock mounting and outlet, start from the correct smaller-bore variant, and check all proposed cuts and remaining walls. An existing 3.2 mm bore cannot be reduced to 2 or 3 mm by cutting.
+
 ![Previous geometry and proposed straight bores](cad-comparison.png)
 
 1. Previous reference: a 3.2-to-2 mm internal shoulder, 2.8 mm neck width and 3.4 mm magnet pole gap. The shoulder was introduced in our custom model; it is not in the user's standard-nozzle drawing.
