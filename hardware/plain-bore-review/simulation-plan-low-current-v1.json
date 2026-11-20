@@ -1,0 +1,56 @@
+{
+  "status": "Prepared lower-current controls; launch only after completed V4 pair assessment",
+  "authorization_reply": 824,
+  "binary": "target/debug/examples/conduction_flow_current_tolerance",
+  "expected_binary_sha256": "05500946e657ccd44c9bc032612e3951635974b001c57a8df126354f63a5bac2",
+  "jobs": [
+    {
+      "bore_mm": 2,
+      "output": "artifacts/hardware-research/plain-bore-low-current-v1-2mm-flow90-r25-h0050",
+      "command": [
+        "target/debug/examples/conduction_flow_current_tolerance",
+        "hardware/designs/plain-bore-2mm-boolean-mesh/flow-h0050.mhd.json",
+        "90",
+        "250",
+        "2400",
+        "artifacts/hardware-research/plain-bore-low-current-v1-2mm-flow90-r25-h0050",
+        "0",
+        ".25",
+        "1.5",
+        "0",
+        "600",
+        "1.5",
+        "25",
+        "body",
+        "0",
+        "1e-6"
+      ],
+      "peak_A": 90
+    },
+    {
+      "bore_mm": 2,
+      "output": "artifacts/hardware-research/plain-bore-low-current-v1-2mm-flow75-r25-h0050",
+      "command": [
+        "target/debug/examples/conduction_flow_current_tolerance",
+        "hardware/designs/plain-bore-2mm-boolean-mesh/flow-h0050.mhd.json",
+        "75",
+        "250",
+        "2400",
+        "artifacts/hardware-research/plain-bore-low-current-v1-2mm-flow75-r25-h0050",
+        "0",
+        ".25",
+        "1.5",
+        "0",
+        "600",
+        "1.5",
+        "25",
+        "body",
+        "0",
+        "1e-6"
+      ],
+      "peak_A": 75
+    }
+  ],
+  "baseline": "Completed corrected 2mm V4, one detached region at all four thresholds; same project/mesh/numerics/pulse shape. Only current amplitude changes.",
+  "scope": "Direct-contact exploration per824; no coil/slit work. 90A then75A sequentially, preserve failure, weekly stop<=40."
+}

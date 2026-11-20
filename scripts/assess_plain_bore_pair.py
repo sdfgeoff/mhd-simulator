@@ -69,7 +69,7 @@ for row,(case,project,records) in enumerate(cases):
     summary=f'{len(regions)} detached region(s) at fraction0.5'
     if regions:
         lead=max(regions,key=lambda r:r['volume_nl']);summary+=f'; largest {lead["equivalent_diameter_mm"]:.3f} mm, downward speed {-lead["velocity_m_s"][2]:.3f} m/s'
-    fig.text(.50,.545 if row==0 else .265,summary,ha='center',fontsize=10)
+    fig.text(.50,min(a.get_position().y0 for a in fieldaxes)-.045,summary,ha='center',fontsize=10)
 ax=fig.add_subplot(gs[2,:])
 for (case,_,rows),color in zip(cases,['#287747','#b06a2c']):
     t=np.array([float(r['time_s'])*1e6 for r in rows]);ax.plot(t,[float(r['current_A']) for r in rows],color=color,lw=1.5,label=f'{case["bore_mm"]} mm solved terminal current')

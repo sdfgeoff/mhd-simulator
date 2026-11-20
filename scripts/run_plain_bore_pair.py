@@ -1,4 +1,4 @@
-"""Run only the two custom-nozzle cases approved in board reply 805."""
+"""Run an explicitly authorized, frozen direct-contact experiment sequence."""
 from datetime import datetime
 import argparse
 import fcntl
@@ -34,7 +34,7 @@ hashes={str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in frozen}
 if hashes[plan['binary']]!=plan['expected_binary_sha256']:raise RuntimeError('Baseline binary differs')
 def record(**values):
     d={'updated_at':datetime.now().astimezone().isoformat(),'controller_pid':os.getpid(),
-       'authorization_reply':805,'plan':str(PLAN),'input_and_binary_sha256':hashes,**values}
+       'authorization_reply':plan['authorization_reply'],'plan':str(PLAN),'input_and_binary_sha256':hashes,**values}
     t=STATE.with_suffix('.new');t.write_text(json.dumps(d,indent=2)+'\n');t.replace(STATE)
 record(stage='preflight')
 try:

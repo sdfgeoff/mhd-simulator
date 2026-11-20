@@ -1,4 +1,17 @@
-# Plain bore pair: CAD review before simulation
+# Completed straight-bore comparison
+
+Both corrected-mesh cases completed 2400 steps / 3.6 ms. Earlier attempts and repairs are recorded below; they are not included in this final pair.
+
+![Completed CAD, fluid and current comparison](results-comparison.png)
+
+1. **2 mm bore:** one detached region at all four liquid-fraction thresholds. At fraction 0.5: diameter 0.6035 mm, downward speed 0.6477 m/s.
+2. **3 mm bore:** two detached regions at all four thresholds. The leading region is 0.5936 mm at 0.7720 m/s downward; the second is 0.4177 mm at 0.1421 m/s upward. This is less clean than the 2 mm result.
+3. Both use the same 110 A forward / 27.5 A reverse pulse. Head-voltage peaks are approximately 0.152 V, excluding external wiring and switching inductance. Current-dose RMS at an assumed 200 Hz is 23.43 A; repeated operation is not simulated.
+4. No saved liquid reaches the domain boundary. Maximum relative volume drift is about 1.1e-8; electrical energy-identity defects are about 17.7 ppm. These diagnostics do not establish convergence or experimental accuracy.
+5. Select the 2 mm design for the lower-current follow-on authorized by reply 824. Fixed properties, ideal contacts, imposed permanent field, excluded heater block and uncalibrated wall behavior remain limits. [Machine-readable results](results.json), [follow-on plan](overnight-plan.md).
+
+## Earlier CAD review and execution history
+
 
 Requested in topic 25, replies 797–801. The CAD was shown and reviewed before launch; both custom-part simulations were subsequently approved in reply 805. The figure below records the pre-launch review.
 
