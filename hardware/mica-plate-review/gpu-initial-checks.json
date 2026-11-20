@@ -1,0 +1,136 @@
+{
+  "status": "Saved initialGPU masks: zerooverlap, everybodyrepresented, Cu/SS face contacts confined to lower intended pad/screw band",
+  "source": "artifacts/hardware-research/mica-flat-plate-head-v1-mask.bin",
+  "counts": [
+    {
+      "body": "One-piece stainless heater block and nozzle / 0",
+      "material_id": 14,
+      "cells": 2329016
+    },
+    {
+      "body": "Liquid solder / 0",
+      "material_id": 4,
+      "cells": 16228
+    },
+    {
+      "body": "Left flat copper plate / 0",
+      "material_id": 20,
+      "cells": 299304
+    },
+    {
+      "body": "Left upper mica sheet / 0",
+      "material_id": 19,
+      "cells": 9954
+    },
+    {
+      "body": "Left flush M2 contact screw envelope / 0",
+      "material_id": 14,
+      "cells": 18592
+    },
+    {
+      "body": "Left insulated M3 mount screw envelope / 0",
+      "material_id": 14,
+      "cells": 100228
+    },
+    {
+      "body": "Left insulating shank sleeve envelope / 0",
+      "material_id": 21,
+      "cells": 9492
+    },
+    {
+      "body": "Left mica head washer stack / 0",
+      "material_id": 19,
+      "cells": 15200
+    },
+    {
+      "body": "Left copper cable clamp virtual port / 0",
+      "material_id": 16,
+      "cells": 26960
+    },
+    {
+      "body": "Right flat copper plate / 0",
+      "material_id": 20,
+      "cells": 299304
+    },
+    {
+      "body": "Right upper mica sheet / 0",
+      "material_id": 19,
+      "cells": 9954
+    },
+    {
+      "body": "Right flush M2 contact screw envelope / 0",
+      "material_id": 14,
+      "cells": 18592
+    },
+    {
+      "body": "Right insulated M3 mount screw envelope / 0",
+      "material_id": 14,
+      "cells": 100228
+    },
+    {
+      "body": "Right insulating shank sleeve envelope / 0",
+      "material_id": 21,
+      "cells": 9492
+    },
+    {
+      "body": "Right mica head washer stack / 0",
+      "material_id": 19,
+      "cells": 15200
+    },
+    {
+      "body": "Right copper cable clamp virtual port / 0",
+      "material_id": 17,
+      "cells": 26960
+    },
+    {
+      "body": "Heater cartridge sheath envelope / 0",
+      "material_id": 14,
+      "cells": 150960
+    },
+    {
+      "body": "Sensor sheath envelope / 0",
+      "material_id": 14,
+      "cells": 16320
+    },
+    {
+      "body": "Front SmCo magnet stack / 0",
+      "material_id": 18,
+      "cells": 285600
+    },
+    {
+      "body": "Rear SmCo magnet stack / 0",
+      "material_id": 18,
+      "cells": 887400
+    }
+  ],
+  "Cu_SS_interfaces": [
+    {
+      "array_axis_zyx": 0,
+      "Cu_SS_faces": 1960,
+      "face_area_mm2": 19.6,
+      "contact_z_mm_range": [
+        1.35,
+        5.15
+      ]
+    },
+    {
+      "array_axis_zyx": 1,
+      "Cu_SS_faces": 8104,
+      "face_area_mm2": 81.04,
+      "contact_z_mm_range": [
+        0.8500000000000001,
+        5.75
+      ]
+    },
+    {
+      "array_axis_zyx": 2,
+      "Cu_SS_faces": 1960,
+      "face_area_mm2": 19.6,
+      "contact_z_mm_range": [
+        1.4500000000000002,
+        5.15
+      ]
+    }
+  ],
+  "limits": "One0.1mm grid; no elastic clamp/contact resistance or subcell thermal contact inference."
+}

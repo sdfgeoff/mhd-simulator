@@ -319,6 +319,8 @@ struct IntegralBoundary {
     hot_radius_band_mm: [f64; 2],
     hot_span_mm: [f64; 2],
     label: String,
+    #[serde(default)]
+    conductivity_by_material_w_m_k: Option<std::collections::BTreeMap<u32, f32>>,
 }
 
 // Optimistic bulk-metal heat-delivery screen. The actual heater interface and
@@ -358,6 +360,7 @@ fn integral_pool(args: &[String], gpu: GpuDomain) -> Result<(), Box<dyn Error>> 
                 hot_radius_band_mm: [1.6, 1.75],
                 hot_span_mm: [-5.8, 5.8],
                 label: "Legacy ideal transverse bore wall".into(),
+                conductivity_by_material_w_m_k: None,
             },
             5,
             8,
@@ -377,6 +380,11 @@ fn integral_pool(args: &[String], gpu: GpuDomain) -> Result<(), Box<dyn Error>> 
         || boundary.hot_span_mm[1] > boundary.heater.void_span_mm[1]
     {
         return Err("Invalid hot wall span or radius band".into());
+    }
+    if let Some(table) = &boundary.conductivity_by_material_w_m_k {
+        if !table.values().all(|k| k.is_finite() && *k >= 0.) {
+            return Err("Invalid material conductivity table".into());
+        }
     }
     let tolerance: f32 = args
         .get(tolerance_index)
@@ -414,7 +422,14 @@ fn integral_pool(args: &[String], gpu: GpuDomain) -> Result<(), Box<dyn Error>> 
                 cold += 1;
                 return [liquid_k / 1e6, -0.5];
             }
-            if !matches!(id, 14 | 16 | 17) {
+            let k = if let Some(table) = &boundary.conductivity_by_material_w_m_k {
+                table.get(&id).copied().unwrap_or(0.)
+            } else if matches!(id, 14 | 16 | 17) {
+                15.
+            } else {
+                0.
+            };
+            if k == 0. {
                 return [0., 2.];
             }
             let i = i as u32;
@@ -445,7 +460,7 @@ fn integral_pool(args: &[String], gpu: GpuDomain) -> Result<(), Box<dyn Error>> 
             } else {
                 2.
             };
-            [15. / 1e6, flag]
+            [k / 1e6, flag]
         })
         .collect();
     if hot == 0 || cold == 0 {
@@ -466,11 +481,11 @@ fn integral_pool(args: &[String], gpu: GpuDomain) -> Result<(), Box<dyn Error>> 
     let assumed_loads =
         [1_f32, 5., 10.].map(|w| serde_json::json!({"pool_W":w,"delta_K":w/stats[0]}));
     let report = serde_json::json!({
-        "project":path,"adapter":gpu.name,"method":"Existing GPU finite-volume scalar operator with k; selected steel heater-bore wall cells +0.5K, entire liquid pool -0.5K, other exterior adiabatic",
+        "project":path,"adapter":gpu.name,"method":"Existing GPU finite-volume scalar operator with k; selected heater-bore wall cells +0.5K, entire liquid pool -0.5K, other exterior adiabatic. Optional explicit material k table retained in boundary_geometry.",
         "boundary_geometry":boundary,
         "heater_centre_xz_mm":[boundary.heater.centre_mm[0],boundary.heater.centre_mm[2]],
         "sensor_centre_xz_mm":[boundary.sensor.centre_mm[0],boundary.sensor.centre_mm[2]],
-        "hot_cells":hot,"pool_boundary_cells":cold,"steel_k_W_m_K":15.,"liquid_k_W_m_K":liquid_k,
+        "hot_cells":hot,"pool_boundary_cells":cold,"legacy_steel_k_W_m_K":15.,"liquid_k_W_m_K":liquid_k,
         "conductance_W_K":stats[0],"thermal_resistance_K_W":1./stats[0],"return_relative_error":return_error,
         "energy_identity_relative_error":energy_error,"true_relative_residual":residual,"iterations":iterations,
         "requested_relative_tolerance":tolerance,

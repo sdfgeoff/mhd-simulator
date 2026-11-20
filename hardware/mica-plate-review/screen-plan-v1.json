@@ -1,0 +1,50 @@
+{
+  "binary": "target/debug/examples/conduction_probe",
+  "binary_sha256": "556fd2025833dda765387e91f60ec64d3c411ce3a6fcb67a191be185a0fb6b8a",
+  "expected_binary_hashes": {
+    "target/debug/examples/conduction_probe": "556fd2025833dda765387e91f60ec64d3c411ce3a6fcb67a191be185a0fb6b8a",
+    "target/debug/examples/thermal_conductance": "6c78c196711be218fd7e275cddde5da62b5df41f3e13c0e114c2e1f7a692bb84"
+  },
+  "screen": "mixed",
+  "authorization_replies": [
+    824,
+    836,
+    838,
+    842,
+    851
+  ],
+  "status": "Initial ideal-contact limits only. GPU0overlap and CuSSfacesrestrictedtolowercontactband. No jetting or operating-temperature result.",
+  "jobs": [
+    {
+      "screen": "electrical",
+      "project": "hardware/designs/mica-flat-plate-head-v1/assembly-h0100.mhd.json",
+      "output": "artifacts/hardware-research/mica-flat-plate-v1-cold100-h0100",
+      "command": [
+        "target/debug/examples/conduction_probe",
+        "hardware/designs/mica-flat-plate-head-v1/assembly-h0100.mhd.json",
+        "100",
+        "artifacts/hardware-research/mica-flat-plate-v1-cold100-h0100",
+        "0",
+        "body",
+        "1e-6"
+      ]
+    },
+    {
+      "screen": "thermal",
+      "project": "hardware/designs/mica-flat-plate-head-v1/assembly-h0100.mhd.json",
+      "output": "artifacts/hardware-research/mica-flat-plate-v1-thermal-active-span-h0100",
+      "extra_inputs": [
+        "hardware/mica-plate-review/thermal-boundary-active-span.json"
+      ],
+      "command": [
+        "target/debug/examples/thermal_conductance",
+        "--integral-pool-config",
+        "hardware/designs/mica-flat-plate-head-v1/assembly-h0100.mhd.json",
+        "hardware/mica-plate-review/thermal-boundary-active-span.json",
+        "artifacts/hardware-research/mica-flat-plate-v1-thermal-active-span-h0100",
+        "1e-7"
+      ]
+    }
+  ],
+  "limits": "CuSS ideal electrical/thermal continuity, finite explicit mica and sleeve k. Body boundary applies only to small copper cable-clamp annuli. All currentmetal retained. Contact resistance sensitivity and finiteheater/heatbalance remain required."
+}
