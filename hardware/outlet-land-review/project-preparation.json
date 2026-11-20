@@ -1,0 +1,24 @@
+{
+  "status": "Full fixtures and CPU loader validated; GPU masks NOT checked, no flow run",
+  "baseline": "hardware/designs/plain-bore-2mm-boolean-mesh/flow-h0050.mhd.json",
+  "cases": [
+    {
+      "land_mm": 0.9,
+      "project": "hardware/designs/plain-outlet-land-090/flow-h0050.mhd.json",
+      "geometry": "hardware/designs/plain-outlet-land-090/hot-contact.gltf",
+      "all_non_nozzle_liquid_position_payloads_identical_to_baseline": true,
+      "settings_identical_except_geometry_and_triangle_counts": true,
+      "cpu_loader_output": "hardware/designs/plain-outlet-land-090/flow-h0050.mhd.json: 9 bodies, 0 CAD curves; fluid=false, thermal=false\n",
+      "gpu_preflight": "pending; do not launch before checking actual masks"
+    },
+    {
+      "land_mm": 1.2,
+      "project": "hardware/designs/plain-outlet-land-120/flow-h0050.mhd.json",
+      "geometry": "hardware/designs/plain-outlet-land-120/hot-contact.gltf",
+      "all_non_nozzle_liquid_position_payloads_identical_to_baseline": true,
+      "settings_identical_except_geometry_and_triangle_counts": true,
+      "cpu_loader_output": "hardware/designs/plain-outlet-land-120/flow-h0050.mhd.json: 9 bodies, 0 CAD curves; fluid=false, thermal=false\n",
+      "gpu_preflight": "pending; do not launch before checking actual masks"
+    }
+  ]
+}

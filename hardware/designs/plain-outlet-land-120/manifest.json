@@ -1,0 +1,24 @@
+{
+  "status": "Generated full-CAD collision-checked thermal experiment; not qualified hardware",
+  "source_case": "plain-land-cpu-v1-120/stub4",
+  "project": "hardware/designs/plain-outlet-land-120/hot-contact.mhd.json",
+  "mica_each_mm": [
+    6,
+    10.0,
+    0.1
+  ],
+  "anchor_copper_each_mm": [
+    6,
+    10.0,
+    0.4
+  ],
+  "supply_extension_each_mm": [
+    50,
+    2.5,
+    0.4
+  ],
+  "nominal_supply_extension_area_mm2": 1.0,
+  "heater_temperature_C": 250,
+  "outer_supply_temperature_C": "imposed by native scalar rescaling",
+  "scope": "Allheatercellsfixedreservoir. Thermal domain crops fixed heater but retains all unknown steel/liquid/copper paths. Real insulation/clamp contact resistance, current Joule heat, feed and air losses absent. No physical mounting fasteners modeled."
+}
