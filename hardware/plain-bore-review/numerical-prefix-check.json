@@ -1,0 +1,18 @@
+{
+  "status": "Early shared-prefix comparison only; repaired run is still active, prior attempt failed later",
+  "method": "CPU read-only comparison of existing aligned native exports; no interpolation or new solve",
+  "source": "artifacts/hardware-research/plain-bore-v3-v2-prefix-comparison.json",
+  "reference": "artifacts/hardware-research/plain-bore-v2-2mm-flow110-r25-h0050",
+  "repaired": "artifacts/hardware-research/plain-bore-v3-2mm-flow110-r25-h0050",
+  "time_us": 899.999999999993,
+  "step": 600,
+  "static_open_mask_identical": true,
+  "alpha_L1_volume_difference_nl": 0.005632519149915236,
+  "common_liquid_weighted_velocity_RMS_difference_m_s": 3.782972213031498e-05,
+  "reference_below_exit_nl": 130.25512753580324,
+  "repaired_below_exit_nl": 130.2553644247776,
+  "limits": [
+    "Only the0.9ms shared exported frame has been compared beyondinitial state.",
+    "This does not establish that the2.6625ms numerical failure is repaired or that final breakup matches."
+  ]
+}
