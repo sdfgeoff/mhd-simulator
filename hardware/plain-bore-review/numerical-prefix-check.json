@@ -1,18 +1,18 @@
 {
-  "status": "Early shared-prefix comparison only; repaired run is still active, prior attempt failed later",
+  "status": "Shared-prefix comparison through1.8ms; repairedrunpassedoldfailurepointbutnotyetcomplete",
   "method": "CPU read-only comparison of existing aligned native exports; no interpolation or new solve",
-  "source": "artifacts/hardware-research/plain-bore-v3-v2-prefix-comparison.json",
+  "source": "artifacts/hardware-research/plain-bore-v3-v2-prefix1800us-comparison.json",
   "reference": "artifacts/hardware-research/plain-bore-v2-2mm-flow110-r25-h0050",
   "repaired": "artifacts/hardware-research/plain-bore-v3-2mm-flow110-r25-h0050",
-  "time_us": 899.999999999993,
-  "step": 600,
+  "time_us": 1799.9999999999825,
+  "step": 1200,
   "static_open_mask_identical": true,
-  "alpha_L1_volume_difference_nl": 0.005632519149915236,
-  "common_liquid_weighted_velocity_RMS_difference_m_s": 3.782972213031498e-05,
-  "reference_below_exit_nl": 130.25512753580324,
-  "repaired_below_exit_nl": 130.2553644247776,
+  "alpha_L1_volume_difference_nl": 0.8797375800469655,
+  "common_liquid_weighted_velocity_RMS_difference_m_s": 0.001448417218389444,
+  "reference_below_exit_nl": 190.73645243093128,
+  "repaired_below_exit_nl": 190.73496632592438,
   "limits": [
-    "Only the0.9ms shared exported frame has been compared beyondinitial state.",
-    "This does not establish that the2.6625ms numerical failure is repaired or that final breakup matches."
+    "Shared initial,.9ms and1.8ms exports compared; oldfailedrunhasno2.7ms export.",
+    "Repairedrunpassed2.6625ms, but this does not certify completed3.6ms outcome, gridconvergence or localforceerror."
   ]
 }
