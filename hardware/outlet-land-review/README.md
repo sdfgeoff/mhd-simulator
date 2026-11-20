@@ -1,4 +1,13 @@
-# Internal outlet-length controls
+# Outlet-length results and preparation
+
+**Partial completed comparison:** at 90 A, the 0.6 mm land produces one detached region at all four thresholds by 3.6 ms; the 0.9 mm land produces none at any checked threshold. The 1.2 mm case is still running and is excluded from result metrics. The longer passage has not improved lower-current ejection in the completed comparison.
+
+![Completed cases only](results-comparison.png)
+
+The 0.9 mm case reaches 0.125 V head peak, with the same 19.17 A RMS current dose at assumed 200 Hz. Maximum relative liquid-volume drift is 1.06e-8, no saved boundary contact, and electrical energy-identity defect is about 20.9 ppm. These are one-grid, single-pulse results with fixed properties and ideal contacts; no repeated operation, calibrated wetting or thermal qualification. [Actual native metrics](results.json).
+
+## Geometry preparation
+
 
 Prepared under topic 25 reply 824 while the lower-current sequence runs. These are CPU CAD checks, with no new GPU geometry check or fluid result.
 
