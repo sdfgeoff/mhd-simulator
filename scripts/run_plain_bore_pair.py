@@ -1,5 +1,6 @@
 """Run only the two custom-nozzle cases approved in board reply 805."""
 from datetime import datetime
+import argparse
 import fcntl
 import hashlib
 import json
@@ -10,8 +11,12 @@ import subprocess
 import sys
 
 ROOT=Path('artifacts/hardware-research')
-STATE=ROOT/'plain-bore-v1-state.json'
-PLAN=Path('hardware/plain-bore-review/simulation-plan.json')
+parser=argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--plan',type=Path,default=Path('hardware/plain-bore-review/simulation-plan.json'))
+parser.add_argument('--state',type=Path,default=ROOT/'plain-bore-v1-state.json')
+args=parser.parse_args()
+STATE=args.state
+PLAN=args.plan
 if STATE.exists():raise RuntimeError('Existing state: inspect it; never silently repeat')
 plan=json.loads(PLAN.read_text())
 lease=(ROOT/'native-flow-sequence.lock').open('a')
