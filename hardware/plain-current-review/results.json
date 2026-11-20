@@ -1,0 +1,300 @@
+{
+  "status": "Partial sweep: only terminal complete cases assessed",
+  "pending_currents_A": [
+    75
+  ],
+  "common_settings": {
+    "grid": {
+      "cell_m": 5.0000002374872565e-05,
+      "dims": [
+        152,
+        152,
+        370
+      ]
+    },
+    "positive_duration_s": 0.00025,
+    "rise_s": 2e-05,
+    "retract_fraction": 0.25,
+    "retract_delay_s": 2.4999999999999998e-05,
+    "contact_resistivity_ohm_m2": 0.0,
+    "timestep_s": 1.5e-06,
+    "tail_timestep_s": 1.5e-06,
+    "frequency_hz": 0.0,
+    "uniform_acceleration_m_s2": [
+      0.0,
+      0.0,
+      -9.8100004196167
+    ],
+    "terminal_boundary": "body",
+    "charge_solver": "conservative-split-f32-v2"
+  },
+  "cases": [
+    {
+      "peak_A": 110,
+      "source": "artifacts/hardware-research/plain-bore-v4-2mm-flow110-r25-h0050",
+      "final": {
+        "step": 2400,
+        "time_us": 3600.000000000199,
+        "first_nonnegative_cell_plane_z_mm": 0.025000001187436283,
+        "exit_plane_alpha_area_mm2": 0.12999997634036906,
+        "exit_plane_mean_uz_m_s": 0.23190787480504535,
+        "exit_plane_mean_pressure_pa": 3990.5211295685067,
+        "exit_plane_downward_flux_proxy_nl_s": -30148.018237801163,
+        "liquid_volume_nl": 16244.501528387664,
+        "minimum_liquid_fraction": -4.8106841177286697e-08,
+        "maximum_liquid_fraction": 1.0,
+        "below_tip_maximum_liquid_fraction_at_cell_centres": 1.0,
+        "boundary_maximum_liquid_fraction": {
+          "z_min": 0.0,
+          "z_max": 0.0,
+          "y_min": 0.0,
+          "y_max": 0.0,
+          "x_min": 0.0,
+          "x_max": 0.0
+        },
+        "liquid_touches_domain_boundary_alpha01": false,
+        "below_tip_nl": 195.14688894990618,
+        "below_one_cell_guard_nl": 176.76562698329215,
+        "front_z_mm_alpha_half": -2.725000129430555,
+        "detached_below_tip": [
+          {
+            "volume_nl": 115.07764029398308,
+            "equivalent_diameter_mm": 0.6034817048297797,
+            "cells": 972,
+            "centre_mm": [
+              -0.0024542951880917653,
+              -0.001456867638005998,
+              -2.449355620241846
+            ],
+            "velocity_m_s": [
+              -0.00036978168645873666,
+              -0.0008729977998882532,
+              -0.6476606130599976
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "connectivity_thresholds": {
+          "0.01": [
+            {
+              "volume_nl": 122.39513738914786,
+              "equivalent_diameter_mm": 0.6160110660914838,
+              "cells": 1302,
+              "centre_mm": [
+                -0.0024234772937966396,
+                -0.0015355552403834355,
+                -2.449544461620483
+              ],
+              "velocity_m_s": [
+                -0.0005219524609856308,
+                -0.0007940565701574087,
+                -0.6429409980773926
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.25": [
+            {
+              "volume_nl": 119.90090689513553,
+              "equivalent_diameter_mm": 0.6117978529854732,
+              "cells": 1076,
+              "centre_mm": [
+                -0.0018874568306946427,
+                -0.001495633927357085,
+                -2.449507964313825
+              ],
+              "velocity_m_s": [
+                -0.0005124863237142563,
+                -0.0007948910351842642,
+                -0.6444458961486816
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.5": [
+            {
+              "volume_nl": 115.07764029398308,
+              "equivalent_diameter_mm": 0.6034817048297797,
+              "cells": 972,
+              "centre_mm": [
+                -0.0024542951880917653,
+                -0.001456867638005998,
+                -2.449355620241846
+              ],
+              "velocity_m_s": [
+                -0.00036978168645873666,
+                -0.0008729977998882532,
+                -0.6476606130599976
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.75": [
+            {
+              "volume_nl": 108.11435012285969,
+              "equivalent_diameter_mm": 0.5910554686526185,
+              "cells": 884,
+              "centre_mm": [
+                -0.0019381166410005046,
+                -0.002821958143476768,
+                -2.4490961818560746
+              ],
+              "velocity_m_s": [
+                -0.0007877439493313432,
+                -0.0006271624588407576,
+                -0.6522688269615173
+              ],
+              "touches_domain_boundary": false
+            }
+          ]
+        },
+        "below_tip_change_nl": 195.14687695074278,
+        "relative_liquid_volume_change": -1.085852618931682e-08
+      },
+      "maximum_absolute_relative_volume_change": 1.085852618931682e-08,
+      "any_saved_boundary_contact": false,
+      "head_peak_voltage_V": 0.15190564,
+      "command_I2dt_A2s": 2.7452734255295708,
+      "RMS_A_at_assumed200Hz": 23.431915950385154,
+      "joule_generated_J": 0.0037640174802815525,
+      "energy_identity_relative_defect": -1.7719143505206244e-05,
+      "current_diagnostics_sha256": "c8ce2d7dfe64548ed075ab459b825c190ab35423c9d077767c060e63c40fcba3"
+    },
+    {
+      "peak_A": 90,
+      "source": "artifacts/hardware-research/plain-bore-low-current-v1-2mm-flow90-r25-h0050",
+      "final": {
+        "step": 2400,
+        "time_us": 3600.000000000199,
+        "first_nonnegative_cell_plane_z_mm": 0.025000001187436283,
+        "exit_plane_alpha_area_mm2": 0.10356747092343811,
+        "exit_plane_mean_uz_m_s": 0.49538965718901656,
+        "exit_plane_mean_pressure_pa": 602.0075984992727,
+        "exit_plane_downward_flux_proxy_nl_s": -51306.253916695445,
+        "liquid_volume_nl": 16244.501660731705,
+        "minimum_liquid_fraction": -4.048678281520779e-09,
+        "maximum_liquid_fraction": 1.0000001192092896,
+        "below_tip_maximum_liquid_fraction_at_cell_centres": 1.0,
+        "boundary_maximum_liquid_fraction": {
+          "z_min": 0.0,
+          "z_max": 0.0,
+          "y_min": 0.0,
+          "y_max": 0.0,
+          "x_min": 0.0,
+          "x_max": 0.0
+        },
+        "liquid_touches_domain_boundary_alpha01": false,
+        "below_tip_nl": 137.7992217234899,
+        "below_one_cell_guard_nl": 137.67342163244123,
+        "front_z_mm_alpha_half": -1.6250000771833584,
+        "detached_below_tip": [
+          {
+            "volume_nl": 129.21368497022607,
+            "equivalent_diameter_mm": 0.6272441649639321,
+            "cells": 1090,
+            "centre_mm": [
+              0.00170968106743396,
+              0.0027389289640693225,
+              -1.3088224749311816
+            ],
+            "velocity_m_s": [
+              0.0004070481227245182,
+              0.0013634234201163054,
+              -0.2908180356025696
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "connectivity_thresholds": {
+          "0.01": [
+            {
+              "volume_nl": 137.6298119354613,
+              "equivalent_diameter_mm": 0.6405769363292557,
+              "cells": 1438,
+              "centre_mm": [
+                0.002515300921100459,
+                0.0033759119662164143,
+                -1.3091224146893883
+              ],
+              "velocity_m_s": [
+                0.0004333060351200402,
+                0.0012510078959167004,
+                -0.2832006514072418
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.25": [
+            {
+              "volume_nl": 134.37615228774894,
+              "equivalent_diameter_mm": 0.6354887397735942,
+              "cells": 1203,
+              "centre_mm": [
+                0.00312787222910334,
+                0.0036459083262178065,
+                -1.309766693520507
+              ],
+              "velocity_m_s": [
+                0.0004387461522128433,
+                0.0012876986293122172,
+                -0.2861992418766022
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.5": [
+            {
+              "volume_nl": 129.21368497022607,
+              "equivalent_diameter_mm": 0.6272441649639321,
+              "cells": 1090,
+              "centre_mm": [
+                0.00170968106743396,
+                0.0027389289640693225,
+                -1.3088224749311816
+              ],
+              "velocity_m_s": [
+                0.0004070481227245182,
+                0.0013634234201163054,
+                -0.2908180356025696
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.75": [
+            {
+              "volume_nl": 120.7378955715301,
+              "equivalent_diameter_mm": 0.6132181395713008,
+              "cells": 981,
+              "centre_mm": [
+                0.002724612731115576,
+                0.003529543383571549,
+                -1.3078121380739127
+              ],
+              "velocity_m_s": [
+                0.0007633781642653048,
+                0.001679668901488185,
+                -0.2979460060596466
+              ],
+              "touches_domain_boundary": false
+            }
+          ]
+        },
+        "below_tip_change_nl": 137.7992097243265,
+        "relative_liquid_volume_change": -2.711521007725537e-09
+      },
+      "maximum_absolute_relative_volume_change": 4.105109252527939e-09,
+      "any_saved_boundary_contact": false,
+      "head_peak_voltage_V": 0.124289066,
+      "command_I2dt_A2s": 1.8377450204616284,
+      "RMS_A_at_assumed200Hz": 19.171567596112887,
+      "joule_generated_J": 0.0025219258459227545,
+      "energy_identity_relative_defect": -1.973961121529186e-05,
+      "current_diagnostics_sha256": "58e7144f4d2aadfe71f35d4cfa30c5a8abddcfaf80e8a4febf1b7882c4935b8c"
+    }
+  ],
+  "limits": [
+    "Single pulses at one grid and timestep; no repeatability or thermal qualification.",
+    "Ideal contacts, fixed properties, static imposed magnetic field, no heater block or current self-field.",
+    "Threshold-defined equivalent diameters are not grid-independent measured drop sizes."
+  ]
+}
