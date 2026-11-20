@@ -1,0 +1,66 @@
+{
+  "status": "DevelopedCAD only, no simulation yet",
+  "source": "/home/geoffrey/Reference/OffTopic/mhd-simulator/Concept1.blend",
+  "source_sha256": "c0b310a615e93488423c8f8908165c7039d75456a2dbe218f628b35098e31df4",
+  "confirmed_mm_per_Blenderunit": 0.1,
+  "bodies": 22,
+  "CPU_overlaps": [],
+  "steel_components": 1,
+  "original_pool_volume_mm3": 22.761578506392592,
+  "nominal_lower_head_vs_source_symmetric_difference_mm3": 1.5344140846938266e-05,
+  "heater_bore_axis": "X",
+  "heater_centre_yz_mm": [
+    5.5,
+    9.7
+  ],
+  "heater_diameter_length_mm": [
+    6,
+    20
+  ],
+  "sensor_centre_yz_mm": [
+    -5.5,
+    9.7
+  ],
+  "sensor_diameter_length_mm": [
+    3,
+    15
+  ],
+  "upper_block_mm": [
+    22,
+    20,
+    12
+  ],
+  "upper_block_z_mm": [
+    4.7,
+    16.7
+  ],
+  "feed_bore_diameter_mm": 3,
+  "magnet_inner_faces_x_mm": [
+    -2.7,
+    2.7
+  ],
+  "pole_gap_mm": 5.4,
+  "magnet_face_mica_mm": 0.2,
+  "air_gap_steel_to_mica_mm": 0.5,
+  "copper_clamp_pad_width_length_mm": [
+    4.8,
+    5.2
+  ],
+  "ceramic_candidate": "McMaster92107A111, M2 sleeveL2.5 OD3 ID2.1 flangeOD4.2 thickness1.5",
+  "sleeve_bottom_axial_clearance_mm": 0.2,
+  "thread_engagement_nominal_mm": 3.8,
+  "minimum_target_clearance_below_exit_mm": 2.8,
+  "source_changes": [
+    "Nozzle/pool nominalprofile rebuilt to avoid Boolean slivers; lowerhead/source symmetricdifference recorded, not a new design.",
+    "Upperheaterblock machined integrally withstainlesshead; alternativecurrentbypass included.",
+    "Copper/mica gainflatwidepads aroundM2holes; boltinsulatedatheadandshank.",
+    "Magnetsmoved.7mmoutwards, mica.2+air.5gap tosteel; noqualifiedmagnettemperature."
+  ],
+  "limits": [
+    "Geometryenvelopesnotfullydimensionedtolerancedmanufacturingdrawings. Ceramiccomposition/k/preload/shipping notqualified.",
+    "Heater/sensor family dimensions, notcoldzone/internalthermalstructurequalification. Noheaterpower/ambientloss/feed/dynamicthermalbalanceyet.",
+    "Retainingscrews useidealnominalthreads; actualtapdrillcones/contacttorqueunfinished.",
+    "Magnetcarrier/frame/cables/electricalgrounds remainunfinished; no thermalcontacttomagnetassumed.",
+    "FieldassumesBr.95T SmCoandunitmu; sourcefiledidnotspecifygrade/direction. Declaredtestassumption."
+  ]
+}

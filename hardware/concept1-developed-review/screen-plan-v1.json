@@ -1,0 +1,80 @@
+{
+  "binary": "target/debug/examples/conduction_probe",
+  "binary_sha256": "6949a93f28a5051a7b6d033f53511718f9d6896e74431adfada4b4d8ea7034fa",
+  "expected_binary_hashes": {
+    "target/debug/examples/conduction_probe": "6949a93f28a5051a7b6d033f53511718f9d6896e74431adfada4b4d8ea7034fa",
+    "target/debug/examples/thermal_conductance": "6a61c63fc2683c5b866e1dee3634f368c300a87c336d9d15cbe90781f9b4952e"
+  },
+  "screen": "mixed",
+  "authorization_replies": [
+    860
+  ],
+  "jobs": [
+    {
+      "screen": "electrical",
+      "project": "hardware/designs/concept1-developed-v1/assembly-h0100.mhd.json",
+      "output": "artifacts/hardware-research/concept1-developed-v1-electrical-ideal",
+      "command": [
+        "target/debug/examples/conduction_probe",
+        "hardware/designs/concept1-developed-v1/assembly-h0100.mhd.json",
+        "100",
+        "artifacts/hardware-research/concept1-developed-v1-electrical-ideal",
+        "0",
+        "body",
+        "1e-7",
+        "0",
+        "y"
+      ]
+    },
+    {
+      "screen": "electrical",
+      "project": "hardware/designs/concept1-developed-v1/assembly-h0100.mhd.json",
+      "output": "artifacts/hardware-research/concept1-developed-v1-electrical-contact-low",
+      "command": [
+        "target/debug/examples/conduction_probe",
+        "hardware/designs/concept1-developed-v1/assembly-h0100.mhd.json",
+        "100",
+        "artifacts/hardware-research/concept1-developed-v1-electrical-contact-low",
+        "0",
+        "body",
+        "1e-7",
+        "1e-10",
+        "y"
+      ]
+    },
+    {
+      "screen": "electrical",
+      "project": "hardware/designs/concept1-developed-v1/assembly-h0100.mhd.json",
+      "output": "artifacts/hardware-research/concept1-developed-v1-electrical-contact-high",
+      "command": [
+        "target/debug/examples/conduction_probe",
+        "hardware/designs/concept1-developed-v1/assembly-h0100.mhd.json",
+        "100",
+        "artifacts/hardware-research/concept1-developed-v1-electrical-contact-high",
+        "0",
+        "body",
+        "1e-7",
+        "1e-09",
+        "y"
+      ]
+    },
+    {
+      "screen": "thermal",
+      "project": "hardware/designs/concept1-developed-v1/assembly-h0100.mhd.json",
+      "output": "artifacts/hardware-research/concept1-developed-v1-thermal-wall",
+      "extra_inputs": [
+        "hardware/concept1-developed-review/thermal-wall-boundary.json"
+      ],
+      "command": [
+        "target/debug/examples/thermal_conductance",
+        "--integral-pool-config",
+        "hardware/designs/concept1-developed-v1/assembly-h0100.mhd.json",
+        "hardware/concept1-developed-review/thermal-wall-boundary.json",
+        "artifacts/hardware-research/concept1-developed-v1-thermal-wall",
+        "1e-7"
+      ]
+    }
+  ],
+  "status": "FullassemblyCAD and initialGPU0overlaps. Current+Y, B+X ->downwardFz. Contactvaluesindependentsensitivitynotmeasuredquality.",
+  "limits": "Stationary.1mmfieldgrid, explicitfiniteCu/mica/ceramicsandallsteel. Thermalidealwall, excludesactualpower/contact/sheath/ambientloss/feed/magnetthermalbalance. Nojettingoroperatingtemperatureclaim."
+}

@@ -1,0 +1,45 @@
+{
+  "heater": {
+    "axis": 0,
+    "centre_mm": [
+      0,
+      5.5,
+      9.7
+    ],
+    "void_radius_mm": 3.05,
+    "void_span_mm": [
+      -11.2,
+      11.2
+    ]
+  },
+  "sensor": {
+    "axis": 0,
+    "centre_mm": [
+      0,
+      -5.5,
+      9.7
+    ],
+    "void_radius_mm": 1.55,
+    "void_span_mm": [
+      -11.2,
+      11.2
+    ]
+  },
+  "hot_radius_band_mm": [
+    3.05,
+    3.2
+  ],
+  "hot_span_mm": [
+    -9.8,
+    9.8
+  ],
+  "label": "Idealwholeheater-borewall; heateractive-zone detailsnotqualified",
+  "conductivity_by_material_w_m_k": {
+    "14": 15,
+    "16": 394,
+    "17": 394,
+    "20": 394,
+    "19": 0.528,
+    "21": 25
+  }
+}
