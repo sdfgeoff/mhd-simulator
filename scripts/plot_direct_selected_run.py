@@ -1,5 +1,6 @@
 """CAD and accepted fields for the completed 110 A direct-contact study."""
 import csv
+import argparse
 import json
 from pathlib import Path
 import matplotlib
@@ -10,10 +11,14 @@ from matplotlib.patches import Patch
 from draw_hardware_layouts import load, section, COLORS
 from native_field_io import read_native_fields
 
-RUN=Path('artifacts/hardware-research/m6-rooted08-flow110-r25-chargefix-h0050')
-evidence=json.loads(Path('hardware/m6-rooted-flow-refinement-screening.json').read_text())['runs'][1]
-assert str(RUN)==evidence['source'] and evidence['native_status']['status']=='complete'
-project=json.loads(Path(evidence['native_status']['project']).read_text())
+parser=argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--run',type=Path,default=Path('artifacts/hardware-research/m6-rooted08-flow110-r25-chargefix-h0050'))
+parser.add_argument('--output',type=Path,default=Path('hardware/actuator-families/selected-direct-run.png'))
+parser.add_argument('--label',default='Direct contact: selected low-current circular-nozzle candidate')
+args=parser.parse_args();RUN=args.run
+status=json.loads((RUN/'run-status.json').read_text());assert status['status']=='complete'
+project=json.loads(Path(status['project']).read_text())
+analysis=json.loads((RUN/'flow-analysis.json').read_text());regions=analysis['frames'][-1]['connectivity_thresholds']['0.5']
 parts,_=load(project['geometry'])
 fig=plt.figure(figsize=(16,11))
 gs=fig.add_gridspec(2,4,height_ratios=[2.3,1],left=.055,right=.94,top=.84,bottom=.20,wspace=.38,hspace=.48)
@@ -47,16 +52,19 @@ t=np.array([float(r['time_s'])*1e6 for r in rows])
 ax.plot(t,[float(r['command_A']) for r in rows],color='#287747',lw=2,label='Commanded current')
 ax.plot(t,[float(r['current_A']) for r in rows],color='#374350',lw=1,ls=':',label='Solved terminal current')
 ax.axhline(0,color='#94a3b8',lw=.7)
-ax.set(xlim=(0,500),ylim=(-40,125),xlabel='Time (µs)',ylabel='Current (A)',title='Same completed run: forward pulse and reverse retrieval')
-ax.text(120,117,'+110 A',ha='center',fontsize=10);ax.text(320,-34,'−27.5 A',ha='center',fontsize=10)
+peak=status['peak_A'];reverse=peak*status['retract_fraction'];duration=status['positive_duration_s']*1e6;gap=status['retract_delay_s']*1e6
+ax.set(xlim=(0,duration*4/3+gap+140),ylim=(-reverse*1.45,peak*1.14),xlabel='Time (µs)',ylabel='Current (A)',title='Same completed run: forward pulse and reverse retrieval')
+ax.text(duration/2,peak*1.065,f'+{peak:g} A',ha='center',fontsize=10);ax.text(duration+gap+duration/6,-reverse*1.25,f'−{reverse:g} A',ha='center',fontsize=10)
 ax.grid(alpha=.18);ax.legend(loc='upper right',frameon=False)
-fig.suptitle('Direct contact: selected low-current circular-nozzle candidate',fontsize=18,y=.965)
-fig.text(.5,.91,'110 A / 250 µs forward · 25 µs gap · reverse 27.5 A / 83 µs · completed 3.6 ms at 50 µm grid',ha='center',fontsize=12)
+fig.suptitle(args.label,fontsize=18,y=.965)
+fig.text(.5,.91,f'{peak:g} A / {duration:g} µs forward · {gap:g} µs gap · reverse {reverse:g} A / {duration/3:.0f} µs · completed {status["time_s"]*1000:.1f} ms at {status["grid"]["cell_m"]*1e6:.0f} µm grid',ha='center',fontsize=12)
 fig.legend(handles=[Patch(facecolor=COLORS[k],label=s) for k,s in [('steel','Stainless'),('liquid','Initial solder'),('copper','Copper contacts'),('magnet','Permanent magnets'),('heater','Heater (CAD only)')]],
            loc='lower center',bbox_to_anchor=(.5,.115),ncol=5,frameon=False)
-fig.text(.5,.075,'Final leading region: 0.596 mm / 0.889 m/s downward. Secondary region: 0.417 mm / 0.076 m/s downward.\n'
-         'These diameters use liquid fraction ≥ 0.5; both regions are shown. This is not clean single-drop release.',ha='center',fontsize=10)
+description=f'{len(regions)} detached region(s) at liquid fraction ≥ 0.5.'
+for index,r in enumerate(sorted(regions,key=lambda r:r['volume_nl'],reverse=True)):
+    description+=f' Region {index+1}: {r["equivalent_diameter_mm"]:.3f} mm / {-r["velocity_m_s"][2]:.3f} m/s downward.'
+fig.text(.5,.075,description+'\nSingle-pulse morphology is not demonstrated repeated jetting or grid convergence.',ha='center',fontsize=10)
 fig.text(.5,.025,'Different panel scales. C–D: two central y-cell layers averaged; grey = native solid mask; line = liquid fraction 0.5.\n'
          'Heater shown in CAD, excluded from this flow run. Ideal interfaces; static applied field; no thermal evolution. Existing data only.',ha='center',fontsize=10)
-fig.savefig('hardware/actuator-families/selected-direct-run.png',dpi=170)
+fig.savefig(args.output,dpi=170)
 plt.close(fig)

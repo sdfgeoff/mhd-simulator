@@ -14,6 +14,14 @@ Requested in topic 25, replies 797–801. The CAD was shown and reviewed before 
 
 The rejected direct-cavity and shared-surface diagnostic meshes are parked under `artifacts/hardware-research/cases/plain-bore-invalid-mesh-diagnostics` and marked invalid. They are not simulation candidates. `examples/inspect_overlap.rs` performs initial voxelization and reports conflicting body masks without time integration.
 
+## Completed corrected 2 mm case
+
+![Corrected 2 mm CAD, saved fluid and current profile](2mm-summary.png)
+
+The V4 2 mm run completes 2,400 accepted steps / 3.6 ms. Its final export has one detached region at all four reported liquid-fraction thresholds. At threshold 0.5 the diameter is 0.60348 mm and downward speed 0.64766 m/s. This is one simulated pulse, not a repeated-jetting qualification. The 3 mm case was still running when this individual summary was posted. [Recorded metrics](2mm-summary.json).
+
+Reproduce the image with `scripts/plot_direct_selected_run.py --run artifacts/hardware-research/plain-bore-v4-2mm-flow110-r25-h0050 --output hardware/plain-bore-review/2mm-summary.png --label 'Completed straight 2 mm bore: corrected-mesh direct-contact nozzle'` under the same headless Python environment as the other plots.
+
 **Manufacturing correction, reply 804:** these drafts are custom M6-compatible shapes, not subtractive conversions verified against a stock V6 solid. Their 10 mm body and stockier lower nose differ from a standard 12.5 mm V6. Closed meshes and absence of overlaps do not establish stock containment. The authorized simulations must not be described as stock-V6 conversion tests. A subtractive-only revision would have to preserve the stock mounting and outlet, start from the correct smaller-bore variant, and check all proposed cuts and remaining walls. An existing 3.2 mm bore cannot be reduced to 2 or 3 mm by cutting.
 
 ![Previous geometry and proposed straight bores](cad-comparison.png)

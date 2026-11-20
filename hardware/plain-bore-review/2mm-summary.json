@@ -1,0 +1,91 @@
+{
+  "status": "Corrected2mm complete;3mmstillrunning, notfinalpairassessment",
+  "time_s": 0.003600000000000199,
+  "accepted_steps": 2400,
+  "final_regions_by_threshold": {
+    "0.01": [
+      {
+        "volume_nl": 122.39513738914786,
+        "equivalent_diameter_mm": 0.6160110660914838,
+        "cells": 1302,
+        "centre_mm": [
+          -0.0024234772937966396,
+          -0.0015355552403834355,
+          -2.449544461620483
+        ],
+        "velocity_m_s": [
+          -0.0005219524609856308,
+          -0.0007940565701574087,
+          -0.6429409980773926
+        ],
+        "touches_domain_boundary": false
+      }
+    ],
+    "0.25": [
+      {
+        "volume_nl": 119.90090689513553,
+        "equivalent_diameter_mm": 0.6117978529854732,
+        "cells": 1076,
+        "centre_mm": [
+          -0.0018874568306946427,
+          -0.001495633927357085,
+          -2.449507964313825
+        ],
+        "velocity_m_s": [
+          -0.0005124863237142563,
+          -0.0007948910351842642,
+          -0.6444458961486816
+        ],
+        "touches_domain_boundary": false
+      }
+    ],
+    "0.5": [
+      {
+        "volume_nl": 115.07764029398308,
+        "equivalent_diameter_mm": 0.6034817048297797,
+        "cells": 972,
+        "centre_mm": [
+          -0.0024542951880917653,
+          -0.001456867638005998,
+          -2.449355620241846
+        ],
+        "velocity_m_s": [
+          -0.00036978168645873666,
+          -0.0008729977998882532,
+          -0.6476606130599976
+        ],
+        "touches_domain_boundary": false
+      }
+    ],
+    "0.75": [
+      {
+        "volume_nl": 108.11435012285969,
+        "equivalent_diameter_mm": 0.5910554686526185,
+        "cells": 884,
+        "centre_mm": [
+          -0.0019381166410005046,
+          -0.002821958143476768,
+          -2.4490961818560746
+        ],
+        "velocity_m_s": [
+          -0.0007877439493313432,
+          -0.0006271624588407576,
+          -0.6522688269615173
+        ],
+        "touches_domain_boundary": false
+      }
+    ]
+  },
+  "max_abs_relative_volume_drift": 1.085852618931682e-08,
+  "any_liquid_boundary_contact": false,
+  "peak_head_voltage_V": 0.15190564095973969,
+  "RMS_A_at_assumed200Hz": 23.431915950385154,
+  "electrical_identity_relative_defect": -1.7719143505206244e-05,
+  "current_criteria": {
+    "max_combined_port_imbalance_A": 1.52587890625e-05,
+    "max_motional_imbalance_A": 1.508669924987771e-06,
+    "max_unit_relative_imbalance": 9.999166650231928e-06,
+    "motional_absolute_tolerance_A": 9.999999974752427e-07,
+    "unit_relative_tolerance": 1e-05
+  }
+}
