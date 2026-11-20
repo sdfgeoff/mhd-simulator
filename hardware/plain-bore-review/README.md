@@ -1,6 +1,6 @@
 # Plain bore pair: CAD review before simulation
 
-Requested in topic 25, replies 797–801. **No GPU simulation has started.** The user requested seeing the CAD before launch.
+Requested in topic 25, replies 797–801. The CAD was shown and reviewed before launch; both custom-part simulations were subsequently approved in reply 805. The figure below records the pre-launch review.
 
 **Update, reply 805:** the user accepted these as custom parts and authorized both runs after the CAD review. The fixed two-case sequence was launched headlessly on NVIDIA, using the unchanged executable from the completed fine-grid reference. [Commands and scope](simulation-plan.json). Live state is preserved locally in `artifacts/hardware-research/plain-bore-v1-state.json`; this approval does not resume the wider research campaign.
 
