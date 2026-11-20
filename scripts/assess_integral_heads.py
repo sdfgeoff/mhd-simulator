@@ -6,9 +6,10 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
-parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--study',choices=['initial','near'],default='initial');args=parser.parse_args()
-root=Path('artifacts/hardware-research');out=Path('hardware/integral-head-review')/('near-heater' if args.study=='near' else '');cases=[]
+parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--study',choices=['initial','near','vertical'],default='initial');args=parser.parse_args()
+root=Path('artifacts/hardware-research');out=Path('hardware/integral-head-review')/({'near':'near-heater','vertical':'vertical-heater'}.get(args.study,''));cases=[]
 inputs=[(k,root/f'integral-{k}-v2-cold100-h0100') for k in ['slotted-arms','side-heated']] if args.study=='initial' else [('side-heated',root/'integral-side-heated-v2-cold100-h0100'),('side-heated-near',root/'integral-side-heated-near-v1-cold100-h0100')]
+if args.study=='vertical':inputs=[('side-heated-near',root/'integral-side-heated-near-v1-cold100-h0100'),('vertical-heater',root/'integral-vertical-heater-v2-cold100-h0100')]
 fig,axes=plt.subplots(2,3,figsize=(14,10));fig.subplots_adjust(left=.06,right=.94,top=.87,bottom=.15,wspace=.4,hspace=.35)
 for row,(kind,run) in enumerate(inputs):
     report=json.loads((run/'report.json').read_text());grid=json.loads((run/'grid.json').read_text());nx,ny,nz=grid['dims'];h=grid['cell_m'];origin=np.array(grid['origin_m']);field=np.memmap(run/'em.bin',dtype='<f4',mode='r',shape=(nz,ny,nx,16));ids=np.memmap(run/'material-ids.bin',dtype='<u4',mode='r',shape=(nz,ny,nx))
@@ -33,12 +34,12 @@ for row,(kind,run) in enumerate(inputs):
         else:
             im=ax.imshow(np.ma.masked_where(mid!=4,s[:,:,10]*1e-6),origin='lower',extent=extent,cmap='RdBu_r',vmin=-12,vmax=12,interpolation='nearest');label='Liquid force density fz (mN/mm³)'
             X,Z=np.meshgrid(x,z);stride=(slice(None,None,4),slice(None,None,3));fx=s[:,:,8];fz=s[:,:,10];norm=np.hypot(fx,fz);mask=(mid==4)&(norm>1e3);qx=np.where(mask,fx/np.maximum(norm,1e-30),np.nan);qz=np.where(mask,fz/np.maximum(norm,1e-30),np.nan);ax.quiver(X[stride],Z[stride],qx[stride],qz[stride],color='#273b4b',angles='xy',scale_units='xy',scale=5,width=.006)
-        ax.set(xlim=(-1.5,1.5) if col==2 else (-10.5,10.5),ylim=(-.2,6.4) if col==2 else (-.5,20),aspect='equal',xlabel='x (mm)',ylabel='z (mm)',title=(kind.replace('-',' ').title()+': '+['current','heating','liquid force'][col]))
+        ax.set(xlim=(-1.5,1.5) if col==2 else ((-11.5,10.5) if args.study=='vertical' else (-10.5,10.5)),ylim=(-.2,6.4) if col==2 else ((-.5,29) if args.study=='vertical' else (-.5,20)),aspect='equal',xlabel='x (mm)',ylabel='z (mm)',title=(kind.replace('-',' ').title()+': '+['current','heating','liquid force'][col]))
         fig.colorbar(im,ax=ax,shrink=.8,pad=.03,label=label)
     del field,ids
 report={'status':'Both completed native100A full-body static screens; not thermal or jetting simulations','cases':cases,'limits':['One0.1mm grid; no convergence qualification.','Current sharing is a cell-centred central-plane proxy, not a unique fluid through-current.','Full stainless body and heater/sensor sheath geometry retained; isolated outer magnet occupancy partly cropped, full applied magnet sources unchanged.','Fixed hot properties, ideal continuity within one steel part; no external cables/grounds, carrier/fasteners or heater internal insulation.','Joule heat is instantaneous100A power; temperatures, pulse train heating and fluid dynamics not calculated.']};(out/'electrical-results.json').write_text(json.dumps(report,indent=2)+'\n')
 fig.suptitle('One-piece stainless heads — native stationary 100 A results',fontsize=17,y=.98)
-fig.text(.5,.93,'Same pool and full magnet sources · 0.1 mm cells · all current-carrying metal and heater/sensor sheaths included',ha='center',fontsize=11)
+fig.text(.5,.93,('Same pool / full magnet sources · 0.1 mm cells · vertical pole gap 6 mm versus 4 mm for horizontal' if args.study=='vertical' else 'Same pool and full magnet sources · 0.1 mm cells · all current-carrying metal and heater/sensor sheaths included'),ha='center',fontsize=11)
 fig.text(.5,.015,'Arrows show direction only: current in the first column, force in liquid in the third. Blue force colour means downward.\nJoule heat is instantaneous at 100 A, not a temperature. Terminal regions have the same conductivity as the stainless body.\nDifferent force-panel scale; static total forces are not pressures or demonstrated droplet trajectories.',ha='center',va='bottom',fontsize=10)
 fig.savefig(out/'electrical-results.png',dpi=160);plt.close(fig)
 print(json.dumps([{k:c[k] for k in ['concept','liquid_midplane_fraction_proxy','lateral_to_axial_force_ratio','CPU_sum_Joule_relative_difference']} for c in cases],indent=2))

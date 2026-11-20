@@ -13,5 +13,7 @@
   "CPU_loader_passed": true,
   "thermal_GPU_analytic_checks": "k15/k30uniform rods and metal/mica/metal series passed",
   "thermal_geometry_unit_checks": "axis permutation invariant; finite vertical span retains drill floor, excludes floating sheath; invalid axis rejected",
-  "domain_scope": "Full connected steel and pool. Only isolated outer magnet/sensor occupancy cropped; all PM source surfaces retained."
+  "domain_scope": "Full connected steel and pool. Only isolated outer magnet/sensor occupancy cropped; all PM source surfaces retained.",
+  "all_frozen_input_hashes_match_after_completion": true,
+  "native_sequence_state": "artifacts/hardware-research/integral-vertical-heater-v2-screens-v1-state.json"
 }
