@@ -21,13 +21,13 @@ Reproduce CAD with `uv run --offline --with manifold3d --with matplotlib --with 
 |---|---:|---:|
 | Voltage at100A |0.18175V |0.17549V |
 | Instantaneous Joule power |18.1747W |17.5490W |
-| Sampled liquid centre-plane current proxy |63.05A |53.79A |
+| Sampled liquid centre-plane current proxy |63.05A |63.86A |
 | Total downward liquid force |38.15mN |29.05mN |
 | Total lateral liquid force magnitude |31.05mN |17.94mN |
 | Ideal whole-wall-to-pool thermal resistance |12.4457K/W |5.9356K/W |
 | Vertical nominal winding-span wall-to-pool resistance |Not evaluated |14.3521K/W |
 
-1. Voltage/power change little. Downward force falls about24%, with both current sharing and pole-gap/field changes included. This is a whole-layout comparison, not an isolated measurement of magnet-gap sensitivity. The liquid current is a cell-centred plane proxy, not a unique fluid through-current. Force is not pressure or a predicted trajectory.
+1. Voltage/power change little. Downward force falls about24%, with the steel path and pole-gap/field changes included. This is a whole-layout comparison, not an isolated measurement of magnet-gap sensitivity. The liquid current is a cell-centred plane proxy, not a unique fluid through-current. Force is not pressure or a predicted trajectory.
 2. Heating the entire vertical bore wall gives an optimistic2.1x conductance relative to the older horizontal whole-wall control. Restricting the prescribed wall temperature to the nominal winding span reduces the vertical conductance to0.06968W/K. This demonstrates sensitivity to where heat enters the body; it does not establish that a real vertical cartridge is better or worse than a real horizontal one.
 3. The active-span control leaves the rest of the bore wall adiabatic. Real internal heat spreading and cold-tip heat delivery are not resolved. A finite cartridge/contact/heat-loss model and actual heater selection are needed before operating-temperature or feed-rate claims. Neither thermal result is a droplet qualification.
 4. Native electrical boundary defect5.13ppm and energy defect2.74ppm; thermal heat-return defects0.265ppm (ideal) and1.069ppm (active-span). Maximum-principle range is[0,1] for both thermal fields. CPU integration of exported Joule heat agrees with native power within0.03ppm. Floating sheath cells are excluded using the actual bore axes and finite axial spans.
@@ -36,3 +36,5 @@ Reproduce CAD with `uv run --offline --with manifold3d --with matplotlib --with 
 ![Native100A current, heat and liquid force](electrical-results.png)
 
 ![Ideal wall and nominal active-span thermal fields](thermal-results.png)
+
+6. Reporting correction: the original native centre-plane proxy used the domain middle, X=-0.45mm for this asymmetric domain. Read-only assessment now integrates the saved field on the actual first nonnegative-X plane (X=+0.05mm), giving63.86A rather than53.79A. Voltage, power, total force and thermal results are unchanged. The native output is preserved and the source reporting bug is fixed for subsequent builds.

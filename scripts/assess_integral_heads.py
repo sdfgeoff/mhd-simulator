@@ -22,7 +22,9 @@ for row,(kind,run) in enumerate(inputs):
             if len(values):maximum=max(maximum,float(values.max()))
         sums[str(mid)]=total;maximums[str(mid)]=maximum/1e9
     power=sum(sums.values());assert abs(power/report['joule_power_W']-1)<1e-4
-    case={'concept':kind,'source':str(run),'native':report,'joule_power_by_material_W':sums,'peak_voxel_joule_density_by_material_W_mm3':maximums,'CPU_sum_Joule_relative_difference':power/report['joule_power_W']-1,'liquid_midplane_fraction_proxy':report['midplane_adjacent_cell_liquid_current_A']/report['current_A'],'lateral_to_axial_force_ratio':abs(report['liquid_force_N'][0]/report['liquid_force_N'][2])};cases.append(case)
+    x_centres=origin[0]+(np.arange(nx)+.5)*h;plane=int(np.searchsorted(x_centres,0));assert plane<nx
+    liquid_plane_current=float(field[:,:,plane,4][ids[:,:,plane]==4].sum(dtype=np.float64)*h*h)
+    case={'zero_plane_cell_x_mm':float(x_centres[plane]*1000),'zero_plane_liquid_current_A':liquid_plane_current,'native_legacy_plane_cell_x_mm':float(x_centres[nx//2]*1000),'concept':kind,'source':str(run),'native':report,'joule_power_by_material_W':sums,'peak_voxel_joule_density_by_material_W_mm3':maximums,'CPU_sum_Joule_relative_difference':power/report['joule_power_W']-1,'liquid_midplane_fraction_proxy':liquid_plane_current/report['current_A'],'lateral_to_axial_force_ratio':abs(report['liquid_force_N'][0]/report['liquid_force_N'][2])};cases.append(case)
     s=np.array(field[:,ny//2,:,:]);mid=np.array(ids[:,ny//2,:]);x=(origin[0]+(np.arange(nx)+.5)*h)*1000;z=(origin[2]+(np.arange(nz)+.5)*h)*1000;extent=[origin[0]*1000,(origin[0]+nx*h)*1000,origin[2]*1000,(origin[2]+nz*h)*1000];metal=np.isin(mid,[14,16,17]);conducting=metal|(mid==4)
     for col in range(3):
         ax=axes[row,col];ax.set_facecolor('#f6f8fa');ax.contour(x,z,conducting.astype(float),levels=[.5],colors='#6c7780',linewidths=.5);ax.contour(x,z,(mid==4).astype(float),levels=[.5],colors='#216b8c',linewidths=.7)

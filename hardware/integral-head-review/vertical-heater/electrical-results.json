@@ -2,6 +2,9 @@
   "status": "Both completed native100A full-body static screens; not thermal or jetting simulations",
   "cases": [
     {
+      "zero_plane_cell_x_mm": 0.05000011879019439,
+      "zero_plane_liquid_current_A": 63.04956780938713,
+      "native_legacy_plane_cell_x_mm": 0.05000011879019439,
       "concept": "side-heated-near",
       "source": "artifacts/hardware-research/integral-side-heated-near-v1-cold100-h0100",
       "native": {
@@ -64,6 +67,9 @@
       "lateral_to_axial_force_ratio": 0.8140698627218597
     },
     {
+      "zero_plane_cell_x_mm": 0.050000002374872565,
+      "zero_plane_liquid_current_A": 63.85889847626942,
+      "native_legacy_plane_cell_x_mm": -0.4500000213738531,
       "concept": "vertical-heater",
       "source": "artifacts/hardware-research/integral-vertical-heater-v2-cold100-h0100",
       "native": {
@@ -122,7 +128,7 @@
         "18": 0.0
       },
       "CPU_sum_Joule_relative_difference": -2.783086272550861e-08,
-      "liquid_midplane_fraction_proxy": 0.5379238235250182,
+      "liquid_midplane_fraction_proxy": 0.6385889847626942,
       "lateral_to_axial_force_ratio": 0.6174655643792187
     }
   ],

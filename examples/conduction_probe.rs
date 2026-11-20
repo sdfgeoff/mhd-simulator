@@ -12,6 +12,10 @@ use mhd_workbench::{
 };
 use std::{error::Error, path::Path};
 
+fn first_nonnegative_cell(origin: f64, h: f64, n: u32) -> Option<u32> {
+    (0..n).find(|&i| origin + (f64::from(i) + 0.5) * h >= 0.)
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
     let a: Vec<_> = std::env::args().collect();
     let p = project::load(Path::new(a.get(1).ok_or(
@@ -149,12 +153,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut liquid_current_integral = 0.;
     let mut wall_current_integral = 0.;
     let mut mean_by = 0.;
+    let zero_plane = first_nonnegative_cell(f64::from(grid.origin_m[0]), h, grid.dims[0]);
     let mut midplane_liquid = 0.;
     let mut midplane_wall = 0.;
     let mut count = 0usize;
     for (i, (&id, f)) in ids.iter().zip(&fields).enumerate() {
         let x = f64::from(grid.origin_m[0]) + (i as u32 % grid.dims[0]) as f64 * h + h / 2.;
-        if i as u32 % grid.dims[0] == grid.dims[0] / 2 {
+        if Some(i as u32 % grid.dims[0]) == zero_plane {
             if id == 4 {
                 midplane_liquid += f64::from(f.j[0]) * h * h;
             }
@@ -179,7 +184,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
         }
     }
-    let report = serde_json::json!({"project":a[1],"terminal_boundary":terminal_boundary,"requested_relative_tolerance":relative_tolerance,"terminal_x_cell_indices":terminal_x,"released_static_workspace_bytes":released_static_workspace_bytes,"contact_resistivity_ohm_m2":contact,"status":"cold DC conduction and applied permanent-magnet field only; no ejection simulation","iterations":solver.iterations,"true_relative_residual":solver.relative_residual,"boundary_current_defect":solver.boundary_current_defect,"potential_representation":"split f32 high/low","current_A":stats[0],"return_current_A":stats[1],"terminal_voltage_V":voltage,"joule_power_W":stats[2],"source_power_W":voltage*0.5*(stats[0]-stats[1]),"power_relative_defect":stats[2]/(voltage*0.5*(stats[0]-stats[1]))-1.,"power_definition":"sum terminal phi*I on both ports","liquid_force_N":force,"liquid_joule_power_W":liquid_power,"liquid_mean_By_T":mean_by/count as f64,"midplane_adjacent_cell_liquid_current_A":midplane_liquid,"midplane_adjacent_cell_wall_current_A":midplane_wall,"mean_liquid_current_over_x_plus_minus_2mm_A":liquid_current_integral/0.004,"mean_wall_current_over_x_plus_minus_2mm_A":wall_current_integral/0.004,"limitations":["Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.","Ideal electrical contact; material and oxide/contact resistance require bracketing.","body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.","Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.","Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."]});
+    let report = serde_json::json!({"project":a[1],"terminal_boundary":terminal_boundary,"requested_relative_tolerance":relative_tolerance,"terminal_x_cell_indices":terminal_x,"released_static_workspace_bytes":released_static_workspace_bytes,"contact_resistivity_ohm_m2":contact,"status":"cold DC conduction and applied permanent-magnet field only; no ejection simulation","iterations":solver.iterations,"true_relative_residual":solver.relative_residual,"boundary_current_defect":solver.boundary_current_defect,"potential_representation":"split f32 high/low","current_A":stats[0],"return_current_A":stats[1],"terminal_voltage_V":voltage,"joule_power_W":stats[2],"source_power_W":voltage*0.5*(stats[0]-stats[1]),"power_relative_defect":stats[2]/(voltage*0.5*(stats[0]-stats[1]))-1.,"power_definition":"sum terminal phi*I on both ports","liquid_force_N":force,"liquid_joule_power_W":liquid_power,"liquid_mean_By_T":mean_by/count as f64,"midplane_x_cell_index":zero_plane,"midplane_x_m":zero_plane.map(|i|f64::from(grid.origin_m[0])+(f64::from(i)+0.5)*h),"midplane_adjacent_cell_liquid_current_A":midplane_liquid,"midplane_adjacent_cell_wall_current_A":midplane_wall,"mean_liquid_current_over_x_plus_minus_2mm_A":liquid_current_integral/0.004,"mean_wall_current_over_x_plus_minus_2mm_A":wall_current_integral/0.004,"limitations":["Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.","Ideal electrical contact; material and oxide/contact resistance require bracketing.","body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.","Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.","Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."]});
     std::fs::write(
         output.join("report.json"),
         serde_json::to_vec_pretty(&report)?,
@@ -194,4 +199,15 @@ fn main() -> Result<(), Box<dyn Error>> {
     )?;
     println!("{}", serde_json::to_string_pretty(&report)?);
     Ok(())
+}
+
+#[cfg(test)]
+mod plane_tests {
+    use super::first_nonnegative_cell;
+    #[test]
+    fn physical_zero_plane_is_independent_of_domain_centre() {
+        assert_eq!(first_nonnegative_cell(-11.2, 0.1, 214), Some(112));
+        assert_eq!(first_nonnegative_cell(-10.2, 0.1, 204), Some(102));
+        assert_eq!(first_nonnegative_cell(-10., 0.1, 20), None);
+    }
 }

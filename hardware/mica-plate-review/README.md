@@ -15,3 +15,15 @@ Proposed assembly for user topic25 replies842(option2) and851. This is CPU CAD, 
 ![Actual CAD sections](proposed-cuts.png)
 
 Reproduce with `uv run --offline --with manifold3d --with numpy --with matplotlib python scripts/make_mica_plate_head.py`. It refuses an existing output directory.
+
+## Initial completed screens
+
+1. The actual GPU voxelization has zero overlaps. All20 bodies are represented. Face-adjacent Cu/SS contacts occur only in the intended lower pad/screw band (Z=0.85..5.75mm), not at the insulated upper mounts. This verifies the discretized separation, not real clamp insulation reliability.
+2. At100A, the V2 ideal-contact solve gives0.083806V and8.38068W instantaneous Joule power. About1.53347W is in copper (plates plus small cable-port annuli),6.60858W in stainless including screws, and0.23863W in liquid. Central-plane liquid current proxy is49.56A. Total liquid force is25.049mN down,0.260mN alongY and0.0014mN alongX; these are static totals, not pressure or a droplet trajectory.
+3. The material-aware nominal-active-span thermal screen givesG=0.0530933W/K, R=18.8348K/W. This copper/mica arrangement has not demonstrated improved ideal heat delivery to the pool. The central thermal cut shows a substantial gradient in the steel near the pool. Different source/layouts mean this is not a controlled measurement of mica alone.
+4. V1 electrical solve met charge balance but its energy defect147.7ppm missed the100ppm gate; it is preserved. V2 changed only the requested residual from1e-6 to1e-7, keeping geometry, PDE, ports, binary and acceptance gates unchanged. V2 energy defect5.48ppm and charge defect0.060ppm pass. The thermal heat-return and energy defects are0.140ppm and0.119ppm; normalized temperature range[0,1]. All frozen hashes match after completion. No long fluid run was started.
+5. These initial results still assume ideal Cu/SS electrical and thermal joints. The finite mica and sleeve thermal conductivities are included. Real preload/interface resistance, finite cartridge heat spreading, external loss, feed demand and magnet heat balance are not. No operating-temperature or sustained-jetting claim.
+6. Practical hardware lead: the [McMaster ceramic shoulder-washer catalogue](https://www.mcmaster.com/products/ceramic-shoulder-washers/) lists M3 part92107A113 with3.5mm sleeve length,4mm sleeve OD,3.1mm ID,6.2mm flange OD and1.5mm flange thickness. This is a catalogue candidate, not verified NZ availability or an order recommendation. It differs from the provisional CAD sleeve/washer and needs a1.4mm recess into the body for a2mmCu+0.1mmmica stack, plus flange/bolt/tolerance checks. Do not substitute it without updating the CAD.
+7. Next work should select practical insulated mounting parts, quantify joint sensitivity, and investigate a broad lower heat/contact route closer to the pool while keeping the copper rectangular. Moving material inward also changes current bypass and must be tested together; it is not assumed to improve jetting.
+
+![Saved electrical and material-aware thermal fields](results.png)
