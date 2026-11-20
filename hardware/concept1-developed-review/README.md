@@ -9,7 +9,23 @@ Authorized by Geoffrey topic25reply860. The source`/home/geoffrey/Reference/OffT
 5. The original0.1mmmica sheet stays between copper and the head. Its tip opening leaves the intended vertical Cu/SS edge contacts. No conductive clamp path is intended through the upper body. Bolts and retaining screws remain in the model, so unintended current sharing can be checked.
 6. Magnet faces move fromX=±2to±2.7mm. Each has0.2mm mica plus0.5mm air to the steel. The same5mm cube geometry is retained. Br0.95T, magnetization+X andmu_r=1 are declared screening assumptions; the user's original model did not specify magnetic grade. PositiveY current then gives negativeZ Lorentz force. Actual grade, carriers, cooling and magnet temperature remain unresolved; the gap is not a temperature qualification.
 7. Clamp heads now extend2.8mm below the outlet plane. This increases minimum flat-target stand-off from the original magnet-limited2mm; additional carrier/target clearance must be allowed. Wires, lugs, heater leads and external grounded frame paths are unfinished.
-8. Initial CPU checks show one connected steel part and no positive-volume overlaps; the actual loader accepts22 bodies. GPU voxelization also has zero overlaps. All current-carrying geometry fits the computation domain. Initial100A electrical/contact-sensitivity and ideal-bore-wall thermal screens are prepared; no jetting result yet.
+8. Initial CPU checks show one connected steel part and no positive-volume overlaps; the actual loader accepts22 bodies. GPU voxelization also has zero overlaps. All current-carrying geometry fits the computation domain. Initial100A electrical/contact-sensitivity and ideal-bore-wall thermal screens completed; matched coupledflow trials are running. No jetting result yet.
 9. The thermal screen includes finite SS/Cu/mica/ceramic conductivity but prescribes the whole heater-bore wall temperature. It omits finite cartridge power, cold zones/internal spreading, sheath/contact resistance, air/radiation, wire-feed demand, Joule heat and magnet/frame thermal balance. It measures ideal conductance only. Contact resistivity values are sensitivities, not measured joint quality.
 
 ![Actual developed CAD cuts](proposed-cuts.png)
+
+## First completed assembly screens
+
+| Cu/SS contact-resistivity scenario | Voltage at100A | Instantaneous heating | Downward liquid force |
+|---|---:|---:|---:|
+| Ideal0 |0.21885V |21.885W |5.897mN |
+|1e-10Ωm² |0.28326V |28.326W |5.833mN |
+|1e-9Ωm² |0.84749V |84.749W |5.775mN |
+
+1. These are independent contact scenarios, not measurements or claimed hot-joint quality ranges. All charge/energy gates pass. The mean applied field in the liquid is0.1644T for the declared5mmcube/Br0.95T assumptions. The first nonnegativeY-plane liquid-current proxy is64.42A in the ideal case; this is not a unique through-current.
+2. Ideal heater-bore-wall-to-poolG=0.125503W/K, R=7.96794K/W. This demonstrates a better ideal heat route than the earlier tall-plate assembly, not a finite-power operating heat balance. Thermal heat-return/energy errors pass and normalized temperatures stay[0,1].
+3. Scaling the static cell-averaged heat by a250µs100A pulse,20µs rise/fall, followed after25µs by83.33µs at-25A gives226.875µs equivalent full-current heating time. With no heat spreading, the hottest stainless-cell estimates are8.76K ideal,11.16K low-contact and35.82K high-contact. These are grid-cell estimates from a static field, not predictions of microscopic contact flash temperature or safe pulse repetition. Sustained temperature and magnet heating remain unresolved.
+4. A full-assembly coupled startup test accepted2steps at3µs, including pressure/interface motion and the current equation. GPU allocation fits. The matched1200step/3.6ms pair runs driven100A first, then0A, using the same pulse shape and250°C initial properties. Current conductivity updates with the moving interface and includes motionalEMF; forces are not frozen. Temperature evolution is disabled. The imposed-field/inductionless approximation omits current self-field and magnet reaction.
+5. Both cases use100µm spacing, only4cells across the0.4mm outlet. They are startup/drop-response screens, not breakup qualification. First-step costs were about8–11seconds total, so the pair can take severalhours; no completion time is promised. Saved fields every0.6ms allow early inspection. The reporter uses the actual exitZ=-0.5mm.
+
+![Native stationary fields](static-results.png)

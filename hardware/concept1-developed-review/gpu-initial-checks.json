@@ -1,0 +1,139 @@
+{
+  "status": "GPUzerooverlap, all22bodiesrepresented, CuSSfacesonlyattip; noCuSScontactatinsulatedclamps",
+  "counts": [
+    {
+      "body": "Integrated stainless Concept1 head and heater block / 0",
+      "material_id": 14,
+      "cells": 4533692
+    },
+    {
+      "body": "Molten SnCu pool original concept / 0",
+      "material_id": 4,
+      "cells": 22920
+    },
+    {
+      "body": "Positive copper strip with flat clamp pad / 0",
+      "material_id": 20,
+      "cells": 8896
+    },
+    {
+      "body": "Positive mica sheet under head / 0",
+      "material_id": 19,
+      "cells": 2524
+    },
+    {
+      "body": "Positive M2 ceramic shoulder sleeve / 0",
+      "material_id": 21,
+      "cells": 9600
+    },
+    {
+      "body": "Positive M2 ceramic shoulder flange / 0",
+      "material_id": 21,
+      "cells": 15960
+    },
+    {
+      "body": "Positive insulated M2x8 clamp screw / 0",
+      "material_id": 14,
+      "cells": 38540
+    },
+    {
+      "body": "Positive copper cable port virtual region / 0",
+      "material_id": 16,
+      "cells": 1200
+    },
+    {
+      "body": "Negative copper strip with flat clamp pad / 0",
+      "material_id": 20,
+      "cells": 8896
+    },
+    {
+      "body": "Negative mica sheet under head / 0",
+      "material_id": 19,
+      "cells": 2524
+    },
+    {
+      "body": "Negative M2 ceramic shoulder sleeve / 0",
+      "material_id": 21,
+      "cells": 9600
+    },
+    {
+      "body": "Negative M2 ceramic shoulder flange / 0",
+      "material_id": 21,
+      "cells": 15960
+    },
+    {
+      "body": "Negative insulated M2x8 clamp screw / 0",
+      "material_id": 14,
+      "cells": 38540
+    },
+    {
+      "body": "Negative copper cable port virtual region / 0",
+      "material_id": 17,
+      "cells": 1200
+    },
+    {
+      "body": "Heater retaining grub envelope / 0",
+      "material_id": 14,
+      "cells": 28640
+    },
+    {
+      "body": "Sensor retaining grub envelope / 0",
+      "material_id": 14,
+      "cells": 42960
+    },
+    {
+      "body": "6x20 heater cartridge sheath envelope / 0",
+      "material_id": 14,
+      "cells": 565600
+    },
+    {
+      "body": "3x15 sensor cartridge sheath envelope / 0",
+      "material_id": 14,
+      "cells": 107400
+    },
+    {
+      "body": "Left5mm SmCo cube / 0",
+      "material_id": 18,
+      "cells": 125000
+    },
+    {
+      "body": "Left magnet-face mica shield / 0",
+      "material_id": 19,
+      "cells": 5000
+    },
+    {
+      "body": "Right5mm SmCo cube / 0",
+      "material_id": 18,
+      "cells": 125000
+    },
+    {
+      "body": "Right magnet-face mica shield / 0",
+      "material_id": 19,
+      "cells": 5000
+    }
+  ],
+  "contact_interfaces": [
+    {
+      "array_axis_zyx": 0,
+      "faces": 0,
+      "area_mm2": 0.0,
+      "contact_z_mm": null
+    },
+    {
+      "array_axis_zyx": 1,
+      "faces": 64,
+      "area_mm2": 0.64,
+      "contact_z_mm": [
+        -0.44999999999999973,
+        -0.1499999999999999
+      ]
+    },
+    {
+      "array_axis_zyx": 2,
+      "faces": 0,
+      "area_mm2": 0.0,
+      "contact_z_mm": null
+    }
+  ],
+  "scope": "One100umgrid, notrealpreload/contactresistance/tolerancequalification."
+}
