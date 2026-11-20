@@ -1,8 +1,8 @@
 # Outlet-length results and preparation
 
-**Partial completed comparison:** at 90 A, the 0.6 mm land produces one detached region at all four thresholds by 3.6 ms; the 0.9 mm land produces none at any checked threshold. The 1.2 mm case is still running and is excluded from result metrics. The longer passage has not improved lower-current ejection in the completed comparison.
+**Completed comparison:** at 90 A, the 0.6 mm land produces one detached region at all four thresholds by 3.6 ms; both the 0.9 and 1.2 mm lands produce none at any checked threshold. The longer internal passage has not improved lower-current ejection in this comparison. All runs completed 2400 steps; the 1.2 mm case has a 0.1252 V head peak, volume drift below 9.3e-9 relative and electrical energy-identity defect about 21.4 ppm. No saved liquid reaches a domain boundary.
 
-![Completed cases only](results-comparison.png)
+![All three completed cases](results-comparison.png)
 
 The 0.9 mm case reaches 0.125 V head peak, with the same 19.17 A RMS current dose at assumed 200 Hz. Maximum relative liquid-volume drift is 1.06e-8, no saved boundary contact, and electrical energy-identity defect is about 20.9 ppm. These are one-grid, single-pulse results with fixed properties and ideal contacts; no repeated operation, calibrated wetting or thermal qualification. [Actual native metrics](results.json).
 
@@ -35,3 +35,5 @@ Full fixtures use `scripts/make_hot_contact_case.py` with the corresponding `pla
 **GPU initial checks completed:** both new lengths have zero overlapping cells. Relative to the corrected 0.6 mm baseline, all mask changes are liquid-to-steel within the raised internal passage/taper: 7,272 and 14,544 cells respectively. All other body masks are identical. [Native initial-grid checks](gpu-initial-checks.json). These establish valid voxel inputs, not jetting performance. The next pulse comparison uses 90 A, which ejected in the completed 0.6 mm case.
 
 Assess the completed native land cases with `scripts/assess_plain_current_sweep.py --study land`. It uses the 90 A / 0.6 mm completed control and requires both new runs to finish by default; `--available` explicitly labels missing cases. Outputs stay in this directory, separate from the current-amplitude record. Verify the rendered three-row figure before publishing.
+
+Under the updated manufacture-first priorities in topic 25 replies 836/838, this control study is closed. No further isolated chamber/current optimization is queued. Next work is the complete heated assembly, at nominal 100 A. A longer accessible external stem is distinct from the longer internal restriction tested here.
