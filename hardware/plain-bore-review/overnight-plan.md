@@ -1,0 +1,11 @@
+# Follow-on direct-contact exploration
+
+Authorized by topic 25 reply 824, after the current 3 mm case finishes. The wider coil/slit research campaign is not resumed.
+
+1. Finish and publish the corrected 2/3 mm comparison, including the CAD, saved signed velocities, actual current profiles, detached-region counts at several thresholds, size/velocity, energy/current checks and failed-attempt provenance.
+2. Select the practical baseline from those results. Prefer consistent detached-region counts and useful downward velocity near the requested 0.4–0.6 mm diameter; one pulse is not repeatability. If the designs are comparable, the smaller chamber is the simpler next control.
+3. Test lower currents first, provisionally 90 and 75 A, keeping geometry, pulse duration, reverse fraction, material assumptions and numerical settings fixed. Stationary imposed-field force scales approximately with current; Joule heating scales with current squared. Moving-interface jetting does not inherit that simple scaling. Record failures as threshold information rather than increasing current indefinitely.
+4. Then compare longer 0.4 mm outlet lands, provisionally 0.9 and 1.2 mm against the 0.6 mm reference. Keep exterior and contacts fixed when feasible, so the effect of the longer narrow internal passage is explicit. If a second physical change is required, document it. Assess flow resistance/inertia and current bypass, rather than assuming longer is better.
+5. Use intact Boolean meshes; check the actual initial GPU masks and overlap count before long runs. Freeze the numerical solver and all inputs for each batch, run headlessly through a detached controller, and keep resource logs. Retain numerical/current-balance and energy checks; no silent tolerance relaxation.
+6. Follow promising outcomes with targeted qualification, not an indiscriminate parameter grid. Electrical wetting/contact resistance, wall behavior, oxide and repetitive thermal equilibrium remain physical uncertainties. Preserve failed or inconclusive runs.
+7. Post meaningful progress on topic 25. Check the live weekly budget before new batches; retain the earlier user stop at 40% weekly remaining as an upper bound on extended work. Do not launch follow-on experiments before the current comparison finishes.
