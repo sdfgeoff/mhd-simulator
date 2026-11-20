@@ -1,0 +1,40 @@
+{
+  "status": "Corrected unsimplified meshes: both initial GPU checks have zero overlaps; V4 time integration not yet started",
+  "method": "Same NVIDIA voxelizer and152x152x370 grid at50um; build-only diagnostics",
+  "old2_to_corrected2": {
+    "air_to_steel_cells": 8460,
+    "volume_mm3": 1.0575000000000003
+  },
+  "old3_to_corrected3": {
+    "air_to_steel_cells": 8448,
+    "overlap_to_liquid_cells": 12
+  },
+  "corrected_overlaps": {
+    "2mm": 0,
+    "3mm": 0
+  },
+  "corrected_pair_mask_changes": [
+    {
+      "mask_2mm": 1,
+      "mask_3mm": 0,
+      "cells": 117548
+    },
+    {
+      "mask_2mm": 1,
+      "mask_3mm": 2,
+      "cells": 148820
+    },
+    {
+      "mask_2mm": 2,
+      "mask_3mm": 1,
+      "cells": 8
+    }
+  ],
+  "interpretation": [
+    "Skipping optional mesh simplification restores about1.06mm3 of steel. Both cases must use this construction to keep a common exterior.",
+    "Between correctedcases the bulk changes are the expected steel-to-air/liquid from bore enlargement; other bodies/exterior have no unmatched masks.",
+    "Eight cells on the common nominal outlet taper change liquid-to-steel classification (1nL total); this local triangulation/rasterization discrepancy is retained as a geometry-discretization limit, not hidden as a physical difference.",
+    "CompletedV3 2mm run is valid for its older mesh but not the final matched corrected-geometry comparison."
+  ],
+  "fix": "No nominal parameter or numerical setting change; preserve originalBooleanmesh instead of optional simplification."
+}

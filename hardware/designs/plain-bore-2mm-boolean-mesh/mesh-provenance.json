@@ -1,0 +1,6 @@
+{
+  "source": "make_stub_m6_cases.py --preserve-boolean-mesh, same nominal parameters",
+  "nominal_bore_mm": 2,
+  "GPU_overlap_count": 0,
+  "status": "Corrected CAD for same approved bore pair; no simulation yet"
+}

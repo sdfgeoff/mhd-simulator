@@ -19,6 +19,7 @@ p.add_argument("--tip-root-radius-mm", type=float, default=0.0)
 p.add_argument("--contact-height-mm", type=float, default=0.4)
 p.add_argument("--chamber-bore-mm", type=float, help="Straight chamber diameter; omit to reproduce the historical stepped bore")
 p.add_argument("--neck-flat-halfwidth-mm", type=float, default=1.4)
+p.add_argument("--preserve-boolean-mesh",action="store_true",help="Skip optional mesh simplification for geometry diagnostics")
 a = p.parse_args()
 if not math.isfinite(a.neck_flat_halfwidth_mm) or not 1.4 <= a.neck_flat_halfwidth_mm <= 2.4:
     p.error("Neck halfwidth must be1.4..2.4mm")
@@ -62,7 +63,7 @@ def mesh(s):
     return orient(
         [
             tuple(tuple(float(v) for v in x) for x in t)
-            for t in triangles(s.set_tolerance(1e-5).simplify())
+            for t in triangles(s if a.preserve_boolean_mesh else s.set_tolerance(1e-5).simplify())
         ]
     )
 

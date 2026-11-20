@@ -70,6 +70,6 @@ try:
             subprocess.run(['uv','run','--offline','--with','scipy','--with','numpy','--with','matplotlib',
                             'python','scripts/hardware_flow_report.py',job['output'],'--plot','--pool-view'],
                            check=True,env=env,stdout=log,stderr=subprocess.STDOUT)
-    record(stage='complete_needs_assessment',completed_jobs=2)
+    record(stage='complete_needs_assessment',completed_jobs=len(plan['jobs']))
 except Exception as error:
     record(stage='failed',error=str(error));raise
