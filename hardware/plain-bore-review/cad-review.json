@@ -1,0 +1,40 @@
+{
+  "status": "CAD prepared for user review; no GPU simulation started",
+  "requested_by": [
+    797,
+    798,
+    799,
+    801
+  ],
+  "topic": 25,
+  "baseline_project": "artifacts/hardware-research/cases/m6-rooted08-flow-compactgas-h0050.mhd.json",
+  "cell_um": 50,
+  "fill_height_mm": 6,
+  "bores_mm": [
+    2,
+    3
+  ],
+  "shared_neck_width_mm": 3.4,
+  "shared_pole_gap_mm": 4,
+  "air_clearance_per_magnet_mm": 0.3,
+  "outlet_mm": 0.4,
+  "outlet_land_mm": 0.6,
+  "forward_A": 110,
+  "forward_us": 250,
+  "reverse_A": 27.5,
+  "reverse_us": 83.33333333333333,
+  "gap_us": 25,
+  "dt_us": 1.5,
+  "steps": 2400,
+  "end_ms": 3.6,
+  "non_bore_mesh_payloads_identical": true,
+  "configuration_identical_except_geometry_and_two_triangle_counts": true,
+  "heater_excluded_from_flow": true,
+  "limits": [
+    "New shared wider neck and pole gap differ from historical110A candidate.",
+    "Same fill height, not equal molten volume.",
+    "Drill taper length changes with bore diameter at fixed118degree drill point.",
+    "Exterior and magnets are common between the requested pair; old narrow-neck result is not a single-variable control.",
+    "All other research assumptions retained: ideal interfaces, static applied field, no thermal evolution."
+  ]
+}

@@ -17,7 +17,18 @@ p.add_argument("--lower-drill-half-angle-deg", type=float, default=45.0)
 p.add_argument("--boss-width-mm", type=float, default=0.7)
 p.add_argument("--tip-root-radius-mm", type=float, default=0.0)
 p.add_argument("--contact-height-mm", type=float, default=0.4)
+p.add_argument("--chamber-bore-mm", type=float, help="Straight chamber diameter; omit to reproduce the historical stepped bore")
+p.add_argument("--neck-flat-halfwidth-mm", type=float, default=1.4)
 a = p.parse_args()
+if not math.isfinite(a.neck_flat_halfwidth_mm) or not 1.4 <= a.neck_flat_halfwidth_mm <= 2.4:
+    p.error("Neck halfwidth must be1.4..2.4mm")
+if a.chamber_bore_mm is not None and (
+    not math.isfinite(a.chamber_bore_mm) or not 1.5 <= a.chamber_bore_mm <= 3.2
+    or a.chamber_bore_mm / 2 + .15 > a.neck_flat_halfwidth_mm
+):
+    p.error("Straight bore must be1.5..3.2mm and leave at least0.15mm side wall")
+if a.pole_gap_mm / 2 < a.neck_flat_halfwidth_mm + .1:
+    p.error("Magnets must clear neck flats by at least0.1mm per side")
 if not 0.5 <= a.boss_width_mm <= 1.0:
     p.error("Boss width must be0.5..1mm")
 if not 0 <= a.tip_root_radius_mm <= 0.2:
@@ -63,6 +74,8 @@ for below in [3.0, 3.5, 4.0, 5.0]:
     length = below + 6
     fill = below + 2
     radius, upper, ro = 1.0, 1.6, 0.2
+    if a.chamber_bore_mm is not None:
+        radius = upper = a.chamber_bore_mm / 2
     lower_transition = 0.6 + (radius - ro) / math.tan(
         math.radians(a.lower_drill_half_angle_deg)
     )
@@ -88,7 +101,7 @@ for below in [3.0, 3.5, 4.0, 5.0]:
     solid = as_solid(lathe(profile))
     for sign in [-1, 1]:
         solid = solid - box(
-            [20.0, 20.0, below - 0.23], [0.0, sign * 11.4, (below - 0.25 - 0.02) / 2]
+            [20.0, 20.0, below - 0.23], [0.0, sign * (10 + a.neck_flat_halfwidth_mm), (below - 0.25 - 0.02) / 2]
         )
         solid = solid - box(
             [20.0, 20.0, below - 0.28], [sign * 13.0, 0.0, (below - 0.3 - 0.02) / 2]
@@ -176,7 +189,9 @@ for below in [3.0, 3.5, 4.0, 5.0]:
             "overall_length_mm": length,
             "thread_length_mm": 6,
             "thread": "M6x1 envelope; helix omitted",
-            "chamber_diameter_mm": 2.0,
+            "chamber_diameter_mm": 2 * radius,
+            "upper_chamber_diameter_mm": 2 * upper,
+            "straight_chamber": a.chamber_bore_mm is not None,
             "lower_drill_point_included_angle_deg": 2 * a.lower_drill_half_angle_deg,
             "outlet_mm": 0.4,
             "boss_width_mm": a.boss_width_mm,
@@ -184,7 +199,7 @@ for below in [3.0, 3.5, 4.0, 5.0]:
             "contact_height_mm": a.contact_height_mm,
             "nominal_tip_wall_mm": (a.boss_width_mm - 0.4) / 2,
             "pool_level_mm": fill,
-            "waist_Y_mm": 2.8,
+            "waist_Y_mm": 2 * a.neck_flat_halfwidth_mm,
             "wrench_X_AF_mm": 6.0,
             "pole_gap_mm": a.pole_gap_mm,
             "heater_clearance_mm": a.heater_clearance_mm,
