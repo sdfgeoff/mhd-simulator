@@ -1,0 +1,13 @@
+{
+  "baseline_regression": [
+    {
+      "concept": "slotted-arms",
+      "gltf_and_binary_byte_identical": true
+    },
+    {
+      "concept": "side-heated",
+      "gltf_and_binary_byte_identical": true
+    }
+  ],
+  "status": "Generator extension preserves both completed baseline geometries byte for byte"
+}

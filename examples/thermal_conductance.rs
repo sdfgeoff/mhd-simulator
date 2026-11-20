@@ -282,10 +282,16 @@ fn main() -> Result<(), Box<dyn Error>> {
 fn integral_pool(args: &[String], gpu: GpuDomain) -> Result<(), Box<dyn Error>> {
     let path = args
         .get(2)
-        .ok_or("--integral-pool PROJECT HX_MM HZ_MM OUTPUT_DIR")?;
+        .ok_or("--integral-pool PROJECT HX_MM HZ_MM OUTPUT_DIR [SX_MM SZ_MM]")?;
     let hx: f64 = args.get(3).ok_or("Missing heater x")?.parse()?;
     let hz: f64 = args.get(4).ok_or("Missing heater z")?.parse()?;
-    if !hx.is_finite() || !hz.is_finite() {
+    let sx: f64 = args
+        .get(6)
+        .map(|v| v.parse())
+        .transpose()?
+        .unwrap_or(hx + 2.5);
+    let sz: f64 = args.get(7).map(|v| v.parse()).transpose()?.unwrap_or(hz);
+    if !hx.is_finite() || !hz.is_finite() || !sx.is_finite() || !sz.is_finite() {
         return Err("Finite heater centre required".into());
     }
     let output = Path::new(args.get(5).ok_or("Missing output directory")?);
@@ -337,7 +343,7 @@ fn integral_pool(args: &[String], gpu: GpuDomain) -> Result<(), Box<dyn Error>> 
                 })
                 .collect();
             let r = ((xyz[0] - hx).powi(2) + (xyz[2] - hz).powi(2)).sqrt();
-            let sensor_r = ((xyz[0] - (hx + 2.5)).powi(2) + (xyz[2] - hz).powi(2)).sqrt();
+            let sensor_r = ((xyz[0] - sx).powi(2) + (xyz[2] - sz).powi(2)).sqrt();
             // The boundary is on the body wall. Omit floating sheaths inside
             // the bores rather than assigning them arbitrary temperatures or
             // allowing sub-cell gaps to imply a thermal contact.
@@ -368,6 +374,7 @@ fn integral_pool(args: &[String], gpu: GpuDomain) -> Result<(), Box<dyn Error>> 
     let report = serde_json::json!({
         "project":path,"adapter":gpu.name,"method":"Existing GPU finite-volume scalar operator with k; selected steel heater-bore wall cells +0.5K, entire liquid pool -0.5K, other exterior adiabatic",
         "heater_centre_xz_mm":[hx,hz],"hot_wall_radius_band_mm":[1.6,1.75],"hot_wall_abs_y_max_mm":5.8,
+        "sensor_centre_xz_mm":[sx,sz],
         "hot_cells":hot,"pool_boundary_cells":cold,"steel_k_W_m_K":15.,"liquid_k_W_m_K":liquid_k,
         "conductance_W_K":stats[0],"thermal_resistance_K_W":1./stats[0],"return_relative_error":return_error,
         "energy_identity_relative_error":energy_error,"true_relative_residual":residual,"iterations":iterations,
