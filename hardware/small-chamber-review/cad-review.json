@@ -1,0 +1,20 @@
+{
+  "status": "Prepared CPU candidate only; GPU masks and flow pending",
+  "project": "hardware/designs/plain-chamber-15mm/flow-h0050.mhd.json",
+  "baseline": "hardware/designs/plain-bore-2mm-boolean-mesh/flow-h0050.mhd.json",
+  "chambers_mm": [
+    2,
+    1.5
+  ],
+  "liquid_volumes_mm3": [
+    16.14252673837886,
+    9.287775447887201
+  ],
+  "combined_steel_liquid_difference_above_fill_expected_mm3": 5.248042267931749,
+  "combined_steel_liquid_envelope_difference_below_fill_mm3": 1.0347011072230389e-07,
+  "solid_liquid_overlap_mm3": 2.2906761103813423e-07,
+  "other_body_position_payloads_identical": true,
+  "flow_settings_identical_except_geometry_and_triangle_counts": true,
+  "cpu_loader": "hardware/designs/plain-chamber-15mm/flow-h0050.mhd.json: 9 bodies, 0 CAD curves; fluid=false, thermal=false\n",
+  "intent": "Test reduced chamber diameter while preserving 0.4mm outlet/0.6mm land, outer shell, contacts, magnets, initial fill height; taper span and liquid volume change inherently. No claimed performance gain."
+}
