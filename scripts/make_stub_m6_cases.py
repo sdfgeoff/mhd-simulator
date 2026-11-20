@@ -19,8 +19,11 @@ p.add_argument("--tip-root-radius-mm", type=float, default=0.0)
 p.add_argument("--contact-height-mm", type=float, default=0.4)
 p.add_argument("--chamber-bore-mm", type=float, help="Straight chamber diameter; omit to reproduce the historical stepped bore")
 p.add_argument("--neck-flat-halfwidth-mm", type=float, default=1.4)
+p.add_argument("--outlet-land-mm", type=float, default=0.6, help="Internal 0.4 mm bore length; exterior and contact heights stay fixed")
 p.add_argument("--preserve-boolean-mesh",action="store_true",help="Skip optional mesh simplification for geometry diagnostics")
 a = p.parse_args()
+if not math.isfinite(a.outlet_land_mm) or not 0.6 <= a.outlet_land_mm <= 1.5:
+    p.error("Outlet land must be0.6..1.5mm")
 if not math.isfinite(a.neck_flat_halfwidth_mm) or not 1.4 <= a.neck_flat_halfwidth_mm <= 2.4:
     p.error("Neck halfwidth must be1.4..2.4mm")
 if a.chamber_bore_mm is not None and (
@@ -77,7 +80,7 @@ for below in [3.0, 3.5, 4.0, 5.0]:
     radius, upper, ro = 1.0, 1.6, 0.2
     if a.chamber_bore_mm is not None:
         radius = upper = a.chamber_bore_mm / 2
-    lower_transition = 0.6 + (radius - ro) / math.tan(
+    lower_transition = a.outlet_land_mm + (radius - ro) / math.tan(
         math.radians(a.lower_drill_half_angle_deg)
     )
     transition = below - (upper - radius) / math.tan(math.radians(59))
@@ -92,7 +95,7 @@ for below in [3.0, 3.5, 4.0, 5.0]:
         (3.5, 0.8, True),
         (0.5, 0.0, False),
         (ro, 0.0, False),
-        (ro, 0.6, False),
+        (ro, a.outlet_land_mm, False),
         (radius, lower_transition, False),
         (radius, transition, False),
         (upper, below, False),
@@ -135,7 +138,7 @@ for below in [3.0, 3.5, 4.0, 5.0]:
         (upper, below, False),
         (radius, transition, False),
         (radius, lower_transition, False),
-        (ro, 0.6, False),
+        (ro, a.outlet_land_mm, False),
         (ro, 0.0, False),
         (0.0, 0.0, False),
     ]
@@ -195,6 +198,7 @@ for below in [3.0, 3.5, 4.0, 5.0]:
             "straight_chamber": a.chamber_bore_mm is not None,
             "lower_drill_point_included_angle_deg": 2 * a.lower_drill_half_angle_deg,
             "outlet_mm": 0.4,
+            "outlet_land_mm": a.outlet_land_mm,
             "boss_width_mm": a.boss_width_mm,
             "tip_root_radius_mm": a.tip_root_radius_mm,
             "contact_height_mm": a.contact_height_mm,

@@ -1,0 +1,33 @@
+{
+  "status": "CPU CAD preparation only; no new GPU voxel check or fluid run",
+  "default_geometry_byte_identical_to_completed_source": true,
+  "candidates": [
+    {
+      "land_mm": 0.6,
+      "source": "artifacts/hardware-research/cases/plain-land-cpu-v1-060",
+      "solid_liquid_overlap_mm3": 3.6232959418555644e-07,
+      "solid_plus_liquid_envelope_difference_mm3": 1.1102230246251565e-16,
+      "liquid_volume_mm3": 16.14252673837886,
+      "nozzle_volume_mm3": 203.63194509643088,
+      "other_body_triangle_payloads_identical": true
+    },
+    {
+      "land_mm": 0.9,
+      "source": "artifacts/hardware-research/cases/plain-land-cpu-v1-090",
+      "solid_liquid_overlap_mm3": 3.3801848512563014e-07,
+      "solid_plus_liquid_envelope_difference_mm3": 1.5256355236175912e-08,
+      "liquid_volume_mm3": 15.238393787295859,
+      "nozzle_volume_mm3": 204.5360780288072,
+      "other_body_triangle_payloads_identical": true
+    },
+    {
+      "land_mm": 1.2,
+      "source": "artifacts/hardware-research/cases/plain-land-cpu-v1-120",
+      "solid_liquid_overlap_mm3": 3.1370737834909053e-07,
+      "solid_plus_liquid_envelope_difference_mm3": 2.201927948699676e-08,
+      "liquid_volume_mm3": 14.334260916050663,
+      "nozzle_volume_mm3": 205.44021088134568,
+      "other_body_triangle_payloads_identical": true
+    }
+  ]
+}
