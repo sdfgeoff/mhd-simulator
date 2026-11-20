@@ -1,8 +1,6 @@
 {
-  "status": "Partial sweep: only terminal complete cases assessed",
-  "pending_currents_A": [
-    75
-  ],
+  "status": "Complete current sweep",
+  "pending_currents_A": [],
   "common_settings": {
     "grid": {
       "cell_m": 5.0000002374872565e-05,
@@ -290,6 +288,52 @@
       "joule_generated_J": 0.0025219258459227545,
       "energy_identity_relative_defect": -1.973961121529186e-05,
       "current_diagnostics_sha256": "58e7144f4d2aadfe71f35d4cfa30c5a8abddcfaf80e8a4febf1b7882c4935b8c"
+    },
+    {
+      "peak_A": 75,
+      "source": "artifacts/hardware-research/plain-bore-low-current-v1-2mm-flow75-r25-h0050",
+      "final": {
+        "step": 2400,
+        "time_us": 3600.000000000199,
+        "first_nonnegative_cell_plane_z_mm": 0.025000001187436283,
+        "exit_plane_alpha_area_mm2": 0.12999997836240526,
+        "exit_plane_mean_uz_m_s": 0.186948012868007,
+        "exit_plane_mean_pressure_pa": 2633.021168011813,
+        "exit_plane_downward_flux_proxy_nl_s": -24303.23762773557,
+        "liquid_volume_nl": 16244.501564548218,
+        "minimum_liquid_fraction": -6.241943850682219e-08,
+        "maximum_liquid_fraction": 1.0000001192092896,
+        "below_tip_maximum_liquid_fraction_at_cell_centres": 1.0000001192092896,
+        "boundary_maximum_liquid_fraction": {
+          "z_min": 0.0,
+          "z_max": 0.0,
+          "y_min": 0.0,
+          "y_max": 0.0,
+          "x_min": 0.0,
+          "x_max": 0.0
+        },
+        "liquid_touches_domain_boundary_alpha01": false,
+        "below_tip_nl": 164.53551082710558,
+        "below_one_cell_guard_nl": 136.3575300294045,
+        "front_z_mm_alpha_half": -0.4250000201864168,
+        "detached_below_tip": [],
+        "connectivity_thresholds": {
+          "0.01": [],
+          "0.25": [],
+          "0.5": [],
+          "0.75": []
+        },
+        "below_tip_change_nl": 164.53549882794218,
+        "relative_liquid_volume_change": -8.632508152750518e-09
+      },
+      "maximum_absolute_relative_volume_change": 8.632508152750518e-09,
+      "any_saved_boundary_contact": false,
+      "head_peak_voltage_V": 0.10357523,
+      "command_I2dt_A2s": 1.276211819421422,
+      "RMS_A_at_assumed200Hz": 15.976306327943403,
+      "joule_generated_J": 0.0017526128819116843,
+      "energy_identity_relative_defect": -2.043240069447949e-05,
+      "current_diagnostics_sha256": "76b2502ce9008b3b64e30a91c5349f2c065f3b7b3a71f384cc5b9861b37d1e97"
     }
   ],
   "limits": [

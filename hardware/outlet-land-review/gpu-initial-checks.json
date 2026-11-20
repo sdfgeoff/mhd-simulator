@@ -1,0 +1,40 @@
+{
+  "status": "GPU initial voxel checks only; no fluid timestep",
+  "baseline": "plain-bore-2mm-clean-mask.bin",
+  "cases": [
+    {
+      "land_mm": 0.9,
+      "adapter": "NVIDIA GeForce RTX 3060 Laptop GPU",
+      "dims": [
+        152,
+        152,
+        370
+      ],
+      "overlap_cells": 0,
+      "other_body_mask_changes": 0,
+      "liquid_to_steel_cells": 7272,
+      "unexpected_classification_changes": 0,
+      "changed_z_range_mm": [
+        0.625,
+        1.375
+      ]
+    },
+    {
+      "land_mm": 1.2,
+      "adapter": "NVIDIA GeForce RTX 3060 Laptop GPU",
+      "dims": [
+        152,
+        152,
+        370
+      ],
+      "overlap_cells": 0,
+      "other_body_mask_changes": 0,
+      "liquid_to_steel_cells": 14544,
+      "unexpected_classification_changes": 0,
+      "changed_z_range_mm": [
+        0.625,
+        1.6750000000000007
+      ]
+    }
+  ]
+}

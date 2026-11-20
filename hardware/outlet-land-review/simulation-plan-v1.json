@@ -1,0 +1,58 @@
+{
+  "authorization_reply": 824,
+  "binary": "target/debug/examples/conduction_flow_current_tolerance",
+  "expected_binary_sha256": "05500946e657ccd44c9bc032612e3951635974b001c57a8df126354f63a5bac2",
+  "status": "GPU overlap/mask checks pass; authorized824 outlet length comparison",
+  "jobs": [
+    {
+      "bore_mm": 2,
+      "output": "artifacts/hardware-research/plain-land-flow-v1-090-flow90-r25-h0050",
+      "command": [
+        "target/debug/examples/conduction_flow_current_tolerance",
+        "hardware/designs/plain-outlet-land-090/flow-h0050.mhd.json",
+        "90",
+        "250",
+        "2400",
+        "artifacts/hardware-research/plain-land-flow-v1-090-flow90-r25-h0050",
+        "0",
+        ".25",
+        "1.5",
+        "0",
+        "600",
+        "1.5",
+        "25",
+        "body",
+        "0",
+        "1e-6"
+      ],
+      "peak_A": 90,
+      "land_mm": 0.9
+    },
+    {
+      "bore_mm": 2,
+      "output": "artifacts/hardware-research/plain-land-flow-v1-120-flow90-r25-h0050",
+      "command": [
+        "target/debug/examples/conduction_flow_current_tolerance",
+        "hardware/designs/plain-outlet-land-120/flow-h0050.mhd.json",
+        "90",
+        "250",
+        "2400",
+        "artifacts/hardware-research/plain-land-flow-v1-120-flow90-r25-h0050",
+        "0",
+        ".25",
+        "1.5",
+        "0",
+        "600",
+        "1.5",
+        "25",
+        "body",
+        "0",
+        "1e-6"
+      ],
+      "peak_A": 90,
+      "land_mm": 1.2
+    }
+  ],
+  "baseline": "Completed90A0.6mmland,oneD.62724/down.29082. Onlyinternal land/taper position changes; initial liquidvolume changes inherently; exterior/contacts/magnets/settingsheldfixed.",
+  "scope": "0.9 then1.2mm land at90A; oneGPUjob at a time, preserve failure, weekly stop<=40. No other design family."
+}
