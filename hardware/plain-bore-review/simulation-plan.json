@@ -1,0 +1,50 @@
+{
+  "status": "Two custom CAD cases approved for headless simulation in topic25 reply805",
+  "authorization_reply": 805,
+  "binary": "target/debug/examples/conduction_flow",
+  "expected_binary_sha256": "7468feb92aae28e69224166b0ac4dbd8c0d757712f36a28e348b517f321e61fc",
+  "baseline": "Same executable as completed fine110A rooted reference; no rebuild",
+  "jobs": [
+    {
+      "bore_mm": 2,
+      "output": "artifacts/hardware-research/plain-bore-v1-2mm-flow110-r25-h0050",
+      "command": [
+        "target/debug/examples/conduction_flow",
+        "hardware/designs/plain-bore-2mm/flow-h0050.mhd.json",
+        "110",
+        "250",
+        "2400",
+        "artifacts/hardware-research/plain-bore-v1-2mm-flow110-r25-h0050",
+        "0",
+        ".25",
+        "1.5",
+        "0",
+        "600",
+        "1.5",
+        "25",
+        "body"
+      ]
+    },
+    {
+      "bore_mm": 3,
+      "output": "artifacts/hardware-research/plain-bore-v1-3mm-flow110-r25-h0050",
+      "command": [
+        "target/debug/examples/conduction_flow",
+        "hardware/designs/plain-bore-3mm/flow-h0050.mhd.json",
+        "110",
+        "250",
+        "2400",
+        "artifacts/hardware-research/plain-bore-v1-3mm-flow110-r25-h0050",
+        "0",
+        ".25",
+        "1.5",
+        "0",
+        "600",
+        "1.5",
+        "25",
+        "body"
+      ]
+    }
+  ],
+  "scope": "Only this pair authorized; wider research remains paused. These are custom M6-compatible shapes, not stock-subtractive conversions."
+}

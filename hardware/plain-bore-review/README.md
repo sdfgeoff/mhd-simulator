@@ -2,7 +2,9 @@
 
 Requested in topic 25, replies 797–801. **No GPU simulation has started.** The user requested seeing the CAD before launch.
 
-**Manufacturing correction, reply 804:** these drafts are custom M6-compatible shapes, not subtractive conversions verified against a stock V6 solid. Their 10 mm body and stockier lower nose differ from a standard 12.5 mm V6. Closed meshes and absence of overlaps do not establish stock containment. Do not launch these drafts as a stock-V6 conversion test. A subtractive-only revision must preserve the stock mounting and outlet, start from the correct smaller-bore variant, and check all proposed cuts and remaining walls. An existing 3.2 mm bore cannot be reduced to 2 or 3 mm by cutting.
+**Update, reply 805:** the user accepted these as custom parts and authorized both runs after the CAD review. The fixed two-case sequence was launched headlessly on NVIDIA, using the unchanged executable from the completed fine-grid reference. [Commands and scope](simulation-plan.json). Live state is preserved locally in `artifacts/hardware-research/plain-bore-v1-state.json`; this approval does not resume the wider research campaign.
+
+**Manufacturing correction, reply 804:** these drafts are custom M6-compatible shapes, not subtractive conversions verified against a stock V6 solid. Their 10 mm body and stockier lower nose differ from a standard 12.5 mm V6. Closed meshes and absence of overlaps do not establish stock containment. The authorized simulations must not be described as stock-V6 conversion tests. A subtractive-only revision would have to preserve the stock mounting and outlet, start from the correct smaller-bore variant, and check all proposed cuts and remaining walls. An existing 3.2 mm bore cannot be reduced to 2 or 3 mm by cutting.
 
 ![Previous geometry and proposed straight bores](cad-comparison.png)
 
