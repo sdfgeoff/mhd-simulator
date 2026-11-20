@@ -1,0 +1,35 @@
+{
+  "screen": "thermal",
+  "binary": "target/debug/examples/thermal_conductance",
+  "binary_sha256": "3fd663dc6f3a78202d1871989f58e90bb156b44b85f28f20f11d2efca0535b38",
+  "jobs": [
+    {
+      "concept": "slotted-arms",
+      "project": "hardware/designs/integral-slotted-arms-v1/electrical-h0100-compact.mhd.json",
+      "output": "artifacts/hardware-research/integral-slotted-arms-v1-thermal-wall-pool-h0100",
+      "command": [
+        "target/debug/examples/thermal_conductance",
+        "--integral-pool",
+        "hardware/designs/integral-slotted-arms-v1/electrical-h0100-compact.mhd.json",
+        "-5",
+        "16",
+        "artifacts/hardware-research/integral-slotted-arms-v1-thermal-wall-pool-h0100"
+      ]
+    },
+    {
+      "concept": "side-heated",
+      "project": "hardware/designs/integral-side-heated-v1/electrical-h0100-compact.mhd.json",
+      "output": "artifacts/hardware-research/integral-side-heated-v1-thermal-wall-pool-h0100",
+      "command": [
+        "target/debug/examples/thermal_conductance",
+        "--integral-pool",
+        "hardware/designs/integral-side-heated-v1/electrical-h0100-compact.mhd.json",
+        "-6",
+        "10",
+        "artifacts/hardware-research/integral-side-heated-v1-thermal-wall-pool-h0100"
+      ]
+    }
+  ],
+  "status": "Optimistic bulk-steel conductance only; ideal imposed bore-wall layer to isothermal pool, no external losses/interface/Joule heat; no operating temperature claim",
+  "verification": "ExistingGPUrod15/30WmK and metal/mica/metal analytic conductance checks passed; sameFVoperator, newboundaryselection"
+}

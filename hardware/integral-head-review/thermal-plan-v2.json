@@ -1,0 +1,36 @@
+{
+  "screen": "thermal",
+  "binary": "target/debug/examples/thermal_conductance",
+  "binary_sha256": "7c3444e296e2ea9880ad6b600b836c078cbeb00b5870cab1c4ae53e6aac7dbf1",
+  "jobs": [
+    {
+      "concept": "slotted-arms",
+      "project": "hardware/designs/integral-slotted-arms-v1/electrical-h0100-compact.mhd.json",
+      "output": "artifacts/hardware-research/integral-slotted-arms-v2-thermal-wall-pool-h0100",
+      "command": [
+        "target/debug/examples/thermal_conductance",
+        "--integral-pool",
+        "hardware/designs/integral-slotted-arms-v1/electrical-h0100-compact.mhd.json",
+        "-5",
+        "16",
+        "artifacts/hardware-research/integral-slotted-arms-v2-thermal-wall-pool-h0100"
+      ]
+    },
+    {
+      "concept": "side-heated",
+      "project": "hardware/designs/integral-side-heated-v1/electrical-h0100-compact.mhd.json",
+      "output": "artifacts/hardware-research/integral-side-heated-v2-thermal-wall-pool-h0100",
+      "command": [
+        "target/debug/examples/thermal_conductance",
+        "--integral-pool",
+        "hardware/designs/integral-side-heated-v1/electrical-h0100-compact.mhd.json",
+        "-6",
+        "10",
+        "artifacts/hardware-research/integral-side-heated-v2-thermal-wall-pool-h0100"
+      ]
+    }
+  ],
+  "status": "Optimistic BODY bore-wall-to-isothermal-pool conductance; floating heater/sensor sheaths explicitly thermally omitted to avoid subcell-contact assumptions. Current electrical results unchanged.",
+  "verification": "ExistingGPUrod15/30WmK and metal/mica/metal analytic conductance checks passed; sameFVoperator, newboundaryselection",
+  "predecessor": "V1thermalresults preserved; newboundaryselectoromitsfloatinghardware, no material/geometrychange."
+}

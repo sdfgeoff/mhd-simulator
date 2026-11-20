@@ -124,6 +124,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         );
         return Ok(());
     }
+    if args.get(1).is_some_and(|x| x == "--integral-pool") {
+        return integral_pool(&args, gpu);
+    }
     let p = project::load(Path::new(args.get(1).ok_or(
         "PROJECT HEATER_START_MM OUTPUT [STEEL_K] [TOLERANCE] [pool|leads|anchors] [MICA_K]",
     )?))?;
@@ -271,5 +274,121 @@ fn main() -> Result<(), Box<dyn Error>> {
         .open(output)?;
     writeln!(file, "{}", serde_json::to_string_pretty(&record)?)?;
     println!("{}", serde_json::to_string_pretty(&record)?);
+    Ok(())
+}
+
+// Optimistic bulk-metal heat-delivery screen. The actual heater interface and
+// exterior losses are deliberately excluded and stated in the output.
+fn integral_pool(args: &[String], gpu: GpuDomain) -> Result<(), Box<dyn Error>> {
+    let path = args
+        .get(2)
+        .ok_or("--integral-pool PROJECT HX_MM HZ_MM OUTPUT_DIR")?;
+    let hx: f64 = args.get(3).ok_or("Missing heater x")?.parse()?;
+    let hz: f64 = args.get(4).ok_or("Missing heater z")?.parse()?;
+    if !hx.is_finite() || !hz.is_finite() {
+        return Err("Finite heater centre required".into());
+    }
+    let output = Path::new(args.get(5).ok_or("Missing output directory")?);
+    std::fs::create_dir(output)?;
+    let p = project::load(Path::new(path))?;
+    let volume = gpu.build(&p.model, &p.settings, &p.materials)?;
+    if volume.overlaps != 0 {
+        return Err("Overlapping CAD".into());
+    }
+    let grid = volume.inputs.snapshot().grid.clone();
+    let bytes = read_bytes(
+        &gpu.context,
+        volume.material_ids(),
+        0,
+        volume.material_ids().size(),
+    )?;
+    let ids = bytemuck::cast_slice::<u8, u32>(&bytes);
+    let liquid_k = p
+        .materials
+        .iter()
+        .find(|m| m.id == 4)
+        .and_then(|m| m.thermal.conductivity_w_m_k)
+        .ok_or("Missing liquid k")?;
+    let mut hot = 0usize;
+    let mut cold = 0usize;
+    let cells: Vec<[f32; 2]> = ids
+        .iter()
+        .enumerate()
+        .map(|(i, &id)| {
+            if id == 4 {
+                cold += 1;
+                return [liquid_k / 1e6, -0.5];
+            }
+            if !matches!(id, 14 | 16 | 17) {
+                return [0., 2.];
+            }
+            let i = i as u32;
+            let q = [
+                i % grid.dims[0],
+                (i / grid.dims[0]) % grid.dims[1],
+                i / (grid.dims[0] * grid.dims[1]),
+            ];
+            let xyz: Vec<f64> = q
+                .iter()
+                .enumerate()
+                .map(|(j, &v)| {
+                    (f64::from(grid.origin_m[j]) + (f64::from(v) + 0.5) * f64::from(grid.cell_m))
+                        * 1000.
+                })
+                .collect();
+            let r = ((xyz[0] - hx).powi(2) + (xyz[2] - hz).powi(2)).sqrt();
+            let sensor_r = ((xyz[0] - (hx + 2.5)).powi(2) + (xyz[2] - hz).powi(2)).sqrt();
+            // The boundary is on the body wall. Omit floating sheaths inside
+            // the bores rather than assigning them arbitrary temperatures or
+            // allowing sub-cell gaps to imply a thermal contact.
+            if r < 1.6 || sensor_r < 0.6 {
+                return [0., 2.];
+            }
+            let flag = if xyz[1].abs() <= 5.8 && (1.6..=1.75).contains(&r) {
+                hot += 1;
+                0.5
+            } else {
+                2.
+            };
+            [15. / 1e6, flag]
+        })
+        .collect();
+    if hot == 0 || cold == 0 {
+        return Err("Missing heater-wall or pool boundary".into());
+    }
+    let (stats, potential, residual, iterations) =
+        solve(gpu.context.clone(), grid.dims, grid.cell_m, &cells, 1e-6)?;
+    let return_error = (stats[0] + stats[1]).abs() / stats[0];
+    let energy_error = stats[2] / stats[0] - 1.;
+    if stats[0] <= 0. || return_error > 1e-5 || energy_error.abs() > 1e-4 {
+        return Err(format!("Thermal conductance checks failed: {stats:?}, return={return_error}, energy={energy_error}").into());
+    }
+    let assumed_loads =
+        [1_f32, 5., 10.].map(|w| serde_json::json!({"pool_W":w,"delta_K":w/stats[0]}));
+    let report = serde_json::json!({
+        "project":path,"adapter":gpu.name,"method":"Existing GPU finite-volume scalar operator with k; selected steel heater-bore wall cells +0.5K, entire liquid pool -0.5K, other exterior adiabatic",
+        "heater_centre_xz_mm":[hx,hz],"hot_wall_radius_band_mm":[1.6,1.75],"hot_wall_abs_y_max_mm":5.8,
+        "hot_cells":hot,"pool_boundary_cells":cold,"steel_k_W_m_K":15.,"liquid_k_W_m_K":liquid_k,
+        "conductance_W_K":stats[0],"thermal_resistance_K_W":1./stats[0],"return_relative_error":return_error,
+        "energy_identity_relative_error":energy_error,"true_relative_residual":residual,"iterations":iterations,
+        "required_delta_K_at_assumed_pool_loads_W": assumed_loads,
+        "limits":["Ideal prescribed-temperature bore-wall layer and isothermal pool; optimistic bulk-metal delivery only, not operating temperatures or finite heater power.","No heater contact/interface resistance, external losses, cable/mount cooling, wire-feed melting, phase change, convection, transient heat capacity or Joule heat.","Fixed k and one0.1mm grid. Assumed pool loads illustrate thermal resistance; no actual feed demand has been established.","Air, magnets and floating heater/sensor sheaths are thermally omitted. Temperature is prescribed directly in the steel bore-wall layer; no sheath/interface contact is inferred from sub-cell gaps."]
+    });
+    std::fs::write(
+        output.join("report.json"),
+        serde_json::to_vec_pretty(&report)?,
+    )?;
+    std::fs::write(
+        output.join("potential.bin"),
+        bytemuck::cast_slice(&potential),
+    )?;
+    std::fs::write(output.join("material-ids.bin"), &bytes)?;
+    std::fs::write(
+        output.join("grid.json"),
+        serde_json::to_vec_pretty(
+            &serde_json::json!({"dims":grid.dims,"origin_m":grid.origin_m,"cell_m":grid.cell_m}),
+        )?,
+    )?;
+    println!("{}", serde_json::to_string_pretty(&report)?);
     Ok(())
 }

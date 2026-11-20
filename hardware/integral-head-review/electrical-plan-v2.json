@@ -1,0 +1,21 @@
+{
+  "status": "Recovery after pre-solve direct-source work limit; compact electrical domain retains entire stainless body and heater/sensor sheaths; external full magnet CAD sources unchanged.",
+  "binary": "target/debug/examples/conduction_probe",
+  "binary_sha256": "556fd2025833dda765387e91f60ec64d3c411ce3a6fcb67a191be185a0fb6b8a",
+  "jobs": [
+    {
+      "concept": "slotted-arms",
+      "project": "hardware/designs/integral-slotted-arms-v1/electrical-h0100-compact.mhd.json",
+      "output": "artifacts/hardware-research/integral-slotted-arms-v2-cold100-h0100"
+    },
+    {
+      "concept": "side-heated",
+      "project": "hardware/designs/integral-side-heated-v1/electrical-h0100-compact.mhd.json",
+      "output": "artifacts/hardware-research/integral-side-heated-v2-cold100-h0100"
+    }
+  ],
+  "drive": "100A, outermost X faces of virtual stainless terminal regions; zero interface resistance within one continuous steel part",
+  "gates": "unit boundary10ppm, true residual1e-6, energyidentity100ppm, nooverlappingcells",
+  "limits": "No moving fluid, thermal evolution, feeding, pulse driver or complete mount/ground model. Full monolithicbody and heater/sensor sheaths included.",
+  "predecessor": "artifacts/hardware-research/integral-head-electrical-v1-state.json, failed before solving; output preserved"
+}

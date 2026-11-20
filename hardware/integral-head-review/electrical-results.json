@@ -1,0 +1,136 @@
+{
+  "status": "Both completed native100A full-body static screens; not thermal or jetting simulations",
+  "cases": [
+    {
+      "concept": "slotted-arms",
+      "source": "artifacts/hardware-research/integral-slotted-arms-v2-cold100-h0100",
+      "native": {
+        "boundary_current_defect": 1.125912035604415e-06,
+        "contact_resistivity_ohm_m2": 0.0,
+        "current_A": 100.0,
+        "iterations": 416,
+        "joule_power_W": 29.1727294921875,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          -6.521398327007985e-11,
+          1.1743347622817572e-09,
+          -0.046002007957082244
+        ],
+        "liquid_joule_power_W": 0.49943053676649474,
+        "liquid_mean_By_T": -0.3617299798125847,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 27.923737839777704,
+        "mean_wall_current_over_x_plus_minus_2mm_A": 72.0783574604962,
+        "midplane_adjacent_cell_liquid_current_A": 71.61690634949046,
+        "midplane_adjacent_cell_wall_current_A": 28.38938978872201,
+        "potential_representation": "split f32 high/low",
+        "power_definition": "sum terminal phi*I on both ports",
+        "power_relative_defect": -1.4901161193847656e-05,
+        "project": "hardware/designs/integral-slotted-arms-v1/electrical-h0100-compact.mhd.json",
+        "released_static_workspace_bytes": 1808238780,
+        "requested_relative_tolerance": 9.999999974752427e-07,
+        "return_current_A": -99.99977111816406,
+        "source_power_W": 29.17316436767578,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_boundary": "x-ends",
+        "terminal_voltage_V": 0.29173198342323303,
+        "terminal_x_cell_indices": [
+          2,
+          201
+        ],
+        "true_relative_residual": 9.988940519178868e-07
+      },
+      "joule_power_by_material_W": {
+        "4": 0.4994305367664948,
+        "14": 27.884571980107552,
+        "16": 0.39436420708775377,
+        "17": 0.39436380393461845,
+        "18": 0.0
+      },
+      "peak_voxel_joule_density_by_material_W_mm3": {
+        "4": 0.098847192,
+        "14": 1.045871872,
+        "16": 1.048676864,
+        "17": 1.048678272,
+        "18": 0.0
+      },
+      "CPU_sum_Joule_relative_difference": 3.5502640161055865e-08,
+      "liquid_midplane_fraction_proxy": 0.7161690634949046,
+      "lateral_to_axial_force_ratio": 1.417633407022613e-09
+    },
+    {
+      "concept": "side-heated",
+      "source": "artifacts/hardware-research/integral-side-heated-v2-cold100-h0100",
+      "native": {
+        "boundary_current_defect": 5.2028585741936695e-06,
+        "contact_resistivity_ohm_m2": 0.0,
+        "current_A": 99.99999237060547,
+        "iterations": 1088,
+        "joule_power_W": 17.746110916137695,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative-x plane. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          -0.030755266685145256,
+          1.5704119911704194e-05,
+          -0.03833757886421089
+        ],
+        "liquid_joule_power_W": 0.5688573526197219,
+        "liquid_mean_By_T": -0.3617299798125847,
+        "mean_liquid_current_over_x_plus_minus_2mm_A": 24.73684108860127,
+        "mean_wall_current_over_x_plus_minus_2mm_A": 75.26258518104419,
+        "midplane_adjacent_cell_liquid_current_A": 63.40146014781507,
+        "midplane_adjacent_cell_wall_current_A": 36.59787371098614,
+        "potential_representation": "split f32 high/low",
+        "power_definition": "sum terminal phi*I on both ports",
+        "power_relative_defect": 1.5497207641601562e-06,
+        "project": "hardware/designs/integral-side-heated-v1/electrical-h0100-compact.mhd.json",
+        "released_static_workspace_bytes": 1808238780,
+        "requested_relative_tolerance": 9.999999974752427e-07,
+        "return_current_A": -99.99894714355469,
+        "source_power_W": 17.746084213256836,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_boundary": "x-ends",
+        "terminal_voltage_V": 0.17746178805828094,
+        "terminal_x_cell_indices": [
+          2,
+          201
+        ],
+        "true_relative_residual": 9.716394089309688e-08
+      },
+      "joule_power_by_material_W": {
+        "4": 0.5688573526197217,
+        "14": 16.641458768917847,
+        "16": 0.1262616944066368,
+        "17": 0.4095341572033555,
+        "18": 0.0
+      },
+      "peak_voxel_joule_density_by_material_W_mm3": {
+        "4": 0.106050968,
+        "14": 1.059803392,
+        "16": 0.090735184,
+        "17": 1.063444992,
+        "18": 0.0
+      },
+      "CPU_sum_Joule_relative_difference": 5.956290216602156e-08,
+      "liquid_midplane_fraction_proxy": 0.6340146498496297,
+      "lateral_to_axial_force_ratio": 0.8022224563026875
+    }
+  ],
+  "limits": [
+    "One0.1mm grid; no convergence qualification.",
+    "Current sharing is a cell-centred central-plane proxy, not a unique fluid through-current.",
+    "Full stainless body and heater/sensor sheath geometry retained; isolated outer magnet occupancy partly cropped, full applied magnet sources unchanged.",
+    "Fixed hot properties, ideal continuity within one steel part; no external cables/grounds, carrier/fasteners or heater internal insulation.",
+    "Joule heat is instantaneous100A power; temperatures, pulse train heating and fluid dynamics not calculated."
+  ]
+}
