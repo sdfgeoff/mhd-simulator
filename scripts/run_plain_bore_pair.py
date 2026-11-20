@@ -43,7 +43,7 @@ try:
         if not proc.name.isdigit():continue
         try:arg=proc.joinpath('cmdline').read_bytes().split(b'\0')[0].decode()
         except (FileNotFoundError,PermissionError,ProcessLookupError):continue
-        if re.fullmatch(r'(?:.*/)?(?:conduction_flow(?:_precision|_current_tolerance|_energy)?|hardware_probe(?:_tail|_decay)?|conduction_probe|applied_probe)',arg):
+        if re.fullmatch(r'(?:.*/)?(?:conduction_flow(?:_precision|_current_tolerance|_energy|_concept1)?|hardware_probe(?:_tail|_decay)?|conduction_probe|applied_probe|thermal_conductance)',arg):
             raise RuntimeError(f'Existing native compute PID{proc.name}: {arg}')
     inventory=json.loads(subprocess.check_output(['target/debug/examples/adapter_inventory'],env=env,text=True))
     if len(inventory['vulkan_adapters'])!=1 or inventory['vulkan_adapters'][0]['vendor']!=0x10de:
@@ -63,12 +63,12 @@ try:
             code=process.wait()
         if code:raise RuntimeError(f'Native case {index} failed with exit{code}; preserve output')
         status=json.loads((Path(job['output'])/'run-status.json').read_text())
-        if status['status']!='complete' or status['accepted_steps']!=2400 or abs(status['time_s']-.0036)>1e-12:
+        if status['status']!='complete' or status['accepted_steps']!=job.get('expected_steps',2400) or abs(status['time_s']-job.get('expected_time_s',.0036))>1e-12:
             raise RuntimeError('Native result incomplete')
         record(stage='analysing_saved_output',index=index)
         with Path(job['output']+'-report.log').open('x') as log:
             subprocess.run(['uv','run','--offline','--with','scipy','--with','numpy','--with','matplotlib',
-                            'python','scripts/hardware_flow_report.py',job['output'],'--plot','--pool-view'],
+                            'python','scripts/hardware_flow_report.py',job['output'],'--plot','--pool-view',*job.get('analysis_args',[])],
                            check=True,env=env,stdout=log,stderr=subprocess.STDOUT)
     record(stage='complete_needs_assessment',completed_jobs=len(plan['jobs']))
 except Exception as error:

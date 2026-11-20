@@ -15,7 +15,7 @@ from scipy import ndimage
 from native_field_io import read_native_fields
 
 
-def components(alpha, fields, h, origin, threshold):
+def components(alpha, fields, h, origin, threshold, exit_z=0.):
     labels, count = ndimage.label(alpha >= threshold)
     sizes = np.bincount(labels.ravel(), weights=alpha.ravel(), minlength=count + 1)
     sizes[0] = 0
@@ -27,7 +27,7 @@ def components(alpha, fields, h, origin, threshold):
             continue
         indices = np.array(np.nonzero(labels == label))
         positions = origin[:, None] + (indices[::-1] + 0.5) * h
-        if not np.any(positions[2] < 0):
+        if not np.any(positions[2] < exit_z):
             continue
         weights = alpha[tuple(indices)]
         volume = float(sizes[label] * h**3)
@@ -56,7 +56,10 @@ def main():
     parser.add_argument("directory", type=Path)
     parser.add_argument("--plot", action="store_true")
     parser.add_argument("--pool-view", action="store_true", help="Include the initial pool and free surface in the section plot")
+    parser.add_argument("--exit-z-mm",type=float,default=0.,help="Nominal CAD exit coordinate, default0mm")
     args = parser.parse_args()
+    exit_z=args.exit_z_mm*.001
+    if not np.isfinite(exit_z):raise ValueError("Finite exit coordinate required")
     records = sorted(args.directory.glob("frame-*/metadata.json"))
     if not records:
         raise SystemExit("No accepted native exports")
@@ -73,7 +76,7 @@ def main():
         alpha = f[..., 14]
         z = origin[2] + (np.arange(nz) + 0.5) * h
         if initial_aperture is None:
-            first = np.flatnonzero(z >= 0)
+            first = np.flatnonzero(z >= exit_z)
             if len(first):
                 k = int(first[0])
                 initial_aperture = {
@@ -83,7 +86,7 @@ def main():
                     ),
                     "meaning": "Initial liquid-fraction area at the first cell-centre plane at or above the nominal exit; a voxel-aperture proxy, not the CAD area.",
                 }
-        exit_planes = np.flatnonzero(z >= 0)
+        exit_planes = np.flatnonzero(z >= exit_z)
         exit_plane = int(exit_planes[0]) if len(exit_planes) else None
         exit_weight = (
             float(alpha[exit_plane].sum(dtype=np.float64))
@@ -106,10 +109,10 @@ def main():
             if exit_weight > 0
             else None
         )
-        below = np.clip((0 - (z - h / 2)) / h, 0, 1)
-        below_guard = np.clip((-h - (z - h / 2)) / h, 0, 1)
+        below = np.clip((exit_z - (z - h / 2)) / h, 0, 1)
+        below_guard = np.clip((exit_z-h - (z - h / 2)) / h, 0, 1)
         thresholds = {
-            str(t): components(alpha, f, h, origin, t) for t in [0.01, 0.25, 0.5, 0.75]
+            str(t): components(alpha, f, h, origin, t, exit_z) for t in [0.01, 0.25, 0.5, 0.75]
         }
         detached = thresholds["0.5"]
         occupied_z = z[np.any(alpha >= 0.5, axis=(1, 2))]
@@ -120,7 +123,7 @@ def main():
         row = {
             "step": m["step"],
             "time_us": m["time_s"] * 1e6,
-            "first_nonnegative_cell_plane_z_mm": (
+            "first_cell_plane_at_or_above_exit_z_mm": (
                 float(z[exit_plane] * 1000) if exit_plane is not None else None
             ),
             "exit_plane_alpha_area_mm2": exit_weight * h**2 * 1e6,
@@ -132,7 +135,7 @@ def main():
             "liquid_volume_nl": float(alpha.sum(dtype=np.float64) * h**3 * 1e12),
             "minimum_liquid_fraction": float(alpha.min()),
             "maximum_liquid_fraction": float(alpha.max()),
-            "below_tip_maximum_liquid_fraction_at_cell_centres": float(alpha[z < 0].max()) if np.any(z < 0) else None,
+            "below_tip_maximum_liquid_fraction_at_cell_centres": float(alpha[z < exit_z].max()) if np.any(z < exit_z) else None,
             "boundary_maximum_liquid_fraction": boundary_maxima,
             "liquid_touches_domain_boundary_alpha01": any(v >= .01 for v in boundary_maxima.values()),
             "below_tip_nl": float(
@@ -230,7 +233,7 @@ def main():
             rgba[..., :3] = .55
             rgba[..., 3] = np.clip(solid, 0, 1)
             ax.imshow(rgba, origin="lower", interpolation="nearest", extent=picture.get_extent())
-            ax.axhline(0, color="darkorange", lw=0.8, ls=":")
+            ax.axhline(args.exit_z_mm, color="darkorange", lw=0.8, ls=":")
             ax.set(
                 xlim=xlimits,
                 ylim=(lower_z, upper_z),
