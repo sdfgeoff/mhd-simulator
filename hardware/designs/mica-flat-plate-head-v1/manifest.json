@@ -1,0 +1,90 @@
+{
+  "status": "CPU assembly CAD; no physics results",
+  "body_count": 20,
+  "steel_components": 1,
+  "CPU_overlaps": 0,
+  "copper_plate_each_mm": [
+    7,
+    2,
+    27.2
+  ],
+  "upper_mica_thickness_mm": 0.1,
+  "lower_contact_each_nominal_mm": [
+    7,
+    5
+  ],
+  "contact_pad_front_y_mm": -1.6,
+  "upper_body_front_y_mm": -1.5,
+  "copper_span_y_mm": [
+    -3.6,
+    -1.6
+  ],
+  "heater_axis": "x",
+  "heater_centre_yz_mm": [
+    5,
+    16
+  ],
+  "heater_envelope_mm": [
+    3.1,
+    25.4
+  ],
+  "sensor_axis": "x",
+  "sensor_centre_yz_mm": [
+    8.5,
+    19
+  ],
+  "front_pole_face_y_mm": -4,
+  "rear_pole_face_y_mm": 2,
+  "pole_gap_mm": 6,
+  "insulated_M3_mounts_xz_mm": [
+    [
+      -6.5,
+      20
+    ],
+    [
+      6.5,
+      20
+    ]
+  ],
+  "M2_flush_contact_screws_xz_mm": [
+    [
+      -6.5,
+      3.3
+    ],
+    [
+      6.5,
+      3.3
+    ]
+  ],
+  "M3_cable_ports_xz_mm": [
+    [
+      -6.5,
+      26
+    ],
+    [
+      6.5,
+      26
+    ]
+  ],
+  "insulator_sleeve_OD_ID_length_mm": [
+    4,
+    3.2,
+    2.1
+  ],
+  "mica_head_washer_OD_ID_thickness_mm": [
+    7,
+    3.2,
+    0.5
+  ],
+  "limitations": [
+    "Sleeve and washer dimensions are provisional envelopes, not sourced components or compression qualification.",
+    "Flat Cu plates need only profile cutting, drilling and M2 countersinks; no bent fingers or fitted jaws.",
+    "Steel blank has two broad contact pads only0.1mm proud of the upper front face; mica must not extend into the intended lower contacts.",
+    "M3 cable lug/bolt/nut outside upper block not modeled. Virtual copper annuli prescribe cable-clamp ports for later stationary solve.",
+    "Thread envelopes use matching nominal diameters without modeled thread teeth; actual tap drills, engagement and drill cones need manufacturing drawings.",
+    "Heater retention, clamping preload, magnetic carriers, external mounting/ground paths and clearances to actual lugs/leads unfinished.",
+    "Thermal constants provisional fixed inputs, not hot-property qualification. Do not run old integral thermal mode: it treats copper as stainless and omits mica.",
+    "All steel,Cu,fastener,insulator current/thermal paths must be retained in full assembly tests. Ideal CuSS contact is only an initial limit; proper interface resistance sensitivity required.",
+    "No GPU initial masks, electrical, thermal, jetting or operating-temperature result yet."
+  ]
+}

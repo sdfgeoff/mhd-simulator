@@ -1,0 +1,767 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "MHD hardware study; E3D dimension-based simplified CAD"
+  },
+  "buffers": [
+    {
+      "uri": "body.bin",
+      "byteLength": 554616
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 124056
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 124056,
+      "byteLength": 27648
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 151704,
+      "byteLength": 46080
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 197784,
+      "byteLength": 13248
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 211032,
+      "byteLength": 20592
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 231624,
+      "byteLength": 27504
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 259128,
+      "byteLength": 27648
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 286776,
+      "byteLength": 27648
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 314424,
+      "byteLength": 24624
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 339048,
+      "byteLength": 46080
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 385128,
+      "byteLength": 13248
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 398376,
+      "byteLength": 20592
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 418968,
+      "byteLength": 27504
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 446472,
+      "byteLength": 27648
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 474120,
+      "byteLength": 27648
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 501768,
+      "byteLength": 24624
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 526392,
+      "byteLength": 13680
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 540072,
+      "byteLength": 13680
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 553752,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 554184,
+      "byteLength": 432
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 10338,
+      "type": "VEC3",
+      "min": [
+        -0.01,
+        -0.001600000023841858,
+        0.0
+      ],
+      "max": [
+        0.01,
+        0.0105,
+        0.022
+      ]
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 2304,
+      "type": "VEC3",
+      "min": [
+        -0.001,
+        -0.001,
+        0.0
+      ],
+      "max": [
+        0.001,
+        0.001,
+        0.006
+      ]
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 3840,
+      "type": "VEC3",
+      "min": [
+        -0.01,
+        -0.0035999999046325685,
+        0.000800000011920929
+      ],
+      "max": [
+        -0.003,
+        -0.001600000023841858,
+        0.028
+      ]
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 1104,
+      "type": "VEC3",
+      "min": [
+        -0.01,
+        -0.001600000023841858,
+        0.005800000190734863
+      ],
+      "max": [
+        -0.003,
+        -0.0015,
+        0.022
+      ]
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 1716,
+      "type": "VEC3",
+      "min": [
+        -0.0085,
+        -0.0035999999046325685,
+        0.0012999999523162842
+      ],
+      "max": [
+        -0.0045000000000000005,
+        0.001,
+        0.005300000190734864
+      ]
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 2292,
+      "type": "VEC3",
+      "min": [
+        -0.00925,
+        -0.006599999904632568,
+        0.01725
+      ],
+      "max": [
+        -0.00375,
+        0.0017000000476837158,
+        0.02275
+      ]
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5126,
+      "count": 2304,
+      "type": "VEC3",
+      "min": [
+        -0.0085,
+        -0.0035999999046325685,
+        0.018000000000000002
+      ],
+      "max": [
+        -0.0045000000000000005,
+        -0.0015,
+        0.022
+      ]
+    },
+    {
+      "bufferView": 7,
+      "componentType": 5126,
+      "count": 2304,
+      "type": "VEC3",
+      "min": [
+        -0.01,
+        -0.0040999999046325685,
+        0.0165
+      ],
+      "max": [
+        -0.003,
+        -0.0035999999046325685,
+        0.0235
+      ]
+    },
+    {
+      "bufferView": 8,
+      "componentType": 5126,
+      "count": 2052,
+      "type": "VEC3",
+      "min": [
+        -0.00925,
+        -0.0035999999046325685,
+        0.02325
+      ],
+      "max": [
+        -0.00375,
+        -0.001600000023841858,
+        0.028
+      ]
+    },
+    {
+      "bufferView": 9,
+      "componentType": 5126,
+      "count": 3840,
+      "type": "VEC3",
+      "min": [
+        0.003,
+        -0.0035999999046325685,
+        0.000800000011920929
+      ],
+      "max": [
+        0.01,
+        -0.001600000023841858,
+        0.028
+      ]
+    },
+    {
+      "bufferView": 10,
+      "componentType": 5126,
+      "count": 1104,
+      "type": "VEC3",
+      "min": [
+        0.003,
+        -0.001600000023841858,
+        0.005800000190734863
+      ],
+      "max": [
+        0.01,
+        -0.0015,
+        0.022
+      ]
+    },
+    {
+      "bufferView": 11,
+      "componentType": 5126,
+      "count": 1716,
+      "type": "VEC3",
+      "min": [
+        0.0045000000000000005,
+        -0.0035999999046325685,
+        0.0012999999523162842
+      ],
+      "max": [
+        0.0085,
+        0.001,
+        0.005300000190734864
+      ]
+    },
+    {
+      "bufferView": 12,
+      "componentType": 5126,
+      "count": 2292,
+      "type": "VEC3",
+      "min": [
+        0.00375,
+        -0.006599999904632568,
+        0.01725
+      ],
+      "max": [
+        0.00925,
+        0.0017000000476837158,
+        0.02275
+      ]
+    },
+    {
+      "bufferView": 13,
+      "componentType": 5126,
+      "count": 2304,
+      "type": "VEC3",
+      "min": [
+        0.0045000000000000005,
+        -0.0035999999046325685,
+        0.018000000000000002
+      ],
+      "max": [
+        0.0085,
+        -0.0015,
+        0.022
+      ]
+    },
+    {
+      "bufferView": 14,
+      "componentType": 5126,
+      "count": 2304,
+      "type": "VEC3",
+      "min": [
+        0.003,
+        -0.0040999999046325685,
+        0.0165
+      ],
+      "max": [
+        0.01,
+        -0.0035999999046325685,
+        0.0235
+      ]
+    },
+    {
+      "bufferView": 15,
+      "componentType": 5126,
+      "count": 2052,
+      "type": "VEC3",
+      "min": [
+        0.00375,
+        -0.0035999999046325685,
+        0.02325
+      ],
+      "max": [
+        0.00925,
+        -0.001600000023841858,
+        0.028
+      ]
+    },
+    {
+      "bufferView": 16,
+      "componentType": 5126,
+      "count": 1140,
+      "type": "VEC3",
+      "min": [
+        -0.012699999809265138,
+        0.003450000047683716,
+        0.014449999809265137
+      ],
+      "max": [
+        0.012699999809265138,
+        0.006550000190734863,
+        0.01754999923706055
+      ]
+    },
+    {
+      "bufferView": 17,
+      "componentType": 5126,
+      "count": 1140,
+      "type": "VEC3",
+      "min": [
+        -0.012699999809265138,
+        0.008,
+        0.0185
+      ],
+      "max": [
+        0.012699999809265138,
+        0.009000000000000001,
+        0.0195
+      ]
+    },
+    {
+      "bufferView": 18,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.0125,
+        -0.014,
+        0.0
+      ],
+      "max": [
+        0.0125,
+        -0.004,
+        0.005
+      ]
+    },
+    {
+      "bufferView": 19,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.0125,
+        0.002,
+        0.0
+      ],
+      "max": [
+        0.0125,
+        0.012,
+        0.005
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "One-piece stainless heater block and nozzle",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Liquid solder",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Left flat copper plate",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 2
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Left upper mica sheet",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 3
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Left flush M2 contact screw envelope",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 4
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Left insulated M3 mount screw envelope",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 5
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Left insulating shank sleeve envelope",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 6
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Left mica head washer stack",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 7
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Left copper cable clamp virtual port",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 8
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Right flat copper plate",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 9
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Right upper mica sheet",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 10
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Right flush M2 contact screw envelope",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 11
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Right insulated M3 mount screw envelope",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 12
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Right insulating shank sleeve envelope",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 13
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Right mica head washer stack",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 14
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Right copper cable clamp virtual port",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 15
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Heater cartridge sheath envelope",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 16
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Sensor sheath envelope",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 17
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Front SmCo magnet stack",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 18
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Rear SmCo magnet stack",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 19
+          },
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "One-piece stainless heater block and nozzle"
+    },
+    {
+      "mesh": 1,
+      "name": "Liquid solder"
+    },
+    {
+      "mesh": 2,
+      "name": "Left flat copper plate"
+    },
+    {
+      "mesh": 3,
+      "name": "Left upper mica sheet"
+    },
+    {
+      "mesh": 4,
+      "name": "Left flush M2 contact screw envelope"
+    },
+    {
+      "mesh": 5,
+      "name": "Left insulated M3 mount screw envelope"
+    },
+    {
+      "mesh": 6,
+      "name": "Left insulating shank sleeve envelope"
+    },
+    {
+      "mesh": 7,
+      "name": "Left mica head washer stack"
+    },
+    {
+      "mesh": 8,
+      "name": "Left copper cable clamp virtual port"
+    },
+    {
+      "mesh": 9,
+      "name": "Right flat copper plate"
+    },
+    {
+      "mesh": 10,
+      "name": "Right upper mica sheet"
+    },
+    {
+      "mesh": 11,
+      "name": "Right flush M2 contact screw envelope"
+    },
+    {
+      "mesh": 12,
+      "name": "Right insulated M3 mount screw envelope"
+    },
+    {
+      "mesh": 13,
+      "name": "Right insulating shank sleeve envelope"
+    },
+    {
+      "mesh": 14,
+      "name": "Right mica head washer stack"
+    },
+    {
+      "mesh": 15,
+      "name": "Right copper cable clamp virtual port"
+    },
+    {
+      "mesh": 16,
+      "name": "Heater cartridge sheath envelope"
+    },
+    {
+      "mesh": 17,
+      "name": "Sensor sheath envelope"
+    },
+    {
+      "mesh": 18,
+      "name": "Front SmCo magnet stack"
+    },
+    {
+      "mesh": 19,
+      "name": "Rear SmCo magnet stack"
+    }
+  ],
+  "scenes": [
+    {
+      "nodes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ]
+    }
+  ],
+  "scene": 0
+}
