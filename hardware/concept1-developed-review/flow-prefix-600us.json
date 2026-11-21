@@ -1,0 +1,91 @@
+{
+  "status": "PARTIAL accepted prefix; full driven run active, matched zero control not started",
+  "source_run": "artifacts/hardware-research/concept1-developed-flow-v1-driven100",
+  "last_saved_time_us": 600.0,
+  "nominal_exit_z_mm": -0.5,
+  "analysis": {
+    "method": "Accepted native exports; six-neighbour components at several alpha thresholds. Component volumes include alpha only above that threshold. Below-tip volume includes all alpha. Exit flux is a cell-centred proxy, not a native MAC-face flux. No convergence or wetting claim.",
+    "initial_aperture_proxy": {
+      "plane_z_mm": -0.4499999631661922,
+      "alpha_area_mm2": 0.12000001139938858,
+      "meaning": "Initial liquid-fraction area at the first cell-centre plane at or above the nominal exit; a voxel-aperture proxy, not the CAD area."
+    },
+    "component_minimum_alpha_weighted_cells": 1,
+    "component_minimum_volume_nl": 1.0000001424923606,
+    "frames": [
+      {
+        "step": 0,
+        "time_us": 0.0,
+        "first_cell_plane_at_or_above_exit_z_mm": -0.4499999631661922,
+        "exit_plane_alpha_area_mm2": 0.12000001139938858,
+        "exit_plane_mean_uz_m_s": 0.0,
+        "exit_plane_mean_pressure_pa": 0.0,
+        "exit_plane_downward_flux_proxy_nl_s": -0.0,
+        "liquid_volume_nl": 22920.001206464927,
+        "minimum_liquid_fraction": 0.0,
+        "maximum_liquid_fraction": 1.0,
+        "below_tip_maximum_liquid_fraction_at_cell_centres": 0.0,
+        "boundary_maximum_liquid_fraction": {
+          "z_min": 0.0,
+          "z_max": 0.0,
+          "y_min": 0.0,
+          "y_max": 0.0,
+          "x_min": 0.0,
+          "x_max": 0.0
+        },
+        "liquid_touches_domain_boundary_alpha01": false,
+        "below_tip_nl": 0.0,
+        "below_one_cell_guard_nl": 0.0,
+        "front_z_mm_alpha_half": -0.4499999631661922,
+        "detached_below_tip": [],
+        "connectivity_thresholds": {
+          "0.01": [],
+          "0.25": [],
+          "0.5": [],
+          "0.75": []
+        },
+        "below_tip_change_nl": 0.0,
+        "relative_liquid_volume_change": 0.0
+      },
+      {
+        "step": 200,
+        "time_us": 600.0,
+        "first_cell_plane_at_or_above_exit_z_mm": -0.4499999631661922,
+        "exit_plane_alpha_area_mm2": 0.12000001139938858,
+        "exit_plane_mean_uz_m_s": -0.5612094476819038,
+        "exit_plane_mean_pressure_pa": 2130.1487833658853,
+        "exit_plane_downward_flux_proxy_nl_s": 67345.14011927303,
+        "liquid_volume_nl": 22920.001538158846,
+        "minimum_liquid_fraction": 0.0,
+        "maximum_liquid_fraction": 1.0,
+        "below_tip_maximum_liquid_fraction_at_cell_centres": 1.0,
+        "boundary_maximum_liquid_fraction": {
+          "z_min": 0.0,
+          "z_max": 0.0,
+          "y_min": 0.0,
+          "y_max": 0.0,
+          "x_min": 0.0,
+          "x_max": 0.0
+        },
+        "liquid_touches_domain_boundary_alpha01": false,
+        "below_tip_nl": 46.809953420361765,
+        "below_one_cell_guard_nl": 33.435430161218825,
+        "front_z_mm_alpha_half": -0.8499999821651727,
+        "detached_below_tip": [],
+        "connectivity_thresholds": {
+          "0.01": [],
+          "0.25": [],
+          "0.5": [],
+          "0.75": []
+        },
+        "below_tip_change_nl": 46.809953420361765,
+        "relative_liquid_volume_change": 1.4471810638738702e-08
+      }
+    ]
+  },
+  "limits": [
+    "100um grid; four cells across outlet. No breakup qualification.",
+    "Current-coupled, fixed-temperature inductionless model; self-field/reaction omitted.",
+    "Final charge/energy CSV only written when native terminates."
+  ]
+}

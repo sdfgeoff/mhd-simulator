@@ -29,3 +29,10 @@ Authorized by Geoffrey topic25reply860. The source`/home/geoffrey/Reference/OffT
 5. Both cases use100µm spacing, only4cells across the0.4mm outlet. They are startup/drop-response screens, not breakup qualification. First-step costs were about8–11seconds total, so the pair can take severalhours; no completion time is promised. Saved fields every0.6ms allow early inspection. The reporter uses the actual exitZ=-0.5mm.
 
 ![Native stationary fields](static-results.png)
+
+## Partial flow result at 0.6 ms
+
+1. The first accepted saved frame shows an attached protrusion approximately 0.35 mm below the nominal outlet, with 46.81 nL of liquid below the exit plane. The sampled outlet liquid velocity is 0.56 m/s downward. No detached component appears at alpha thresholds 0.01, 0.25, 0.5 or 0.75.
+2. This is a running prefix, not the final outcome. The matched zero-current control has not started. No liquid reaches a domain boundary in this saved frame. The 100 µm spacing still prevents a trustworthy breakup or droplet-size claim.
+
+![Partial accepted flow frames: initial and 0.6 ms](flow-prefix-600us.png)
