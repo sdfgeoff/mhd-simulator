@@ -1,0 +1,18 @@
+{
+  "scope": "Original interruptedV3 versus restartedV4 accepted native fields; no extra simulation. Samephysics/geometry/binary/pulse/grid/dt.",
+  "frames": [
+    {
+      "step": 0,
+      "previous_raw_field_sha256": "2467b6f2acb3372b7243d4087be644cabab6ec929213a6396ac66c394c06313a",
+      "restarted_raw_field_sha256": "2467b6f2acb3372b7243d4087be644cabab6ec929213a6396ac66c394c06313a",
+      "byte_identical": true
+    },
+    {
+      "step": 200,
+      "previous_raw_field_sha256": "c50dd78c5680fa2a8c188d0702607a05b3a64c424e0a53c2e570ffebb6a8281a",
+      "restarted_raw_field_sha256": "c50dd78c5680fa2a8c188d0702607a05b3a64c424e0a53c2e570ffebb6a8281a",
+      "byte_identical": true
+    }
+  ],
+  "interpretation": "Initial and600us full fields are byte-identical; this verifies recovered prefix, not later breakup."
+}
