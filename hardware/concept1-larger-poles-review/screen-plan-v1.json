@@ -1,0 +1,32 @@
+{
+  "binary": "target/debug/examples/conduction_probe",
+  "binary_sha256": "6949a93f28a5051a7b6d033f53511718f9d6896e74431adfada4b4d8ea7034fa",
+  "expected_binary_hashes": {
+    "target/debug/examples/conduction_probe": "6949a93f28a5051a7b6d033f53511718f9d6896e74431adfada4b4d8ea7034fa"
+  },
+  "screen": "electrical",
+  "authorization_replies": [
+    860,
+    871
+  ],
+  "jobs": [
+    {
+      "screen": "electrical",
+      "project": "hardware/designs/concept1-larger-poles-v1/assembly-h0100.mhd.json",
+      "output": "artifacts/hardware-research/concept1-larger-poles-v1-electrical100",
+      "command": [
+        "target/debug/examples/conduction_probe",
+        "hardware/designs/concept1-larger-poles-v1/assembly-h0100.mhd.json",
+        "100",
+        "artifacts/hardware-research/concept1-larger-poles-v1-electrical100",
+        "0",
+        "body",
+        "1e-7",
+        "0",
+        "y"
+      ]
+    }
+  ],
+  "status": "Only larger poles; preserved nonmagnet geometry and identical masks, GPUzerooverlap. Same100A idealCuSS stationary control.",
+  "limits": "Stationary.1mmfieldgrid, explicitfiniteCu/mica/ceramicsandallsteel. Thermalidealwall, excludesactualpower/contact/sheath/ambientloss/feed/magnetthermalbalance. Nojettingoroperatingtemperatureclaim."
+}

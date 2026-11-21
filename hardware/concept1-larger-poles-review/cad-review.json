@@ -1,0 +1,77 @@
+{
+  "status": "CAD candidate; no performance result yet",
+  "authorization": [
+    860,
+    871
+  ],
+  "pole_dimensions_xyz_mm": [
+    10,
+    10,
+    5
+  ],
+  "pole_gap_mm": 5.4,
+  "unchanged": "All nonmagnet geometry bytes, source magnetization, current/pulse, domain and numerics.",
+  "changes": [
+    {
+      "name": "Left5mm SmCo cube",
+      "old_bounds_mm": [
+        [
+          -7.699999809265137,
+          -2.5,
+          -2.5
+        ],
+        [
+          -2.700000047683716,
+          2.5,
+          2.5
+        ]
+      ],
+      "new_bounds_mm": [
+        [
+          -12.699999809265137,
+          -5.0,
+          -2.5
+        ],
+        [
+          -2.700000047683716,
+          5.0,
+          2.5
+        ]
+      ]
+    },
+    {
+      "name": "Right5mm SmCo cube",
+      "old_bounds_mm": [
+        [
+          2.700000047683716,
+          -2.5,
+          -2.5
+        ],
+        [
+          7.699999809265137,
+          2.5,
+          2.5
+        ]
+      ],
+      "new_bounds_mm": [
+        [
+          2.700000047683716,
+          -5.0,
+          -2.5
+        ],
+        [
+          12.699999809265137,
+          5.0,
+          2.5
+        ]
+      ]
+    }
+  ],
+  "nonmagnet_buffer_bytes_identical": true,
+  "baseline_binary_sha256": "58a11cc2e12356f2a2e104c85d0290a8c0c8b209e37d31ea4e129a6c6c270dbb",
+  "limits": [
+    "Same 2.5mm magnet extent below Z0; no increased flight obstruction.",
+    "Magnet carriers/cooling unresolved; not an operating-temperature claim.",
+    "Full source meshes retained; isolated outer magnet occupancy cropped by unchanged domain."
+  ]
+}
