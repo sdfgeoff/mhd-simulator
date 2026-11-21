@@ -42,3 +42,9 @@
 3. Next: same100A and geometry, positive duration400µs instead250µs; reverse remains25A but its width scales83.3->133.3µs with the client waveform. This increases net drive impulse. The analytic heating dose gives27.57Arms at assumed200Hz, not a repeated-run or heat-balance qualification. Charge requested residual tightens1e-6->1e-7 to address energy error; same PDE, grid, timestep and conservation gates. Nozero control.
 
 ![Completed native comparison](flow-comparison-prefix-step1200.png)
+
+## Longer-pulse numerical recovery
+
+1. V1 stopped after8acceptedsteps (24µs): motional true residual1.0214e-7 narrowly missed1e-7 at the4000iteration cap; boundary imbalance9.1e-11A passed. Outputs are preserved; no jetting inference is possible.
+2. V2 uses the same physics and numerical tolerances with a12000iteration cap. The original4000 default remains for other callers. A new separately named binary preserves the old frozen binary. No convergence or conservation limit is relaxed.
+3. All9headless numerical tests pass. The long-path analytical test additionally rejects a32iteration budget and converges with a larger configured budget while retaining current/power checks. Actual Concept1 convergence at1e-7 remains to be demonstrated by V2.

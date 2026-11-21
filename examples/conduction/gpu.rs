@@ -36,6 +36,7 @@ pub struct Conduction {
     pub unit_boundary_current_defect: f32,
     pub motional_boundary_current_imbalance_a: f32,
     motion_boundary_absolute_tolerance_a: f32,
+    max_iterations: u32,
     has_material_groups: bool,
 }
 impl Conduction {
@@ -243,6 +244,7 @@ impl Conduction {
             unit_boundary_current_defect: f32::INFINITY,
             motional_boundary_current_imbalance_a: f32::INFINITY,
             motion_boundary_absolute_tolerance_a: 0.,
+            max_iterations: 4000,
             has_material_groups: groups.is_some(),
         })
     }
@@ -294,7 +296,7 @@ impl Conduction {
             }
             self.tighten_iteration_target();
         }
-        for batch in 0..125 {
+        for batch in 0..self.max_iterations / 32 {
             let mut commands = Vec::new();
             for _ in 0..32 {
                 commands.extend([
@@ -389,6 +391,14 @@ impl Conduction {
     }
     pub fn relative_tolerance(&self) -> f32 {
         self.params.physical[2]
+    }
+    /// Change only the work budget, retaining true-residual and flux gates.
+    pub fn set_max_iterations(&mut self, iterations: u32) -> Result<(), String> {
+        if iterations < 32 || iterations % 32 != 0 {
+            return Err("DC iteration limit must be a positive multiple of32".into());
+        }
+        self.max_iterations = iterations;
+        Ok(())
     }
     pub fn set_contact_resistivity(&mut self, resistance_ohm_m2: f32) -> Result<(), String> {
         if !resistance_ohm_m2.is_finite() || resistance_ohm_m2 < 0. {

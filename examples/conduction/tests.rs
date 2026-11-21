@@ -158,6 +158,10 @@ fn long_bottlenecked_parallel_paths_conserve_current_and_match_series_resistance
     }
     let mut solver = Conduction::new(context, dims, h, &cells, &bias).unwrap();
     solver.set_relative_tolerance(2e-6).unwrap();
+    solver.set_max_iterations(32).unwrap();
+    assert!(solver.solve().is_err(), "A short work budget must not waive convergence");
+    assert_eq!(solver.iterations, 32);
+    solver.set_max_iterations(12000).unwrap();
     solver.solve().unwrap();
     let stats = solver.fields(1.).unwrap();
     // Harmonic faces give half-cell endpoint resistances and full unknown
