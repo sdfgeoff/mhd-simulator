@@ -18,6 +18,8 @@ for ax,(label,name) in zip(axes,[('5 mm cubes','concept1-developed-flow-v1-drive
     rgba=np.full((*solid.shape,4),.55);rgba[...,3]=solid;ax.imshow(rgba,origin='lower',extent=extent,interpolation='nearest')
     ax.axhline(-.5,color='darkorange',linestyle=':');ax.set(xlim=(-1.8,1.8),ylim=(-1.6,4.1),xlabel='x (mm)',ylabel='z (mm)',title=label+'\n'+f"{record['below_tip_nl']:.1f} nL below exit; {abs(record['exit_plane_mean_uz_m_s']):.2f} m/s "+('down' if record['exit_plane_mean_uz_m_s']<0 else 'up'))
     results.append({'case':label,'native_frame':str(path),'measurements':record});del f
+lower=min(-1.6,min(c['measurements']['front_z_mm_alpha_half'] for c in results if c['measurements']['front_z_mm_alpha_half'] is not None)-.4)
+for ax in axes: ax.set_ylim(lower,4.1)
 connectivity_note=("no detached region in these frames" if all(not regions for c in results for regions in c["measurements"]["connectivity_thresholds"].values()) else "see JSON for detached-region threshold counts")
 fig.suptitle(f"Concept1: shared {results[0]['measurements']['time_us']:.0f} us frame — partial response\nSame 100 A pulse / 100 µm grid; {connectivity_note}",fontsize=12)
 fig.colorbar(im,ax=axes,label='Liquid fraction',shrink=.6)

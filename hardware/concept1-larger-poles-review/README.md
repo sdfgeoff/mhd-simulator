@@ -19,3 +19,10 @@
 2. Neither saved frame has detached regions at the four alpha thresholds. The larger-pole run is still active: this is an initial-response improvement, not a droplet-release result. Volume change is about 1e-9 relative and no liquid reaches a domain boundary in the new frame.
 
 ![Matched accepted 0.6 ms frames](flow-comparison-prefix-step200.png)
+
+## Partial comparison at 1.8 ms
+
+1. Larger poles: attached ligament reaches about 1.05 mm below the exit, with 128.22 nL below it and outlet mean velocity 0.123 m/s downward. Cubes: 84.68 nL and outlet mean velocity 0.0105 m/s upward, with the front only 0.25 mm below the exit.
+2. No detached regions occur at any of the four checked thresholds in these saved frames. The new run continues; the ligament may still release or retract. Relative volume change is below 1e-9 and no domain-boundary liquid contact appears in the new frame.
+
+![Matched accepted 1.8 ms frames](flow-comparison-prefix-step600.png)
