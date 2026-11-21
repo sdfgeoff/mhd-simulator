@@ -62,3 +62,11 @@
 3. V4 restarts in fresh outputs with identical geometry, waveform, grid, timestep,1e-6residual and originalbinary; no physics change. V3 outputs/state are preserved as interrupted.
 
 ![Partial400µs response before host interruption](flow-pulse-comparison-prefix-step200.png)
+
+## 400 µs partial response at 1.8 ms (V4)
+
+1. A dense region is separated at alpha0.25/0.5/0.75 but remains connected at0.01. At0.5 it is83.265nL, D0.54178mm, moving1.108m/s downward; threshold-dependent dense-region diameters0.516–0.569mm. This is not yet threshold-robust free flight.
+2. Total liquid belowexit183.10nL includes the trailing ligament as well as the dense bulb; it is not droplet volume. The leading front reaches2.15mm belowexit. No liquid touches a domain boundary in the saved1.8msframe; relative volume change1.15e-8.
+3. The lower domain boundary is Z=-3.5mm, so the leading drop will approach it before the requested3.6ms endpoint. Later wall interaction must be identified rather than mistaken for jet physics. Extra flight space is a candidate next numerical-domain change after this run, not a geometry improvement. No additional GPU job is queued.
+
+![Matched1.8ms pulse response](flow-pulse-v4-comparison-prefix-step600.png)
