@@ -48,3 +48,9 @@
 1. V1 stopped after8acceptedsteps (24µs): motional true residual1.0214e-7 narrowly missed1e-7 at the4000iteration cap; boundary imbalance9.1e-11A passed. Outputs are preserved; no jetting inference is possible.
 2. V2 uses the same physics and numerical tolerances with a12000iteration cap. The original4000 default remains for other callers. A new separately named binary preserves the old frozen binary. No convergence or conservation limit is relaxed.
 3. All9headless numerical tests pass. The long-path analytical test additionally rejects a32iteration budget and converges with a larger configured budget while retaining current/power checks. Actual Concept1 convergence at1e-7 remains to be demonstrated by V2.
+
+## Screening tolerance restored (human879)
+
+1. V2 also stopped at24µs despite12000iterations: true residual1.01447e-7 vs1e-7, zero reported terminal imbalance. This is consistent with stagnation near the arithmetic floor, rather than insufficient iteration count; its exact origin is not established. Both failed attempts remain preserved.
+2. The performance screen now uses the original frozen Concept1 binary and1e-6 residual, as for the completed250µs reference. The400µs pulse,100Apeak, geometry/grid/timestep and conservation gates are retained. No claim that residual equals physical accuracy; the electrical energy limitation stays recorded.
+3. This V3 comparison now changes waveform duration alone relative to the completed larger-pole250µs baseline. Nozero control or strict-tolerance repeat is queued.

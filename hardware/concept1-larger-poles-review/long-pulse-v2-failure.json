@@ -1,0 +1,85 @@
+{
+  "status": "Failed strict tolerance; preserved, no physical inference",
+  "native_run_status": {
+    "accepted_steps": 8,
+    "body_acceleration_work_J": 3.019558886784013e-11,
+    "charge_boundary_criteria": {
+      "max_combined_port_imbalance_A": 0.0001678466796875,
+      "max_motional_imbalance_A": 4.092726435533933e-10,
+      "max_unit_relative_imbalance": 8.348560527338122e-07,
+      "motional_absolute_tolerance_A": 9.999999974752427e-07,
+      "unit_relative_tolerance": 1e-05
+    },
+    "charge_max_iterations": 12000,
+    "charge_potential_representation": "split f32 high/low",
+    "charge_requested_relative_tolerance": 1.0000000116860974e-07,
+    "charge_solver": "conservative-split-f32-pair-interface-v3",
+    "contact_resistivity_ohm_m2": 0.0,
+    "cu_ss_contact_resistivity_ohm_m2": 0.0,
+    "electrical_work_definition": "sum terminal phi*I on both ports",
+    "error": "DC solve did not converge after 12000 iterations, true residual 0.000000101447256, boundary current defect 0, mode 1, net boundary flux 0 A / absolute 0.0054444503 A",
+    "field_every": 200,
+    "fluid_em_work_J": 4.163603200277657e-09,
+    "fluid_energy_diagnostics": {
+      "area_work_mismatch_J": 1.610181789453018e-10,
+      "capillary_work_J": -7.710571101858532e-11,
+      "discrete_fluid_loss_J": 3.83981964165159e-12,
+      "kinetic_J": 4.112852280968582e-09,
+      "scope": "Existing RunState ledger only; no additional GPU solve. Area-work mismatch compares the interface-area estimator with capillary-force work; it is not a certified discretization-error bound. Fluid loss includes physical and numerical contributions. Electrical Joule heat is accounted separately by the conduction client; thermal evolution is disabled.",
+      "surface_energy_estimate_J": 3.836257330754262e-06
+    },
+    "fluid_external_work_J": 4.1937987891454975e-09,
+    "fluid_work_definition": "EM/impressed-force work only; excludes body acceleration",
+    "frequency_hz": 0.0,
+    "grid": {
+      "cell_m": 0.00010000000474974513,
+      "dims": [
+        224,
+        204,
+        209
+      ]
+    },
+    "joule_generated_J": 0.00023370143321156504,
+    "lagged_electrical_work_J": 0.00023369652096927166,
+    "lagged_mechanical_work_J": 3.481409359665122e-09,
+    "limitations": [
+      "Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.",
+      "Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.",
+      "Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.",
+      "New research client; not a GUI electrode feature or frozen-baseline claim."
+    ],
+    "max_charge_boundary_current_defect": 8.348560527338122e-07,
+    "max_terminal_voltage_V": 0.21885696053504944,
+    "method": "GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.",
+    "peak_A": 100.0,
+    "periodic_fluid_axes": [
+      false,
+      false,
+      false
+    ],
+    "positive_duration_s": 0.00039999999999999996,
+    "project": "hardware/designs/concept1-larger-poles-v1/flow-h0100.mhd.json",
+    "pulse_start_s": 0.0,
+    "released_static_workspace_bytes": 2135627460,
+    "requested_steps": 1200,
+    "retract_delay_s": 2.4999999999999998e-05,
+    "retract_fraction": 0.25,
+    "rise_s": 2e-05,
+    "status": "failed",
+    "tail_timestep_s": 3e-06,
+    "tail_transition_not_before_s": 0.0005583333333333332,
+    "terminal_boundary": "body",
+    "terminal_x_cell_indices": [
+      97,
+      126
+    ],
+    "time_s": 2.4e-05,
+    "timestep_s": 3e-06,
+    "uniform_acceleration_m_s2": [
+      0.0,
+      0.0,
+      -9.8100004196167
+    ]
+  },
+  "interpretation": "Increasing cap4000->12000 barely changed residual1.0214e-7->1.01447e-7 and did not accept ninthstep. Arithmetic stagnation is plausible but not established. User879questioned strictaccuracy; performanceV3usesestablished1e-6setting, sameascompleted250usbaseline. No additional strict-tolerance retry."
+}
