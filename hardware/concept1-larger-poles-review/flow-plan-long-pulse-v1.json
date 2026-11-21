@@ -1,0 +1,46 @@
+{
+  "binary": "target/debug/examples/conduction_flow_concept1",
+  "expected_binary_sha256": "0eea92d7040b8f8ca4800db3b5c199fbb56d5d625af4c358fd60050de17b8dc2",
+  "authorization_reply": 871,
+  "purpose": "Authorized871performance:100Aforwardpulse400us instead250; samehead/poles/grid/dt; charge residual tightened1e-7 to address recorded energy discrepancy, noPDEorconservationgatechange.",
+  "jobs": [
+    {
+      "output": "artifacts/hardware-research/concept1-long-pulse-flow-v1-driven100",
+      "expected_steps": 1200,
+      "expected_time_s": 0.0036,
+      "analysis_args": [
+        "--exit-z-mm",
+        "-.5"
+      ],
+      "command": [
+        "target/debug/examples/conduction_flow_concept1",
+        "hardware/designs/concept1-larger-poles-v1/flow-h0100.mhd.json",
+        "100",
+        "400",
+        "1200",
+        "artifacts/hardware-research/concept1-long-pulse-flow-v1-driven100",
+        "0",
+        ".25",
+        "3",
+        "0",
+        "200",
+        "3",
+        "25",
+        "body",
+        "0",
+        "1e-6",
+        "0",
+        "1e-7"
+      ]
+    }
+  ],
+  "limits": [
+    "100umgrid:0.4mmoutlet4cellsacross, notbreakupqualification.",
+    "Thermalheldfixed, separatewallconductanceonly. Noheaterfeedback/oxidation/feed/self-fieldorPMreaction.",
+    "100A250uspositive20usrise,25Areverse83.33usafter25usgap, singlepulse. Assumed200Hzdosewouldbe21.3ARMS, notatestofrepetition.",
+    "Fullheater/clamps/magnetgeometry retained; current+Y andB+X ->-Z. Magnetmount/coolingexternalpathsunfinished.",
+    "Baseline400ppm electrical energy identity defect unresolved; same numerical settings retained for response comparison, not qualification.",
+    "Reverse fraction remains.25; its duration also grows83.33->133.33us because client scales reverse width with positive duration. Forward/reverse waveform family scales, not an isolated forward-only impulse change.",
+    "AnalyticI2dose3.8A2s gives27.57Arms atassumed200Hz, not continuous/repetition/thermalqualification."
+  ]
+}

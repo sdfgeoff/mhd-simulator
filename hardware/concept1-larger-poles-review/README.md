@@ -34,3 +34,11 @@
 3. The original cubes have no detached region in the matched frame. The larger-pole run remains active through its requested 3.6 ms.
 
 ![Matched accepted 3.0 ms frames](flow-comparison-prefix-step1000.png)
+
+## Completed 3.6 ms result and next pulse
+
+1. Both magnet-size cases completed1200steps. Larger poles retain one separated region at every threshold: alpha0.5 D0.53005mm,77.976nL, mean velocity0.00928m/s upward. This is a near-stationary released region rather than a useful downward jet. The original cubes have no separated region in any savedframe.
+2. The larger-pole electrical-work identity defect is -336.1ppm (-1.662µJ), mostly during forward drive. It is comparable to the mechanical work0.906µJ, so mechanical-energy accuracy is unqualified despite the small fraction of Jouleheat. Unit-current defect is9.92ppm; the existing motion gate is a mixed10ppm-relative PLUS1µA allowance (peakabsolute1.070µA), not a hard1µA ceiling.
+3. Next: same100A and geometry, positive duration400µs instead250µs; reverse remains25A but its width scales83.3->133.3µs with the client waveform. This increases net drive impulse. The analytic heating dose gives27.57Arms at assumed200Hz, not a repeated-run or heat-balance qualification. Charge requested residual tightens1e-6->1e-7 to address energy error; same PDE, grid, timestep and conservation gates. Nozero control.
+
+![Completed native comparison](flow-comparison-prefix-step1200.png)
