@@ -1,25 +1,33 @@
 """Manufacture-first Concept1 candidates; CPU CAD only, preserving other mesh bytes."""
-import copy,json
+import argparse,copy,json
 from pathlib import Path
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import draw_hardware_layouts as drawing
-from make_conduction_hardware import box,triangles
-from make_hardware import lathe
+from make_conduction_hardware import box,cylinder,triangles
+from make_hardware import lathe,orient
 from make_v6_conduction import as_solid
 
 source=Path('hardware/designs/concept1-larger-poles-v1')
-review=Path('hardware/concept1-sturdy-tip-review');review.mkdir(exist_ok=False)
+parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--version',default='v2');args=parser.parse_args()
+review=Path('hardware/concept1-sturdy-tip-review')/('cad-'+args.version);review.mkdir(exist_ok=False)
 g=json.loads((source/'assembly.gltf').read_text());original=(source/'assembly.bin').read_bytes()
 parts,_=drawing.load(str(source/'assembly.gltf'))
 records=[];all_parts=[]
 for diameter in [.4,.5]:
-    out=Path(f'hardware/designs/concept1-sturdy-tip-{round(diameter*100):03d}')
+    out=Path(f'hardware/designs/concept1-sturdy-tip-{args.version}-{round(diameter*100):03d}')
     out.mkdir(exist_ok=False);data=bytearray(original);newg=copy.deepcopy(g);modified={}
     cavity=as_solid(lathe([(0,-.6,False),(diameter/2,-.6,False),(diameter/2,.1,False),(1.5,.7,False),(1.5,17,False),(0,17,False)],segments=32))
-    steel=(parts[0][2]+box([1.2,1.2,.5],[0,0,-.25]))-cavity
+    # Rebuild steel from nominal primitives; Boolean operations against rounded
+    # imported faces can leave near-coincident slivers that defeat raster integrals.
+    steel=box([4,16,4.7],[0,0,2.35])+box([1.2,1.2,.5],[0,0,-.25])+box([22,20,12],[0,0,10.7])-cavity
+    steel=steel-cylinder(3.05,22.2,[0,5.5,9.7],'x')-cylinder(1.55,22.2,[0,-5.5,9.7],'x')
+    for sign in [-1,1]:
+        steel=steel-cylinder(1.6,2.3,[0,sign*4,1.05])-cylinder(1,4.2,[0,sign*4,4.1])
+    for y,tip,top in [(5.5,12.7,16.7),(-5.5,11.2,17.2)]:
+        steel=steel-cylinder(1.5,top-tip+.2,[5,y,(tip+top)/2+.1])
     modified[0]=steel
     if diameter!=.4:
         modified[1]=as_solid(lathe([(0,-.5,False),(diameter/2,-.5,False),(diameter/2,.1,False),(1.5,.7,False),(1.5,3.7,False),(0,3.7,False)],segments=32))
@@ -32,7 +40,7 @@ for diameter in [.4,.5]:
     for i,(name,faces,solid) in enumerate(parts):
         if i in modified:
             solid=modified[i];assert solid.volume()>0
-            faces=np.asarray(triangles(solid),dtype=np.float32)
+            faces=np.asarray(orient(triangles(solid)),dtype=np.float32)
             points=(faces.reshape(-1,3)*.001).astype('<f4')
             primitive=newg['meshes'][i]['primitives'][0]
             accessor=newg['accessors'][primitive['attributes']['POSITION']]

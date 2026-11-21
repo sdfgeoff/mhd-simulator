@@ -15,3 +15,7 @@
 ## Fluid startup mesh repair
 
 The first040fluid attempt stopped beforetimestepping: CADsubcell integration rejected invalidorientedlengths. CPUclosedsolids and coarseGPUoccupancy hadpassed; the Booleanagainstimportedf32steel likely introduced tinyfaceartifacts. Staticgridresults remain coarsegeometryscreens, nofluidresult. The nominalshape is being rebuilt fromanalytic primitives in freshv2files; oldinputs/outputspreserved.
+
+Analyticv2CAD preserves the nominaltip dimensions. The040repairedmesh has zeroGPUoverlap and byte-identical coarse bodymasks to the screenedv1geometry, with the same magnetic sources. The staticcurrent/force screen therefore remains applicable to this discretegrid; it was not repeated. The040fluidexperiment now uses the repairedv2input.
+
+The repaired040case has now completed CADfractioninitialization and published its initialacceptedframe; its fluidrun is active. Geometry/performance remains the priority, with no furtherdomain/accuracycomparison queued.

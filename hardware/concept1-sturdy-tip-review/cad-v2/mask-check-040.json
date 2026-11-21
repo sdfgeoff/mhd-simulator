@@ -1,0 +1,6 @@
+{
+  "overlaps": 0,
+  "different_mask_cells_from_v1": 0,
+  "static_screen_transfer_valid_if_zero": true,
+  "scope": "Brief repairedCAD setup check, same nominaldesign; no repeatedfieldsolve whenmasks+sourcesidentical."
+}
