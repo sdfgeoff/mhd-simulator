@@ -96,3 +96,8 @@
 1. FlightspaceV2 accepted200steps600µs, then failed its export guard: a722MiB readback allocation was requested with688MiB available under the driver budget. This was an export-memory issue; field/convergence had advanced. The incompleteframe was removed atomically and the failedrun remains preserved.
 2. V3 streams identical fieldbytes through one reusable32MiB stagingbuffer directlytofile. Grid, PDE, sourcequadrature, pulse and numerical tolerances are unchanged. Metadata still publishes only after all fieldfiles finish. Futureexporterrors also preserve the accepted-step diagnostics/status.
 3. Both headlessGPU exporttests pass: acceptedfieldbytes match normalreadback; multiplechunks including a partialfinalchunk preserve exactbytes; prioroutputs and invalidrequests remain protected. A separately named frozenbinary retains the previousversion for inspection.
+
+## Full-scale export recovery verified
+
+1. FlightspaceV3 successfully published the0.6msmovingframe and advanced beyond the prior export failure. The complete757456896byte initialfluidfield has SHA2568b9c7f3d17dd26c72ae10600b4bccd07d08a5c3aa2e00e2b9981dc19ccd6bff3 with both whole and chunkedreadback. Exactbyteequality is recorded in full-field-chunked-export-check.json.
+2. The0.6msresponse remains attached at allthresholds:93.822nLbelowexit and1.24567m/sdownward outletflow, essentially matching the shortdomainprefix. The extendedflight outcome is still pending.

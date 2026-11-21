@@ -1,0 +1,17 @@
+{
+  "status": "Full-scale initialfluidfield byte-identical whole-readback versus32MiBchunked-readback",
+  "fields": [
+    {
+      "source": "artifacts/hardware-research/concept1-flightspace-flow-v2-driven100/frame-00000000/fluid.bin",
+      "bytes": 757456896,
+      "sha256": "8b9c7f3d17dd26c72ae10600b4bccd07d08a5c3aa2e00e2b9981dc19ccd6bff3"
+    },
+    {
+      "source": "artifacts/hardware-research/concept1-flightspace-flow-v3-driven100/frame-00000000/fluid.bin",
+      "bytes": 757456896,
+      "sha256": "8b9c7f3d17dd26c72ae10600b4bccd07d08a5c3aa2e00e2b9981dc19ccd6bff3"
+    }
+  ],
+  "moving_frame_export_passed_step": 200,
+  "scope": "Exportserialization only; no extra simulation or claim about later physicalflight."
+}
