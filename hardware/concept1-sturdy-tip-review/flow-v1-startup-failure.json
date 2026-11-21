@@ -1,0 +1,21 @@
+{
+  "state": {
+    "updated_at": "2026-11-22T12:10:44.891917+13:00",
+    "controller_pid": 49992,
+    "authorization_reply": 911,
+    "plan": "hardware/concept1-sturdy-tip-review/flow-plan-040-v1.json",
+    "input_and_binary_sha256": {
+      "hardware/concept1-sturdy-tip-review/flow-plan-040-v1.json": "674afd4ea472e229bf6d8e2881dcd9810548ea679a0f5b76c71808fc9f344820",
+      "target/debug/examples/conduction_flow_flightspace_chunked": "62f8d99fc5c5f84bd20f97349182522a149fee4355acd779466b9dd2ad463841",
+      "target/debug/examples/adapter_inventory": "4a7669f1c40f32843f6e218353e2ec009cd214e8b1948ec70053b865d8c40f39",
+      "/usr/share/vulkan/icd.d/nvidia_icd.json": "c3d16065778dfd50812b3d51c15dfc8f8387c74260e621cdeb7ab8d148470b99",
+      "hardware/designs/concept1-sturdy-tip-040/flow-h0100.mhd.json": "d6c96c494ec08bfab321449369de6547c0bbfb41105942cca4b07b9f7783f45c",
+      "/home/geoffrey/Reference/OffTopic/mhd-hardware-study/hardware/designs/concept1-sturdy-tip-040/assembly.gltf": "2df71afe16fad00afeac5f8fd0129afa4fb01af1a0ce2ae756e72c0f78200bd3",
+      "/home/geoffrey/Reference/OffTopic/mhd-hardware-study/hardware/designs/concept1-sturdy-tip-040/assembly.bin": "f0905b3e2df325b01c5203e635cc9377dd3f9c73d8e14edb8645dd2aa67f3413"
+    },
+    "stage": "failed",
+    "error": "Native case 0 failed with exit1; preserve output"
+  },
+  "native_error": "Error: \"CAD liquid integration found invalid oriented lengths; check outward surface winding and cavity orientation\"\n",
+  "recovery": "Rebuild nominalsteel analytically instead of Booleanagainstimportedf32mesh; keepgeometrydimensions/pulse/grid/tolerances."
+}

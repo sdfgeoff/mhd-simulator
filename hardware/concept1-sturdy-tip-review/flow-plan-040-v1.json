@@ -1,0 +1,49 @@
+{
+  "binary": "target/debug/examples/conduction_flow_flightspace_chunked",
+  "expected_binary_sha256": "62f8d99fc5c5f84bd20f97349182522a149fee4355acd779466b9dd2ad463841",
+  "authorization_reply": 911,
+  "purpose": "Geometry/performance experiment per911:sturdier1.2mmtip/.4outlet/.48mm2contacts, same100A400uspulse/remainingassembly/grid/dt/tol; no extendedverificationcampaign.",
+  "jobs": [
+    {
+      "output": "artifacts/hardware-research/concept1-sturdy-flow-v1-040-driven100",
+      "expected_steps": 1200,
+      "expected_time_s": 0.0036,
+      "analysis_args": [
+        "--exit-z-mm",
+        "-.5"
+      ],
+      "command": [
+        "target/debug/examples/conduction_flow_flightspace_chunked",
+        "hardware/designs/concept1-sturdy-tip-040/flow-h0100.mhd.json",
+        "100",
+        "400",
+        "1200",
+        "artifacts/hardware-research/concept1-sturdy-flow-v1-040-driven100",
+        "0",
+        ".25",
+        "3",
+        "0",
+        "200",
+        "3",
+        "25",
+        "body",
+        "0",
+        "1e-6",
+        "0",
+        "1e-6",
+        "4000",
+        "75000000000"
+      ]
+    }
+  ],
+  "limits": [
+    "100umgrid:0.4mmoutlet4cellsacross, notbreakupqualification.",
+    "Thermalheldfixed, separatewallconductanceonly. Noheaterfeedback/oxidation/feed/self-fieldorPMreaction.",
+    "100A250uspositive20usrise,25Areverse83.33usafter25usgap, singlepulse. Assumed200Hzdosewouldbe21.3ARMS, notatestofrepetition.",
+    "Fullheater/clamps/magnetgeometry retained; current+Y andB+X ->-Z. Magnetmount/coolingexternalpathsunfinished.",
+    "Baseline400ppm electrical energy identity defect unresolved; same numerical settings retained for response comparison, not qualification.",
+    "Reverse fraction remains.25; its duration also grows83.33->133.33us because client scales reverse width with positive duration. Forward/reverse waveform family scales, not an isolated forward-only impulse change.",
+    "AnalyticI2dose3.8A2s gives27.57Arms atassumed200Hz, not continuous/repetition/thermalqualification.",
+    "Only lowerboundarymoves5mm; ~24%morecells/estimated5.2GiBVRAM. Actualstartupmemory/convergenceobserved separately. Nozero/refinementtest."
+  ]
+}

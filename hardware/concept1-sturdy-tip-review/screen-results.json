@@ -1,0 +1,181 @@
+{
+  "status": "Stationary geometry comparison only; no new jetting result",
+  "cases": [
+    {
+      "label": "Current 0.4mm",
+      "source": "artifacts/hardware-research/concept1-larger-poles-v1-electrical100/report.json",
+      "voltage_V": 0.21885229647159576,
+      "Joule_W": 21.885204315185547,
+      "downward_liquid_force_mN": 8.758592005507712,
+      "native": {
+        "boundary_current_defect": 9.392131801178039e-07,
+        "contact_resistivity_ohm_m2": 0.0,
+        "cu_ss_contact_resistivity_ohm_m2": 0.0,
+        "current_A": 100.0,
+        "current_report_axis": "y",
+        "iterations": 1024,
+        "joule_power_W": 21.885204315185547,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative coordinate plane of current_report_axis. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          3.1980075624645554e-10,
+          5.5633442814095947e-08,
+          -0.008758592005507711
+        ],
+        "liquid_joule_power_W": 1.6449634712442036,
+        "liquid_mean_B_T": [
+          0.25517722280374217,
+          -4.415063850163526e-05,
+          5.946252868879736e-09
+        ],
+        "mean_liquid_current_over_axis_plus_minus_2mm_A": 6.659659074967044,
+        "mean_wall_current_over_axis_plus_minus_2mm_A": 13.339594634863575,
+        "midplane_adjacent_cell_liquid_current_A": 64.41572729791535,
+        "midplane_adjacent_cell_wall_current_A": 35.58344683626408,
+        "midplane_cell_index": 102,
+        "midplane_position_m": 5.000011879019439e-05,
+        "potential_representation": "split f32 high/low",
+        "power_definition": "sum terminal phi*I on both ports",
+        "power_relative_defect": -2.384185791015625e-07,
+        "project": "hardware/designs/concept1-larger-poles-v1/assembly-h0100.mhd.json",
+        "released_static_workspace_bytes": 2135627460,
+        "requested_relative_tolerance": 1.0000000116860974e-07,
+        "return_current_A": -99.99981689453125,
+        "solver_version": "conservative-split-f32-pair-interface-v3",
+        "source_power_W": 21.885210037231445,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_boundary": "body",
+        "terminal_voltage_V": 0.21885229647159576,
+        "terminal_x_cell_indices": [
+          97,
+          126
+        ],
+        "true_relative_residual": 9.938381673180174e-09
+      },
+      "force_relative_to_current_tip": 1.0
+    },
+    {
+      "label": "Sturdy 0.4mm",
+      "source": "artifacts/hardware-research/concept1-sturdy-v1-040-electrical100/report.json",
+      "voltage_V": 0.1954803317785263,
+      "Joule_W": 19.54796600341797,
+      "downward_liquid_force_mN": 11.776826673664749,
+      "native": {
+        "boundary_current_defect": 3.0760152185393963e-06,
+        "contact_resistivity_ohm_m2": 0.0,
+        "cu_ss_contact_resistivity_ohm_m2": 0.0,
+        "current_A": 100.0,
+        "current_report_axis": "y",
+        "iterations": 1120,
+        "joule_power_W": 19.54796600341797,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative coordinate plane of current_report_axis. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          3.073183521448992e-10,
+          2.1054564354384178e-07,
+          -0.011776826673664748
+        ],
+        "liquid_joule_power_W": 0.6710952913540302,
+        "liquid_mean_B_T": [
+          0.25517722280374217,
+          -4.415063850163526e-05,
+          5.946252868879736e-09
+        ],
+        "mean_liquid_current_over_axis_plus_minus_2mm_A": 9.277279067066786,
+        "mean_wall_current_over_axis_plus_minus_2mm_A": 20.722311530981873,
+        "midplane_adjacent_cell_liquid_current_A": 55.94525187638833,
+        "midplane_adjacent_cell_wall_current_A": 44.05414756535377,
+        "midplane_cell_index": 102,
+        "midplane_position_m": 5.000011879019439e-05,
+        "potential_representation": "split f32 high/low",
+        "power_definition": "sum terminal phi*I on both ports",
+        "power_relative_defect": -4.172325134277344e-07,
+        "project": "hardware/designs/concept1-sturdy-tip-040/assembly-h0100.mhd.json",
+        "released_static_workspace_bytes": 2135627460,
+        "requested_relative_tolerance": 1.0000000116860974e-07,
+        "return_current_A": -99.99938201904297,
+        "solver_version": "conservative-split-f32-pair-interface-v3",
+        "source_power_W": 19.5479736328125,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_boundary": "body",
+        "terminal_voltage_V": 0.1954803317785263,
+        "terminal_x_cell_indices": [
+          97,
+          126
+        ],
+        "true_relative_residual": 1.0035942743513715e-08
+      },
+      "force_relative_to_current_tip": 1.344602724531416
+    },
+    {
+      "label": "Sturdy 0.5mm",
+      "source": "artifacts/hardware-research/concept1-sturdy-v1-050-electrical100/report.json",
+      "voltage_V": 0.19424547255039215,
+      "Joule_W": 19.424482345581055,
+      "downward_liquid_force_mN": 12.653480779034199,
+      "native": {
+        "boundary_current_defect": 3.1260517516784603e-06,
+        "contact_resistivity_ohm_m2": 0.0,
+        "cu_ss_contact_resistivity_ohm_m2": 0.0,
+        "current_A": 100.0,
+        "current_report_axis": "y",
+        "iterations": 1120,
+        "joule_power_W": 19.424482345581055,
+        "limitations": [
+          "Midplane estimates integrate cell-centred J on the first nonnegative coordinate plane of current_report_axis. The +/-2 mm mean includes the full interval even where a phase is absent; it is not a unique through-current.",
+          "Ideal electrical contact; material and oxide/contact resistance require bracketing.",
+          "body mode makes whole terminal bodies equipotential. x-ends supplies the outermost modeled x-plane of each copper pad and resolves copper resistance only inside the electrical domain; out-of-domain leads remain separate.",
+          "Static liquid; no moving interface, motional EMF, self-field, driver, thermal evolution or droplet claim.",
+          "Applied magnetization and unit permeability approximate a specified magnet grade; check local field and temperature."
+        ],
+        "liquid_force_N": [
+          4.635757905377491e-10,
+          2.1113958547409151e-07,
+          -0.012653480779034198
+        ],
+        "liquid_joule_power_W": 0.8291273566034563,
+        "liquid_mean_B_T": [
+          0.25550715568703924,
+          -4.401188216589076e-05,
+          5.472107161917576e-09
+        ],
+        "mean_liquid_current_over_axis_plus_minus_2mm_A": 9.904320505913685,
+        "mean_wall_current_over_axis_plus_minus_2mm_A": 20.095275095631237,
+        "midplane_adjacent_cell_liquid_current_A": 57.75665906783779,
+        "midplane_adjacent_cell_wall_current_A": 42.242749581736454,
+        "midplane_cell_index": 102,
+        "midplane_position_m": 5.000011879019439e-05,
+        "potential_representation": "split f32 high/low",
+        "power_definition": "sum terminal phi*I on both ports",
+        "power_relative_defect": -1.7881393432617188e-07,
+        "project": "hardware/designs/concept1-sturdy-tip-050/assembly-h0100.mhd.json",
+        "released_static_workspace_bytes": 2135627460,
+        "requested_relative_tolerance": 1.0000000116860974e-07,
+        "return_current_A": -99.99937438964844,
+        "solver_version": "conservative-split-f32-pair-interface-v3",
+        "source_power_W": 19.42448616027832,
+        "status": "cold DC conduction and applied permanent-magnet field only; no ejection simulation",
+        "terminal_boundary": "body",
+        "terminal_voltage_V": 0.19424547255039215,
+        "terminal_x_cell_indices": [
+          97,
+          126
+        ],
+        "true_relative_residual": 1.0145440931808025e-08
+      },
+      "force_relative_to_current_tip": 1.444693481678019
+    }
+  ],
+  "selection_scope": "Both new tips improve nominal wall/contact dimensions; force/current sharing guides selection, actual droplet performance still needs a driven run.",
+  "limits": "Same100A hot-property/ideal-contact model and larger magnets. No dynamic thermal/contact chemistry qualification."
+}

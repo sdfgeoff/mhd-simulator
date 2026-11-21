@@ -1,0 +1,841 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "MHD hardware study; E3D dimension-based simplified CAD"
+  },
+  "buffers": [
+    {
+      "uri": "assembly.bin",
+      "byteLength": 628272
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 425088,
+      "byteLength": 125136
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 550224,
+      "byteLength": 9216
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 559440,
+      "byteLength": 17208
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 576648,
+      "byteLength": 17208
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 167760,
+      "byteLength": 27648
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 195408,
+      "byteLength": 27648
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 223056,
+      "byteLength": 27504
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 250560,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 593856,
+      "byteLength": 17208
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 611064,
+      "byteLength": 17208
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 285408,
+      "byteLength": 27648
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 313056,
+      "byteLength": 27648
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 340704,
+      "byteLength": 27504
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 368208,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 368640,
+      "byteLength": 13680
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 382320,
+      "byteLength": 13680
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 396000,
+      "byteLength": 13680
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 409680,
+      "byteLength": 13680
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 423360,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 423792,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 424224,
+      "byteLength": 432
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 424656,
+      "byteLength": 432
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 10428,
+      "type": "VEC3",
+      "min": [
+        -0.01100000087171793,
+        -0.010000000707805157,
+        -0.0005000000237487257
+      ],
+      "max": [
+        0.01100000087171793,
+        0.010000000707805157,
+        0.016700001433491707
+      ]
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 768,
+      "type": "VEC3",
+      "min": [
+        -0.001500000013038516,
+        -0.001500000013038516,
+        -0.0005000000237487257
+      ],
+      "max": [
+        0.001500000013038516,
+        0.001500000013038516,
+        0.0037000002339482307
+      ]
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 1434,
+      "type": "VEC3",
+      "min": [
+        -0.002400000113993883,
+        -0.0074000004678964615,
+        -0.0005000000237487257
+      ],
+      "max": [
+        0.002400000113993883,
+        -0.0006000000284984708,
+        -0.00010000000474974513
+      ]
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 1434,
+      "type": "VEC3",
+      "min": [
+        -0.002400000113993883,
+        -0.00839999970048666,
+        -0.00010000000474974513
+      ],
+      "max": [
+        0.002400000113993883,
+        -0.0006000000284984708,
+        0.0
+      ]
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 2304,
+      "type": "VEC3",
+      "min": [
+        -0.0015,
+        -0.0055,
+        -0.0005
+      ],
+      "max": [
+        0.0015,
+        -0.0025,
+        0.002
+      ]
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 2304,
+      "type": "VEC3",
+      "min": [
+        -0.0020999999046325685,
+        -0.0060999999046325686,
+        -0.002
+      ],
+      "max": [
+        0.0020999999046325685,
+        -0.001899999976158142,
+        -0.0005
+      ]
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5126,
+      "count": 2292,
+      "type": "VEC3",
+      "min": [
+        -0.0017999999523162843,
+        -0.005800000190734863,
+        -0.003299999952316284
+      ],
+      "max": [
+        0.0017999999523162843,
+        -0.002200000047683716,
+        0.006
+      ]
+    },
+    {
+      "bufferView": 7,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.0015,
+        -0.008399999618530274,
+        -0.0005
+      ],
+      "max": [
+        0.0015,
+        -0.007400000095367432,
+        -0.00010000000149011613
+      ]
+    },
+    {
+      "bufferView": 8,
+      "componentType": 5126,
+      "count": 1434,
+      "type": "VEC3",
+      "min": [
+        -0.002400000113993883,
+        0.0006000000284984708,
+        -0.0005000000237487257
+      ],
+      "max": [
+        0.002400000113993883,
+        0.0074000004678964615,
+        -0.00010000000474974513
+      ]
+    },
+    {
+      "bufferView": 9,
+      "componentType": 5126,
+      "count": 1434,
+      "type": "VEC3",
+      "min": [
+        -0.002400000113993883,
+        0.0006000000284984708,
+        -0.00010000000474974513
+      ],
+      "max": [
+        0.002400000113993883,
+        0.00839999970048666,
+        0.0
+      ]
+    },
+    {
+      "bufferView": 10,
+      "componentType": 5126,
+      "count": 2304,
+      "type": "VEC3",
+      "min": [
+        -0.0015,
+        0.0025,
+        -0.0005
+      ],
+      "max": [
+        0.0015,
+        0.0055,
+        0.002
+      ]
+    },
+    {
+      "bufferView": 11,
+      "componentType": 5126,
+      "count": 2304,
+      "type": "VEC3",
+      "min": [
+        -0.0020999999046325685,
+        0.001899999976158142,
+        -0.002
+      ],
+      "max": [
+        0.0020999999046325685,
+        0.0060999999046325686,
+        -0.0005
+      ]
+    },
+    {
+      "bufferView": 12,
+      "componentType": 5126,
+      "count": 2292,
+      "type": "VEC3",
+      "min": [
+        -0.0017999999523162843,
+        0.002200000047683716,
+        -0.003299999952316284
+      ],
+      "max": [
+        0.0017999999523162843,
+        0.005800000190734863,
+        0.006
+      ]
+    },
+    {
+      "bufferView": 13,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.0015,
+        0.007400000095367432,
+        -0.0005
+      ],
+      "max": [
+        0.0015,
+        0.008399999618530274,
+        -0.00010000000149011613
+      ]
+    },
+    {
+      "bufferView": 14,
+      "componentType": 5126,
+      "count": 1140,
+      "type": "VEC3",
+      "min": [
+        0.0035,
+        0.004,
+        0.012699999809265138
+      ],
+      "max": [
+        0.006500000000000001,
+        0.007,
+        0.016700000762939454
+      ]
+    },
+    {
+      "bufferView": 15,
+      "componentType": 5126,
+      "count": 1140,
+      "type": "VEC3",
+      "min": [
+        0.0035,
+        -0.007,
+        0.011199999809265136
+      ],
+      "max": [
+        0.006500000000000001,
+        -0.004,
+        0.017200000762939455
+      ]
+    },
+    {
+      "bufferView": 16,
+      "componentType": 5126,
+      "count": 1140,
+      "type": "VEC3",
+      "min": [
+        -0.01,
+        0.0025,
+        0.0066999998092651366
+      ],
+      "max": [
+        0.01,
+        0.0085,
+        0.012699999809265138
+      ]
+    },
+    {
+      "bufferView": 17,
+      "componentType": 5126,
+      "count": 1140,
+      "type": "VEC3",
+      "min": [
+        -0.0075,
+        -0.007,
+        0.008199999809265137
+      ],
+      "max": [
+        0.0075,
+        -0.004,
+        0.011199999809265136
+      ]
+    },
+    {
+      "bufferView": 18,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.01269999984651804,
+        -0.004999999888241291,
+        -0.0024999999441206455
+      ],
+      "max": [
+        -0.0027000000700354576,
+        0.004999999888241291,
+        0.0024999999441206455
+      ]
+    },
+    {
+      "bufferView": 19,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        -0.002700000047683716,
+        -0.0025,
+        -0.0025
+      ],
+      "max": [
+        -0.0025,
+        0.0025,
+        0.0025
+      ]
+    },
+    {
+      "bufferView": 20,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        0.0027000000700354576,
+        -0.004999999888241291,
+        -0.0024999999441206455
+      ],
+      "max": [
+        0.01269999984651804,
+        0.004999999888241291,
+        0.0024999999441206455
+      ]
+    },
+    {
+      "bufferView": 21,
+      "componentType": 5126,
+      "count": 36,
+      "type": "VEC3",
+      "min": [
+        0.0025,
+        -0.0025,
+        -0.0025
+      ],
+      "max": [
+        0.002700000047683716,
+        0.0025,
+        0.0025
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Integrated stainless Concept1 head and heater block",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Molten SnCu pool original concept",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Positive copper strip with flat clamp pad",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 2
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Positive mica sheet under head",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 3
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Positive M2 ceramic shoulder sleeve",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 4
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Positive M2 ceramic shoulder flange",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 5
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Positive insulated M2x8 clamp screw",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 6
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Positive copper cable port virtual region",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 7
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Negative copper strip with flat clamp pad",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 8
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Negative mica sheet under head",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 9
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Negative M2 ceramic shoulder sleeve",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 10
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Negative M2 ceramic shoulder flange",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 11
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Negative insulated M2x8 clamp screw",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 12
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Negative copper cable port virtual region",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 13
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Heater retaining grub envelope",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 14
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Sensor retaining grub envelope",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 15
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "6x20 heater cartridge sheath envelope",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 16
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "3x15 sensor cartridge sheath envelope",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 17
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Left10x10x5mm SmCo pole",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 18
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Left magnet-face mica shield",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 19
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Right10x10x5mm SmCo pole",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 20
+          },
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Right magnet-face mica shield",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 21
+          },
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "Integrated stainless Concept1 head and heater block"
+    },
+    {
+      "mesh": 1,
+      "name": "Molten SnCu pool original concept"
+    },
+    {
+      "mesh": 2,
+      "name": "Positive copper strip with flat clamp pad"
+    },
+    {
+      "mesh": 3,
+      "name": "Positive mica sheet under head"
+    },
+    {
+      "mesh": 4,
+      "name": "Positive M2 ceramic shoulder sleeve"
+    },
+    {
+      "mesh": 5,
+      "name": "Positive M2 ceramic shoulder flange"
+    },
+    {
+      "mesh": 6,
+      "name": "Positive insulated M2x8 clamp screw"
+    },
+    {
+      "mesh": 7,
+      "name": "Positive copper cable port virtual region"
+    },
+    {
+      "mesh": 8,
+      "name": "Negative copper strip with flat clamp pad"
+    },
+    {
+      "mesh": 9,
+      "name": "Negative mica sheet under head"
+    },
+    {
+      "mesh": 10,
+      "name": "Negative M2 ceramic shoulder sleeve"
+    },
+    {
+      "mesh": 11,
+      "name": "Negative M2 ceramic shoulder flange"
+    },
+    {
+      "mesh": 12,
+      "name": "Negative insulated M2x8 clamp screw"
+    },
+    {
+      "mesh": 13,
+      "name": "Negative copper cable port virtual region"
+    },
+    {
+      "mesh": 14,
+      "name": "Heater retaining grub envelope"
+    },
+    {
+      "mesh": 15,
+      "name": "Sensor retaining grub envelope"
+    },
+    {
+      "mesh": 16,
+      "name": "6x20 heater cartridge sheath envelope"
+    },
+    {
+      "mesh": 17,
+      "name": "3x15 sensor cartridge sheath envelope"
+    },
+    {
+      "mesh": 18,
+      "name": "Left10x10x5mm SmCo pole"
+    },
+    {
+      "mesh": 19,
+      "name": "Left magnet-face mica shield"
+    },
+    {
+      "mesh": 20,
+      "name": "Right10x10x5mm SmCo pole"
+    },
+    {
+      "mesh": 21,
+      "name": "Right magnet-face mica shield"
+    }
+  ],
+  "scenes": [
+    {
+      "nodes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21
+      ]
+    }
+  ],
+  "scene": 0
+}
