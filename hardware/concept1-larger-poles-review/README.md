@@ -90,3 +90,9 @@
 1. The first extended-domain attempt was blocked beforefluidsteps by the default50billion directsource-interaction cap. This was not a pressure/current convergence failure or an actual memory-allocation failure. Its state/log/output remain preserved.
 2. A fresh V2 permits75billion interactions, preserving the50billion default for normal callers. All sourcequadrature, field kernels, geometry, conductivity, pulse and memoryguards are unchanged; only permitted startupwork grows. The new separately named binary preserves all older frozenbinaries.
 3. The GPU analyticmagnet-prism test passes, rejects an insufficientworkbudget, and returns bit-identical magneticfield with default versus enlargedcap. Three pulse-scheduling CPUtests also pass. Actual largedomain solverfit/acceptedsteps remain monitored.
+
+## Bounded export readback recovery
+
+1. FlightspaceV2 accepted200steps600µs, then failed its export guard: a722MiB readback allocation was requested with688MiB available under the driver budget. This was an export-memory issue; field/convergence had advanced. The incompleteframe was removed atomically and the failedrun remains preserved.
+2. V3 streams identical fieldbytes through one reusable32MiB stagingbuffer directlytofile. Grid, PDE, sourcequadrature, pulse and numerical tolerances are unchanged. Metadata still publishes only after all fieldfiles finish. Futureexporterrors also preserve the accepted-step diagnostics/status.
+3. Both headlessGPU exporttests pass: acceptedfieldbytes match normalreadback; multiplechunks including a partialfinalchunk preserve exactbytes; prioroutputs and invalidrequests remain protected. A separately named frozenbinary retains the previousversion for inspection.

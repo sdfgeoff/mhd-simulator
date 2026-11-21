@@ -1,0 +1,23 @@
+{
+  "status": "Accepted200steps600us; field-export memoryguard failure, no fluid convergencefailure",
+  "state": {
+    "updated_at": "2026-11-22T10:03:22.073606+13:00",
+    "controller_pid": 25147,
+    "authorization_reply": 879,
+    "plan": "hardware/concept1-larger-poles-review/flow-plan-flightspace-v2.json",
+    "input_and_binary_sha256": {
+      "hardware/concept1-larger-poles-review/flow-plan-flightspace-v2.json": "9eb148f38f3729313c6008a99cf6c1afbf6502071584ad8d002bf6cbfb3b391e",
+      "target/debug/examples/conduction_flow_flightspace": "21e0d58914ed7dea2457707bbdf36e6456899663fdaf47744546901891a7f1ee",
+      "target/debug/examples/adapter_inventory": "4a7669f1c40f32843f6e218353e2ec009cd214e8b1948ec70053b865d8c40f39",
+      "/usr/share/vulkan/icd.d/nvidia_icd.json": "c3d16065778dfd50812b3d51c15dfc8f8387c74260e621cdeb7ab8d148470b99",
+      "hardware/designs/concept1-larger-poles-v1/flow-h0100-flightspace.mhd.json": "a48c40ba79e62f25fd35a93ec0dc676848c0db279675091b0f5a421246bd0c74",
+      "/home/geoffrey/Reference/OffTopic/mhd-hardware-study/hardware/designs/concept1-larger-poles-v1/assembly.gltf": "68368950d95f11966d5da72ed2a087a759e52295c523883d2cae780e161785a9",
+      "/home/geoffrey/Reference/OffTopic/mhd-hardware-study/hardware/designs/concept1-larger-poles-v1/assembly.bin": "5ee8e3101270976a1e8ed77ed48074028203fec94208b4ad166c57f54cfb8e27"
+    },
+    "stage": "failed",
+    "error": "Native case 0 failed with exit1; preserve output"
+  },
+  "native_error": "Error: \"Headless field export readback needs 722 MiB additional GPU memory; 688 MiB currently available (Vulkan driver memory budget, process usage 5078 / budget 5766 MiB). Reduce resolution or retained history\"",
+  "recovery": "Streamacceptedfields throughone32MiBreusablestagingbufferdirectlytofile; identicalbytes/metadata, unchangedgrid/PDE/sourcequadrature/tolerances. PreservefailedV2. SaveCSV/runstatusonfutureexporterrors.",
+  "verification": "2headlessGPUexporttestsPASS:byteidenticalacceptedfields, streamedpartiallastchunk, invalidalignmentrejected, originalframeprotected; no physicskernelschanged."
+}

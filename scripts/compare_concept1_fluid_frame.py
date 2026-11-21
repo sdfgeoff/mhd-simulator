@@ -12,7 +12,7 @@ studies={
     'magnets':[('5 mm cubes','concept1-developed-flow-v1-driven100'),('10 x 10 x 5 mm poles','concept1-larger-poles-flow-v1-driven100')],
     'pulse':[('250 us forward pulse','concept1-larger-poles-flow-v1-driven100'),('400 us forward pulse','concept1-long-pulse-flow-v3-driven100')],
     'pulse-v4':[('250 us forward pulse','concept1-larger-poles-flow-v1-driven100'),('400 us forward pulse','concept1-long-pulse-flow-v4-driven100')],
-    'flightspace':[('Lower boundary Z=-3.5 mm','concept1-long-pulse-flow-v4-driven100'),('Lower boundary Z=-8.5 mm','concept1-flightspace-flow-v1-driven100')],
+    'flightspace':[('Lower boundary Z=-3.5 mm','concept1-long-pulse-flow-v4-driven100'),('Lower boundary Z=-8.5 mm','concept1-flightspace-flow-v3-driven100')],
 }
 cases=studies[a.study]
 for _,name in cases:

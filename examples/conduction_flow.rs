@@ -364,7 +364,10 @@ pub(crate) fn main() -> Result<(), Box<dyn Error>> {
         let onset_checkpoint =
             pulse_start_s > 0. && (run.time_s - pulse_start_s).abs() <= 0.5 * p.run.dt_s;
         if step % field_every == 0 || step == steps || onset_checkpoint {
-            run.export_fields(&volume, &p.model, &out.join(format!("frame-{step:08}")))?;
+            if let Err(e) = run.export_fields(&volume, &p.model, &out.join(format!("frame-{step:08}"))) {
+                error = Some(format!("Field export failed: {e}"));
+                break;
+            }
             std::fs::write(out.join("current-diagnostics.csv"), &csv)?;
             std::fs::write(out.join("iteration-costs.csv"), &costs)?;
         }
