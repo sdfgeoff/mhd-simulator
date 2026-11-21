@@ -54,3 +54,11 @@
 1. V2 also stopped at24µs despite12000iterations: true residual1.01447e-7 vs1e-7, zero reported terminal imbalance. This is consistent with stagnation near the arithmetic floor, rather than insufficient iteration count; its exact origin is not established. Both failed attempts remain preserved.
 2. The performance screen now uses the original frozen Concept1 binary and1e-6 residual, as for the completed250µs reference. The400µs pulse,100Apeak, geometry/grid/timestep and conservation gates are retained. No claim that residual equals physical accuracy; the electrical energy limitation stays recorded.
 3. This V3 comparison now changes waveform duration alone relative to the completed larger-pole250µs baseline. Nozero control or strict-tolerance repeat is queued.
+
+## 400 µs partial response and host interruption
+
+1. V3 passed the strict-attempt failure point on its restored1e-6screening setting. Its saved0.6msframe remains attached at all thresholds:93.82nL belowexit, outlet1.246m/sdown, front0.75mmbelowexit. The250µs reference has67.61nL,0.812m/sdown and0.55mmfront at the same time.
+2. Host restart interrupted V3: at06:41NZDT22Nov, uptime was28min, all three originalPIDs were absent, and no terminalrunstatus existed. Lastlog240steps720µs; lastacceptedexport200steps600µs. The saved partial result remains usable, but the run did not complete.
+3. V4 restarts in fresh outputs with identical geometry, waveform, grid, timestep,1e-6residual and originalbinary; no physics change. V3 outputs/state are preserved as interrupted.
+
+![Partial400µs response before host interruption](flow-pulse-comparison-prefix-step200.png)
