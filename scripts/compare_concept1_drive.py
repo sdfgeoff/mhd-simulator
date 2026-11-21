@@ -1,0 +1,13 @@
+"""Read-only comparison of applied magnet fields and numerical setup, no new solver."""
+import json
+from pathlib import Path
+import numpy as np
+root=Path('hardware/concept1-developed-review')
+def line(run,component,zmin,zmax):
+ r=Path('artifacts/hardware-research')/run;g=json.loads((r/'grid.json').read_text());nx,ny,nz=g['dims'];h=g['cell_m'];origin=np.array(g['origin_m']);f=np.memmap(r/'em.bin',dtype='<f4',mode='r',shape=(nz,ny,nx,16));x=origin[0]+(np.arange(nx)+.5)*h;y=origin[1]+(np.arange(ny)+.5)*h;z=(origin[2]+(np.arange(nz)+.5)*h)*1000;ix=abs(x).argmin();iy=abs(y).argmin();m=(z>=zmin)&(z<zmax);return {'run':str(r),'sample_x_y_mm':[float(x[ix]*1000),float(y[iy]*1000)],'sample_z_mm':z[m].tolist(),'absolute_B_T':np.abs(f[m,iy,ix,component]).tolist()}
+# Earliersuccessful poles are geometrically the near-horizontal savedfield
+# sources translated down2mm. Withprescribed sources andmu=1, B translates
+# independently ofthecurrent/solidshape. Sample zold=outletlocalz+2.
+old=line('integral-side-heated-near-v1-cold100-h0100',1,2,2.6);new=line('concept1-developed-v1-electrical-ideal',0,-.5,.1);oldmean=float(np.mean(old['absolute_B_T']));newmean=float(np.mean(new['absolute_B_T']))
+result={'status':'Diagnostic inference from saved applied fields, not controlled flow test','earlier_pole_geometry_mm':[25,10,5],'concept_pole_geometry_mm':[5,5,5],'earlier_gap_mm':4,'concept_gap_mm':5.4,'earlier_field_sample':old,'concept_field_sample':new,'earlier_mean_nearaxis_outlet_B_T':oldmean,'concept_mean_nearaxis_outlet_B_T':newmean,'B_ratio_new_old':newmean/oldmean,'IB_ratio_vs110A_old':100/110*newmean/oldmean,'IB_ratio_vs90A_old':100/90*newmean/oldmean,'old_110A_spatial_um':50,'new_spatial_um':100,'outlet_diameter_um':400,'pulse_positive_us_both':250,'old_dt_us':1.5,'new_dt_us':3,'limits':['Oldfield taken from geometricallyidentical larger poles shiftedZ+2mm relative tosuccessfulcase; bothsource-onlyprescribedBr.95Tmu1, quadrature3/smoothing.05. Rotation swaps field axes. This is not asavedB fromthefullsuccessfulflow case.','IBratio assumesunchanged currentpath/force distribution; actual designs have different contacts/bore/taper and heater paths. It is not a measured force or impulse ratio.','Coarse4celloutlet vs8cell can alter breakup in either direction. Earlierdetachment also was not fullyconvergence-qualified.','The newrun remainsactive and matchedzero controlpending. No controlled cause isolation yet.']}
+(root/'performance-comparison.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps({k:result[k] for k in ['earlier_mean_nearaxis_outlet_B_T','concept_mean_nearaxis_outlet_B_T','B_ratio_new_old','IB_ratio_vs110A_old','IB_ratio_vs90A_old']},indent=2))

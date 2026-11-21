@@ -1,0 +1,78 @@
+{
+  "status": "Diagnostic inference from saved applied fields, not controlled flow test",
+  "earlier_pole_geometry_mm": [
+    25,
+    10,
+    5
+  ],
+  "concept_pole_geometry_mm": [
+    5,
+    5,
+    5
+  ],
+  "earlier_gap_mm": 4,
+  "concept_gap_mm": 5.4,
+  "earlier_field_sample": {
+    "run": "artifacts/hardware-research/integral-side-heated-near-v1-cold100-h0100",
+    "sample_x_y_mm": [
+      -0.04999988595955074,
+      -0.04999988595955074
+    ],
+    "sample_z_mm": [
+      2.050000097369775,
+      2.1500001021195203,
+      2.2500001068692654,
+      2.3500001116190106,
+      2.4500001163687557,
+      2.550000121118501
+    ],
+    "absolute_B_T": [
+      0.43488141894340515,
+      0.43717455863952637,
+      0.4388940632343292,
+      0.440036416053772,
+      0.44060832262039185,
+      0.4406069815158844
+    ]
+  },
+  "concept_field_sample": {
+    "run": "artifacts/hardware-research/concept1-developed-v1-electrical-ideal",
+    "sample_x_y_mm": [
+      -0.050000002374872565,
+      -0.04999988595955074
+    ],
+    "sample_z_mm": [
+      -0.4499999631661922,
+      -0.34999995841644704,
+      -0.2499999536667019,
+      -0.14999994891695678,
+      -0.04999994416721165,
+      0.05000006058253348
+    ],
+    "absolute_B_T": [
+      0.22883093357086182,
+      0.23008137941360474,
+      0.2310177981853485,
+      0.23164357244968414,
+      0.231955885887146,
+      0.2319566160440445
+    ]
+  },
+  "earlier_mean_nearaxis_outlet_B_T": 0.43870029350121814,
+  "concept_mean_nearaxis_outlet_B_T": 0.23091436425844827,
+  "B_ratio_new_old": 0.5263601772762595,
+  "IB_ratio_vs110A_old": 0.4785092520693269,
+  "IB_ratio_vs90A_old": 0.5848446414180661,
+  "old_110A_spatial_um": 50,
+  "new_spatial_um": 100,
+  "outlet_diameter_um": 400,
+  "pulse_positive_us_both": 250,
+  "old_dt_us": 1.5,
+  "new_dt_us": 3,
+  "limits": [
+    "Oldfield taken from geometricallyidentical larger poles shiftedZ+2mm relative tosuccessfulcase; bothsource-onlyprescribedBr.95Tmu1, quadrature3/smoothing.05. Rotation swaps field axes. This is not asavedB fromthefullsuccessfulflow case.",
+    "IBratio assumesunchanged currentpath/force distribution; actual designs have different contacts/bore/taper and heater paths. It is not a measured force or impulse ratio.",
+    "Coarse4celloutlet vs8cell can alter breakup in either direction. Earlierdetachment also was not fullyconvergence-qualified.",
+    "The newrun remainsactive and matchedzero controlpending. No controlled cause isolation yet."
+  ]
+}
