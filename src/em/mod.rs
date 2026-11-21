@@ -145,6 +145,17 @@ impl EmState {
         config: EmConfig,
         mode: Mode,
     ) -> Result<Self, String> {
+        Self::new_with_source_work_budget(context, volume, model, config, mode, 50_000_000_000)
+    }
+    /// Override the computation cap without changing source quadrature or memory checks.
+    pub fn new_with_source_work_budget(
+        context: GpuContext,
+        volume: &Volume,
+        model: &Model,
+        config: EmConfig,
+        mode: Mode,
+        source_work_budget: u64,
+    ) -> Result<Self, String> {
         config.validate(model)?;
         validate_model_inputs(volume, model)?;
         if volume.overlaps > 0 {
@@ -224,8 +235,9 @@ impl EmState {
         ];
         let source_elements = config.elements(model, 0.)?;
         let source_count = source_elements.len() as u32;
-        if edges * source_count as u64 > 50_000_000_000 {
-            return Err("Direct source summation exceeds the work budget for this grid; reduce source refinement/segment count or increase cell spacing".into());
+        let source_work = edges * source_count as u64;
+        if source_work > source_work_budget {
+            return Err(format!("Direct source summation needs {source_work} interactions, above work budget {source_work_budget}; reduce source refinement/segment count or increase cell spacing"));
         }
         let source_elements = if source_elements.is_empty() {
             vec![sources::Element::zeroed()]

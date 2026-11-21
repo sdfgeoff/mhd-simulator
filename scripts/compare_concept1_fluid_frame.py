@@ -6,9 +6,15 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from native_field_io import read_native_fields
-p=argparse.ArgumentParser(description=__doc__);p.add_argument('--step',type=int,default=200);p.add_argument('--study',choices=['magnets','pulse','pulse-v4'],default='magnets');a=p.parse_args()
+p=argparse.ArgumentParser(description=__doc__);p.add_argument('--step',type=int,default=200);p.add_argument('--study',choices=['magnets','pulse','pulse-v4','flightspace'],default='magnets');a=p.parse_args()
 root=Path('artifacts/hardware-research');out=Path('hardware/concept1-larger-poles-review')
-cases=([('5 mm cubes','concept1-developed-flow-v1-driven100'),('10 x 10 x 5 mm poles','concept1-larger-poles-flow-v1-driven100')] if a.study=='magnets' else [('250 us forward pulse','concept1-larger-poles-flow-v1-driven100'),('400 us forward pulse','concept1-long-pulse-flow-v4-driven100' if a.study=='pulse-v4' else 'concept1-long-pulse-flow-v3-driven100')])
+studies={
+    'magnets':[('5 mm cubes','concept1-developed-flow-v1-driven100'),('10 x 10 x 5 mm poles','concept1-larger-poles-flow-v1-driven100')],
+    'pulse':[('250 us forward pulse','concept1-larger-poles-flow-v1-driven100'),('400 us forward pulse','concept1-long-pulse-flow-v3-driven100')],
+    'pulse-v4':[('250 us forward pulse','concept1-larger-poles-flow-v1-driven100'),('400 us forward pulse','concept1-long-pulse-flow-v4-driven100')],
+    'flightspace':[('Lower boundary Z=-3.5 mm','concept1-long-pulse-flow-v4-driven100'),('Lower boundary Z=-8.5 mm','concept1-flightspace-flow-v1-driven100')],
+}
+cases=studies[a.study]
 for _,name in cases:
     records=json.loads((root/name/'flow-analysis.json').read_text())['frames']
     assert any(r['step']==a.step for r in records),'Shared accepted frame not available: '+name
@@ -29,8 +35,10 @@ connectivity_note=("no detached region in these frames" if all(not regions for c
 completed=all((root/name/'run-status.json').exists() and json.loads((root/name/'run-status.json').read_text())['status']=='complete' for _,name in cases)
 scope='completed runs' if completed and a.step==1200 else 'partial response'
 control='Same 100 A pulse / 100 µm grid' if a.study=='magnets' else 'Same head, magnets, 100 A peak / 100 µm grid'
+if a.study=='flightspace': control='Same 100 A / 400 us pulse, head and 100 µm grid'
 fig.suptitle(f"Concept1: shared {results[0]['measurements']['time_us']:.0f} us frame — {scope}\n{control}; {connectivity_note}",fontsize=12)
 fig.colorbar(im,ax=axes,label='Liquid fraction',shrink=.6)
-stem=(f'flow-comparison-prefix-step{a.step}' if a.study=='magnets' else (f'flow-pulse-v4-comparison-prefix-step{a.step}' if a.study=='pulse-v4' else f'flow-pulse-comparison-prefix-step{a.step}'))
+prefix={'magnets':'flow-comparison','pulse':'flow-pulse-comparison','pulse-v4':'flow-pulse-v4-comparison','flightspace':'flow-flightspace-comparison'}[a.study]
+stem=f'{prefix}-prefix-step{a.step}'
 fig.savefig(out/(stem+'.png'),dpi=150)
 (out/(stem+'.json')).write_text(json.dumps({'scope':'Shared accepted frame only; running candidate is not a final detachment result. Four cells across outlet; breakup unqualified.','study':a.study,'cases':results},indent=2)+'\n')

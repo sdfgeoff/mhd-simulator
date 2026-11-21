@@ -1,0 +1,22 @@
+{
+  "status": "Startup guard rejection beforefluidintegration",
+  "state": {
+    "updated_at": "2026-11-22T09:21:15.773337+13:00",
+    "controller_pid": 21346,
+    "authorization_reply": 879,
+    "plan": "hardware/concept1-larger-poles-review/flow-plan-flightspace-v1.json",
+    "input_and_binary_sha256": {
+      "hardware/concept1-larger-poles-review/flow-plan-flightspace-v1.json": "28470650f42ea1e93f598700994e89e77391e986c5cc0f648243ea07b2100c6c",
+      "target/debug/examples/conduction_flow_concept1": "0eea92d7040b8f8ca4800db3b5c199fbb56d5d625af4c358fd60050de17b8dc2",
+      "target/debug/examples/adapter_inventory": "4a7669f1c40f32843f6e218353e2ec009cd214e8b1948ec70053b865d8c40f39",
+      "/usr/share/vulkan/icd.d/nvidia_icd.json": "c3d16065778dfd50812b3d51c15dfc8f8387c74260e621cdeb7ab8d148470b99",
+      "hardware/designs/concept1-larger-poles-v1/flow-h0100-flightspace.mhd.json": "a48c40ba79e62f25fd35a93ec0dc676848c0db279675091b0f5a421246bd0c74",
+      "/home/geoffrey/Reference/OffTopic/mhd-hardware-study/hardware/designs/concept1-larger-poles-v1/assembly.gltf": "68368950d95f11966d5da72ed2a087a759e52295c523883d2cae780e161785a9",
+      "/home/geoffrey/Reference/OffTopic/mhd-hardware-study/hardware/designs/concept1-larger-poles-v1/assembly.bin": "5ee8e3101270976a1e8ed77ed48074028203fec94208b4ad166c57f54cfb8e27"
+    },
+    "stage": "failed",
+    "error": "Native case 0 failed with exit1; preserve output"
+  },
+  "diagnosis": "Direct magnetic source interaction computation estimate exceeded default50B. GPUgrid/mask checks passed; not a convergencefailure. V2raisesONLYcomputecap75B; sourcequadrature/memorylimits unchanged.",
+  "verification": "Analytic magnetprism test passes, rejects tinycap, and returns bit-identical B with default50B versus explicit75B. ThreepulseCPUtests pass."
+}

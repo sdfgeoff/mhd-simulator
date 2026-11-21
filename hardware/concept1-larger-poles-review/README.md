@@ -78,3 +78,15 @@
 3. A CPU-only follow-up project extends lowerZ to-8.5mm with all other configuration identical. GPUpreflight and memory check must follow after the currentrun exits. No newGPUcase is queued yet. This provides flightspace rather than changing hardware.
 
 ![Matched2.4ms pulse response before contact](flow-pulse-v4-comparison-prefix-step800.png)
+
+## Completed short-domain pulse screen and extended-domain follow-up
+
+1. V4 completed1200steps3.6ms. Observed pulse dose corresponds to27.569A RMS at assumed200Hz, peak terminalvoltage0.218870V, Jouleheat8.2485mJ. The energyidentity defect is-315.5ppm (-2.602µJ), still comparable to2.290µJ mechanicalwork; performance/energy qualification remains limited. Unit-current defect3.99ppm and peakmotional imbalance0.928µA are within the stated criteria.
+2. Firstsaved boundarycontact is3.0ms; lastnoncontactframe2.4ms shows the separated leadingdrop reported above. Finalleadingdrop shape/speed and trailingdrop behaviour cannot be treated as unaffected freeflight.
+3. Extended-domain GPUpreflight passes:224x204x259, zerooverlap, the original209planes shifted50planes have byte-identical bodymasks, addedspaceempty. LinearworkingVRAMestimate5174MiB vs6144MiB device capacity; actualfullsolverstartup remains monitored. The same400µs pulse is running in this domain, with no hardware/resolution/timestep/tolerance change.
+
+## Flightspace startup computation cap
+
+1. The first extended-domain attempt was blocked beforefluidsteps by the default50billion directsource-interaction cap. This was not a pressure/current convergence failure or an actual memory-allocation failure. Its state/log/output remain preserved.
+2. A fresh V2 permits75billion interactions, preserving the50billion default for normal callers. All sourcequadrature, field kernels, geometry, conductivity, pulse and memoryguards are unchanged; only permitted startupwork grows. The new separately named binary preserves all older frozenbinaries.
+3. The GPU analyticmagnet-prism test passes, rejects an insufficientworkbudget, and returns bit-identical magneticfield with default versus enlargedcap. Three pulse-scheduling CPUtests also pass. Actual largedomain solverfit/acceptedsteps remain monitored.

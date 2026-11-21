@@ -264,8 +264,16 @@ fn magnetized_cad_prism_matches_analytic_axis_field() {
         }],
         ..Default::default()
     };
-    let state = EmState::new(gpu.context.clone(), &volume, &model, cfg, Mode::Applied).unwrap();
+    assert!(EmState::new_with_source_work_budget(
+        gpu.context.clone(), &volume, &model, cfg.clone(), Mode::Applied, 1,
+    ).err().unwrap().contains("work budget"));
+    let state = EmState::new(gpu.context.clone(), &volume, &model, cfg.clone(), Mode::Applied).unwrap();
     let sample = state.probe([0., 0., 3.125]).unwrap().unwrap();
+    let budgeted = EmState::new_with_source_work_budget(
+        gpu.context.clone(), &volume, &model, cfg, Mode::Applied, 75_000_000_000,
+    ).unwrap();
+    assert_eq!(sample.b, budgeted.probe([0., 0., 3.125]).unwrap().unwrap().b,
+        "Computation cap must not change the magnetic field");
     let a = 0.001f64;
     let z = 0.003125;
     let omega = |d: f64| (a * a / (d * (2. * a * a + d * d).sqrt())).atan();

@@ -1,0 +1,19 @@
+{
+  "status": "GPU zerooverlap; old domain crop masks exactly identical after50cell shift; additional flightspace empty",
+  "old_dims": [
+    224,
+    204,
+    209
+  ],
+  "new_dims": [
+    224,
+    204,
+    259
+  ],
+  "aligned_crop_shift_z_cells": 50,
+  "all_body_masks_equal_in_original_domain": true,
+  "additional_lower_space_empty": true,
+  "estimated_working_VRAM_MiB": 5173.803827751196,
+  "device_VRAM_MiB": 6144,
+  "memory_scope": "Linear scaling estimate; actual fullsolver startup/firststep allocation still must be observed."
+}
