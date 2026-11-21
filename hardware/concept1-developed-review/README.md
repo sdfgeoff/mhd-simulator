@@ -43,3 +43,11 @@ Authorized by Geoffrey topic25reply860. The source`/home/geoffrey/Reference/OffT
 2. The driven run is still active and the zero-current control remains queued. This is not a final failure/success finding or a grid-qualified breakup result. No liquid reaches the computational boundary in these saved frames.
 
 ![Partial accepted frames through 2.4 ms](flow-prefix-2400us.png)
+
+## Completed driven flow screen at 3.6 ms
+
+1. All 1200 steps completed. No detached region occurs in the saved frames at the four checked alpha thresholds. The attached bulge mostly retracts: below-exit volume falls from 84.68 nL at 1.8 ms to 9.89 nL at 3.6 ms; final outlet mean velocity is 0.688 m/s upward.
+2. The matched zero-current control is now running. This remains a 100 µm response screen with four cells across the outlet, not a qualified breakup result.
+3. Unit-current boundary imbalance is 3.99 ppm and motional imbalance 0.350 µA, within the declared 10 ppm / 1 µA criteria. The cumulative electrical-work identity has a signed relative defect of -0.000399810385 (399.8 ppm magnitude). This larger energy discrepancy is unresolved; completing steps is not equivalent to numerical qualification. Thermal evolution remains disabled.
+
+![Completed driven flow frames](flow-driven-complete.png)
