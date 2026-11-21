@@ -1,0 +1,166 @@
+{
+  "scope": "Shared accepted frame only; running larger-pole case is not a final detachment result. Four cells across outlet; breakup unqualified.",
+  "cases": [
+    {
+      "case": "5 mm cubes",
+      "native_frame": "artifacts/hardware-research/concept1-developed-flow-v1-driven100/frame-00001000",
+      "measurements": {
+        "step": 1000,
+        "time_us": 2999.999999999972,
+        "first_cell_plane_at_or_above_exit_z_mm": -0.4499999631661922,
+        "exit_plane_alpha_area_mm2": 0.12002860325171652,
+        "exit_plane_mean_uz_m_s": 0.43890104613508235,
+        "exit_plane_mean_pressure_pa": 2074.3902936511986,
+        "exit_plane_downward_flux_proxy_nl_s": -52680.67953331114,
+        "liquid_volume_nl": 22920.001305051337,
+        "minimum_liquid_fraction": 0.0,
+        "maximum_liquid_fraction": 1.0,
+        "below_tip_maximum_liquid_fraction_at_cell_centres": 1.0,
+        "boundary_maximum_liquid_fraction": {
+          "z_min": 0.0,
+          "z_max": 0.0,
+          "y_min": 0.0,
+          "y_max": 0.0,
+          "x_min": 0.0,
+          "x_max": 0.0
+        },
+        "liquid_touches_domain_boundary_alpha01": false,
+        "below_tip_nl": 50.69896474433883,
+        "below_one_cell_guard_nl": 30.874988235939682,
+        "front_z_mm_alpha_half": -0.7499999774154276,
+        "detached_below_tip": [],
+        "connectivity_thresholds": {
+          "0.01": [],
+          "0.25": [],
+          "0.5": [],
+          "0.75": []
+        },
+        "below_tip_change_nl": 50.69896474433883,
+        "relative_liquid_volume_change": 4.3013266282088125e-09
+      }
+    },
+    {
+      "case": "10 x 10 x 5 mm poles",
+      "native_frame": "artifacts/hardware-research/concept1-larger-poles-flow-v1-driven100/frame-00001000",
+      "measurements": {
+        "step": 1000,
+        "time_us": 2999.999999999972,
+        "first_cell_plane_at_or_above_exit_z_mm": -0.4499999631661922,
+        "exit_plane_alpha_area_mm2": 0.11740263444843502,
+        "exit_plane_mean_uz_m_s": 0.32446342028676534,
+        "exit_plane_mean_pressure_pa": 3472.3252248373788,
+        "exit_plane_downward_flux_proxy_nl_s": -38092.86032381605,
+        "liquid_volume_nl": 22920.001050440595,
+        "minimum_liquid_fraction": 0.0,
+        "maximum_liquid_fraction": 1.0,
+        "below_tip_maximum_liquid_fraction_at_cell_centres": 1.0,
+        "boundary_maximum_liquid_fraction": {
+          "z_min": 0.0,
+          "z_max": 0.0,
+          "y_min": 0.0,
+          "y_max": 0.0,
+          "x_min": 0.0,
+          "x_max": 0.0
+        },
+        "liquid_touches_domain_boundary_alpha01": false,
+        "below_tip_nl": 117.10214447151702,
+        "below_one_cell_guard_nl": 106.82204338687191,
+        "front_z_mm_alpha_half": -1.5500000154133886,
+        "detached_below_tip": [
+          {
+            "volume_nl": 78.28843219031485,
+            "equivalent_diameter_mm": 0.5307617995249757,
+            "cells": 93,
+            "centre_mm": [
+              -0.002009738848719688,
+              0.0003213346135877445,
+              -1.2916488714733356
+            ],
+            "velocity_m_s": [
+              -0.0012961907777935266,
+              -5.3950847359374166e-05,
+              0.0325976237654686
+            ],
+            "touches_domain_boundary": false
+          }
+        ],
+        "connectivity_thresholds": {
+          "0.01": [
+            {
+              "volume_nl": 105.36045749778715,
+              "equivalent_diameter_mm": 0.5859937830167006,
+              "cells": 217,
+              "centre_mm": [
+                -0.00046471622948535466,
+                6.314720455600154e-05,
+                -1.3010048353042087
+              ],
+              "velocity_m_s": [
+                -0.0015715376939624548,
+                -0.0006124016363173723,
+                0.021217163652181625
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.25": [
+            {
+              "volume_nl": 96.0315011188558,
+              "equivalent_diameter_mm": 0.5681613651113623,
+              "cells": 140,
+              "centre_mm": [
+                -0.0004572339864566106,
+                -4.753527072580816e-05,
+                -1.300465030295729
+              ],
+              "velocity_m_s": [
+                -0.001699889893643558,
+                -0.0005090587656013668,
+                0.03032662905752659
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.5": [
+            {
+              "volume_nl": 78.28843219031485,
+              "equivalent_diameter_mm": 0.5307617995249757,
+              "cells": 93,
+              "centre_mm": [
+                -0.002009738848719688,
+                0.0003213346135877445,
+                -1.2916488714733356
+              ],
+              "velocity_m_s": [
+                -0.0012961907777935266,
+                -5.3950847359374166e-05,
+                0.0325976237654686
+              ],
+              "touches_domain_boundary": false
+            }
+          ],
+          "0.75": [
+            {
+              "volume_nl": 56.46603500778091,
+              "equivalent_diameter_mm": 0.4759882406815605,
+              "cells": 58,
+              "centre_mm": [
+                -3.2251845933028074e-05,
+                0.004076209524910133,
+                -1.2993907849687778
+              ],
+              "velocity_m_s": [
+                -0.002597637940198183,
+                -0.0007512897718697786,
+                0.025581855326890945
+              ],
+              "touches_domain_boundary": false
+            }
+          ]
+        },
+        "below_tip_change_nl": 117.10214447151702,
+        "relative_liquid_volume_change": -6.8073440218086034e-09
+      }
+    }
+  ]
+}

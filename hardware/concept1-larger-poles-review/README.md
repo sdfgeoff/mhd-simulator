@@ -26,3 +26,11 @@
 2. No detached regions occur at any of the four checked thresholds in these saved frames. The new run continues; the ligament may still release or retract. Relative volume change is below 1e-9 and no domain-boundary liquid contact appears in the new frame.
 
 ![Matched accepted 1.8 ms frames](flow-comparison-prefix-step600.png)
+
+## Partial pinch-off observation at 3.0 ms
+
+1. The larger-pole case has one detached region at every checked alpha threshold (0.01/0.25/0.5/0.75). At alpha=0.5 its volume is 78.29 nL and equivalent diameter 0.531 mm; its mean velocity is 0.0326 m/s upward. Threshold-dependent diameters span 0.476–0.586 mm. It is not a demonstrated useful downward flight.
+2. At 2.4 ms the region was still attached at every threshold. Saved frames bracket separation between 2.4 and 3.0 ms; they do not establish exact pinch-off timing. The 100 µm grid and unresolved electrical-energy defect still prevent qualification.
+3. The original cubes have no detached region in the matched frame. The larger-pole run remains active through its requested 3.6 ms.
+
+![Matched accepted 3.0 ms frames](flow-comparison-prefix-step1000.png)
