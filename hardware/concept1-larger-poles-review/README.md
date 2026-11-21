@@ -70,3 +70,11 @@
 3. The lower domain boundary is Z=-3.5mm, so the leading drop will approach it before the requested3.6ms endpoint. Later wall interaction must be identified rather than mistaken for jet physics. Extra flight space is a candidate next numerical-domain change after this run, not a geometry improvement. No additional GPU job is queued.
 
 ![Matched1.8ms pulse response](flow-pulse-v4-comparison-prefix-step600.png)
+
+## Pre-contact separation at 2.4 ms
+
+1. One leading region is separated at all four thresholds. At alpha0.5 it is90.44nL, D0.55692mm and1.07359m/s downward; threshold diameters0.529–0.581mm and speeds1.069–1.079m/sdown. No liquid touches the computational boundary in this savedframe (maximum lowerboundaryalpha7.9e-9). The leading center is Z=-2.979mm.
+2. By3.0ms the leading region contacts the lowerboundary (Z=-3.5mm); its later speed/shape are boundary-affected. A second dense trailing region is threshold-dependent at that point, so a clean-single-drop outcome is not established.
+3. A CPU-only follow-up project extends lowerZ to-8.5mm with all other configuration identical. GPUpreflight and memory check must follow after the currentrun exits. No newGPUcase is queued yet. This provides flightspace rather than changing hardware.
+
+![Matched2.4ms pulse response before contact](flow-pulse-v4-comparison-prefix-step800.png)

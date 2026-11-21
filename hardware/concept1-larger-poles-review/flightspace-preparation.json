@@ -1,0 +1,10 @@
+{
+  "status": "CPU project prepared only; no GPU test queued",
+  "source": "hardware/designs/concept1-larger-poles-v1/flow-h0100.mhd.json",
+  "project": "hardware/designs/concept1-larger-poles-v1/flow-h0100-flightspace.mhd.json",
+  "only_change": "Domain lowerZ -3.5 -> -8.5mm, same100um cells and all other settings/geometry/materials",
+  "reason": "400usleadingdrop separates atallthresholds2.4ms but toucheslowerboundaryby3.0ms; must remove nearbywall to assess longerflight and trailing region.",
+  "preflight_required": "After current native exits: actualGPUoverlap+alignedcrop bodymask equality; estimate memory and freeze freshplan before running.",
+  "estimated_cell_growth_ratio": 1.2392344497607655,
+  "scope": "Boundary placement control, not grid refinement or hardware geometry improvement."
+}
