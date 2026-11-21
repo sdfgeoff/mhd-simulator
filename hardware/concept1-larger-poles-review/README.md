@@ -12,3 +12,10 @@
 1. Near-outlet Bx increases from 0.2309 T to 0.3415 T. Downward liquid force increases from 5.897 to 8.759 mN, a factor of 1.485, at the same 100 A. Terminal voltage remains 0.218852 V and Joule power 21.8852 W.
 2. Native charge and power gates pass. This is a stationary force comparison, not a prediction of detached drop size. The unchanged current solution is expected in this imposed-field DC calculation without motion.
 3. A single driven fluid follow-up now runs with identical current/pulse/grid/timestep and the larger poles. No zero control is queued. The baseline 400 ppm electrical-energy mismatch remains unresolved and numerical qualification is not claimed.
+
+## Partial matched-frame comparison at 0.6 ms
+
+1. Larger poles produce an attached front approximately 0.55 mm below the exit, versus 0.35 mm with the cubes. Below-exit volume is 67.61 versus 46.81 nL, and mean outlet speed 0.812 versus 0.561 m/s downward.
+2. Neither saved frame has detached regions at the four alpha thresholds. The larger-pole run is still active: this is an initial-response improvement, not a droplet-release result. Volume change is about 1e-9 relative and no liquid reaches a domain boundary in the new frame.
+
+![Matched accepted 0.6 ms frames](flow-comparison-prefix-step200.png)
