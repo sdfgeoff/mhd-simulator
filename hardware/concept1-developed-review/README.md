@@ -36,3 +36,10 @@ Authorized by Geoffrey topic25reply860. The source`/home/geoffrey/Reference/OffT
 2. This is a running prefix, not the final outcome. The matched zero-current control has not started. No liquid reaches a domain boundary in this saved frame. The 100 µm spacing still prevents a trustworthy breakup or droplet-size claim.
 
 ![Partial accepted flow frames: initial and 0.6 ms](flow-prefix-600us.png)
+
+## Partial flow result at 2.4 ms
+
+1. The accepted 2.4 ms frame remains attached at all four connectivity thresholds. Below-tip liquid volume falls from 84.68 nL at 1.8 ms to 75.45 nL at 2.4 ms. The outlet-plane mean velocity changes to 0.243 m/s upward, indicating recoil.
+2. The driven run is still active and the zero-current control remains queued. This is not a final failure/success finding or a grid-qualified breakup result. No liquid reaches the computational boundary in these saved frames.
+
+![Partial accepted frames through 2.4 ms](flow-prefix-2400us.png)
