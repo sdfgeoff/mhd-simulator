@@ -52,3 +52,11 @@ At1.2ms the050run remains attached at all thresholds:144.947nL belowexit versus1
 ![1.8ms outlet comparison](flow-sturdy-050-comparison-prefix-step600.png)
 
 ![Prepared118-degree cone](cad-drill118-v1/proposed-tip-sections.png)
+
+## Stopped050 and118-degree flow test
+
+1. At2.4ms the050ligament remains attached,191.596nLbelowexit, outletdown0.0489m/s. At3.0ms it remains attached at all thresholds and recoils:188.607nL, outletup0.08828m/s, no boundary contact. Stopped near3.12ms to pursue the next geometry; this partial result does not prove no eventual release.
+2. The118-degree cone passes GPUoverlap (zero;620liquid->steelchangedcells, allotherbodymasksidentical) and brief100Aelectrical gates. Voltage0.1945008V, Joule19.4500W, totaldownforce12.3837mN versus12.6535baseline; straightoutlet3.50238 versus3.48385mN. See cad-drill118-v1/screen-results.json. These are stationary forces, not jetting predictions.
+3. A fresh118-degree fluidrun now uses exactly the previous050waveform/numerics; its actual response remains pending. Plans and binaries are frozen. No verification or accuracy campaign.
+
+![Stopped050partial](050-screen-prefix3000us.png)

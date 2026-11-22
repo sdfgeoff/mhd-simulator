@@ -1,0 +1,47 @@
+{
+  "binary": "target/debug/examples/conduction_flow_flightspace_chunked",
+  "expected_binary_sha256": "62f8d99fc5c5f84bd20f97349182522a149fee4355acd779466b9dd2ad463841",
+  "authorization_reply": 911,
+  "purpose": "Geometry performance per911: same sturdy050 head, 118 degree internal cone rather than128.7; test transition response with identical100A400us waveform/numerics.",
+  "jobs": [
+    {
+      "output": "artifacts/hardware-research/concept1-drill118-flow-v1-050-driven100",
+      "expected_steps": 1200,
+      "expected_time_s": 0.0036,
+      "analysis_args": [
+        "--exit-z-mm",
+        "-.5"
+      ],
+      "command": [
+        "target/debug/examples/conduction_flow_flightspace_chunked",
+        "hardware/designs/concept1-sturdy-tip-drill118-v1-050/flow-h0100.mhd.json",
+        "100",
+        "400",
+        "1200",
+        "artifacts/hardware-research/concept1-drill118-flow-v1-050-driven100",
+        "0",
+        ".25",
+        "3",
+        "0",
+        "200",
+        "3",
+        "25",
+        "body",
+        "0",
+        "1e-6",
+        "0",
+        "1e-6",
+        "4000",
+        "75000000000"
+      ]
+    }
+  ],
+  "limits": [
+    "100 um grid: 0.5 mm outlet is five cells across; response screening, not breakup qualification.",
+    "Temperature held fixed at 250 C material properties. No heater feedback, oxidation, feed, self-field or permanent-magnet reaction.",
+    "100 A forward 400 us, 20 us rise; 25 A reverse 133.33 us after 25 us gap. Single pulse; analytic RMS 27.57 A at assumed 200 Hz is not a repetition or thermal test.",
+    "Full heater/clamp geometry retained. Current +Y and field +X give force -Z; external mounts and cooling paths unfinished.",
+    "Baseline electrical energy identity defect remains unresolved; common numerical settings permit response comparison, not qualification.",
+    "Extended flight domain lower Z -8.5 mm retained from prior case; no new domain or refinement study."
+  ]
+}

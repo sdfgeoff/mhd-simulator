@@ -1,0 +1,216 @@
+{
+  "method": "Accepted native exports; six-neighbour components at several alpha thresholds. Component volumes include alpha only above that threshold. Below-tip volume includes all alpha. Exit flux is a cell-centred proxy, not a native MAC-face flux. No convergence or wetting claim.",
+  "initial_aperture_proxy": {
+    "plane_z_mm": -0.450000079581514,
+    "alpha_area_mm2": 0.16000001519918478,
+    "meaning": "Initial liquid-fraction area at the first cell-centre plane at or above the nominal exit; a voxel-aperture proxy, not the CAD area."
+  },
+  "component_minimum_alpha_weighted_cells": 1,
+  "component_minimum_volume_nl": 1.0000001424923606,
+  "frames": [
+    {
+      "step": 0,
+      "time_us": 0.0,
+      "first_cell_plane_at_or_above_exit_z_mm": -0.450000079581514,
+      "exit_plane_alpha_area_mm2": 0.16000001519918478,
+      "exit_plane_mean_uz_m_s": 0.0,
+      "exit_plane_mean_pressure_pa": 0.0,
+      "exit_plane_downward_flux_proxy_nl_s": -0.0,
+      "liquid_volume_nl": 23004.007312503447,
+      "minimum_liquid_fraction": 0.0,
+      "maximum_liquid_fraction": 1.0,
+      "below_tip_maximum_liquid_fraction_at_cell_centres": 9.5367431640625e-07,
+      "boundary_maximum_liquid_fraction": {
+        "z_min": 0.0,
+        "z_max": 0.0,
+        "y_min": 0.0,
+        "y_max": 0.0,
+        "x_min": 0.0,
+        "x_max": 0.0
+      },
+      "liquid_touches_domain_boundary_alpha01": false,
+      "below_tip_nl": 3.1739480310572526e-05,
+      "below_one_cell_guard_nl": 1.5265570552496334e-11,
+      "front_z_mm_alpha_half": -0.450000079581514,
+      "detached_below_tip": [],
+      "connectivity_thresholds": {
+        "0.01": [],
+        "0.25": [],
+        "0.5": [],
+        "0.75": []
+      },
+      "below_tip_change_nl": 0.0,
+      "relative_liquid_volume_change": 0.0
+    },
+    {
+      "step": 200,
+      "time_us": 600.0,
+      "first_cell_plane_at_or_above_exit_z_mm": -0.450000079581514,
+      "exit_plane_alpha_area_mm2": 0.15999996513127843,
+      "exit_plane_mean_uz_m_s": -0.9068682088588533,
+      "exit_plane_mean_pressure_pa": 1225.7836248495596,
+      "exit_plane_downward_flux_proxy_nl_s": 145098.88179608143,
+      "liquid_volume_nl": 23004.00729039466,
+      "minimum_liquid_fraction": -3.4323402786640145e-08,
+      "maximum_liquid_fraction": 1.0,
+      "below_tip_maximum_liquid_fraction_at_cell_centres": 1.0,
+      "boundary_maximum_liquid_fraction": {
+        "z_min": 0.0,
+        "z_max": 0.0,
+        "y_min": 0.0,
+        "y_max": 0.0,
+        "x_min": 0.0,
+        "x_max": 0.0
+      },
+      "liquid_touches_domain_boundary_alpha01": false,
+      "below_tip_nl": 80.7113838306168,
+      "below_one_cell_guard_nl": 63.20389919356066,
+      "front_z_mm_alpha_half": -0.9500001033302397,
+      "detached_below_tip": [],
+      "connectivity_thresholds": {
+        "0.01": [],
+        "0.25": [],
+        "0.5": [],
+        "0.75": []
+      },
+      "below_tip_change_nl": 80.71135209113649,
+      "relative_liquid_volume_change": -9.610841011920002e-10
+    },
+    {
+      "step": 400,
+      "time_us": 1199.999999999993,
+      "first_cell_plane_at_or_above_exit_z_mm": -0.450000079581514,
+      "exit_plane_alpha_area_mm2": 0.15999996513127843,
+      "exit_plane_mean_uz_m_s": -0.47438930756860165,
+      "exit_plane_mean_pressure_pa": 1845.6702552896047,
+      "exit_plane_downward_flux_proxy_nl_s": 75902.27266962756,
+      "liquid_volume_nl": 23004.007251324,
+      "minimum_liquid_fraction": -3.1225265928469526e-08,
+      "maximum_liquid_fraction": 1.0,
+      "below_tip_maximum_liquid_fraction_at_cell_centres": 1.0,
+      "boundary_maximum_liquid_fraction": {
+        "z_min": 0.0,
+        "z_max": 0.0,
+        "y_min": 0.0,
+        "y_max": 0.0,
+        "x_min": 0.0,
+        "x_max": 0.0
+      },
+      "liquid_touches_domain_boundary_alpha01": false,
+      "below_tip_nl": 144.94704572251007,
+      "below_one_cell_guard_nl": 128.7029191976196,
+      "front_z_mm_alpha_half": -1.3500001223292202,
+      "detached_below_tip": [],
+      "connectivity_thresholds": {
+        "0.01": [],
+        "0.25": [],
+        "0.5": [],
+        "0.75": []
+      },
+      "below_tip_change_nl": 144.94701398302976,
+      "relative_liquid_volume_change": -2.659512499114669e-09
+    },
+    {
+      "step": 600,
+      "time_us": 1799.999999999986,
+      "first_cell_plane_at_or_above_exit_z_mm": -0.450000079581514,
+      "exit_plane_alpha_area_mm2": 0.15999996513127843,
+      "exit_plane_mean_uz_m_s": -0.23478672130809944,
+      "exit_plane_mean_pressure_pa": 1577.0444922139397,
+      "exit_plane_downward_flux_proxy_nl_s": 37565.867222583096,
+      "liquid_volume_nl": 23004.007229119972,
+      "minimum_liquid_fraction": -2.9752698083029827e-08,
+      "maximum_liquid_fraction": 1.0,
+      "below_tip_maximum_liquid_fraction_at_cell_centres": 1.0,
+      "boundary_maximum_liquid_fraction": {
+        "z_min": 0.0,
+        "z_max": 0.0,
+        "y_min": 0.0,
+        "y_max": 0.0,
+        "x_min": 0.0,
+        "x_max": 0.0
+      },
+      "liquid_touches_domain_boundary_alpha01": false,
+      "below_tip_nl": 177.7273356441452,
+      "below_one_cell_guard_nl": 164.19729559589013,
+      "front_z_mm_alpha_half": -1.5500001318287104,
+      "detached_below_tip": [],
+      "connectivity_thresholds": {
+        "0.01": [],
+        "0.25": [],
+        "0.5": [],
+        "0.75": []
+      },
+      "below_tip_change_nl": 177.7273039046649,
+      "relative_liquid_volume_change": -3.6247369550324038e-09
+    },
+    {
+      "step": 800,
+      "time_us": 2399.999999999979,
+      "first_cell_plane_at_or_above_exit_z_mm": -0.450000079581514,
+      "exit_plane_alpha_area_mm2": 0.15881716925590308,
+      "exit_plane_mean_uz_m_s": -0.04890313661646643,
+      "exit_plane_mean_pressure_pa": 2184.822381213324,
+      "exit_plane_downward_flux_proxy_nl_s": 7766.657725161902,
+      "liquid_volume_nl": 23004.007232392683,
+      "minimum_liquid_fraction": -2.915843211326319e-08,
+      "maximum_liquid_fraction": 1.0,
+      "below_tip_maximum_liquid_fraction_at_cell_centres": 1.0,
+      "boundary_maximum_liquid_fraction": {
+        "z_min": 0.0,
+        "z_max": 0.0,
+        "y_min": 0.0,
+        "y_max": 0.0,
+        "x_min": 0.0,
+        "x_max": 0.0
+      },
+      "liquid_touches_domain_boundary_alpha01": false,
+      "below_tip_nl": 191.59627008811748,
+      "below_one_cell_guard_nl": 176.69035483952052,
+      "front_z_mm_alpha_half": -1.6500001365784556,
+      "detached_below_tip": [],
+      "connectivity_thresholds": {
+        "0.01": [],
+        "0.25": [],
+        "0.5": [],
+        "0.75": []
+      },
+      "below_tip_change_nl": 191.59623834863717,
+      "relative_liquid_volume_change": -3.4824698680324673e-09
+    },
+    {
+      "step": 1000,
+      "time_us": 2999.999999999972,
+      "first_cell_plane_at_or_above_exit_z_mm": -0.450000079581514,
+      "exit_plane_alpha_area_mm2": 0.15892576654481425,
+      "exit_plane_mean_uz_m_s": 0.08828268667071973,
+      "exit_plane_mean_pressure_pa": 1231.5626618182976,
+      "exit_plane_downward_flux_proxy_nl_s": -14030.393651779788,
+      "liquid_volume_nl": 23004.007207718158,
+      "minimum_liquid_fraction": -2.884841698858054e-08,
+      "maximum_liquid_fraction": 1.0,
+      "below_tip_maximum_liquid_fraction_at_cell_centres": 1.0,
+      "boundary_maximum_liquid_fraction": {
+        "z_min": 0.0,
+        "z_max": 0.0,
+        "y_min": 0.0,
+        "y_max": 0.0,
+        "x_min": 0.0,
+        "x_max": 0.0
+      },
+      "liquid_touches_domain_boundary_alpha01": false,
+      "below_tip_nl": 188.6068871113728,
+      "below_one_cell_guard_nl": 179.26118794409666,
+      "front_z_mm_alpha_half": -1.6500001365784556,
+      "detached_below_tip": [],
+      "connectivity_thresholds": {
+        "0.01": [],
+        "0.25": [],
+        "0.5": [],
+        "0.75": []
+      },
+      "below_tip_change_nl": 188.6068553718925,
+      "relative_liquid_volume_change": -4.555088528590545e-09
+    }
+  ]
+}

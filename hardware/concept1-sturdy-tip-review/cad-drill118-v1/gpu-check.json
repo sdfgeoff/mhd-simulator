@@ -1,0 +1,13 @@
+{
+  "GPU_overlap_cells": 0,
+  "different_mask_cells": 620,
+  "transitions": [
+    {
+      "before": 2,
+      "after": 1,
+      "cells": 620
+    }
+  ],
+  "all_other_body_masks_identical": true,
+  "scope": "Only steel/liquid cone differs. No extra field solve or verification case."
+}
