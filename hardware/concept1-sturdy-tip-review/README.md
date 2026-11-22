@@ -34,3 +34,9 @@ The repaired040case has now completed CADfractioninitialization and published it
 2. The050 repaired mesh passes zero-overlap and all coarse bodymasks match its prior stationaryscreen exactly. No repeated fieldsolve. A fresh050 fluidrun now uses the same100A400us waveform/settings; only outletgeometry differs from040. Static force alone is not a jetting claim.
 
 ![Partial040 progression through1.8ms](040-screen-prefix1800us.png)
+
+## First050 moving-frame comparison
+
+At0.6ms the0.5mm outlet has80.71nL belowexit versus61.99nL for0.4mm (+30.2%), with similar downward outlet velocities0.90687 versus0.89175m/s. Both remain attached at all four connectivity thresholds, with no boundary contact. This is more initial expelled volume, not evidence of a released drop. The050run continues to assess release/tail performance.
+
+![Shared0.6ms outlet comparison](flow-sturdy-050-comparison-prefix-step200.png)
