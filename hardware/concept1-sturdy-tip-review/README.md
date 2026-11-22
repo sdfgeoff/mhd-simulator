@@ -60,3 +60,5 @@ At1.2ms the050run remains attached at all thresholds:144.947nL belowexit versus1
 3. A fresh118-degree fluidrun now uses exactly the previous050waveform/numerics; its actual response remains pending. Plans and binaries are frozen. No verification or accuracy campaign.
 
 ![Stopped050partial](050-screen-prefix3000us.png)
+
+At0.6ms the118-degree cone has80.631nL belowexit and downward outlet speed0.91283m/s, versus80.711nL and0.90687m/s for128.7degrees. Both remain attached at all thresholds, samefront0.45mm belowexit, no boundary contact. Thus there is no material earlyresponse improvement; release remains pending. Actual first-frame comparison was visually checked.
