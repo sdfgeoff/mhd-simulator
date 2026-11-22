@@ -40,3 +40,5 @@ The repaired040case has now completed CADfractioninitialization and published it
 At0.6ms the0.5mm outlet has80.71nL belowexit versus61.99nL for0.4mm (+30.2%), with similar downward outlet velocities0.90687 versus0.89175m/s. Both remain attached at all four connectivity thresholds, with no boundary contact. This is more initial expelled volume, not evidence of a released drop. The050run continues to assess release/tail performance.
 
 ![Shared0.6ms outlet comparison](flow-sturdy-050-comparison-prefix-step200.png)
+
+At1.2ms the050run remains attached at all thresholds:144.947nL belowexit versus108.983nL for040, downward outlet speed0.47439 versus0.46282m/s, with no boundary contact. This continues the larger-volume/similar-speed trend; release is still pending. See the saved step400 comparison.
