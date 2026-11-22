@@ -42,3 +42,13 @@ At0.6ms the0.5mm outlet has80.71nL belowexit versus61.99nL for0.4mm (+30.2%), wi
 ![Shared0.6ms outlet comparison](flow-sturdy-050-comparison-prefix-step200.png)
 
 At1.2ms the050run remains attached at all thresholds:144.947nL belowexit versus108.983nL for040, downward outlet speed0.47439 versus0.46282m/s, with no boundary contact. This continues the larger-volume/similar-speed trend; release is still pending. See the saved step400 comparison.
+
+## 1.8ms geometry decision and118-degree cone candidate
+
+1. The050prefix has177.727nL belowexit, downward outlet speed0.23479m/s, front1.05mm belowexit; no detached region at any of four thresholds and no boundary contact. The040prefix at the same time has132.007nL,0.19052m/s and0.95mm extension. Allow one more useful frame to assess the larger ligament, rather than a verification campaign.
+2. CPU-prepared candidate `concept1-sturdy-tip-drill118-v1-050` changes only steel/liquid cone geometry:128.7° to118°, increasing transition length0.600 to0.75108mm. Outlet0.5mm, land0.6mm, tip1.2mm/wall0.35mm, contacts and all other meshes retained. It offers a conventional drill-point shape; performance improvement is unproven. CPUloader, one-piece steel and no-overlap checks pass; GPUpreflight and brief100A screen wait for the active flow to exit.
+3. `cad-drill118-v1/screen-plan.json` is prepared only, not queued. No added refinement/domain/precision tests. An initial incomplete generator output was preserved under artifacts/cases/drill118-incomplete-generator after source-template naming differed; it was never simulated.
+
+![1.8ms outlet comparison](flow-sturdy-050-comparison-prefix-step600.png)
+
+![Prepared118-degree cone](cad-drill118-v1/proposed-tip-sections.png)

@@ -1,0 +1,19 @@
+{
+  "design": "hardware/designs/concept1-sturdy-tip-drill118-v1-050",
+  "outlet_diameter_mm": 0.5,
+  "straight_land_mm": 0.6,
+  "square_tip_width_mm": 1.2,
+  "cone_included_angle_deg": 118.00000000000001,
+  "taper_top_z_mm": 0.8510757737844503,
+  "minimum_nominal_tip_wall_mm": 0.35,
+  "nominal_contact_area_per_side_mm2": 0.48,
+  "steel_one_piece": true,
+  "changed_body_indices": [
+    0,
+    1
+  ],
+  "CPU_overlaps": [],
+  "unchanged_mesh_payloads": "All original buffer bytes retained; only changed meshes reference newly appended payloads.",
+  "status": "CPU CAD only; GPU masks and 100A current/force screen pending",
+  "tradeoff": "Broader stainless can bypass liquid current. Larger exit may alter drop size/tail; no improved jetting claim."
+}

@@ -1,0 +1,37 @@
+{
+  "changed_mesh_indices": [
+    0,
+    1
+  ],
+  "unchanged_mesh_indices": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21
+  ],
+  "source_buffer_prefix_identical": true,
+  "all_non_geometry_project_settings_identical": true,
+  "CPU_loader_pass": true,
+  "GPU_check": "not run; current050flow active",
+  "cone_before_deg": 128.71798835138944,
+  "cone_after_deg": 118,
+  "taper_length_before_mm": 0.6,
+  "taper_length_after_mm": 0.7510757737844503,
+  "unqualified": "Performance improvement is a hypothesis, not a result."
+}

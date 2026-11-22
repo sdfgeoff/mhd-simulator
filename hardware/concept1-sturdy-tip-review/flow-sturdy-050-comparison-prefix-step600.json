@@ -1,0 +1,82 @@
+{
+  "scope": "Shared accepted frame only; running candidate is not a final detachment result. Coarse outlet sampling; breakup unqualified.",
+  "study": "sturdy-050",
+  "cases": [
+    {
+      "case": "Sturdy tip / 0.4 mm outlet",
+      "native_frame": "artifacts/hardware-research/concept1-sturdy-flow-v2-040-driven100/frame-00000600",
+      "measurements": {
+        "step": 600,
+        "time_us": 1799.999999999986,
+        "first_cell_plane_at_or_above_exit_z_mm": -0.450000079581514,
+        "exit_plane_alpha_area_mm2": 0.12000001139938858,
+        "exit_plane_mean_uz_m_s": -0.1905185623715321,
+        "exit_plane_mean_pressure_pa": 2093.1345825195312,
+        "exit_plane_downward_flux_proxy_nl_s": 22862.22965637898,
+        "liquid_volume_nl": 22920.000481336287,
+        "minimum_liquid_fraction": 0.0,
+        "maximum_liquid_fraction": 1.0,
+        "below_tip_maximum_liquid_fraction_at_cell_centres": 1.0,
+        "boundary_maximum_liquid_fraction": {
+          "z_min": 0.0,
+          "z_max": 0.0,
+          "y_min": 0.0,
+          "y_max": 0.0,
+          "x_min": 0.0,
+          "x_max": 0.0
+        },
+        "liquid_touches_domain_boundary_alpha01": false,
+        "below_tip_nl": 132.00698452837057,
+        "below_one_cell_guard_nl": 120.1097218784557,
+        "front_z_mm_alpha_half": -1.4500001270789653,
+        "detached_below_tip": [],
+        "connectivity_thresholds": {
+          "0.01": [],
+          "0.25": [],
+          "0.5": [],
+          "0.75": []
+        },
+        "below_tip_change_nl": 132.00696278757204,
+        "relative_liquid_volume_change": -2.7992032025636604e-09
+      }
+    },
+    {
+      "case": "Sturdy tip / 0.5 mm outlet",
+      "native_frame": "artifacts/hardware-research/concept1-sturdy-flow-v1-050-driven100/frame-00000600",
+      "measurements": {
+        "step": 600,
+        "time_us": 1799.999999999986,
+        "first_cell_plane_at_or_above_exit_z_mm": -0.450000079581514,
+        "exit_plane_alpha_area_mm2": 0.15999996513127843,
+        "exit_plane_mean_uz_m_s": -0.23478672130809944,
+        "exit_plane_mean_pressure_pa": 1577.0444922139397,
+        "exit_plane_downward_flux_proxy_nl_s": 37565.867222583096,
+        "liquid_volume_nl": 23004.007229119972,
+        "minimum_liquid_fraction": -2.9752698083029827e-08,
+        "maximum_liquid_fraction": 1.0,
+        "below_tip_maximum_liquid_fraction_at_cell_centres": 1.0,
+        "boundary_maximum_liquid_fraction": {
+          "z_min": 0.0,
+          "z_max": 0.0,
+          "y_min": 0.0,
+          "y_max": 0.0,
+          "x_min": 0.0,
+          "x_max": 0.0
+        },
+        "liquid_touches_domain_boundary_alpha01": false,
+        "below_tip_nl": 177.7273356441452,
+        "below_one_cell_guard_nl": 164.19729559589013,
+        "front_z_mm_alpha_half": -1.5500001318287104,
+        "detached_below_tip": [],
+        "connectivity_thresholds": {
+          "0.01": [],
+          "0.25": [],
+          "0.5": [],
+          "0.75": []
+        },
+        "below_tip_change_nl": 177.7273039046649,
+        "relative_liquid_volume_change": -3.6247369550324038e-09
+      }
+    }
+  ]
+}
