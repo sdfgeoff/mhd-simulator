@@ -2,7 +2,7 @@
   "binary": "target/debug/examples/conduction_flow_flightspace_chunked",
   "expected_binary_sha256": "62f8d99fc5c5f84bd20f97349182522a149fee4355acd779466b9dd2ad463841",
   "authorization_reply": 911,
-  "purpose": "Nextgeometryperformance candidate per911:sturdy1.2mmtipwith.5mmoutlet, same100A400uspulse, selectafter040response. Planpreparedonly; no secondGPUjobqueued.",
+  "purpose": "Geometry performance candidate per reply911: sturdy 1.2 mm tip with 0.5 mm outlet, same 100 A 400 us waveform as stopped sturdy040 screen.",
   "jobs": [
     {
       "output": "artifacts/hardware-research/concept1-sturdy-flow-v1-050-driven100",
@@ -37,13 +37,11 @@
     }
   ],
   "limits": [
-    "100umgrid:0.4mmoutlet4cellsacross, notbreakupqualification.",
-    "Thermalheldfixed, separatewallconductanceonly. Noheaterfeedback/oxidation/feed/self-fieldorPMreaction.",
-    "100A250uspositive20usrise,25Areverse83.33usafter25usgap, singlepulse. Assumed200Hzdosewouldbe21.3ARMS, notatestofrepetition.",
-    "Fullheater/clamps/magnetgeometry retained; current+Y andB+X ->-Z. Magnetmount/coolingexternalpathsunfinished.",
-    "Baseline400ppm electrical energy identity defect unresolved; same numerical settings retained for response comparison, not qualification.",
-    "Reverse fraction remains.25; its duration also grows83.33->133.33us because client scales reverse width with positive duration. Forward/reverse waveform family scales, not an isolated forward-only impulse change.",
-    "AnalyticI2dose3.8A2s gives27.57Arms atassumed200Hz, not continuous/repetition/thermalqualification.",
-    "Only lowerboundarymoves5mm; ~24%morecells/estimated5.2GiBVRAM. Actualstartupmemory/convergenceobserved separately. Nozero/refinementtest."
+    "100 um grid: 0.5 mm outlet is five cells across; response screening, not breakup qualification.",
+    "Temperature held fixed at 250 C material properties. No heater feedback, oxidation, feed, self-field or permanent-magnet reaction.",
+    "100 A forward 400 us, 20 us rise; 25 A reverse 133.33 us after 25 us gap. Single pulse; analytic RMS 27.57 A at assumed 200 Hz is not a repetition or thermal test.",
+    "Full heater/clamp geometry retained. Current +Y and field +X give force -Z; external mounts and cooling paths unfinished.",
+    "Baseline electrical energy identity defect remains unresolved; common numerical settings permit response comparison, not qualification.",
+    "Extended flight domain lower Z -8.5 mm retained from prior case; no new domain or refinement study."
   ]
 }

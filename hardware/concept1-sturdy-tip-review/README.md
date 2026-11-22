@@ -18,7 +18,7 @@ The first040fluid attempt stopped beforetimestepping: CADsubcell integration rej
 
 Analyticv2CAD preserves the nominaltip dimensions. The040repairedmesh has zeroGPUoverlap and byte-identical coarse bodymasks to the screenedv1geometry, with the same magnetic sources. The staticcurrent/force screen therefore remains applicable to this discretegrid; it was not repeated. The040fluidexperiment now uses the repairedv2input.
 
-The repaired040case has now completed CADfractioninitialization and published its initialacceptedframe; its fluidrun is active. Geometry/performance remains the priority, with no furtherdomain/accuracycomparison queued.
+The repaired040case has now completed CADfractioninitialization and published its initialacceptedframe; its fluidrun subsequently passed moving exports and was stopped early for the next geometry. Geometry/performance remains the priority, with no furtherdomain/accuracycomparison queued.
 
 ## First moving040frame and force location
 
@@ -27,3 +27,10 @@ The repaired040case has now completed CADfractioninitialization and published it
 3. The0.5mmbore has3.484mN in its straightoutlet in thatscreen and lower hydraulicresistance is expected. It is the preparednextgeometrycandidate, subject to current040drop/tail results. No newverificationcase is queued.
 
 ![Shared0.6ms geometry response](flow-sturdy-040-comparison-prefix-step200.png)
+
+## Partial040 screening decision and050 launch
+
+1. At1.8ms the040 ligament remains attached at alpha0.01/0.25/0.5/0.75. Below-exit liquid132.007nL; outlet mean velocity0.19052m/s downward, front0.95mm belowexit, no boundary contact. Stopped at1.98ms to prioritize geometry performance per human911. This partial screen does not prove no later release. Raw fields are preserved.
+2. The050 repaired mesh passes zero-overlap and all coarse bodymasks match its prior stationaryscreen exactly. No repeated fieldsolve. A fresh050 fluidrun now uses the same100A400us waveform/settings; only outletgeometry differs from040. Static force alone is not a jetting claim.
+
+![Partial040 progression through1.8ms](040-screen-prefix1800us.png)
