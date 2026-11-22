@@ -71,3 +71,7 @@ At0.6ms the118-degree cone has80.631nL belowexit and downward outlet speed0.9128
 4. Fresh0.6mmfluidrun started withsame100A400uswaveform/numerics, sixcellsacrossoutlet. Response/releaseunproven. See cad-drill118-060-v1/screen-results.json and flow-plan.json.
 
 ![0.6mmoutletCAD](cad-drill118-060-v1/proposed-tip-sections.png)
+
+At0.6ms the0.6mmoutlet has151.831nLbelowexit versus80.631nL for0.5mm/118cone, but downward outlet speed is essentially unchanged (0.90888 versus0.91283m/s). Front0.55 versus0.45mm belowexit; attached at all four thresholds, no boundary contact. Larger represented area moves more liquid without an early speed gain. This is not a released jet or converged geometry comparison. The actual sharedframe figure was visually checked.
+
+![Shared0.6ms larger outlet response](flow-outlet060-comparison-prefix-step200.png)
