@@ -62,3 +62,12 @@ At1.2ms the050run remains attached at all thresholds:144.947nL belowexit versus1
 ![Stopped050partial](050-screen-prefix3000us.png)
 
 At0.6ms the118-degree cone has80.631nL belowexit and downward outlet speed0.91283m/s, versus80.711nL and0.90687m/s for128.7degrees. Both remain attached at all thresholds, samefront0.45mm belowexit, no boundary contact. Thus there is no material earlyresponse improvement; release remains pending. Actual first-frame comparison was visually checked.
+
+## Host interruption and0.6mm outlet candidate
+
+1. Hostreboot on23November10:41NZDT interrupted the118-degree0.5mmrun after330steps0.99ms; only0.6ms movingframe saved, earlyresponse almostidentical to129-degreecone. Controller/native/sampler absent; oldstate markedinterrupted_host_restart, outputs preserved. It was not restarted.
+2. Newcandidate0.6mmoutlet retains118-degreeconeangle,0.6mmstraightland,1.2mmsquaretip andallcontacts/heater/magnets/clamps. Minimumtipwall0.30mm. Only steel/liquid geometry changes. CPUonepiece/nooverlap/loader/payload/settingschecks pass; GPUzerooverlap292steel-to-liquidcells, all otherbodymasks identical. CADshown985beforeelectricaltest.
+3. Brief100Astatic result:0.189578V,18.9577W,totaldownforce15.7545mN,straightoutlet7.0752mN versus3.5024mN for0.5mm. The coarse mask crosssection changes0.16to0.32mm2 despite nominalarea increase1.44x, so this is not a converged physical doubling. Screen passes establishednativegates; no additionalverificationrun.
+4. Fresh0.6mmfluidrun started withsame100A400uswaveform/numerics, sixcellsacrossoutlet. Response/releaseunproven. See cad-drill118-060-v1/screen-results.json and flow-plan.json.
+
+![0.6mmoutletCAD](cad-drill118-060-v1/proposed-tip-sections.png)

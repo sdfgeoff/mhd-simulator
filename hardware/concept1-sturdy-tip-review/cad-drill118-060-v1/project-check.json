@@ -1,0 +1,40 @@
+{
+  "unchanged_meshes": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21
+  ],
+  "all_non_geometry_settings_identical": true,
+  "source_buffer_prefix_identical": true,
+  "CPU_loader_pass": true,
+  "coarse_mask_straight_outlet_areas": [
+    {
+      "case": "concept1-drill118-v1-050-electrical100",
+      "liquid_cell_area_mm2": 0.16000001519918478,
+      "sample_z_mm": -0.4499999631661922
+    },
+    {
+      "case": "concept1-drill118-060-v1-electrical100",
+      "liquid_cell_area_mm2": 0.32000003039836955,
+      "sample_z_mm": -0.4499999631661922
+    }
+  ],
+  "caution": "Coarse sampling amplifies the nominal area increase; not a converged physical force comparison."
+}

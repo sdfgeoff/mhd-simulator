@@ -11,7 +11,7 @@ from make_hardware import lathe,orient
 from make_v6_conduction import as_solid
 
 source=Path('hardware/designs/concept1-larger-poles-v1')
-parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--version',default='v2');parser.add_argument('--diameter',type=float,choices=[.4,.5]);parser.add_argument('--cone-angle-deg',type=float);parser.add_argument('--source',type=Path,default=source);args=parser.parse_args()
+parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--version',default='v2');parser.add_argument('--diameter',type=float,choices=[.4,.5,.6]);parser.add_argument('--cone-angle-deg',type=float);parser.add_argument('--source',type=Path,default=source);args=parser.parse_args()
 source=args.source
 if args.cone_angle_deg is not None: assert 90 < args.cone_angle_deg < 160
 review=Path('hardware/concept1-sturdy-tip-review')/('cad-'+args.version);review.mkdir(exist_ok=False)
@@ -80,7 +80,7 @@ drawing.category=lambda n:'liquid' if 'Molten' in n else ('magnet' if 'SmCo' in 
 fig,axes=plt.subplots(1,1+len(records),figsize=(4.5*(1+len(records)),7),constrained_layout=True)
 for ax,bodies,title in zip(axes,[parts,*all_parts],['Source geometry']+[f"{r['outlet_diameter_mm']:.1f} mm outlet / {r['cone_included_angle_deg']:.1f}° cone" for r in records]):
     drawing.section(ax,bodies,'yz',0);ax.set(xlim=(-1.8,1.8),ylim=(-.8,1.4),title=title,xlabel='y (mm)',ylabel='z (mm)');ax.set_aspect('equal')
-fig.suptitle('Concept1: manufacturable tip candidates — CPU CAD only\n'+('Same sturdy tip, flat contacts and outlet land; changed internal cone' if args.cone_angle_deg is not None else 'Tip width 0.8 → 1.2 mm; nominal contact area 0.32 → 0.48 mm² per side'),fontsize=14)
+fig.suptitle('Concept1: manufacturable tip candidates — CPU CAD only\n'+('Same sturdy tip, flat contacts and straight-land length; changed bore/cone' if args.cone_angle_deg is not None else 'Tip width 0.8 → 1.2 mm; nominal contact area 0.32 → 0.48 mm² per side'),fontsize=14)
 fig.supxlabel('Blue: solder | grey: one-piece stainless | orange: copper | yellow: mica. Same outer assembly, clamps and magnets.\nCandidate geometry is untested for improved jetting. Electrical and fluid effects must be screened.',fontsize=10)
 fig.savefig(review/'proposed-tip-sections.png',dpi=160)
 (review/'cad-review.json').write_text(json.dumps(records,indent=2)+'\n')

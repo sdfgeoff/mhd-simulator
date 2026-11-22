@@ -1,0 +1,12 @@
+{
+  "overlaps": 0,
+  "changed_cells": 292,
+  "transitions": [
+    {
+      "before": 1,
+      "after": 2,
+      "cells": 292
+    }
+  ],
+  "all_other_body_masks_identical": true
+}

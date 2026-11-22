@@ -1,0 +1,32 @@
+{
+  "binary": "target/debug/examples/conduction_probe",
+  "binary_sha256": "6949a93f28a5051a7b6d033f53511718f9d6896e74431adfada4b4d8ea7034fa",
+  "expected_binary_hashes": {
+    "target/debug/examples/conduction_probe": "6949a93f28a5051a7b6d033f53511718f9d6896e74431adfada4b4d8ea7034fa"
+  },
+  "screen": "electrical",
+  "authorization_replies": [
+    860,
+    871,
+    911
+  ],
+  "jobs": [
+    {
+      "screen": "electrical",
+      "project": "hardware/designs/concept1-sturdy-tip-drill118-060-v1-060/assembly-h0100.mhd.json",
+      "output": "artifacts/hardware-research/concept1-drill118-060-v1-electrical100",
+      "command": [
+        "target/debug/examples/conduction_probe",
+        "hardware/designs/concept1-sturdy-tip-drill118-060-v1-060/assembly-h0100.mhd.json",
+        "100",
+        "artifacts/hardware-research/concept1-drill118-060-v1-electrical100",
+        "0",
+        "body",
+        "1e-7",
+        "0",
+        "y"
+      ]
+    }
+  ],
+  "purpose": "Manufacturable0.6mmoutletperformance screen per911, same118cone/landlength/tip/contacts/heater/magnets100A. Briefscreenbeforefluid,notverification."
+}
