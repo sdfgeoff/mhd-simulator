@@ -1,0 +1,29 @@
+{
+  "scope": "Read-only spatial breakdown of existing stationary fields; not a pressure or jetting prediction.",
+  "cases": [
+    {
+      "source": "concept1-larger-poles-v1-electrical100",
+      "downward_force_mN_by_z_region": {
+        "straight_outlet": 4.855935767933652,
+        "taper": 1.9855260200949179,
+        "upper_pool": 1.9171302174790905
+      }
+    },
+    {
+      "source": "concept1-sturdy-v1-040-electrical100",
+      "downward_force_mN_by_z_region": {
+        "straight_outlet": 2.5482889291116537,
+        "taper": 4.0926705177791805,
+        "upper_pool": 5.1358672267740415
+      }
+    },
+    {
+      "source": "concept1-sturdy-v1-050-electrical100",
+      "downward_force_mN_by_z_region": {
+        "straight_outlet": 3.4838506404220313,
+        "taper": 4.124662652543869,
+        "upper_pool": 5.044967486068199
+      }
+    }
+  ]
+}

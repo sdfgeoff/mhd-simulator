@@ -19,3 +19,11 @@ The first040fluid attempt stopped beforetimestepping: CADsubcell integration rej
 Analyticv2CAD preserves the nominaltip dimensions. The040repairedmesh has zeroGPUoverlap and byte-identical coarse bodymasks to the screenedv1geometry, with the same magnetic sources. The staticcurrent/force screen therefore remains applicable to this discretegrid; it was not repeated. The040fluidexperiment now uses the repairedv2input.
 
 The repaired040case has now completed CADfractioninitialization and published its initialacceptedframe; its fluidrun is active. Geometry/performance remains the priority, with no furtherdomain/accuracycomparison queued.
+
+## First moving040frame and force location
+
+1. At0.6ms the sturdytip has61.99nLbelowexit and0.89175m/sdownward outletflow, versus93.82nL/1.24567m/s for the earlier0.8mmtip in the sameflightdomain/pulse. All connectivitythresholds remain attached. This is an earlyresponse comparison, not the finaldrop result.
+2. A read-only breakdown of savedstationaryfields finds that force in the straightoutlet falls4.856->2.548mN while taperforce rises1.986->4.093mN and upperpoolforce1.917->5.136mN. Thus the greaterintegratedforce is distributed fartherupstream; this is consistent with weaker earlyoutletmotion, though not a complete causalpressure decomposition.
+3. The0.5mmbore has3.484mN in its straightoutlet in thatscreen and lower hydraulicresistance is expected. It is the preparednextgeometrycandidate, subject to current040drop/tail results. No newverificationcase is queued.
+
+![Shared0.6ms geometry response](flow-sturdy-040-comparison-prefix-step200.png)
