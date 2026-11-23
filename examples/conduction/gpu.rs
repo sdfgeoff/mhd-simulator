@@ -260,21 +260,26 @@ impl Conduction {
         })
     }
     fn dispatch(&self, commands: &[(&str, u32)]) {
-        let mut encoder = self
-            .context
-            .device
-            .create_command_encoder(&Default::default());
-        {
-            let mut pass = self
-                .context
-                .compute_pass(&mut encoder, Some("DC finite-volume solve"));
-            pass.set_bind_group(0, &self.bind, &[]);
-            for (name, count) in commands {
-                pass.set_pipeline(&self.pipes[name]);
-                pass.dispatch_workgroups((*count).min(self.dispatch_row_width), (*count).div_ceil(self.dispatch_row_width), 1);
+        // A 32-iteration batch is a long unpreemptible submission on an iGPU
+        // at >16M cells. Preserve the command order and residual-check cadence,
+        // but fence each iteration-sized chunk when dispatch spans rows.
+        let multi_row = self.params.dims[3].div_ceil(256) > self.dispatch_row_width;
+        let chunk_size = if multi_row { 5 } else { commands.len().max(1) };
+        for chunk in commands.chunks(chunk_size) {
+            let mut encoder = self.context.device.create_command_encoder(&Default::default());
+            {
+                let mut pass = self.context.compute_pass(&mut encoder, Some("DC finite-volume solve"));
+                pass.set_bind_group(0, &self.bind, &[]);
+                for (name, count) in chunk {
+                    pass.set_pipeline(&self.pipes[name]);
+                    pass.dispatch_workgroups((*count).min(self.dispatch_row_width), (*count).div_ceil(self.dispatch_row_width), 1);
+                }
+            }
+            let submission = self.context.queue.submit(Some(encoder.finish()));
+            if multi_row {
+                self.context.device.poll(wgpu::Maintain::WaitForSubmissionIndex(submission));
             }
         }
-        self.context.queue.submit(Some(encoder.finish()));
     }
     pub fn scalar_values(&self) -> Result<[[f32; 4]; 4], String> {
         let bytes = read_bytes(&self.context, &self.scalars, 0, 64)?;

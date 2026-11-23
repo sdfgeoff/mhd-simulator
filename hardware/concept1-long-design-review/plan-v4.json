@@ -1,0 +1,65 @@
+{
+  "binary": "target/debug/examples/conduction_flow_large_grid_chunked",
+  "expected_binary_sha256": "a23ce51cb28e990434f9df764ef25d19a1e35a96eeb33c92c0014af2c321a0d5",
+  "authorization_reply": 992,
+  "purpose": "Human992 single85um10msexperiment. DiagnosedV3GPUtimeoutafterinitialexport; V4fences sameorderedCGcommands in5commandchunks, noiterationcheck/PDEchanges. Failedversionspreserved.",
+  "jobs": [
+    {
+      "output": "artifacts/hardware-research/concept1-design060-long-h0085-v4",
+      "expected_steps": 5000,
+      "expected_time_s": 0.01,
+      "analysis_args": [
+        "--exit-z-mm",
+        "-.5"
+      ],
+      "command": [
+        "target/debug/examples/conduction_flow_large_grid_chunked",
+        "hardware/concept1-long-design-review/flow-h0085-long-fit-v2.mhd.json",
+        "120",
+        "400",
+        "5000",
+        "artifacts/hardware-research/concept1-design060-long-h0085-v4",
+        "0",
+        "0.20833333333333334",
+        "2",
+        "0",
+        "250",
+        "2",
+        "25",
+        "body",
+        "0",
+        "1e-6",
+        "0",
+        "1e-6",
+        "4000",
+        "120000000000"
+      ]
+    }
+  ],
+  "limits": [
+    "85um grid:~7cells across0.6mm outlet, modest improvement from100um/6cells, not converged breakup.",
+    "Whole heater/current paths and original full magnet sources retained. LowerZ-11.72mm,11.22mm flightspace; only10verifiedemptybottomplanes removed fromV1.",
+    "5000steps2us=10ms. Save0.5msframes; do not stop early for weak appearance. Report any boundary contact.",
+    "Same inductionless/isothermal/ideal-contact model; self-field, thermal feedback, oxidation and feed omitted.",
+    "Driver memory budget and buffer-size guards remain active; no forced overcommit or automatic failure retry.",
+    "AMD shared-memory GPU may be slow. No runtime promise.",
+    "Lossless SHA-verified zstd archives retain completed field bytes and allow existing analysis to read them."
+  ],
+  "driver_manifest": "/home/geoffrey/Reference/OffTopic/mhd-hardware-study/artifacts/hardware-research/radv-local-26.2.7/radeon-local.json",
+  "expected_adapter_vendor": 4098,
+  "expected_adapter_name": "AMD Radeon Graphics (RADV RENOIR)",
+  "largest_field_buffer_bytes": 2109404096,
+  "minimum_free_disk_bytes": 35542584320,
+  "archive_completed_fields": true,
+  "buffer_layout": {
+    "dims": [
+      265,
+      240,
+      343
+    ],
+    "cells": 21814800,
+    "max_EM_edge_buffer_bytes": 2109404096,
+    "max_cell_field_bytes": 1396147200,
+    "device_single_buffer_limit_bytes": 2147483647
+  }
+}

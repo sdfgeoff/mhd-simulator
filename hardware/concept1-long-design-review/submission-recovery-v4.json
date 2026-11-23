@@ -1,0 +1,10 @@
+{
+  "V3_failure": "AMDGPU gfx ring timeout and drivercontextloss20:36:36NZDT; initialfieldfullyexported, noacceptedstepreported",
+  "kernel_evidence": "journalctl -k: ring gfx timeout,Processconduction_flow PID99644;gfxringreset succeeded",
+  "inference": "32CGiterations inonecommandbuffer may exceed watchdogtime at21.8Mcells; exactoffendingkernelnotisolated",
+  "fix": "Sameorderedcommands/residualchecks/iterationcounts; for multirowgrids fence iteration-sized5commandchunks tobound submission duration. Firststepcharge/fluidprogress logs added.",
+  "tests": "All10analyticconductiontestsPASS includingmultirowtest nowalsoexercises5commandchunks and comparesfield/stats exact. AMDusableafterreset.",
+  "new_binary": "target/debug/examples/conduction_flow_large_grid_chunked",
+  "sha256": "a23ce51cb28e990434f9df764ef25d19a1e35a96eeb33c92c0014af2c321a0d5",
+  "scope": "NoPDE/gate/geometry/grid/timestep/waveform/durationchanges. PreserveV1/V2/V3, noautomaticretryonfurtherfailure."
+}

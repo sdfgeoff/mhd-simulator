@@ -281,6 +281,7 @@ pub(crate) fn main() -> Result<(), Box<dyn Error>> {
             retract,
             retract_delay_s,
         );
+        if step == 1 { eprintln!("First timestep: starting charge solve"); }
         let charge_start = std::time::Instant::now();
         let (voltage, s) = match current.solve_current(command) {
             Ok(v) => v,
@@ -290,11 +291,13 @@ pub(crate) fn main() -> Result<(), Box<dyn Error>> {
             }
         };
         let charge_ms = charge_start.elapsed().as_secs_f64() * 1000.;
+        if step == 1 { eprintln!("First timestep: charge accepted in {charge_ms:.1} ms; starting fluid step"); }
         let fluid_start = std::time::Instant::now();
         if let Err(e) = run.step(&p.model, &volume) {
             error = Some(e);
             break;
         }
+        if step == 1 { eprintln!("First timestep: fluid accepted in {:.1} ms",fluid_start.elapsed().as_secs_f64()*1000.); }
         costs.push_str(&format!(
             "{step},{charge_ms},{}\n",
             fluid_start.elapsed().as_secs_f64() * 1000.

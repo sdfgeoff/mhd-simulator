@@ -23,3 +23,7 @@ Removed10emptybottomplanes(0.85mm), retaining11.22mmflightspace. New265×240×34
 ## Large-grid dispatch correction V3
 
 V2 reached DCstartup but failed beforetimesteps:85,215workgroups exceeded the single-axis65,535limit. DCdispatch now uses multiple rows with matching flattened indices and padded-reduction guards. All10conduction tests pass onAMD, including forcedmultirow/nonmultiplelastgroup with exactfield/statistics equality. V3uses a separately named executable; oldfailedstates/binaries are preserved. SameV2project,hardware,pulse,resolution,duration,PDEandgates. See `dispatch-recovery-v3.json`; startupfit/firststep remains pending.
+
+## Command submission correction V4
+
+V3exported itsinitialfield, then theAMDkernel reported a gfxringtimeout/reset before anyacceptedstep. Suspectedcause:32CGiterations inoneunpreemptiblecommandbuffer onthelargegrid. V4fencesiteration-sized5commandchunks for multirowgrids, preservingcommandorder and32iterationresidualchecks. All10conductiontests pass; theforcedmultirowtest alsoexerciseschunking with exactfield/statistics agreement. Firststepcharge/fluidprogresslogsadded. Thisis aruntimehypothesis, notproof of theoffendingkernel. Sameproject/physics/waveform/numerics; failedV3retained. See `submission-recovery-v4.json`.
