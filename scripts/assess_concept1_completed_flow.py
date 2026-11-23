@@ -1,8 +1,8 @@
-"""Assess the two completed magnet-size cases from existing diagnostics only."""
+"""Assess explicitly selected completed Concept1 experiments from saved diagnostics."""
 import argparse,csv,json
 from pathlib import Path
 root=Path('artifacts/hardware-research');out=Path('hardware/concept1-larger-poles-review')
-parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--study',choices=['magnets','pulse-v4','outlet060','pullback060','forward120'],default='magnets');args=parser.parse_args()
+parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--study',choices=['magnets','pulse-v4','outlet060','pullback060','forward120','long-v5'],default='magnets');args=parser.parse_args()
 names=(['concept1-developed-flow-v1-driven100','concept1-larger-poles-flow-v1-driven100'] if args.study=='magnets' else ['concept1-larger-poles-flow-v1-driven100','concept1-long-pulse-flow-v4-driven100'])
 if args.study=='outlet060':
     names=['concept1-drill118-060-flow-v1-driven100'];out=Path('hardware/concept1-sturdy-tip-review')
@@ -10,10 +10,16 @@ if args.study=='pullback060':
     names=['concept1-drill118-060-flow-v1-driven100','concept1-drill118-060-retract050-v1-driven100'];out=Path('hardware/concept1-sturdy-tip-review')
 if args.study=='forward120':
     names=['concept1-drill118-060-flow-v1-driven100','concept1-drill118-060-forward120-v1'];out=Path('hardware/concept1-sturdy-tip-review')
+if args.study=='long-v5':
+    names=['concept1-design060-long-h0085-v5'];out=Path('hardware/concept1-long-design-review')
+expected_steps=5000 if args.study=='long-v5' else 1200
+expected_time=.01 if args.study=='long-v5' else .0036
 cases=[]
 for name in names:
-    run=root/name;s=json.loads((run/'run-status.json').read_text());assert s['status']=='complete' and s['accepted_steps']==1200
-    f=json.loads((run/'flow-analysis.json').read_text());rows=[{k:float(v) for k,v in r.items()} for r in csv.DictReader((run/'current-diagnostics.csv').open())];assert len(rows)==1200
+    run=root/name;s=json.loads((run/'run-status.json').read_text());assert s['status']=='complete' and s['accepted_steps']==expected_steps and abs(s['time_s']-expected_time)<1e-12
+    f=json.loads((run/'flow-analysis.json').read_text());rows=[{k:float(v) for k,v in r.items()} for r in csv.DictReader((run/'current-diagnostics.csv').open())];assert len(rows)==expected_steps
+    assert abs(sum(r['timestep_s'] for r in rows)-expected_time)<1e-10
+    assert f['frames'][-1]['step']==expected_steps
     dose=sum(r['command_A']**2*r['timestep_s'] for r in rows)
     defect=s['lagged_electrical_work_J']-s['joule_generated_J']-s['lagged_mechanical_work_J']
     cases.append({'source':str(run),'run_status':s,'final_frame':f['frames'][-1],
@@ -44,6 +50,11 @@ if args.study=='pullback060':
     record['interpretation']='Same0.6mmoutlet geometry and100Aforwardpulse; reverseamplitude25versus50A. Read actual final regions and signed drop velocities to assess useful release.'
 if args.study=='forward120':
     record['interpretation']='Same0.6mmoutlet geometry and25Apullback, forwardpeak100versus120A. Readactualregions/signeddropvelocity/currentdose ratherthaninferreleasefromimpulse.'
-filename={'magnets':'completed-flow-comparison.json','pulse-v4':'completed-pulse-v4-comparison.json','outlet060':'completed-060-flow.json','pullback060':'completed-060-pullback-comparison.json','forward120':'completed-060-forward120-comparison.json'}[args.study]
+if args.study=='long-v5':
+    record['status']='Completed single finer longer design experiment; not qualified breakup'
+    record['interpretation']='85um/2us/10ms fullassembly,0.6mmoutlet120Aforward400us25Areverse133us. Read actual saved release thresholds/signed velocities/tail and any boundary contact. No early termination for attached appearance.'
+    record['limits'][0]='85um grid, about7cells across0.6mmoutlet; modest improvement, not converged breakup.'
+    record['limits'][1]='Established1e-6 charge residual retained. Report electrical work defect relative to mechanical work; no qualified energy accuracy.'
+filename={'magnets':'completed-flow-comparison.json','pulse-v4':'completed-pulse-v4-comparison.json','outlet060':'completed-060-flow.json','pullback060':'completed-060-pullback-comparison.json','forward120':'completed-060-forward120-comparison.json','long-v5':'completed-long-v5-flow.json'}[args.study]
 (out/filename).write_text(json.dumps(record,indent=2)+'\n')
 print(json.dumps([{'source':c['source'],'energy_defect_ppm':c['electrical_energy_defect_relative']*1e6,'RMS_assumed200Hz':c['RMS_A_at_assumed200Hz'],'final_detached':c['final_frame']['detached_below_tip']} for c in cases],indent=2))
