@@ -1,0 +1,37 @@
+{
+  "adapter": "AMD Radeon Graphics (RADV RENOIR)",
+  "dims": [
+    265,
+    240,
+    353
+  ],
+  "overlap_cells": 0,
+  "all22bodies_represented": true,
+  "body_cell_counts": [
+    7378132,
+    36028,
+    15010,
+    3434,
+    14442,
+    25920,
+    61954,
+    2160,
+    15010,
+    3434,
+    14442,
+    25920,
+    61954,
+    2160,
+    45919,
+    68390,
+    921816,
+    172832,
+    696200,
+    10266,
+    703162,
+    10266
+  ],
+  "face_shield_counts_mirror_equal": true,
+  "source_magnets_full_CAD_unchanged": true,
+  "scope": "Initial geometry build only, no electrical/fluid timestep; full solver memory fit untested. Isolated outer magnet occupancy is cropped as before; its full prescribed source geometry is retained."
+}

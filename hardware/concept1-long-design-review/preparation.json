@@ -1,0 +1,135 @@
+{
+  "authorization_reply": 992,
+  "scope": "One finer, longer run per mechanical design; not a grid/time sweep. CPU budget estimate and adapter capability only, no new physics run launched.",
+  "AMD_memory_budget_bytes": 11336200192,
+  "AMD_max_buffer_bytes": 2147483647,
+  "budget_source": "artifacts/hardware-research/amd-vulkan-memory-review-20261123.txt",
+  "observed_NVIDIA_usage_bytes": 5386534912,
+  "source_count": 1536,
+  "candidates": [
+    {
+      "cell_mm": 0.1,
+      "dims": [
+        225,
+        204,
+        301
+      ],
+      "cells": 13815900,
+      "outlet_cells_across": 5.999999999999999,
+      "estimated_device_bytes_from_existing_usage": 6287973610,
+      "largest_field_buffer_bytes": 884217600,
+      "within_AMD_budget_estimate": true,
+      "within_single_buffer_limit": true,
+      "source_interactions": 64202477568
+    },
+    {
+      "cell_mm": 0.09,
+      "dims": [
+        250,
+        227,
+        334
+      ],
+      "cells": 18954500,
+      "outlet_cells_across": 6.666666666666667,
+      "estimated_device_bytes_from_existing_usage": 8626683443,
+      "largest_field_buffer_bytes": 1213088000,
+      "within_AMD_budget_estimate": true,
+      "within_single_buffer_limit": true,
+      "source_interactions": 88007342592
+    },
+    {
+      "cell_mm": 0.085,
+      "dims": [
+        265,
+        240,
+        353
+      ],
+      "cells": 22450800,
+      "outlet_cells_across": 7.058823529411764,
+      "estimated_device_bytes_from_existing_usage": 10217940048,
+      "largest_field_buffer_bytes": 1436851200,
+      "within_AMD_budget_estimate": true,
+      "within_single_buffer_limit": true,
+      "source_interactions": 104197613568
+    },
+    {
+      "cell_mm": 0.08,
+      "dims": [
+        281,
+        255,
+        376
+      ],
+      "cells": 26942280,
+      "outlet_cells_across": 7.5,
+      "estimated_device_bytes_from_existing_usage": 12262128824,
+      "largest_field_buffer_bytes": 1724305920,
+      "within_AMD_budget_estimate": false,
+      "within_single_buffer_limit": true,
+      "source_interactions": 124990669824
+    },
+    {
+      "cell_mm": 0.075,
+      "dims": [
+        300,
+        272,
+        401
+      ],
+      "cells": 32721600,
+      "outlet_cells_across": 8.0,
+      "estimated_device_bytes_from_existing_usage": 14892446910,
+      "largest_field_buffer_bytes": 2094182400,
+      "within_AMD_budget_estimate": false,
+      "within_single_buffer_limit": true,
+      "source_interactions": 151737933312
+    },
+    {
+      "cell_mm": 0.05,
+      "dims": [
+        449,
+        408,
+        601
+      ],
+      "cells": 110098392,
+      "outlet_cells_across": 11.999999999999998,
+      "estimated_device_bytes_from_existing_usage": 50108627257,
+      "largest_field_buffer_bytes": 7046297088,
+      "within_AMD_budget_estimate": false,
+      "within_single_buffer_limit": false,
+      "source_interactions": 509480650752
+    }
+  ],
+  "selected": {
+    "cell_mm": 0.085,
+    "dims": [
+      265,
+      240,
+      353
+    ],
+    "cells": 22450800,
+    "outlet_cells_across": 7.058823529411764,
+    "estimated_device_bytes_from_existing_usage": 10217940048,
+    "largest_field_buffer_bytes": 1436851200,
+    "within_AMD_budget_estimate": true,
+    "within_single_buffer_limit": true,
+    "source_interactions": 104197613568
+  },
+  "planned_duration_s": 0.01,
+  "planned_dt_s": 2e-06,
+  "planned_steps": 5000,
+  "field_every_steps": 250,
+  "field_interval_s": 0.0005,
+  "raw_field_bytes_total": 30173875200,
+  "retain_full_geometry": true,
+  "geometry_file_unchanged": "/home/geoffrey/Reference/OffTopic/mhd-hardware-study/hardware/designs/concept1-sturdy-tip-drill118-060-v1-060/assembly.gltf",
+  "geometry_binary_sha256": "0714f402eb8ffb7a481faa962751c82066eb35af5373cd2664483aef31f7cb15",
+  "physics_choice": "Retain current120Aforward/400us,25Areverse/133us,gap25us,rise20us; no more waveform sweep. Freeze after current run finishes.",
+  "limits": [
+    "85um is a modest spatial improvement, ~7 cells across0.6mm versus6 previously, not converged breakup.",
+    "Working allocation is estimated; native allocation guard must pass, no forced overcommit.",
+    "Shared-memory AMD may be considerably slower; no runtime promise.",
+    "Lowerdomain extends to-12.5mm to provide12mmflightspace; flag any actual boundary contact.",
+    "Existing inductionless/isothermal/ideal-contact and electrical energy limitations remain."
+  ],
+  "domain_alignment": "Centered X/Y cell grid about CAD axis; nominal exitZ=-0.5 lies on a cell face. Supersedes uncentered initial voxel draft; no physics run has started.",
+  "grid_dimension_calculation": "Matches Rust f32 project coordinates; selected grid has one extra outer X plane from ceil rounding. Active X/Y coordinates centered; both magnet sources remain full CAD meshes."
+}
