@@ -175,6 +175,8 @@ pub struct FluidState {
     pub(crate) force_multigrid: Option<bool>,
     #[cfg(test)]
     pub(crate) force_meanfree_pressure: Option<bool>,
+    #[cfg(test)]
+    force_bounded_submissions: Option<bool>,
     multigrid: Option<multigrid::Multigrid>,
     multigrid_attempted: bool,
 }
@@ -633,6 +635,8 @@ impl FluidState {
             force_multigrid: None,
             #[cfg(test)]
             force_meanfree_pressure: None,
+            #[cfg(test)]
+            force_bounded_submissions: None,
             multigrid: None,
             multigrid_attempted: false,
             max_face_speed: 0.,
@@ -970,20 +974,28 @@ impl FluidState {
     pub fn result_buffer(&self) -> &wgpu::Buffer {
         &self.result
     }
+    fn bounded_submissions(&self) -> bool {
+        let bounded = self.params.dims[3].div_ceil(256) > 65535;
+        #[cfg(test)]
+        let bounded = self.force_bounded_submissions.unwrap_or(bounded);
+        bounded
+    }
     fn dispatch(&self, entries: &[(&str, [u32; 3])]) {
-        let mut encoder = self
-            .context
-            .device
-            .create_command_encoder(&Default::default());
-        {
-            let mut pass = self.context.compute_pass(&mut encoder, None);
-            pass.set_bind_group(0, &self.bind, &[]);
-            for (entry, g) in entries {
-                pass.set_pipeline(&self.pipelines[entry]);
-                pass.dispatch_workgroups(g[0], g[1], g[2]);
+        let bounded = self.bounded_submissions();
+        let chunk_size = if bounded { 1 } else { entries.len().max(1) };
+        for chunk in entries.chunks(chunk_size) {
+            let mut encoder = self.context.device.create_command_encoder(&Default::default());
+            {
+                let mut pass = self.context.compute_pass(&mut encoder, None);
+                pass.set_bind_group(0, &self.bind, &[]);
+                for (entry, g) in chunk {
+                    pass.set_pipeline(&self.pipelines[entry]);
+                    pass.dispatch_workgroups(g[0], g[1], g[2]);
+                }
             }
+            let submission = self.context.queue.submit(Some(encoder.finish()));
+            if bounded { self.context.device.poll(wgpu::Maintain::WaitForSubmissionIndex(submission)); }
         }
-        self.context.queue.submit(Some(encoder.finish()));
     }
     fn convergence(&self) -> Result<(f32, bool, u32), String> {
         let data = read_bytes(&self.context, &self.scalars, 0, 32)?;
@@ -1309,6 +1321,7 @@ impl FluidState {
         let mut run = || -> Result<(u32, f32), String> {
             let faces = groups(self.params.faces[3]);
             self.dispatch(&[("predict", faces)]);
+            if self.time_s == 0. && self.bounded_submissions() { eprintln!("First fluid step: predictor accepted; starting viscosity"); }
             if self.config.surface.enabled {
                 self.diffuse_surface_stress()?;
             }
@@ -1325,6 +1338,7 @@ impl FluidState {
                 self.velocity.size(),
             );
             self.context.queue.submit(Some(encoder.finish()));
+            if self.time_s == 0. && self.bounded_submissions() { eprintln!("First fluid step: viscosity accepted; starting pressure"); }
             self.project(true)
         };
         let result = run().and_then(|(iterations, residual)| {

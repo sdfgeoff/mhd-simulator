@@ -1,0 +1,11 @@
+{
+  "V4_failure": "Chargeaccepted82781.3ms; AMDgfxringtimeoutatfirstfluidstep20:40:37NZDT. Noacceptedfluidstep; initialframepreserved.",
+  "evidence": "nativefirststepchargeacceptedlog plusjournalctl-k timeout Process104182; zeroOOMs, unchangedfrozenhashes",
+  "inference": "PressureCG/MG batches containmanykernels percommandbuffer; offendingfluidkernelnotisolated",
+  "fix": "Largegridfluiddispatch fences eachstage; MGbuild/cycle/CGsequence alsofencedperstage, preservesstagesandcheckcadence. Defaultsmallgridpathunchanged. Firstfluidpredictor/viscosity/pressureprogresslogsadded.",
+  "test": "AMD GPU bounded_pressure_submissions_preserve_jacobi_and_multigrid_fields PASS; forcedboundedvsoriginalpressure/velocity fieldbytesexact forbothJacobi andMG andanalyticpressureerror<1e-4.",
+  "binary": "target/debug/examples/conduction_flow_bounded_pressure",
+  "sha256": "276c5165ec61a0205d4e2a3aee909d26121100691d762262527e1bb5fbf3e26e",
+  "physics": "NoPDE/convergence/gate/current/geometry/grid/dt/durationchanges",
+  "failed_versions": "V1-V4retained, noautomaticretryifnewfailure"
+}

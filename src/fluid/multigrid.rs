@@ -21,6 +21,7 @@ pub(super) struct Multigrid {
     value: wgpu::Buffer,
     pub(super) bytes: u64,
     cycle: Vec<(usize, &'static str)>,
+    bounded_submissions: bool,
 }
 fn hierarchy(dims: [u32; 4], faces: [u32; 4], periodic: u32) -> Result<(Vec<Level>, u64), String> {
     let fine = dims;
@@ -230,6 +231,7 @@ impl Multigrid {
             value,
             bytes,
             cycle,
+            bounded_submissions: state.bounded_submissions(),
         })
     }
     fn encode(
@@ -259,9 +261,13 @@ impl Multigrid {
         }
     }
     fn dispatch(&self, context: &GpuContext, stages: &[(usize, &str)]) {
-        let mut encoder = context.device.create_command_encoder(&Default::default());
-        self.encode(context, &mut encoder, stages);
-        context.queue.submit(Some(encoder.finish()));
+        let chunk_size = if self.bounded_submissions { 1 } else { stages.len().max(1) };
+        for chunk in stages.chunks(chunk_size) {
+            let mut encoder = context.device.create_command_encoder(&Default::default());
+            self.encode(context, &mut encoder, chunk);
+            let submission = context.queue.submit(Some(encoder.finish()));
+            if self.bounded_submissions { context.device.poll(wgpu::Maintain::WaitForSubmissionIndex(submission)); }
+        }
     }
     pub(super) fn build(&self, context: &GpuContext) {
         self.dispatch(
@@ -291,6 +297,21 @@ impl Multigrid {
     }
     pub(super) fn iterate(&self, state: &FluidState, batch: u32) {
         let cells = groups(state.params.dims[3]);
+        if self.bounded_submissions {
+            // Preserve each CG/V-cycle stage and the caller's convergence-check
+            // cadence; only the submission boundaries change.
+            for _ in 0..batch {
+                state.dispatch(&[("pressure_apply", cells), ("alpha_reduce", [1,1,1]), ("update", cells)]);
+                if state.params.initial[3] > 0. {
+                    state.dispatch(&[("pressure_residual_mean", [1,1,1]), ("pressure_residual_subspace", cells)]);
+                }
+                self.apply(&state.context);
+                self.dispatch(&state.context, &[(0, "preconditioned_dot")]);
+                state.dispatch(&[("beta_reduce", [1,1,1])]);
+                self.dispatch(&state.context, &[(0, "preconditioned_search")]);
+            }
+            return;
+        }
         let mut encoder = state
             .context
             .device

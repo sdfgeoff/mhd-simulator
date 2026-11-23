@@ -27,3 +27,7 @@ V2 reached DCstartup but failed beforetimesteps:85,215workgroups exceeded the si
 ## Command submission correction V4
 
 V3exported itsinitialfield, then theAMDkernel reported a gfxringtimeout/reset before anyacceptedstep. Suspectedcause:32CGiterations inoneunpreemptiblecommandbuffer onthelargegrid. V4fencesiteration-sized5commandchunks for multirowgrids, preservingcommandorder and32iterationresidualchecks. All10conductiontests pass; theforcedmultirowtest alsoexerciseschunking with exactfield/statistics agreement. Firststepcharge/fluidprogresslogsadded. Thisis aruntimehypothesis, notproof of theoffendingkernel. Sameproject/physics/waveform/numerics; failedV3retained. See `submission-recovery-v4.json`.
+
+## Fluid submission correction V5
+
+V4chargeaccepted in82.8s, thenAMDGPUtimeoutinfirstfluidstep. V5fenceslargegridfluidpressureandMGstages, preservingstageorderandconvergencecheckcadence. ForcedboundedvsoriginalGPUtest has exactpressure/velocityfields forJacobiandMG; analyticpressureL2<1e-4. Thisaddresses a suspectedlongsubmissionpath; exactoffendingkernel remainsunisolated. Firstfluidpredictor/viscosity/pressureprogresslogsadded. Samehardware,numerics,pulse,10msduration. See `pressure-submission-recovery-v5.json`; noacceptedfluidstepyet.
