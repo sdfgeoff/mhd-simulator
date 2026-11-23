@@ -1,0 +1,16 @@
+{
+  "status": "failed_before_timesteps",
+  "cause": "EM applied-source/edge-coefficient single storage buffer exceeds adapter per-buffer limit",
+  "dims": [
+    265,
+    240,
+    353
+  ],
+  "edge_count": 67836988,
+  "edge_source_buffer_bytes": 2170783616,
+  "adapter_storage_buffer_limit_bytes": 2147483647,
+  "native_message": "EM buffers need 6150 MiB and exceed device buffer limits; increase cell spacing",
+  "planning_error": "largest_field_buffer_bytes considered cell*64 but missed edge*32 EM buffer; total memory budget is separate from individual buffer limit",
+  "preservation": "V1 plan/state/log/output retained; no automatic rerun, no guard bypass",
+  "next_requirement": "Support segmented EM storage or select a fitting spatial domain/resolution before a new attempt. Preserve full conducting assembly and requested long duration; do not repeat waveform sweeps."
+}
