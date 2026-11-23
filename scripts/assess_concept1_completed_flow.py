@@ -2,8 +2,10 @@
 import argparse,csv,json
 from pathlib import Path
 root=Path('artifacts/hardware-research');out=Path('hardware/concept1-larger-poles-review')
-parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--study',choices=['magnets','pulse-v4'],default='magnets');args=parser.parse_args()
+parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--study',choices=['magnets','pulse-v4','outlet060'],default='magnets');args=parser.parse_args()
 names=(['concept1-developed-flow-v1-driven100','concept1-larger-poles-flow-v1-driven100'] if args.study=='magnets' else ['concept1-larger-poles-flow-v1-driven100','concept1-long-pulse-flow-v4-driven100'])
+if args.study=='outlet060':
+    names=['concept1-drill118-060-flow-v1-driven100'];out=Path('hardware/concept1-sturdy-tip-review')
 cases=[]
 for name in names:
     run=root/name;s=json.loads((run/'run-status.json').read_text());assert s['status']=='complete' and s['accepted_steps']==1200
@@ -30,6 +32,10 @@ record={'status':'Completed coarse-grid response comparison, not qualified jetti
 if args.study=='pulse-v4':
     record['interpretation']='400us case has a leading drop separated at all four thresholds by2.4ms, moving downward before boundary contact. First saved lower-boundary contact at3.0ms invalidates later free-flight interpretation; extended domain follows.'
     record['limits'][1]='Electrical work identity error remains comparable to mechanical work. Established1e-6 screening residual retained perhuman879; tighter1e-7 attempts stalled. No qualified energy accuracy.'
-filename='completed-flow-comparison.json' if args.study=='magnets' else 'completed-pulse-v4-comparison.json'
+if args.study=='outlet060':
+    record['interpretation']='Completed0.6mmoutlet118degreecone response screen. Read final_frame and first_saved_separated_step_by_threshold for actual release; total below-exit volume includes any attached ligament.'
+    record['limits'][0]='100um grid, six cells across outlet; coarse binary-mask area differs discontinuously from0.5mm case. No qualified breakup or physical gain claim.'
+    record['limits'][1]='Established1e-6 screening residual retained perhuman879/911. Electrical work defect must be reported relative to mechanical work; no qualified energy accuracy.'
+filename={'magnets':'completed-flow-comparison.json','pulse-v4':'completed-pulse-v4-comparison.json','outlet060':'completed-060-flow.json'}[args.study]
 (out/filename).write_text(json.dumps(record,indent=2)+'\n')
 print(json.dumps([{'source':c['source'],'energy_defect_ppm':c['electrical_energy_defect_relative']*1e6,'RMS_assumed200Hz':c['RMS_A_at_assumed200Hz'],'final_detached':c['final_frame']['detached_below_tip']} for c in cases],indent=2))
