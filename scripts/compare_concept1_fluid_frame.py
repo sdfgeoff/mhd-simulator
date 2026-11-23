@@ -34,7 +34,15 @@ for ax,(label,name) in zip(axes,cases):
     im=ax.imshow(section,origin='lower',extent=extent,vmin=0,vmax=1,cmap='Blues',interpolation='nearest')
     rgba=np.full((*solid.shape,4),.55);rgba[...,3]=solid;ax.imshow(rgba,origin='lower',extent=extent,interpolation='nearest')
     ax.axhline(-.5,color='darkorange',linestyle=':');ax.set(xlim=(-1.8,1.8),ylim=(-1.6,4.1),xlabel='x (mm)',ylabel='z (mm)',title=label+'\n'+f"{record['below_tip_nl']:.1f} nL below; "+outlet_label)
-    results.append({'case':label,'native_frame':str(path),'measurements':record});del f
+    entry={'case':label,'native_frame':str(path),'measurements':record}
+    if a.study=='pullback060':
+        z_mm=o[2]+(np.arange(nz)+.5)*h
+        bins={}
+        for bin_name,select in [('just_below_exit',(z_mm<-.5)&(z_mm>=-.8)),('farther_below_exit',z_mm<-.8)]:
+            weight=np.clip(f[select,:,:,14],0,1);total=weight.sum(dtype=np.float64)
+            bins[bin_name]={'liquid_volume_nl':float(total*(h*.001)**3*1e12),'alpha_weighted_vz_m_s':float(np.sum(weight*f[select,:,:,2],dtype=np.float64)/total) if total>1e-8 else None}
+        entry['fixed_spatial_bins']={'scope':'Eulerian bands split at z=-0.8mm; not isolated droplets or tracked material. Negative vz is downward.','bins':bins}
+    results.append(entry);del f
 lower=min(-1.6,min(c['measurements']['front_z_mm_alpha_half'] for c in results if c['measurements']['front_z_mm_alpha_half'] is not None)-.4)
 for ax in axes: ax.set_ylim(lower,4.1)
 connectivity_note=("no detached region in these frames" if all(not regions for c in results for regions in c["measurements"]["connectivity_thresholds"].values()) else "detached-region counts at alpha=0.5: "+" / ".join(str(len(c["measurements"]["connectivity_thresholds"]["0.5"])) for c in results))
@@ -42,7 +50,9 @@ completed=all((root/name/'run-status.json').exists() and json.loads((root/name/'
 scope='completed runs' if completed and a.step==1200 else 'partial response'
 control='Same 100 A pulse / 100 µm grid' if a.study=='magnets' else 'Same head, magnets, 100 A peak / 100 µm grid'
 if a.study in ['flightspace','sturdy-040','sturdy-050','drill118','outlet060']: control='Same 100 A / 400 us pulse, magnets and 100 µm grid'
-if a.study=='pullback060': control='Same geometry / 100 A forward pulse / 100 µm grid; changed pullback'
+if a.study=='pullback060':
+    control='Same head / 100 A forward / 100 µm grid; changed pullback'
+    if all(not regions for c in results for regions in c['measurements']['connectivity_thresholds'].values()): connectivity_note='both attached'
 fig.suptitle(f"Concept1: shared {results[0]['measurements']['time_us']:.0f} us frame — {scope}\n{control}; {connectivity_note}",fontsize=12)
 fig.colorbar(im,ax=axes,label='Liquid fraction',shrink=.6)
 prefix={'magnets':'flow-comparison','pulse':'flow-pulse-comparison','pulse-v4':'flow-pulse-v4-comparison','flightspace':'flow-flightspace-comparison','sturdy-040':'flow-sturdy-040-comparison','sturdy-050':'flow-sturdy-050-comparison','drill118':'flow-drill118-comparison','outlet060':'flow-outlet060-comparison','pullback060':'flow-pullback060-comparison'}[a.study]

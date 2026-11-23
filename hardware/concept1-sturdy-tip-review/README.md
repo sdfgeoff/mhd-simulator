@@ -89,3 +89,7 @@ At1.8ms the0.6mmrun still has no detached regions at any threshold. Belowexit384
 3. Nextperformancecase keepsallgeometry and100A400usforward pulse, raises reverseamplitude25to50A forsame133.33uswidth/gap25us. Testneckwithdrawal whilebulbcoasts; mayinsteadretractbulb. Predictedcurrentdose4.00043A2s/RMS28.2858atassumed200Hz,notrepetition/thermaltest. Freshfrozenplanflow-plan-retract050.json, no repeatedstatic solve.
 
 ![Completed0.6mm timeline](060-completed-sections.png)
+
+At0.6ms with50Apullback:148.560nLbelowexit,outletdown0.82133m/s, samefront0.55mmbelowexit and attached at all thresholds. The25Acase has151.831nL/outletdown0.90888m/s. Fixed Eulerian bands distinguish nearby liquid(z=-0.8to-0.5mm) from farther liquid(z<-0.8mm): strongerpullback reduces mean downward speed7.3% versus3.3%, respectively. These bands do not track a bulb or isolateddrop and do not prove eventual release. Actual sharedframe figure visually checked.
+
+![Earlypullbackcomparison](flow-pullback060-comparison-prefix-step200.png)
