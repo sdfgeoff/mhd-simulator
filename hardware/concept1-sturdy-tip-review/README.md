@@ -107,3 +107,5 @@ At1.2ms50Apullback remains attached:276.195nLbelowexit,outletdown0.53274m/s,fron
 At0.6ms120Aforward yields179.853nLbelowexit and downward outlet speed1.07493m/s versus151.831nL/0.90888m/s at100A, about18%higher volume/speed. Front0.65versus0.55mm belowexit; attached at all thresholds and no boundary contact. This is an early response gain, not a released-drop result. The actual matched-frame comparison was visually checked.
 
 ![120Aearlyresponse](flow-forward120-comparison-prefix-step200.png)
+
+At1.2ms120Aforward stillhasno detachedregions at anythreshold:344.650nLbelowexit,outletdown0.68006m/s,front1.25mmbelowexit versus292.384nL/0.58504m/s/1.05mm at100A. The speed gain persists (~16%) with no boundary contact; release remains pending. Actual sharedframe figure visuallychecked.

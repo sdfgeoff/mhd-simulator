@@ -61,5 +61,5 @@ fig.suptitle(f"Concept1: shared {results[0]['measurements']['time_us']:.0f} us f
 fig.colorbar(im,ax=axes,label='Liquid fraction',shrink=.6)
 prefix={'magnets':'flow-comparison','pulse':'flow-pulse-comparison','pulse-v4':'flow-pulse-v4-comparison','flightspace':'flow-flightspace-comparison','sturdy-040':'flow-sturdy-040-comparison','sturdy-050':'flow-sturdy-050-comparison','drill118':'flow-drill118-comparison','outlet060':'flow-outlet060-comparison','pullback060':'flow-pullback060-comparison','forward120':'flow-forward120-comparison'}[a.study]
 stem=f'{prefix}-prefix-step{a.step}'
-fig.savefig(out/(stem+'.png'),dpi=150)
+fig.savefig(out/(stem+'.png'),dpi=150,bbox_inches='tight')
 (out/(stem+'.json')).write_text(json.dumps({'scope':'Shared accepted frame only; running candidate is not a final detachment result. Coarse outlet sampling; breakup unqualified.','study':a.study,'cases':results},indent=2)+'\n')
