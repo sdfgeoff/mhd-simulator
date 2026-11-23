@@ -1,0 +1,37 @@
+{
+  "removed_nonempty_cells": 0,
+  "retained_masks_byte_identical": true,
+  "new_dims": [
+    265,
+    240,
+    343
+  ],
+  "overlap_cells": 0,
+  "body_counts": [
+    7378132,
+    36028,
+    15010,
+    3434,
+    14442,
+    25920,
+    61954,
+    2160,
+    15010,
+    3434,
+    14442,
+    25920,
+    61954,
+    2160,
+    45919,
+    68390,
+    921816,
+    172832,
+    696200,
+    10266,
+    703162,
+    10266
+  ],
+  "domain_change": "Removed10emptybottomplanes0.85mm; lowerZ-11.72mm,11.22mm flightspace. All other coordinates/cells/materials/sources remain unchanged.",
+  "max_EM_buffer_bytes": 2109404096,
+  "device_limit_bytes": 2147483647
+}

@@ -15,3 +15,7 @@ Human reply 992 supersedes the earlier early-screening and waveform-sweep workfl
 ## Actual startup result
 
 The first85µm/10ms attempt failed before timesteps. The edge-source buffer requires2,170,783,616bytes, exceeding the adapter limit2,147,483,647bytes. The earlier largest-buffer estimate omitted this edge-based buffer. Total heap availability does not remove the per-buffer limit. Inputs, logs and failed state are preserved; no automatic retry or guard bypass was made. See `startup-failure-v1.json`. The preceding120A coarse run completed3.6ms with an attached column at every threshold, reported in topic25 reply999.
+
+## Fitting domain correction V2
+
+Removed10emptybottomplanes(0.85mm), retaining11.22mmflightspace. New265×240×343grid has an EM edge buffer2,109,404,096bytes below the2,147,483,647byte limit. GPUgeometrycheck found zerooverlaps and byteidenticalretainedmasks; all22bodycounts unchanged. MechanicalCAD, fullmagnet sources, waveform,85µm cells,2µs steps and10ms duration unchanged. V2 launched with freshplan/state/output and normalnativeguards; fullsolverstartup and firstacceptedstep still pending at20:32NZDT23Nov. No further jobs queued.
