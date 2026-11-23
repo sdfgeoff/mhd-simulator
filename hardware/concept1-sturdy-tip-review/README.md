@@ -103,3 +103,7 @@ At1.2ms50Apullback remains attached:276.195nLbelowexit,outletdown0.53274m/s,fron
 3. Prepared comparison studyforward120 and completedassessorforward120 write separatefiles. The50Apullbackrunispartial; completedpullbackassessmentmustnotbeused.
 
 ![Partialpullbackcomparisonat1.8ms](flow-pullback060-comparison-prefix-step600.png)
+
+At0.6ms120Aforward yields179.853nLbelowexit and downward outlet speed1.07493m/s versus151.831nL/0.90888m/s at100A, about18%higher volume/speed. Front0.65versus0.55mm belowexit; attached at all thresholds and no boundary contact. This is an early response gain, not a released-drop result. The actual matched-frame comparison was visually checked.
+
+![120Aearlyresponse](flow-forward120-comparison-prefix-step200.png)
