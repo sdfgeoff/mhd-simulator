@@ -77,3 +77,7 @@ At0.6ms the0.6mmoutlet has151.831nLbelowexit versus80.631nL for0.5mm/118cone, bu
 ![Shared0.6ms larger outlet response](flow-outlet060-comparison-prefix-step200.png)
 
 At1.2ms the0.6mmoutlet remains attached at all thresholds, with292.384nL belowexit, downward outlet speed0.58504m/s, front1.05mm belowexit and no boundary contact. The ligament continues growing; release remains unproven. Only a standalone timeline is available at this time because the matched118-degree0.5mmrun was interrupted before1.2ms.
+
+At1.8ms the0.6mmrun still has no detached regions at any threshold. Belowexit384.269nL includes the attached column, not an emitted drop. Downward outlet speed0.38761m/s, front1.35mm belowexit, no boundary touch and relativevolumechange-2.90e-9. The broad column is still growing; drop size, release and tail remain unproven.
+
+![0.6mm progression to1.8ms](060-screen-prefix1800us.png)
