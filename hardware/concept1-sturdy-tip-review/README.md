@@ -81,3 +81,11 @@ At1.2ms the0.6mmoutlet remains attached at all thresholds, with292.384nL belowex
 At1.8ms the0.6mmrun still has no detached regions at any threshold. Belowexit384.269nL includes the attached column, not an emitted drop. Downward outlet speed0.38761m/s, front1.35mm belowexit, no boundary touch and relativevolumechange-2.90e-9. The broad column is still growing; drop size, release and tail remain unproven.
 
 ![0.6mm progression to1.8ms](060-screen-prefix1800us.png)
+
+## Completed0.6mm response and stronger pullback
+
+1. Nativecomplete1200steps3.6ms: no detached region at any of four thresholds in any savedframe. Final496.752nL belowexit, outletdown0.02979m/s, front1.65mm belowexit; no boundary contact, maximumrelativevolumechange8.71e-9. This completed time window has no useful released drop.
+2. RMS27.569A atassumed200Hz, Vmax0.189595V, Joule7.16487mJ. Electricalworkidentitydefect-2.6376uJ(-368.13ppm) is comparable to laggedmechanicalwork2.07989uJ; energy accuracy remains unqualified. Establishedscreeningresidual retained, no accuracycampaign.
+3. Nextperformancecase keepsallgeometry and100A400usforward pulse, raises reverseamplitude25to50A forsame133.33uswidth/gap25us. Testneckwithdrawal whilebulbcoasts; mayinsteadretractbulb. Predictedcurrentdose4.00043A2s/RMS28.2858atassumed200Hz,notrepetition/thermaltest. Freshfrozenplanflow-plan-retract050.json, no repeatedstatic solve.
+
+![Completed0.6mm timeline](060-completed-sections.png)

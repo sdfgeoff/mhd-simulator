@@ -1,0 +1,15 @@
+{
+  "only_command_differences": {
+    "output": "newfolder",
+    "reverse_fraction": ".25->.5"
+  },
+  "same_project": true,
+  "forward_peak_A": 100,
+  "reverse_peak_A": 50,
+  "same_positive_duration_us": 400,
+  "same_reverse_duration_us": 133.33333333333334,
+  "same_gap_us": 25,
+  "predicted_I2dt_A2s_from_baseline_command_samples": 4.000425518750167,
+  "RMS_A_at_assumed200Hz": 28.285775643422497,
+  "scope": "Waveform performance test, not geometry or verification. Repetition and thermal loads not simulated."
+}

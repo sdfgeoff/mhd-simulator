@@ -6,7 +6,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from native_field_io import read_native_fields
-p=argparse.ArgumentParser(description=__doc__);p.add_argument('--step',type=int,default=200);p.add_argument('--study',choices=['magnets','pulse','pulse-v4','flightspace','sturdy-040','sturdy-050','drill118','outlet060'],default='magnets');a=p.parse_args()
+p=argparse.ArgumentParser(description=__doc__);p.add_argument('--step',type=int,default=200);p.add_argument('--study',choices=['magnets','pulse','pulse-v4','flightspace','sturdy-040','sturdy-050','drill118','outlet060','pullback060'],default='magnets');a=p.parse_args()
 root=Path('artifacts/hardware-research');out=Path('hardware/concept1-larger-poles-review')
 studies={
     'magnets':[('5 mm cubes','concept1-developed-flow-v1-driven100'),('10 x 10 x 5 mm poles','concept1-larger-poles-flow-v1-driven100')],
@@ -18,7 +18,8 @@ studies['sturdy-040']=[('Earlier 0.8 mm tip','concept1-flightspace-flow-v3-drive
 studies['sturdy-050']=[('Sturdy tip / 0.4 mm outlet','concept1-sturdy-flow-v2-040-driven100'),('Sturdy tip / 0.5 mm outlet','concept1-sturdy-flow-v1-050-driven100')]
 studies['drill118']=[('Sturdy050 / 128.7° cone','concept1-sturdy-flow-v1-050-driven100'),('Sturdy050 / 118° cone','concept1-drill118-flow-v1-050-driven100')]
 studies['outlet060']=[('0.5 mm outlet / 118° cone','concept1-drill118-flow-v1-050-driven100'),('0.6 mm outlet / 118° cone','concept1-drill118-060-flow-v1-driven100')]
-if a.study in ['sturdy-040','sturdy-050','drill118','outlet060']: out=Path('hardware/concept1-sturdy-tip-review')
+studies['pullback060']=[('25 A pullback','concept1-drill118-060-flow-v1-driven100'),('50 A pullback','concept1-drill118-060-retract050-v1-driven100')]
+if a.study in ['sturdy-040','sturdy-050','drill118','outlet060','pullback060']: out=Path('hardware/concept1-sturdy-tip-review')
 cases=studies[a.study]
 for _,name in cases:
     records=json.loads((root/name/'flow-analysis.json').read_text())['frames']
@@ -41,9 +42,10 @@ completed=all((root/name/'run-status.json').exists() and json.loads((root/name/'
 scope='completed runs' if completed and a.step==1200 else 'partial response'
 control='Same 100 A pulse / 100 µm grid' if a.study=='magnets' else 'Same head, magnets, 100 A peak / 100 µm grid'
 if a.study in ['flightspace','sturdy-040','sturdy-050','drill118','outlet060']: control='Same 100 A / 400 us pulse, magnets and 100 µm grid'
+if a.study=='pullback060': control='Same geometry / 100 A forward pulse / 100 µm grid; changed pullback'
 fig.suptitle(f"Concept1: shared {results[0]['measurements']['time_us']:.0f} us frame — {scope}\n{control}; {connectivity_note}",fontsize=12)
 fig.colorbar(im,ax=axes,label='Liquid fraction',shrink=.6)
-prefix={'magnets':'flow-comparison','pulse':'flow-pulse-comparison','pulse-v4':'flow-pulse-v4-comparison','flightspace':'flow-flightspace-comparison','sturdy-040':'flow-sturdy-040-comparison','sturdy-050':'flow-sturdy-050-comparison','drill118':'flow-drill118-comparison','outlet060':'flow-outlet060-comparison'}[a.study]
+prefix={'magnets':'flow-comparison','pulse':'flow-pulse-comparison','pulse-v4':'flow-pulse-v4-comparison','flightspace':'flow-flightspace-comparison','sturdy-040':'flow-sturdy-040-comparison','sturdy-050':'flow-sturdy-050-comparison','drill118':'flow-drill118-comparison','outlet060':'flow-outlet060-comparison','pullback060':'flow-pullback060-comparison'}[a.study]
 stem=f'{prefix}-prefix-step{a.step}'
 fig.savefig(out/(stem+'.png'),dpi=150)
 (out/(stem+'.json')).write_text(json.dumps({'scope':'Shared accepted frame only; running candidate is not a final detachment result. Coarse outlet sampling; breakup unqualified.','study':a.study,'cases':results},indent=2)+'\n')
