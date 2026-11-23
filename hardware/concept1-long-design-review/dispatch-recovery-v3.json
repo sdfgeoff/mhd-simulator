@@ -1,0 +1,9 @@
+{
+  "v2_status": "failed_before_timesteps",
+  "cause": "DC dispatch85215workgroups inoneXdimension exceeded65535",
+  "fix": "2Ddispatch with flattened invocation and workgroup indices; paddedgroup partialwrites guarded. Samefinitevolumeequations/convergence/currentgates.",
+  "tests": "All10conduction_probe CPU/GPUtests passed onAMD; forced3workgrouprow and nonmultiplelastgroup matches defaultsingle-row voltage/stats/fullfield bytes exactly.",
+  "new_binary": "target/debug/examples/conduction_flow_large_grid",
+  "sha256": "a861286a3ee17b2dac4209c2cca5b991e277d9ac59610d5dc403cbf7d314c5bd",
+  "old_binary_unchanged": true
+}

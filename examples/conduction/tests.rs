@@ -585,3 +585,33 @@ fn tagged_pair_contact_matches_series_law_and_leaves_other_interface_ideal() {
     let mut untagged = Conduction::new(context, [n as u32, 1, 1], 1e-4, &cells, &bias).unwrap();
     assert!(untagged.set_pair_resistivity(14, 20, 1e-9).is_err());
 }
+
+#[test]
+fn multi_row_dispatch_preserves_fields_and_partial_reductions() {
+    let context = GpuContext::headless().unwrap();
+    let dims = [17, 17, 3];
+    let n = dims.iter().product::<u32>() as usize;
+    // Four workgroups. Width three forces a second row and two padded groups,
+    // while the last valid group has fewer than 256 cells.
+    let cells: Vec<_> = (0..n).map(|i| [2.2, if i%17==0 {0.5} else if i%17==16 {-0.5} else {3.}]).collect();
+    let fields=vec![CellField {b:[0.,0.5,0.,0.],..Default::default()};n];
+    let bias=context.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+        label:Some("Multi-row analytic slab bias"), contents:bytemuck::cast_slice(&fields), usage:wgpu::BufferUsages::STORAGE,
+    });
+    let flow:Vec<_>=(0..n).map(|i|CellField {b:[0.,0.,0.1*(std::f32::consts::TAU*((i/17)%17) as f32/17.).sin(),0.],applied:[0.,0.,1.,0.],..Default::default()}).collect();
+    let velocity=context.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+        label:Some("Multi-row shear flow"),contents:bytemuck::cast_slice(&flow),usage:wgpu::BufferUsages::STORAGE,
+    });
+    let mut results=Vec::new();
+    for width in [65535,3] {
+        let mut solver=Conduction::new_with_dispatch_width(context.clone(),dims,1e-4,&cells,&bias,None,width).unwrap();
+        solver.set_motional_boundary_absolute_tolerance_a(1e-6).unwrap();
+        solver.attach_flow(&velocity).unwrap();
+        let (voltage,stats)=solver.solve_current(100.).unwrap();
+        assert!(solver.unit_boundary_current_defect<=1e-5);
+        results.push((voltage,stats,solver.read_fields().unwrap()));
+    }
+    assert_eq!(results[0].0,results[1].0);
+    assert_eq!(results[0].1,results[1].1);
+    assert_eq!(bytemuck::cast_slice::<_,u8>(&results[0].2),bytemuck::cast_slice::<_,u8>(&results[1].2));
+}

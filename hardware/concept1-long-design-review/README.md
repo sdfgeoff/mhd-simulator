@@ -19,3 +19,7 @@ The first85µm/10ms attempt failed before timesteps. The edge-source buffer requ
 ## Fitting domain correction V2
 
 Removed10emptybottomplanes(0.85mm), retaining11.22mmflightspace. New265×240×343grid has an EM edge buffer2,109,404,096bytes below the2,147,483,647byte limit. GPUgeometrycheck found zerooverlaps and byteidenticalretainedmasks; all22bodycounts unchanged. MechanicalCAD, fullmagnet sources, waveform,85µm cells,2µs steps and10ms duration unchanged. V2 launched with freshplan/state/output and normalnativeguards; fullsolverstartup and firstacceptedstep still pending at20:32NZDT23Nov. No further jobs queued.
+
+## Large-grid dispatch correction V3
+
+V2 reached DCstartup but failed beforetimesteps:85,215workgroups exceeded the single-axis65,535limit. DCdispatch now uses multiple rows with matching flattened indices and padded-reduction guards. All10conduction tests pass onAMD, including forcedmultirow/nonmultiplelastgroup with exactfield/statistics equality. V3uses a separately named executable; oldfailedstates/binaries are preserved. SameV2project,hardware,pulse,resolution,duration,PDEandgates. See `dispatch-recovery-v3.json`; startupfit/firststep remains pending.

@@ -38,6 +38,7 @@ pub struct Conduction {
     motion_boundary_absolute_tolerance_a: f32,
     max_iterations: u32,
     has_material_groups: bool,
+    dispatch_row_width: u32,
 }
 impl Conduction {
     pub fn new(
@@ -60,6 +61,15 @@ impl Conduction {
         bias: &wgpu::Buffer,
         groups: Option<&[u32]>,
     ) -> Result<Self, String> {
+        Self::new_with_dispatch_width(context, dims, h, cells, bias, groups, 65535)
+    }
+    // An explicit narrow row exercises the same multi-row indexing on a small
+    // analytic test grid, without allocating millions of test cells.
+    pub(crate) fn new_with_dispatch_width(
+        context: GpuContext, dims: [u32; 3], h: f32, cells: &[[f32; 2]],
+        bias: &wgpu::Buffer, groups: Option<&[u32]>, dispatch_row_width: u32,
+    ) -> Result<Self, String> {
+        if !(1..=65535).contains(&dispatch_row_width) { return Err("Invalid dispatch row width".into()); }
         let n = dims.iter().product::<u32>();
         if cells.len() != n as usize || !h.is_finite() || h <= 0. {
             return Err("Invalid conduction grid".into());
@@ -182,7 +192,7 @@ impl Conduction {
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
                 label: Some("DC finite volumes"),
-                source: wgpu::ShaderSource::Wgsl(include_str!("solver.wgsl").into()),
+                source: wgpu::ShaderSource::Wgsl(include_str!("solver.wgsl").replace("const DISPATCH_ROW_WIDTH:u32=65535u;", &format!("const DISPATCH_ROW_WIDTH:u32={dispatch_row_width}u;")).into()),
             });
         let pipeline_layout =
             context
@@ -246,6 +256,7 @@ impl Conduction {
             motion_boundary_absolute_tolerance_a: 0.,
             max_iterations: 4000,
             has_material_groups: groups.is_some(),
+            dispatch_row_width,
         })
     }
     fn dispatch(&self, commands: &[(&str, u32)]) {
@@ -260,7 +271,7 @@ impl Conduction {
             pass.set_bind_group(0, &self.bind, &[]);
             for (name, count) in commands {
                 pass.set_pipeline(&self.pipes[name]);
-                pass.dispatch_workgroups(*count, 1, 1);
+                pass.dispatch_workgroups((*count).min(self.dispatch_row_width), (*count).div_ceil(self.dispatch_row_width), 1);
             }
         }
         self.context.queue.submit(Some(encoder.finish()));
