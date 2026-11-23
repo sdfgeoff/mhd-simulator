@@ -95,3 +95,11 @@ At0.6ms with50Apullback:148.560nLbelowexit,outletdown0.82133m/s, samefront0.55mm
 ![Earlypullbackcomparison](flow-pullback060-comparison-prefix-step200.png)
 
 At1.2ms50Apullback remains attached:276.195nLbelowexit,outletdown0.53274m/s,front0.95mmbelowexit versus292.384nL,0.58504m/s and1.05mm for25A. Fixednear/farbandsarebothbrakedabout9%; the earlypreferentialnear-braking trend has not persisted. No visible separation advantage yet. Actual400comparisonfigure visuallychecked; evaluate1.8ms for an earlyperformance decision.
+
+## Earlypullbackstop and120Aforward test
+
+1. At1.8ms50Apullback stillhasno detachedregions at anythreshold,359.819nLbelowexit,outletdown0.35304m/s/front1.25mmbelow versus384.269nL/0.38761m/s/1.35mm for25A. Fixednear/farbandvelocities bothslower, withno visible separation advantage. Stoppednear1.95ms to prioritize performance; partialdoesnotprovenoeventualrelease.
+2. Freshcase changesonlyforwardpeak100to120A, maintaining400usforward and25Aabsolute reversefor133.33us/gap25us/rise20us. Reversefraction25/120 holds25A. Samehardware, material properties andnumerics. Predicted5.44308A2s/RMS32.9942atassumed200Hz versus27.5692baseline; increased currentdose/heatingcost,notrepetitionorthermalqualification.
+3. Prepared comparison studyforward120 and completedassessorforward120 write separatefiles. The50Apullbackrunispartial; completedpullbackassessmentmustnotbeused.
+
+![Partialpullbackcomparisonat1.8ms](flow-pullback060-comparison-prefix-step600.png)

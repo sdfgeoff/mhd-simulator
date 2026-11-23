@@ -1,0 +1,108 @@
+{
+  "scope": "Shared accepted frame only; running candidate is not a final detachment result. Coarse outlet sampling; breakup unqualified.",
+  "study": "pullback060",
+  "cases": [
+    {
+      "case": "25 A pullback",
+      "native_frame": "artifacts/hardware-research/concept1-drill118-060-flow-v1-driven100/frame-00000600",
+      "measurements": {
+        "step": 600,
+        "time_us": 1799.999999999986,
+        "first_cell_plane_at_or_above_exit_z_mm": -0.450000079581514,
+        "exit_plane_alpha_area_mm2": 0.32000003039836955,
+        "exit_plane_mean_uz_m_s": -0.3876101658679545,
+        "exit_plane_mean_pressure_pa": 1127.058307647705,
+        "exit_plane_downward_flux_proxy_nl_s": 124035.26486046251,
+        "liquid_volume_nl": 22676.007207325245,
+        "minimum_liquid_fraction": -1.4426846384196779e-08,
+        "maximum_liquid_fraction": 1.0,
+        "below_tip_maximum_liquid_fraction_at_cell_centres": 1.0,
+        "boundary_maximum_liquid_fraction": {
+          "z_min": 0.0,
+          "z_max": 0.0,
+          "y_min": 0.0,
+          "y_max": 0.0,
+          "x_min": 0.0,
+          "x_max": 0.0
+        },
+        "liquid_touches_domain_boundary_alpha01": false,
+        "below_tip_nl": 384.268817145633,
+        "below_one_cell_guard_nl": 351.39111519696723,
+        "front_z_mm_alpha_half": -1.8500001460779458,
+        "detached_below_tip": [],
+        "connectivity_thresholds": {
+          "0.01": [],
+          "0.25": [],
+          "0.5": [],
+          "0.75": []
+        },
+        "below_tip_change_nl": 384.26876409748957,
+        "relative_liquid_volume_change": -2.9044570082348287e-09
+      },
+      "fixed_spatial_bins": {
+        "scope": "Eulerian bands split at z=-0.8mm; not isolated droplets or tracked material. Negative vz is downward.",
+        "bins": {
+          "just_below_exit": {
+            "liquid_volume_nl": 90.43159943015264,
+            "alpha_weighted_vz_m_s": -0.4133361151332516
+          },
+          "farther_below_exit": {
+            "liquid_volume_nl": 293.8371914894341,
+            "alpha_weighted_vz_m_s": -0.501276715220566
+          }
+        }
+      }
+    },
+    {
+      "case": "50 A pullback",
+      "native_frame": "artifacts/hardware-research/concept1-drill118-060-retract050-v1-driven100/frame-00000600",
+      "measurements": {
+        "step": 600,
+        "time_us": 1799.999999999986,
+        "first_cell_plane_at_or_above_exit_z_mm": -0.450000079581514,
+        "exit_plane_alpha_area_mm2": 0.32000003039836955,
+        "exit_plane_mean_uz_m_s": -0.35303553054109216,
+        "exit_plane_mean_pressure_pa": 1138.1946640014648,
+        "exit_plane_downward_flux_proxy_nl_s": 112971.38050485402,
+        "liquid_volume_nl": 22676.00725879685,
+        "minimum_liquid_fraction": -1.4949421256460482e-08,
+        "maximum_liquid_fraction": 1.0,
+        "below_tip_maximum_liquid_fraction_at_cell_centres": 1.0,
+        "boundary_maximum_liquid_fraction": {
+          "z_min": 0.0,
+          "z_max": 0.0,
+          "y_min": 0.0,
+          "y_max": 0.0,
+          "x_min": 0.0,
+          "x_max": 0.0
+        },
+        "liquid_touches_domain_boundary_alpha01": false,
+        "below_tip_nl": 359.81942737016857,
+        "below_one_cell_guard_nl": 326.99709443946983,
+        "front_z_mm_alpha_half": -1.7500001413282007,
+        "detached_below_tip": [],
+        "connectivity_thresholds": {
+          "0.01": [],
+          "0.25": [],
+          "0.5": [],
+          "0.75": []
+        },
+        "below_tip_change_nl": 359.8193743220251,
+        "relative_liquid_volume_change": -6.345862724188578e-10
+      },
+      "fixed_spatial_bins": {
+        "scope": "Eulerian bands split at z=-0.8mm; not isolated droplets or tracked material. Negative vz is downward.",
+        "bins": {
+          "just_below_exit": {
+            "liquid_volume_nl": 90.0715603057017,
+            "alpha_weighted_vz_m_s": -0.37918662663466723
+          },
+          "farther_below_exit": {
+            "liquid_volume_nl": 269.7478408384207,
+            "alpha_weighted_vz_m_s": -0.427771980603308
+          }
+        }
+      }
+    }
+  ]
+}

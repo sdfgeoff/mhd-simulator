@@ -6,7 +6,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from native_field_io import read_native_fields
-p=argparse.ArgumentParser(description=__doc__);p.add_argument('--step',type=int,default=200);p.add_argument('--study',choices=['magnets','pulse','pulse-v4','flightspace','sturdy-040','sturdy-050','drill118','outlet060','pullback060'],default='magnets');a=p.parse_args()
+p=argparse.ArgumentParser(description=__doc__);p.add_argument('--step',type=int,default=200);p.add_argument('--study',choices=['magnets','pulse','pulse-v4','flightspace','sturdy-040','sturdy-050','drill118','outlet060','pullback060','forward120'],default='magnets');a=p.parse_args()
 root=Path('artifacts/hardware-research');out=Path('hardware/concept1-larger-poles-review')
 studies={
     'magnets':[('5 mm cubes','concept1-developed-flow-v1-driven100'),('10 x 10 x 5 mm poles','concept1-larger-poles-flow-v1-driven100')],
@@ -19,7 +19,8 @@ studies['sturdy-050']=[('Sturdy tip / 0.4 mm outlet','concept1-sturdy-flow-v2-04
 studies['drill118']=[('Sturdy050 / 128.7° cone','concept1-sturdy-flow-v1-050-driven100'),('Sturdy050 / 118° cone','concept1-drill118-flow-v1-050-driven100')]
 studies['outlet060']=[('0.5 mm outlet / 118° cone','concept1-drill118-flow-v1-050-driven100'),('0.6 mm outlet / 118° cone','concept1-drill118-060-flow-v1-driven100')]
 studies['pullback060']=[('25 A pullback','concept1-drill118-060-flow-v1-driven100'),('50 A pullback','concept1-drill118-060-retract050-v1-driven100')]
-if a.study in ['sturdy-040','sturdy-050','drill118','outlet060','pullback060']: out=Path('hardware/concept1-sturdy-tip-review')
+studies['forward120']=[('100 A forward / 25 A pullback','concept1-drill118-060-flow-v1-driven100'),('120 A forward / 25 A pullback','concept1-drill118-060-forward120-v1')]
+if a.study in ['sturdy-040','sturdy-050','drill118','outlet060','pullback060','forward120']: out=Path('hardware/concept1-sturdy-tip-review')
 cases=studies[a.study]
 for _,name in cases:
     records=json.loads((root/name/'flow-analysis.json').read_text())['frames']
@@ -35,7 +36,7 @@ for ax,(label,name) in zip(axes,cases):
     rgba=np.full((*solid.shape,4),.55);rgba[...,3]=solid;ax.imshow(rgba,origin='lower',extent=extent,interpolation='nearest')
     ax.axhline(-.5,color='darkorange',linestyle=':');ax.set(xlim=(-1.8,1.8),ylim=(-1.6,4.1),xlabel='x (mm)',ylabel='z (mm)',title=label+'\n'+f"{record['below_tip_nl']:.1f} nL below; "+outlet_label)
     entry={'case':label,'native_frame':str(path),'measurements':record}
-    if a.study=='pullback060':
+    if a.study in ['pullback060','forward120']:
         z_mm=o[2]+(np.arange(nz)+.5)*h
         bins={}
         for bin_name,select in [('just_below_exit',(z_mm<-.5)&(z_mm>=-.8)),('farther_below_exit',z_mm<-.8)]:
@@ -53,9 +54,12 @@ if a.study in ['flightspace','sturdy-040','sturdy-050','drill118','outlet060']: 
 if a.study=='pullback060':
     control='Same head / 100 A forward / 100 µm grid; changed pullback'
     if all(not regions for c in results for regions in c['measurements']['connectivity_thresholds'].values()): connectivity_note='both attached'
+if a.study=='forward120':
+    control='Same head / 25 A pullback / 100 µm grid; changed forward peak'
+    if all(not regions for c in results for regions in c['measurements']['connectivity_thresholds'].values()): connectivity_note='both attached'
 fig.suptitle(f"Concept1: shared {results[0]['measurements']['time_us']:.0f} us frame — {scope}\n{control}; {connectivity_note}",fontsize=12)
 fig.colorbar(im,ax=axes,label='Liquid fraction',shrink=.6)
-prefix={'magnets':'flow-comparison','pulse':'flow-pulse-comparison','pulse-v4':'flow-pulse-v4-comparison','flightspace':'flow-flightspace-comparison','sturdy-040':'flow-sturdy-040-comparison','sturdy-050':'flow-sturdy-050-comparison','drill118':'flow-drill118-comparison','outlet060':'flow-outlet060-comparison','pullback060':'flow-pullback060-comparison'}[a.study]
+prefix={'magnets':'flow-comparison','pulse':'flow-pulse-comparison','pulse-v4':'flow-pulse-v4-comparison','flightspace':'flow-flightspace-comparison','sturdy-040':'flow-sturdy-040-comparison','sturdy-050':'flow-sturdy-050-comparison','drill118':'flow-drill118-comparison','outlet060':'flow-outlet060-comparison','pullback060':'flow-pullback060-comparison','forward120':'flow-forward120-comparison'}[a.study]
 stem=f'{prefix}-prefix-step{a.step}'
 fig.savefig(out/(stem+'.png'),dpi=150)
 (out/(stem+'.json')).write_text(json.dumps({'scope':'Shared accepted frame only; running candidate is not a final detachment result. Coarse outlet sampling; breakup unqualified.','study':a.study,'cases':results},indent=2)+'\n')

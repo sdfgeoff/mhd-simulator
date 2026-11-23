@@ -1,0 +1,13 @@
+{
+  "only_physical_waveform_change": "forwardpeak100->120A",
+  "reverse_A": 25,
+  "reverse_fraction": 0.20833333333333334,
+  "positive_us": 400,
+  "reverse_us": 133.33333333333334,
+  "gap_us": 25,
+  "rise_us": 20,
+  "predicted_I2dt_A2s_from_baseline_samples": 5.443082940714917,
+  "RMS_A_at_assumed200Hz": 32.994190218021465,
+  "dose_ratio_to_baseline": 1.4322765356323812,
+  "scope": "Currentdosepredictiononly; actualJoule/thermaloutcomesnotinferred."
+}
