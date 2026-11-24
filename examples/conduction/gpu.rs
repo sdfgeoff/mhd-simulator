@@ -39,6 +39,7 @@ pub struct Conduction {
     max_iterations: u32,
     has_material_groups: bool,
     dispatch_row_width: u32,
+    compact: bool,
 }
 impl Conduction {
     pub fn new(
@@ -66,10 +67,49 @@ impl Conduction {
     // An explicit narrow row exercises the same multi-row indexing on a small
     // analytic test grid, without allocating millions of test cells.
     pub(crate) fn new_with_dispatch_width(
-        context: GpuContext, dims: [u32; 3], h: f32, cells: &[[f32; 2]],
-        bias: &wgpu::Buffer, groups: Option<&[u32]>, dispatch_row_width: u32,
+        context: GpuContext,
+        dims: [u32; 3],
+        h: f32,
+        cells: &[[f32; 2]],
+        bias: &wgpu::Buffer,
+        groups: Option<&[u32]>,
+        dispatch_row_width: u32,
     ) -> Result<Self, String> {
-        if !(1..=65535).contains(&dispatch_row_width) { return Err("Invalid dispatch row width".into()); }
+        Self::new_layout(
+            context,
+            dims,
+            h,
+            cells,
+            bias,
+            groups,
+            (dispatch_row_width, false),
+        )
+    }
+    /// Coupled-flow output: vec4(B) and vec4(force.xyz, Joule density), both f32.
+    /// Full diagnostic constructors retain the original CellField contract.
+    pub fn new_compact_with_groups(
+        context: GpuContext,
+        dims: [u32; 3],
+        h: f32,
+        cells: &[[f32; 2]],
+        bias: &wgpu::Buffer,
+        groups: Option<&[u32]>,
+    ) -> Result<Self, String> {
+        Self::new_layout(context, dims, h, cells, bias, groups, (65535, true))
+    }
+    fn new_layout(
+        context: GpuContext,
+        dims: [u32; 3],
+        h: f32,
+        cells: &[[f32; 2]],
+        bias: &wgpu::Buffer,
+        groups: Option<&[u32]>,
+        layout: (u32, bool),
+    ) -> Result<Self, String> {
+        let (dispatch_row_width, compact) = layout;
+        if !(1..=65535).contains(&dispatch_row_width) {
+            return Err("Invalid dispatch row width".into());
+        }
         let n = dims.iter().product::<u32>();
         if cells.len() != n as usize || !h.is_finite() || h <= 0. {
             return Err("Invalid conduction grid".into());
@@ -94,6 +134,23 @@ impl Conduction {
         } else {
             cells
         };
+        if bias.size() < u64::from(n) * 64 {
+            return Err("Magnetic input requires a full CellField per cell".into());
+        }
+        let packed_bias = if compact {
+            Some(pack_bias(&context, bias, n, dispatch_row_width))
+        } else {
+            None
+        };
+        let bias = packed_bias.as_ref().unwrap_or(bias);
+        // No-flow mode never reads this binding. Do not retain a wide B packet
+        // just to satisfy the unrelated legacy fluid packet layout.
+        let empty_flow = context.device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("DC unattached flow placeholder"),
+            size: 64,
+            usage: wgpu::BufferUsages::STORAGE,
+            mapped_at_creation: false,
+        });
         let params = Params {
             dims: [dims[0], dims[1], dims[2], n],
             physical: [h, 1., 1e-5, 0.],
@@ -135,7 +192,10 @@ impl Conduction {
         let work = storage("DC PCG vectors", u64::from(n) * 16);
         let partials = storage("DC reduction scratch", u64::from(n.div_ceil(256)) * 16);
         let scalars = storage("DC scalars", 64);
-        let result = storage("DC current force and heating", u64::from(n) * 64);
+        let result = storage(
+            "DC current force and heating",
+            u64::from(n) * if compact { 16 } else { 64 },
+        );
         let unit_potential = storage(
             "DC compensated unit and motional potential predictors",
             u64::from(n) * 16,
@@ -171,7 +231,7 @@ impl Conduction {
             &scalars,
             bias,
             &result,
-            bias,
+            &empty_flow,
             &unit_potential,
         ];
         let bind = context
@@ -192,7 +252,14 @@ impl Conduction {
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
                 label: Some("DC finite volumes"),
-                source: wgpu::ShaderSource::Wgsl(include_str!("solver.wgsl").replace("const DISPATCH_ROW_WIDTH:u32=65535u;", &format!("const DISPATCH_ROW_WIDTH:u32={dispatch_row_width}u;")).into()),
+                source: wgpu::ShaderSource::Wgsl(
+                    shader_source(compact)
+                        .replace(
+                            "const DISPATCH_ROW_WIDTH:u32=65535u;",
+                            &format!("const DISPATCH_ROW_WIDTH:u32={dispatch_row_width}u;"),
+                        )
+                        .into(),
+                ),
             });
         let pipeline_layout =
             context
@@ -219,6 +286,7 @@ impl Conduction {
             "true_residual",
             "terminal_flux",
             "terminal_flux_reduce",
+            "collect_ports",
             "collect_fields",
             "fields_reduce",
         ] {
@@ -257,27 +325,39 @@ impl Conduction {
             max_iterations: 4000,
             has_material_groups: groups.is_some(),
             dispatch_row_width,
+            compact,
         })
     }
     fn dispatch(&self, commands: &[(&str, u32)]) {
         // A 32-iteration batch is a long unpreemptible submission on an iGPU
         // at >16M cells. Preserve the command order and residual-check cadence,
-        // but fence each iteration-sized chunk when dispatch spans rows.
+        // keep each iteration-sized chunk separate when dispatch spans rows.
+        // GpuContext controls how many short submissions precede a host wait.
         let multi_row = self.params.dims[3].div_ceil(256) > self.dispatch_row_width;
         let chunk_size = if multi_row { 5 } else { commands.len().max(1) };
         for chunk in commands.chunks(chunk_size) {
-            let mut encoder = self.context.device.create_command_encoder(&Default::default());
+            let mut encoder = self
+                .context
+                .device
+                .create_command_encoder(&Default::default());
             {
-                let mut pass = self.context.compute_pass(&mut encoder, Some("DC finite-volume solve"));
+                let mut pass = self
+                    .context
+                    .compute_pass(&mut encoder, Some("DC finite-volume solve"));
                 pass.set_bind_group(0, &self.bind, &[]);
                 for (name, count) in chunk {
                     pass.set_pipeline(&self.pipes[name]);
-                    pass.dispatch_workgroups((*count).min(self.dispatch_row_width), (*count).div_ceil(self.dispatch_row_width), 1);
+                    pass.dispatch_workgroups(
+                        (*count).min(self.dispatch_row_width),
+                        (*count).div_ceil(self.dispatch_row_width),
+                        1,
+                    );
                 }
             }
-            let submission = self.context.queue.submit(Some(encoder.finish()));
             if multi_row {
-                self.context.device.poll(wgpu::Maintain::WaitForSubmissionIndex(submission));
+                self.context.submit_bounded(encoder.finish());
+            } else {
+                self.context.queue.submit(Some(encoder.finish()));
             }
         }
     }
@@ -287,15 +367,22 @@ impl Conduction {
         Ok(values.try_into().expect("four scalar records"))
     }
     pub fn solve(&mut self) -> Result<(), String> {
+        self.solve_prepared(true)
+    }
+    fn solve_prepared(&mut self, update_phase: bool) -> Result<(), String> {
         let groups = self.params.dims[3].div_ceil(256);
         self.params.extra[1] = self.params.physical[2];
         self.write_params();
-        self.dispatch(&[
-            ("update_phase", groups),
+        let mut preparation = Vec::with_capacity(4);
+        if update_phase {
+            preparation.push(("update_phase", groups));
+        }
+        preparation.extend([
             ("initial_guess", groups),
             ("initialize", groups),
             ("initial_reduce", 1),
         ]);
+        self.dispatch(&preparation);
         self.iterations = 0;
         let initial = self.scalar_values()?[0];
         if initial[2] == 0. {
@@ -474,8 +561,15 @@ impl Conduction {
         Ok(())
     }
     /// Inductionless, charge-conserving current drive, including u cross B.
-    /// Rebuild conductivity from accepted liquid fractions before both solves.
+    /// Rebuild conductivity once from accepted liquid fractions, shared by both bases.
     pub fn solve_current(&mut self, current_a: f32) -> Result<(f32, [f32; 4]), String> {
+        self.solve_current_impl(current_a, true)
+    }
+    fn solve_current_impl(
+        &mut self,
+        current_a: f32,
+        optimized: bool,
+    ) -> Result<(f32, [f32; 4]), String> {
         if !current_a.is_finite() {
             return Err("Nonfinite commanded current".into());
         }
@@ -487,7 +581,11 @@ impl Conduction {
         let unit_residual = self.relative_residual;
         let unit_boundary_defect = self.boundary_current_defect;
         self.unit_boundary_current_defect = unit_boundary_defect;
-        let unit = self.fields(1.)?;
+        let unit = if optimized {
+            self.port_currents(1.)?
+        } else {
+            self.fields(1.)?
+        };
         if !unit[0].is_finite() || unit[0] <= 0. {
             return Err("No conducting path between terminals".into());
         }
@@ -495,9 +593,13 @@ impl Conduction {
         self.params.control[0] = 1;
         self.params.physical[1] = 0.;
         self.write_params();
-        self.solve()?;
+        self.solve_prepared(!optimized)?;
         self.motional_boundary_current_imbalance_a = self.boundary_current_imbalance_a;
-        let motion = self.fields(0.)?;
+        let motion = if optimized {
+            self.port_currents(0.)?
+        } else {
+            self.fields(0.)?
+        };
         self.dispatch(&[("save_motion", self.params.dims[3].div_ceil(256))]);
         let voltage = (current_a - motion[0]) / unit[0];
         let result = self.fields(voltage)?;
@@ -505,6 +607,15 @@ impl Conduction {
         self.relative_residual = self.relative_residual.max(unit_residual);
         self.boundary_current_defect = self.boundary_current_defect.max(unit_boundary_defect);
         Ok((voltage, result))
+    }
+    fn port_currents(&mut self, voltage: f32) -> Result<[f32; 4], String> {
+        self.params.physical[1] = voltage;
+        self.write_params();
+        self.dispatch(&[
+            ("collect_ports", self.params.dims[3].div_ceil(256)),
+            ("fields_reduce", 1),
+        ]);
+        Ok(self.scalar_values()?[2])
     }
     pub fn fields(&mut self, voltage: f32) -> Result<[f32; 4], String> {
         self.params.physical[1] = voltage;
@@ -532,7 +643,223 @@ impl Conduction {
             .collect())
     }
     pub fn read_fields(&self) -> Result<Vec<CellField>, String> {
+        if self.compact {
+            return Err("Compact output contains force/heat only; use full diagnostic constructor for J/B fields".into());
+        }
         let bytes = read_bytes(&self.context, &self.result, 0, self.result.size())?;
         Ok(bytemuck::cast_slice(&bytes).to_vec())
+    }
+}
+
+fn shader_source(compact: bool) -> String {
+    let s = include_str!("solver.wgsl").to_owned();
+    if !compact {
+        return s;
+    }
+    s.replace("bias:array<Field>", "bias:array<vec4<f32>>")
+        .replace("output:array<Field>", "output:array<vec4<f32>>")
+        .replace("bias[i].b", "bias[i]")
+        .replace("output[i]=Field(b,vec4<f32>(jvec,divergence),vec4<f32>(cross(jvec,b.xyz),power/(h*h*h)),bias[i].applied);",
+                 "output[i]=vec4<f32>(cross(jvec,b.xyz),power/(h*h*h));")
+}
+fn pack_bias(context: &GpuContext, wide: &wgpu::Buffer, n: u32, row: u32) -> wgpu::Buffer {
+    let packed = context.device.create_buffer(&wgpu::BufferDescriptor {
+        label: Some("Compact fixed magnetic field"),
+        size: u64::from(n) * 16,
+        usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
+        mapped_at_creation: false,
+    });
+    let source = format!(
+        r#"
+        struct Field {{ b:vec4<f32>, j:vec4<f32>, f:vec4<f32>, a:vec4<f32> }}
+        @group(0) @binding(0) var<storage,read> wide:array<Field>;
+        @group(0) @binding(1) var<storage,read_write> packed:array<vec4<f32>>;
+        @compute @workgroup_size(256) fn pack(@builtin(global_invocation_id) g:vec3<u32>) {{
+            let i=g.x+g.y*{row}u*256u; if i<{n}u {{packed[i]=wide[i].b;}}
+        }}"#
+    );
+    let module = context
+        .device
+        .create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("Pack fixed B without a host field roundtrip"),
+            source: wgpu::ShaderSource::Wgsl(source.into()),
+        });
+    let pipeline = context
+        .device
+        .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+            label: Some("Pack fixed B"),
+            layout: None,
+            module: &module,
+            entry_point: Some("pack"),
+            compilation_options: Default::default(),
+            cache: None,
+        });
+    let bind = context
+        .device
+        .create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("Pack fixed B"),
+            layout: &pipeline.get_bind_group_layout(0),
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: wide.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: packed.as_entire_binding(),
+                },
+            ],
+        });
+    let mut encoder = context.device.create_command_encoder(&Default::default());
+    {
+        let mut pass = context.compute_pass(&mut encoder, Some("Pack fixed B"));
+        pass.set_pipeline(&pipeline);
+        pass.set_bind_group(0, &bind, &[]);
+        let groups = n.div_ceil(256);
+        pass.dispatch_workgroups(groups.min(row), groups.div_ceil(row), 1);
+    }
+    context.queue.submit(Some(encoder.finish()));
+    packed
+}
+
+#[cfg(test)]
+mod optimization_tests {
+    use super::*;
+    #[test]
+    fn optimized_ports_compact_packets_and_submission_window_match_reference() {
+        let context = GpuContext::headless().unwrap();
+        let dims = [17, 17, 3];
+        let n = dims.iter().product::<u32>() as usize;
+        let cells: Vec<_> = (0..n)
+            .map(|i| {
+                [
+                    if i % 17 < 5 { 50. } else { 2.2 },
+                    if i % 17 == 0 {
+                        0.5
+                    } else if i % 17 == 16 {
+                        -0.5
+                    } else if i % 17 >= 5 {
+                        3.
+                    } else {
+                        2.
+                    },
+                ]
+            })
+            .collect();
+        let groups: Vec<_> = (0..n).map(|i| if i % 17 < 5 { 14 } else { 20 }).collect();
+        let b: Vec<_> = (0..n)
+            .map(|i| CellField {
+                b: [0.01 * (i % 17) as f32, 0.5, 0., 0.],
+                ..Default::default()
+            })
+            .collect();
+        let bias = context
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Optimization magnetic fixture"),
+                contents: bytemuck::cast_slice(&b),
+                usage: wgpu::BufferUsages::STORAGE,
+            });
+        let flow = context.device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Moving alpha and shear"),
+            size: n as u64 * 64,
+            usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+        let mut reference = Conduction::new_layout(
+            context.clone(),
+            dims,
+            1e-4,
+            &cells,
+            &bias,
+            Some(&groups),
+            (3, false),
+        )
+        .unwrap();
+        let mut optimized = Conduction::new_layout(
+            context.clone(),
+            dims,
+            1e-4,
+            &cells,
+            &bias,
+            Some(&groups),
+            (3, false),
+        )
+        .unwrap();
+        let mut compact = Conduction::new_layout(
+            context.clone(),
+            dims,
+            1e-4,
+            &cells,
+            &bias,
+            Some(&groups),
+            (3, true),
+        )
+        .unwrap();
+        assert_eq!(compact.buffers[5].size(), n as u64 * 16);
+        assert_eq!(compact.result.size(), n as u64 * 16);
+        for solver in [&mut reference, &mut optimized, &mut compact] {
+            solver.attach_flow(&flow).unwrap();
+            solver.set_pair_resistivity(14, 20, 1e-10).unwrap();
+            solver.set_contact_resistivity(1e-10).unwrap();
+            solver
+                .set_motional_boundary_absolute_tolerance_a(1e-6)
+                .unwrap();
+        }
+        for (step, current) in [100., 0., -25.].into_iter().enumerate() {
+            let phase: Vec<_> = (0..n)
+                .map(|i| CellField {
+                    b: [
+                        0.,
+                        0.,
+                        0.1 * (std::f32::consts::TAU * ((i / 17) % 17) as f32 / 17.).sin(),
+                        0.,
+                    ],
+                    applied: [
+                        0.,
+                        0.,
+                        if step == 0 {
+                            1.
+                        } else {
+                            0.3 + 0.7 * (i % 3) as f32 / 2.
+                        },
+                        0.,
+                    ],
+                    ..Default::default()
+                })
+                .collect();
+            context
+                .queue
+                .write_buffer(&flow, 0, bytemuck::cast_slice(&phase));
+            context.set_bounded_submission_window(1).unwrap();
+            let start = std::time::Instant::now();
+            let expected = reference.solve_current_impl(current, false).unwrap();
+            let reference_ms = start.elapsed().as_secs_f64() * 1000.;
+            let reference_counts = context.bounded_submission_counts();
+            let fields = reference.read_fields().unwrap();
+            context.set_bounded_submission_window(4).unwrap();
+            let start = std::time::Instant::now();
+            let actual = optimized.solve_current(current).unwrap();
+            let optimized_ms = start.elapsed().as_secs_f64() * 1000.;
+            let optimized_counts = context.bounded_submission_counts();
+            assert_eq!(expected, actual, "full output stats at command {current}");
+            assert_eq!(
+                bytemuck::cast_slice::<_, u8>(&fields),
+                bytemuck::cast_slice::<_, u8>(&optimized.read_fields().unwrap())
+            );
+            let small = compact.solve_current(current).unwrap();
+            assert_eq!(expected, small, "compact stats at command {current}");
+            let bytes = read_bytes(&context, &compact.result, 0, compact.result.size()).unwrap();
+            let packed = bytemuck::cast_slice::<u8, [f32; 4]>(&bytes);
+            for (full, small) in fields.iter().zip(packed) {
+                assert_eq!(&full.force_heat, small);
+            }
+            assert_eq!(reference.iterations, optimized.iterations);
+            assert_eq!(reference.iterations, compact.iterations);
+            eprintln!(
+                "step={step} command={current} reference_ms={reference_ms:.3} optimized_ms={optimized_ms:.3} bounded_submissions/waits={reference_counts:?}->{optimized_counts:?}"
+            );
+        }
+        assert!(compact.read_fields().is_err());
     }
 }

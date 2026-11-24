@@ -719,3 +719,111 @@ fn periodic_shear_uses_correct_neighbors_on_non_power_of_two_grids() {
         (error / norm).sqrt()
     );
 }
+
+#[test]
+fn compact_force_matches_full_force_with_surface_and_snapshots() {
+    use wgpu::util::DeviceExt;
+    let _lock = crate::gpu_test_lock();
+    let (gpu, volume, _, _) = crate::surface::tests::fixture(8);
+    let grid = volume.inputs.snapshot().grid.clone();
+    let n = grid.dims.iter().product::<u32>() as usize;
+    let force: Vec<_> = (0..n)
+        .map(|i| [0.01 * (i % 8) as f32, -0.03, 0.07, 11.])
+        .collect();
+    let full: Vec<_> = force
+        .iter()
+        .map(|f| crate::em::CellField {
+            force_heat: *f,
+            ..Default::default()
+        })
+        .collect();
+    let make = |bytes: &[u8]| {
+        gpu.context
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Force packet equivalence"),
+                contents: bytes,
+                usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
+            })
+    };
+    let wide = make(bytemuck::cast_slice(&full));
+    let compact = make(bytemuck::cast_slice(&force));
+    let mut reference = None;
+    for (buffer, shared) in [(&wide, true), (&compact, true), (&compact, false)] {
+        let (mut surface, _) = crate::surface::SurfaceState::with_periodic_boundaries(
+            gpu.context.clone(),
+            &volume,
+            3,
+            [true; 3],
+        )
+        .unwrap();
+        let cfg = FluidConfig {
+            material_id: 3,
+            periodic: [true; 3],
+            use_em_force: true,
+            acceleration_m_s2: [0.; 3],
+            surface: crate::surface::SurfaceConfig {
+                enabled: true,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let field = Some(ForceField {
+            buffer,
+            grid: &grid,
+        });
+        let mut fluid = if shared {
+            FluidState::new_coupled(gpu.context.clone(), &volume, cfg, field)
+        } else {
+            FluidState::new(gpu.context.clone(), &volume, cfg, field)
+        }
+        .unwrap();
+        // A partial liquid region exercises density, curvature and the second
+        // projection rather than comparing only a uniform single-phase state.
+        let alpha = crate::surface::tests::sphere(8, glam::Vec3::splat(0.5), 0.3);
+        gpu.context
+            .queue
+            .write_buffer(surface.field(), 0, bytemuck::cast_slice(&alpha));
+        fluid
+            .update_surface(&volume, surface.field(), None)
+            .unwrap();
+        fluid
+            .update_force(ForceField {
+                buffer,
+                grid: &grid,
+            })
+            .unwrap();
+        fluid.step(&volume).unwrap();
+        let dt = fluid.config.dt_s;
+        surface
+            .advance_coupled(&volume, &mut fluid, None, dt)
+            .unwrap();
+        fluid
+            .update_surface(&volume, surface.field(), None)
+            .unwrap();
+        let bytes = read_bytes(
+            &gpu.context,
+            fluid.result_buffer(),
+            0,
+            fluid.result_buffer().size(),
+        )
+        .unwrap();
+        let alpha = read_bytes(&gpu.context, surface.field(), 0, surface.field().size()).unwrap();
+        if let Some((ref f, ref a)) = reference {
+            assert_eq!(&bytes, f);
+            assert_eq!(&alpha, a);
+        } else {
+            reference = Some((bytes, alpha));
+        }
+        if !shared {
+            assert!(
+                fluid
+                    .update_force(ForceField {
+                        buffer: &wide,
+                        grid: &grid
+                    })
+                    .is_err()
+            );
+        }
+    }
+}

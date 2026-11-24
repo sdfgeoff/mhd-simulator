@@ -132,3 +132,13 @@ fn collect_fields(@builtin(global_invocation_id) g:vec3<u32>,@builtin(local_invo
 }
 @compute @workgroup_size(256)
 fn fields_reduce(@builtin(local_invocation_index) l:u32){let v=sum_partials(l);if l==0u{scalars[2]=v;}}
+
+// Basis port reduction: identical face flux arithmetic/reduction order, no
+// full-grid J/force/heat output and no work on nonterminal cells.
+@compute @workgroup_size(256)
+fn collect_ports(@builtin(global_invocation_id) g:vec3<u32>,@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>){
+ let i=flat_id(g);var stats=vec4<f32>(0.0);if i<cfg.dims.w&&cells[i].x>0.0&&(flag(i)==0.5||flag(i)== -0.5){
+  let h=cfg.physical.x;let q=xyz(i);
+  for(var a=0u;a<3u;a++){for(var sign=-1;sign<=1;sign+=2){var n=q;n[a]+=sign;if valid(n){let k=index(n);let sigma=coefficient(i,k)*1e6;let diff=potential_difference(i,k);let electric=diff/h+0.5*(emf(i)[a]+emf(k)[a])*f32(sign);let outward=sigma*electric;if flag(i)==0.5{stats.x+=outward*h*h;}if flag(i)== -0.5{stats.y+=outward*h*h;}}}}
+ }reduce(stats,l,flat_group(group));
+}

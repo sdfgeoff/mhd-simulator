@@ -84,3 +84,7 @@ Both diagrams were rendered and visually inspected. Buffer arithmetic was cross-
 ## Expanded activity diagrams
 
 The [four detailed activity sheets](activity/README.md) expand the timestep, electrical PCG, pressure/MG, interface/momentum and export paths, with residency, copy sizes and CPU/GPU synchronization. Prepared for board reply1056.
+
+## Implemented approved optimizations
+
+[Reply1097 implementation and validation](optimization-1097/README.md) documents current-only basis reductions, compact coupled-flow buffers and bounded submission windows. The diagrams above retain their historical stopped-V5 scope.

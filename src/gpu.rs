@@ -5,6 +5,13 @@ pub struct GpuContext {
     pub queue: wgpu::Queue,
     pub name: String,
     pub profiler: std::sync::Arc<crate::profile::Profiler>,
+    bounded_queue: std::sync::Arc<std::sync::Mutex<BoundedQueue>>,
+}
+struct BoundedQueue {
+    limit: usize,
+    pending: std::collections::VecDeque<wgpu::SubmissionIndex>,
+    submissions: u64,
+    waits: u64,
 }
 pub fn device_descriptor(adapter: &wgpu::Adapter) -> wgpu::DeviceDescriptor<'static> {
     let limits = adapter.limits();
@@ -29,7 +36,49 @@ impl GpuContext {
             queue,
             name,
             profiler,
+            bounded_queue: std::sync::Arc::new(std::sync::Mutex::new(BoundedQueue {
+                limit: 1,
+                pending: Default::default(),
+                submissions: 0,
+                waits: 0,
+            })),
         }
+    }
+    /// Pipeline short command buffers without enlarging watchdog-sensitive GPU
+    /// submissions. Queue ordering preserves dependencies; readbacks still fence.
+    /// A bounded window limits CPU lead. Set to 1 for the original fence policy.
+    pub fn submit_bounded(&self, commands: wgpu::CommandBuffer) {
+        let mut state = self.bounded_queue.lock().unwrap();
+        let index = self.queue.submit(Some(commands));
+        state.submissions += 1;
+        state.pending.push_back(index);
+        if state.pending.len() >= state.limit {
+            let last = state.pending.pop_back().unwrap();
+            self.device
+                .poll(wgpu::Maintain::WaitForSubmissionIndex(last));
+            state.pending.clear();
+            state.waits += 1;
+        }
+    }
+    pub fn set_bounded_submission_window(&self, limit: usize) -> Result<(), String> {
+        if !(1..=8).contains(&limit) {
+            return Err("Submission window must be between1 and8".into());
+        }
+        let mut state = self.bounded_queue.lock().unwrap();
+        if let Some(last) = state.pending.pop_back() {
+            self.device
+                .poll(wgpu::Maintain::WaitForSubmissionIndex(last));
+        }
+        state.pending.clear();
+        state.limit = limit;
+        state.submissions = 0;
+        state.waits = 0;
+        Ok(())
+    }
+    /// Counts explicit bounded-submission waits, not required scalar map waits.
+    pub fn bounded_submission_counts(&self) -> (u64, u64) {
+        let state = self.bounded_queue.lock().unwrap();
+        (state.submissions, state.waits)
     }
     pub fn compute_pass<'a>(
         &'a self,

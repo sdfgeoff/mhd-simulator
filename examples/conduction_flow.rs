@@ -81,7 +81,11 @@ pub(crate) fn main() -> Result<(), Box<dyn Error>> {
     let cu_ss_contact: Option<f32> = a.get(16).map(|s| s.parse()).transpose()?;
     let charge_tolerance: f32 = a.get(17).map(|s| s.parse()).transpose()?.unwrap_or(1e-5);
     let charge_max_iterations: u32 = a.get(18).map(|s| s.parse()).transpose()?.unwrap_or(4000);
-    let source_work_budget: u64 = a.get(19).map(|s| s.parse()).transpose()?.unwrap_or(50_000_000_000);
+    let source_work_budget: u64 = a
+        .get(19)
+        .map(|s| s.parse())
+        .transpose()?
+        .unwrap_or(50_000_000_000);
     let pulse_start_s = a
         .get(14)
         .map(|s| s.parse::<f64>().map(|v| v * 1e-6))
@@ -120,6 +124,13 @@ pub(crate) fn main() -> Result<(), Box<dyn Error>> {
     std::fs::create_dir_all(out.parent().ok_or("Output parent required")?)?;
     std::fs::create_dir(out)?;
     let gpu = GpuDomain::new()?;
+    // Keep each watchdog-safe command buffer unchanged, but wait once per
+    // bounded window. General library users retain the original window of1.
+    let submission_window: usize = std::env::var("MHD_BOUNDED_SUBMISSION_WINDOW")
+        .unwrap_or_else(|_| "4".into())
+        .parse()?;
+    gpu.context
+        .set_bounded_submission_window(submission_window)?;
     if let Ok(expected) = std::env::var("MHD_EXPECT_ADAPTER")
         && gpu.name != expected
     {
@@ -197,7 +208,7 @@ pub(crate) fn main() -> Result<(), Box<dyn Error>> {
         .iter()
         .map(|id| if matches!(*id, 16 | 17 | 20) { 20 } else { *id })
         .collect();
-    let mut current = conduction::Conduction::new_with_groups(
+    let mut current = conduction::Conduction::new_compact_with_groups(
         gpu.context.clone(),
         grid.dims,
         grid.cell_m,
@@ -281,7 +292,9 @@ pub(crate) fn main() -> Result<(), Box<dyn Error>> {
             retract,
             retract_delay_s,
         );
-        if step == 1 { eprintln!("First timestep: starting charge solve"); }
+        if step == 1 {
+            eprintln!("First timestep: starting charge solve");
+        }
         let charge_start = std::time::Instant::now();
         let (voltage, s) = match current.solve_current(command) {
             Ok(v) => v,
@@ -291,13 +304,20 @@ pub(crate) fn main() -> Result<(), Box<dyn Error>> {
             }
         };
         let charge_ms = charge_start.elapsed().as_secs_f64() * 1000.;
-        if step == 1 { eprintln!("First timestep: charge accepted in {charge_ms:.1} ms; starting fluid step"); }
+        if step == 1 {
+            eprintln!("First timestep: charge accepted in {charge_ms:.1} ms; starting fluid step");
+        }
         let fluid_start = std::time::Instant::now();
         if let Err(e) = run.step(&p.model, &volume) {
             error = Some(e);
             break;
         }
-        if step == 1 { eprintln!("First timestep: fluid accepted in {:.1} ms",fluid_start.elapsed().as_secs_f64()*1000.); }
+        if step == 1 {
+            eprintln!(
+                "First timestep: fluid accepted in {:.1} ms",
+                fluid_start.elapsed().as_secs_f64() * 1000.
+            );
+        }
         costs.push_str(&format!(
             "{step},{charge_ms},{}\n",
             fluid_start.elapsed().as_secs_f64() * 1000.
@@ -367,7 +387,9 @@ pub(crate) fn main() -> Result<(), Box<dyn Error>> {
         let onset_checkpoint =
             pulse_start_s > 0. && (run.time_s - pulse_start_s).abs() <= 0.5 * p.run.dt_s;
         if step % field_every == 0 || step == steps || onset_checkpoint {
-            if let Err(e) = run.export_fields(&volume, &p.model, &out.join(format!("frame-{step:08}"))) {
+            if let Err(e) =
+                run.export_fields(&volume, &p.model, &out.join(format!("frame-{step:08}")))
+            {
                 error = Some(format!("Field export failed: {e}"));
                 break;
             }
@@ -383,7 +405,15 @@ pub(crate) fn main() -> Result<(), Box<dyn Error>> {
     }
     std::fs::write(out.join("performance.csv"), performance)?;
     let mut report = serde_json::json!({"project":a[1],"terminal_boundary":terminal_boundary,"terminal_x_cell_indices":terminal_x,"uniform_acceleration_m_s2":p.fluid.acceleration_m_s2,"periodic_fluid_axes":p.fluid.periodic,"released_static_workspace_bytes":released_static_workspace_bytes,"status":if error.is_some(){"failed"}else{"complete"},"error":error,"accepted_steps":run.steps,"requested_steps":steps,"charge_solver":conduction::SOLVER_VERSION,"charge_requested_relative_tolerance":current.relative_tolerance(),"time_s":run.time_s,"peak_A":peak,"timestep_s":dt_s,"tail_timestep_s":tail_dt_s,"tail_transition_not_before_s":pulse_start_s+duration*4./3.+retract_delay_s,"pulse_start_s":pulse_start_s,"frequency_hz":frequency_hz,"field_every":field_every,"grid":{"dims":grid.dims,"cell_m":grid.cell_m},"positive_duration_s":duration,"rise_s":rise,"retract_fraction":retract,"retract_delay_s":retract_delay_s,"contact_resistivity_ohm_m2":contact,"max_terminal_voltage_V":max_voltage,"max_charge_boundary_current_defect":max_boundary_defect,"charge_potential_representation":"split f32 high/low","electrical_work_definition":"sum terminal phi*I on both ports","joule_generated_J":joule,"lagged_electrical_work_J":electrical,"lagged_mechanical_work_J":lagged_mechanical,"fluid_em_work_J":run.energy.fluid_em_work_j,"body_acceleration_work_J":run.energy.fluid_acceleration_work_j,"fluid_external_work_J":run.energy.external_work_j,"fluid_work_definition":"EM/impressed-force work only; excludes body acceleration","method":"GPU finite-volume div J=0, J=sigma(-grad phi + u cross B0), current-controlled terminals, conductivity updated from accepted alpha; static CAD permanent-magnet B0. Forces drive the normal RunState fluid/interface engine.","limitations":["Inductionless imposed-field approximation: applied-current self-field and magnetic diffusion/reaction omitted; assess Rm and self-field/B0 bounds.","Motion is lagged by one fluid step; compare timestep refinement and lagged electrical versus actual fluid work.","Thermal evolution, oxidation, contact chemistry, wire feeding and driver switching not modeled.","New research client; not a GUI electrode feature or frozen-baseline claim."]});
-    report["cu_ss_contact_resistivity_ohm_m2"]=serde_json::json!(cu_ss_contact);
+    report["cu_ss_contact_resistivity_ohm_m2"] = serde_json::json!(cu_ss_contact);
+    report["storage_and_submission"] = serde_json::json!({
+        "fixed_B_record_bytes_per_cell": 16,
+        "force_heat_record_bytes_per_cell": 16,
+        "basis_output": "terminal-current reductions only; final force/heat reconstructed once",
+        "conductivity_updates_per_current_solve": 1,
+        "bounded_submission_window": submission_window,
+        "bounded_submissions_and_explicit_waits": gpu.context.bounded_submission_counts(),
+    });
     report["charge_max_iterations"] = charge_max_iterations.into();
     report["source_interaction_work_budget"] = source_work_budget.into();
     report["charge_boundary_criteria"] = serde_json::json!({

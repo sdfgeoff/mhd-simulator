@@ -1,0 +1,94 @@
+{
+  "authorization": {
+    "topic": 25,
+    "reply": 1097,
+    "approved_items": [
+      1,
+      2,
+      4
+    ]
+  },
+  "reference_commit": "da55819e60b97de9bdf6bc10429c174d3c056591",
+  "adapter": "NVIDIA GeForce RTX 3060 Laptop GPU",
+  "gpu_driver_manifest": "/usr/share/vulkan/icd.d/nvidia_icd.json",
+  "memory": {
+    "cell_slots": 21814800,
+    "old_fixed_B_bytes_per_cell": 64,
+    "new_fixed_B_bytes_per_cell": 16,
+    "old_force_heat_bytes_per_cell": 64,
+    "new_force_heat_bytes_per_cell": 16,
+    "saved_persistent_bytes": 2094220800,
+    "saved_persistent_GiB": 1.950395107269287,
+    "full_assembly_measured": false
+  },
+  "unchanged": [
+    "equations",
+    "preconditioners",
+    "precision",
+    "convergence_gates",
+    "residual_check_cadence",
+    "pressure_projections",
+    "bounded_command_buffer_lengths"
+  ],
+  "limitations": [
+    "Small NVIDIA regression cases only; no full-size AMD window4 watchdog check.",
+    "Timing samples are not representative warmed repeated full-size benchmarks.",
+    "Persistent allocation saving does not establish startup fit."
+  ],
+  "checks": {
+    "electrical-tests": {
+      "sha256": "659358d111a4055dbe66382a05261b66f794a26bc32dd7e18ff4883c3adb10e5",
+      "result_lines": [
+        "    Finished `test` profile [optimized + debuginfo] target(s) in 1.30s",
+        "test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.84s"
+      ],
+      "output": "   Compiling mhd-workbench v0.1.0 (/home/geoffrey/Reference/OffTopic/mhd-hardware-study)\n    Finished `test` profile [optimized + debuginfo] target(s) in 1.30s\n     Running unittests examples/conduction_probe.rs (target/debug/examples/conduction_probe-1368a506848494a8)\n\nrunning 11 tests\ntest conduction::optimization_tests::optimized_ports_compact_packets_and_submission_window_match_reference ... step=0 command=100 reference_ms=36.593 optimized_ms=29.724 bounded_submissions/waits=(139, 139)->(139, 34)\nstep=1 command=0 reference_ms=53.188 optimized_ms=43.224 bounded_submissions/waits=(207, 207)->(207, 51)\nstep=2 command=-25 reference_ms=12.683 optimized_ms=12.164 bounded_submissions/waits=(9, 9)->(9, 2)\nok\ntest plane_tests::physical_zero_plane_is_independent_of_domain_centre ... ok\ntest tests::contact_resistance_and_motional_emf_preserve_power_balance ... ok\ntest tests::detached_translating_conductor_does_not_keep_current_from_its_old_bridge ... Disconnected translating island: J_rms=4.017755e3 A/m2, force=2.268388e-9 N\nok\ntest tests::dimensional_motion_gate_preserves_small_current_scaling ... ok\ntest tests::long_bottlenecked_parallel_paths_conserve_current_and_match_series_resistance ... ok\ntest tests::multi_row_dispatch_preserves_fields_and_partial_reductions ... ok\ntest tests::near_insulating_bridge_resolves_tiny_copper_terminal_gradients ... ok\ntest tests::potential_predictors_reuse_only_solutions_that_pass_the_current_equation ... ok\ntest tests::tagged_pair_contact_matches_series_law_and_leaves_other_interface_ideal ... ok\ntest tests::uniform_and_parallel_conductors_obey_ohms_law_and_power_balance ... ok\n\ntest result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.84s\n\n"
+    },
+    "pulse-tests": {
+      "sha256": "e1737a4d5317ef2479b3d8c757df094804edb0dcf4260aef80c90e265d3d8b20",
+      "result_lines": [
+        "    Finished `test` profile [optimized + debuginfo] target(s) in 1.27s",
+        "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.20s"
+      ],
+      "output": "   Compiling mhd-workbench v0.1.0 (/home/geoffrey/Reference/OffTopic/mhd-hardware-study)\n    Finished `test` profile [optimized + debuginfo] target(s) in 1.27s\n     Running unittests examples/conduction_flow.rs (target/debug/examples/conduction_flow-7e0b57733c55fee3)\n\nrunning 4 tests\ntest conduction::optimization_tests::optimized_ports_compact_packets_and_submission_window_match_reference ... ok\ntest tests::conditioning_interval_has_no_early_single_or_repeated_pulse ... ok\ntest tests::default_delay_preserves_original_commands ... ok\ntest tests::delayed_retract_changes_only_negative_lobe_time ... ok\n\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.20s\n\n"
+    },
+    "fluid-compact-tests": {
+      "sha256": "bde5104d6db4fab6b489a0b96368193beb4c7bd8a6544bc232f414847d578b83",
+      "result_lines": [
+        "    Finished `test` profile [optimized + debuginfo] target(s) in 6.44s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 172 filtered out; finished in 15.61s"
+      ],
+      "output": "   Compiling mhd-workbench v0.1.0 (/home/geoffrey/Reference/OffTopic/mhd-hardware-study)\n    Finished `test` profile [optimized + debuginfo] target(s) in 6.44s\n     Running unittests src/lib.rs (target/debug/deps/mhd_workbench-8a27543565901b49)\n\nrunning 1 test\ntest fluid::tests::compact_force_matches_full_force_with_surface_and_snapshots ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 172 filtered out; finished in 15.61s\n\n"
+    },
+    "pressure-tests": {
+      "sha256": "f25eb578d9a9ee63752ae9583b85fc8577d0844a18fd10d6ca702f95d862549d",
+      "result_lines": [
+        "    Finished `test` profile [optimized + debuginfo] target(s) in 3.55s",
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 171 filtered out; finished in 1.12s"
+      ],
+      "output": "   Compiling mhd-workbench v0.1.0 (/home/geoffrey/Reference/OffTopic/mhd-hardware-study)\n    Finished `test` profile [optimized + debuginfo] target(s) in 3.55s\n     Running unittests src/lib.rs (target/debug/deps/mhd_workbench-8a27543565901b49)\n\nrunning 2 tests\ntest fluid::pressure_tests::bounded_pressure_submissions_preserve_jacobi_and_multigrid_fields ... Floating=true, MG=false: pressure relative L2=8.50182304e-8, U=2.09547579e-9, iterations=1\nFirst fluid step: predictor submitted; starting viscosity\nFirst fluid step: viscosity submitted; starting pressure\nFloating=true, MG=false: pressure relative L2=8.50182304e-8, U=2.09547579e-9, iterations=1\nFirst fluid step: predictor submitted; starting viscosity\nFirst fluid step: viscosity submitted; starting pressure\nFloating=true, MG=false: pressure relative L2=8.50182304e-8, U=2.09547579e-9, iterations=1\nFloating=true, MG=true: pressure relative L2=7.70875952e-8, U=3.49245965e-10, iterations=4\nFirst fluid step: predictor submitted; starting viscosity\nFirst fluid step: viscosity submitted; starting pressure\nFloating=true, MG=true: pressure relative L2=7.70875952e-8, U=3.49245965e-10, iterations=4\nFirst fluid step: predictor submitted; starting viscosity\nFirst fluid step: viscosity submitted; starting pressure\nFloating=true, MG=true: pressure relative L2=7.70875952e-8, U=3.49245965e-10, iterations=4\nok\ntest fluid::pressure_tests::meanfree_periodic_gradient_recovers_analytic_pressure ... Floating=false, MG=false: pressure relative L2=1.02544093e-6, U=1.20539054e-8, iterations=55\nFloating=true, MG=false: pressure relative L2=8.50182304e-8, U=2.09547579e-9, iterations=1\nFloating=true, MG=true: pressure relative L2=7.70875952e-8, U=3.49245965e-10, iterations=4\nok\n\ntest result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 171 filtered out; finished in 1.12s\n\n"
+    },
+    "work-ledger-tests": {
+      "sha256": "f9d708ef1777c08aa3dba730b8549739358d78d3aef39a9e4dd072473f5e4bd5",
+      "result_lines": [
+        "    Finished `test` profile [optimized + debuginfo] target(s) in 0.13s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 172 filtered out; finished in 0.37s"
+      ],
+      "output": "    Finished `test` profile [optimized + debuginfo] target(s) in 0.13s\n     Running unittests src/lib.rs (target/debug/deps/mhd_workbench-8a27543565901b49)\n\nrunning 1 test\ntest run::thermal_run_tests::impressed_force_work_is_separate_from_body_acceleration_work ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 172 filtered out; finished in 0.37s\n\n"
+    },
+    "all-targets-check": {
+      "sha256": "7537b8920731f5aa6739fd7afb8fd838e47942236cc5ad2c821b3b709427a588",
+      "result_lines": [
+        "    Finished `dev` profile [optimized + debuginfo] target(s) in 1.00s"
+      ],
+      "output": "    Checking mhd-workbench v0.1.0 (/home/geoffrey/Reference/OffTopic/mhd-hardware-study)\nwarning: function `run_with_stationary_decay` is never used\n  --> examples/hardware_probe.rs:15:15\n   |\n15 | pub(crate) fn run_with_stationary_decay(expected: Option<&str>) -> Result<(), Box<dyn Error>> {\n   |               ^^^^^^^^^^^^^^^^^^^^^^^^^\n   |\n   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default\n\nwarning: `mhd-workbench` (example \"hardware_probe\") generated 1 warning\n    Finished `dev` profile [optimized + debuginfo] target(s) in 1.00s\n"
+    },
+    "clippy-scoped": {
+      "sha256": "3ce46ead52b34677c92380fa426e945482297b4e58a1b940b6a6cfea5d1a2c77",
+      "result_lines": [
+        "    Finished `dev` profile [optimized + debuginfo] target(s) in 0.45s"
+      ],
+      "output": "    Checking mhd-workbench v0.1.0 (/home/geoffrey/Reference/OffTopic/mhd-hardware-study)\n    Finished `dev` profile [optimized + debuginfo] target(s) in 0.45s\n"
+    }
+  }
+}

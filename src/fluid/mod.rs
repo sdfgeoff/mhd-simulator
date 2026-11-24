@@ -111,6 +111,9 @@ pub struct EnergyStep {
     pub acceleration_work_j: f64,
     pub surface_work_j: f64,
 }
+/// A force packet on the matching grid. Exactly16 bytes/cell selects compact
+/// f32 force.xyz + heat; at least64 bytes/cell selects the legacy EM CellField.
+/// Layout is fixed when FluidState is constructed, including snapshot updates.
 pub struct ForceField<'a> {
     pub buffer: &'a wgpu::Buffer,
     pub grid: &'a GridSi,
@@ -258,6 +261,24 @@ impl FluidState {
         let n = grid.dims.iter().map(|&v| v as u64).product::<u64>();
         let f = grid.dims.map(|v| v + 1);
         let nf = f.iter().map(|&v| v as u64).product::<u64>();
+        // Compact force packets are exactly vec4<f32> per cell; legacy packets
+        // remain 64 bytes/cell. Reject other/truncated layouts before allocation.
+        let force_bytes = if config.use_em_force {
+            let field = force.as_ref().ok_or("Missing EM force")?;
+            if field.grid != &grid {
+                return Err("EM force grid mismatch".into());
+            }
+            if field.buffer.size() == n * 16 {
+                n * 16
+            } else if field.buffer.size() >= n * 64 {
+                n * 64
+            } else {
+                return Err("EM force packet must be compact16 or full64 bytes/cell".into());
+            }
+        } else {
+            64
+        };
+        let compact_force = config.use_em_force && force_bytes == n * 16;
         let sizes = [
             n * 4,
             nf * 16,
@@ -269,7 +290,7 @@ impl FluidState {
             nf * 16,
             (n * 64).max(nf * 16),
             if config.use_em_force {
-                if shared_force { 0 } else { n * 64 }
+                if shared_force { 0 } else { force_bytes }
             } else {
                 64
             },
@@ -333,7 +354,7 @@ impl FluidState {
         let force = if config.use_em_force {
             let field = force
                 .ok_or("Compute electromagnetics first, then select a recorded force frame")?;
-            if field.grid != &grid || field.buffer.size() < n * 64 {
+            if field.grid != &grid || field.buffer.size() < force_bytes {
                 return Err("Frozen EM force must use the same fluid grid".into());
             }
             if !field.buffer.usage().contains(wgpu::BufferUsages::COPY_SRC) {
@@ -347,12 +368,12 @@ impl FluidState {
             } else {
                 let frozen = context.device.create_buffer(&wgpu::BufferDescriptor {
                     label: Some("Frozen EM force snapshot"),
-                    size: n * 64,
+                    size: force_bytes,
                     usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
                     mapped_at_creation: false,
                 });
                 let mut encoder = context.device.create_command_encoder(&Default::default());
-                encoder.copy_buffer_to_buffer(field.buffer, 0, &frozen, 0, n * 64);
+                encoder.copy_buffer_to_buffer(field.buffer, 0, &frozen, 0, force_bytes);
                 context.queue.submit(Some(encoder.finish()));
                 frozen
             }
@@ -462,7 +483,16 @@ impl FluidState {
                         "{}\n{}\n{}\n{}\n{}\n{}",
                         include_str!("../periodic.wgsl"),
                         include_str!("viscosity.wgsl"),
-                        include_str!("solver.wgsl"),
+                        if compact_force {
+                            include_str!("solver.wgsl")
+                                .replace("em:array<Result>", "em:array<vec4<f32>>")
+                                .replace(
+                                    "em[index(q,p.dims.xyz)].force.xyz",
+                                    "em[index(q,p.dims.xyz)].xyz",
+                                )
+                        } else {
+                            include_str!("solver.wgsl").to_owned()
+                        },
                         include_str!("stabilized.wgsl"),
                         include_str!("pressure_subspace.wgsl"),
                         if cfg!(test) {
@@ -673,7 +703,7 @@ impl FluidState {
     pub fn update_force(&mut self, field: ForceField<'_>) -> Result<(), String> {
         if !self.config.use_em_force
             || field.grid != &self.grid
-            || field.buffer.size() < self.result.size()
+            || field.buffer.size() < self._force.size()
             || !field.buffer.usage().contains(wgpu::BufferUsages::COPY_SRC)
         {
             return Err("Coupled force requires enabled EM forcing and matching GPU grids".into());
@@ -683,11 +713,15 @@ impl FluidState {
                 return Err("Coupled EM output allocation changed".into());
             }
         } else {
+            let compact = self._force.size() == u64::from(self.params.dims[3]) * 16;
+            if compact && field.buffer.size() != self._force.size() {
+                return Err("Coupled force packet layout changed".into());
+            }
             let mut encoder = self
                 .context
                 .device
                 .create_command_encoder(&Default::default());
-            encoder.copy_buffer_to_buffer(field.buffer, 0, &self._force, 0, self.result.size());
+            encoder.copy_buffer_to_buffer(field.buffer, 0, &self._force, 0, self._force.size());
             self.context.queue.submit(Some(encoder.finish()));
         }
         // Refresh the force bound before the CFL check, not after taking the step.
@@ -984,7 +1018,10 @@ impl FluidState {
         let bounded = self.bounded_submissions();
         let chunk_size = if bounded { 1 } else { entries.len().max(1) };
         for chunk in entries.chunks(chunk_size) {
-            let mut encoder = self.context.device.create_command_encoder(&Default::default());
+            let mut encoder = self
+                .context
+                .device
+                .create_command_encoder(&Default::default());
             {
                 let mut pass = self.context.compute_pass(&mut encoder, None);
                 pass.set_bind_group(0, &self.bind, &[]);
@@ -993,8 +1030,11 @@ impl FluidState {
                     pass.dispatch_workgroups(g[0], g[1], g[2]);
                 }
             }
-            let submission = self.context.queue.submit(Some(encoder.finish()));
-            if bounded { self.context.device.poll(wgpu::Maintain::WaitForSubmissionIndex(submission)); }
+            if bounded {
+                self.context.submit_bounded(encoder.finish());
+            } else {
+                self.context.queue.submit(Some(encoder.finish()));
+            }
         }
     }
     fn convergence(&self) -> Result<(f32, bool, u32), String> {
@@ -1321,7 +1361,9 @@ impl FluidState {
         let mut run = || -> Result<(u32, f32), String> {
             let faces = groups(self.params.faces[3]);
             self.dispatch(&[("predict", faces)]);
-            if self.time_s == 0. && self.bounded_submissions() { eprintln!("First fluid step: predictor accepted; starting viscosity"); }
+            if self.time_s == 0. && self.bounded_submissions() {
+                eprintln!("First fluid step: predictor submitted; starting viscosity");
+            }
             if self.config.surface.enabled {
                 self.diffuse_surface_stress()?;
             }
@@ -1338,7 +1380,9 @@ impl FluidState {
                 self.velocity.size(),
             );
             self.context.queue.submit(Some(encoder.finish()));
-            if self.time_s == 0. && self.bounded_submissions() { eprintln!("First fluid step: viscosity accepted; starting pressure"); }
+            if self.time_s == 0. && self.bounded_submissions() {
+                eprintln!("First fluid step: viscosity submitted; starting pressure");
+            }
             self.project(true)
         };
         let result = run().and_then(|(iterations, residual)| {

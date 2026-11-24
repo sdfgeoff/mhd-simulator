@@ -76,7 +76,15 @@ fn bounded_pressure_submissions_preserve_jacobi_and_multigrid_fields() {
     let n = 16u32;
     let (gpu, volume, _, _) = crate::surface::tests::fixture(n);
     let mut prior = Vec::new();
-    for (multigrid, bounded) in [(false, false), (false, true), (true, false), (true, true)] {
+    for (multigrid, bounded, window) in [
+        (false, false, 1),
+        (false, true, 1),
+        (false, true, 4),
+        (true, false, 1),
+        (true, true, 1),
+        (true, true, 4),
+    ] {
+        gpu.context.set_bounded_submission_window(window).unwrap();
         let floating = true;
         let mut fluid = FluidState::new(
             gpu.context.clone(),
@@ -124,7 +132,14 @@ fn bounded_pressure_submissions_preserve_jacobi_and_multigrid_fields() {
             fluid.result_buffer().size(),
         )
         .unwrap();
-        if bounded { assert_eq!(prior, bytes, "Submission boundaries changed pressure/velocity fields; MG={multigrid}"); } else { prior = bytes.clone(); }
+        if bounded {
+            assert_eq!(
+                prior, bytes,
+                "Submission boundaries changed pressure/velocity fields; MG={multigrid}"
+            );
+        } else {
+            prior = bytes.clone();
+        }
         let field = bytemuck::cast_slice::<u8, FluidCell>(&bytes);
         let mut error = 0.;
         let mut norm = 0.;

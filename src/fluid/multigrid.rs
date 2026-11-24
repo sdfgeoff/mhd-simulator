@@ -261,12 +261,19 @@ impl Multigrid {
         }
     }
     fn dispatch(&self, context: &GpuContext, stages: &[(usize, &str)]) {
-        let chunk_size = if self.bounded_submissions { 1 } else { stages.len().max(1) };
+        let chunk_size = if self.bounded_submissions {
+            1
+        } else {
+            stages.len().max(1)
+        };
         for chunk in stages.chunks(chunk_size) {
             let mut encoder = context.device.create_command_encoder(&Default::default());
             self.encode(context, &mut encoder, chunk);
-            let submission = context.queue.submit(Some(encoder.finish()));
-            if self.bounded_submissions { context.device.poll(wgpu::Maintain::WaitForSubmissionIndex(submission)); }
+            if self.bounded_submissions {
+                context.submit_bounded(encoder.finish());
+            } else {
+                context.queue.submit(Some(encoder.finish()));
+            }
         }
     }
     pub(super) fn build(&self, context: &GpuContext) {
@@ -301,13 +308,20 @@ impl Multigrid {
             // Preserve each CG/V-cycle stage and the caller's convergence-check
             // cadence; only the submission boundaries change.
             for _ in 0..batch {
-                state.dispatch(&[("pressure_apply", cells), ("alpha_reduce", [1,1,1]), ("update", cells)]);
+                state.dispatch(&[
+                    ("pressure_apply", cells),
+                    ("alpha_reduce", [1, 1, 1]),
+                    ("update", cells),
+                ]);
                 if state.params.initial[3] > 0. {
-                    state.dispatch(&[("pressure_residual_mean", [1,1,1]), ("pressure_residual_subspace", cells)]);
+                    state.dispatch(&[
+                        ("pressure_residual_mean", [1, 1, 1]),
+                        ("pressure_residual_subspace", cells),
+                    ]);
                 }
                 self.apply(&state.context);
                 self.dispatch(&state.context, &[(0, "preconditioned_dot")]);
-                state.dispatch(&[("beta_reduce", [1,1,1])]);
+                state.dispatch(&[("beta_reduce", [1, 1, 1])]);
                 self.dispatch(&state.context, &[(0, "preconditioned_search")]);
             }
             return;
