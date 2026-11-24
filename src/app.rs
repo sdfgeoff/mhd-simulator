@@ -824,9 +824,9 @@ impl App {
                 for id in 0..=if self.setup { 2 } else { 15 } {
                     ui.add_enabled_ui(
                         id < 3
-                            || (id < 9 && self.run_ui.em_frame().is_some())
-                            || ((9..12).contains(&id) && self.run_ui.fluid_frame().is_some())
-                            || ((12..15).contains(&id) && self.run_ui.thermal_frame().is_some())
+                            || (id < 9 && self.run_ui.timeline.current().is_some_and(|f| f.em.is_some()))
+                            || ((9..12).contains(&id) && self.run_ui.timeline.current().is_some_and(|f| f.fluid.is_some()))
+                            || ((12..15).contains(&id) && self.run_ui.timeline.current().is_some_and(|f| f.thermal.is_some()))
                             || (id == 15
                                 && self
                                     .run_ui
@@ -935,7 +935,15 @@ impl App {
     }
 }
 impl App {
+    fn select_history_fields(&mut self) {
+        self.dirty |= self.run_ui.select_fields([
+            !self.setup && self.analysis == Analysis::Electromagnetics,
+            !self.setup && self.analysis == Analysis::Fluid,
+            !self.setup && self.analysis == Analysis::Thermal,
+        ]);
+    }
     fn ui(&mut self, ctx: &egui::Context) {
+        self.select_history_fields();
         self.dirty |= self.run_ui.poll(ctx, self.volume.as_ref());
         let previous_setup = self.setup;
         ctx.set_visuals(egui::Visuals::dark());
@@ -1006,6 +1014,7 @@ impl App {
             self.path = path.display().to_string();
             self.load();
         }
+        self.select_history_fields();
         self.sync_inputs();
         if let Some(path) = ctx.input(|i| i.raw.dropped_files.first().and_then(|f| f.path.clone()))
         {
@@ -1573,6 +1582,14 @@ mod project_ui_tests {
         assert!(one_frame > 0);
         assert_eq!(app.run_ui.timeline.bytes(), one_frame * 4);
         assert_eq!(app.run_ui.gpu_cache_bytes(), one_frame);
+        app.run_ui.select_fields([true, false, false]);
+        let em_bytes = app.run_ui.gpu_cache_bytes();
+        assert!(em_bytes > 0 && em_bytes < one_frame);
+        assert!(app.run_ui.em_frame().is_some() && app.run_ui.fluid_frame().is_none());
+        app.run_ui.select_fields([false, true, false]);
+        assert!(app.run_ui.fluid_frame().is_some() && app.run_ui.em_frame().is_none());
+        assert_eq!(app.run_ui.gpu_cache_bytes() + em_bytes, one_frame);
+        app.run_ui.select_fields([true; 3]);
         assert!(
             app.run_ui
                 .timeline

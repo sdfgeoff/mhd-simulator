@@ -35,6 +35,7 @@ pub struct RunUi {
     pub profiling: bool,
     pub view_error: String,
     cache: Option<RunFrame>,
+    requested_fields: [bool; 3],
     context: Option<GpuContext>,
     recording_memory: Arc<mhd_workbench::recording::RecordingMemory>,
     statistics: Arc<Mutex<Statistics>>,
@@ -54,6 +55,7 @@ impl Default for RunUi {
             profiling: true,
             view_error: String::new(),
             cache: None,
+            requested_fields: [true; 3],
             context: None,
             recording_memory: Arc::new(Default::default()),
             statistics: Arc::new(Mutex::new(Statistics::default())),
@@ -293,16 +295,48 @@ impl RunUi {
     pub fn gpu_cache_bytes(&self) -> u64 {
         self.cache.as_ref().map_or(0, RunFrame::gpu_bytes)
     }
+    pub fn select_fields(&mut self, fields: [bool; 3]) -> bool {
+        self.requested_fields = fields;
+        self.refresh_cache()
+    }
     fn refresh_cache(&mut self) -> bool {
         let Some(frame) = self.timeline.current() else {
             self.cache = None;
             return false;
         };
-        if self.cache.as_ref().is_some_and(|c| c.id == frame.id) {
+        let requested = self.requested_fields;
+        let visible = [
+            requested[0] && frame.em.is_some(),
+            (requested[1] || (requested.contains(&true) && frame.surface.is_some()))
+                && frame.fluid.is_some(),
+            requested[2] && frame.thermal.is_some(),
+        ];
+        let previous = self.cache.take().filter(|cached| cached.id == frame.id);
+        if let Some(cached) = &previous
+            && [
+                cached.em.is_some(),
+                cached.fluid.is_some(),
+                cached.thermal.is_some(),
+            ] == visible
+        {
+            self.cache = previous;
             return false;
         }
         let mut frame = frame.clone();
-        self.cache = None;
+        if let Some(old) = previous {
+            frame.em = old.em.or(frame.em);
+            frame.fluid = old.fluid.or(frame.fluid);
+            frame.thermal = old.thermal.or(frame.thermal);
+        }
+        if !visible[0] {
+            frame.em = None;
+        }
+        if !visible[1] {
+            frame.fluid = None;
+        }
+        if !visible[2] {
+            frame.thermal = None;
+        }
         let Some(context) = &self.context else {
             return false;
         };

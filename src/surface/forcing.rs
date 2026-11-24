@@ -179,11 +179,7 @@ impl Pulse {
             let mut pass = surface.context.compute_pass(&mut encoder, None);
             pass.set_pipeline(&self.pipeline);
             pass.set_bind_group(0, &self.binds[surface.current], &[]);
-            let g = [
-                self.dims[3].div_ceil(256).min(65535),
-                self.dims[3].div_ceil(256).div_ceil(65535),
-                1,
-            ];
+            let g = crate::gpu::volume_groups(self.dims[3]);
             pass.dispatch_workgroups(g[0], g[1], g[2]);
         }
         surface.context.queue.submit(Some(encoder.finish()));

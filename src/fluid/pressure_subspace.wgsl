@@ -2,8 +2,7 @@
 // The independent physical residual retains its original, unprojected norm.
 @compute @workgroup_size(256)
 fn pressure_residual_mean(@builtin(local_invocation_index) l:u32){
- var sum=vec4<f32>(0.);for(var i=l;i<count_groups();i+=256u){sum.x+=partials[i].w;}
- reduce[l]=sum;let total=sum_group(l);if l==0u{scalars[2].y=total.x*p.initial.w;}
+ let total=pressure_total(l);if l==0u{scalars[2].y=total.w*p.initial.w;}
 }
 fn project_pressure_residual(gid:vec3<u32>,l:u32,group:vec3<u32>,initial:bool){
  if group_id(group)>=count_groups(){return;}

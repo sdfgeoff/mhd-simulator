@@ -30,6 +30,7 @@ pub struct Conduction {
     scalars: wgpu::Buffer,
     pub result: wgpu::Buffer,
     pub iterations: u32,
+    pub basis_wall_ms: [f64; 2],
     pub relative_residual: f32,
     pub boundary_current_defect: f32,
     boundary_current_imbalance_a: f32,
@@ -110,7 +111,19 @@ impl Conduction {
         if !(1..=65535).contains(&dispatch_row_width) {
             return Err("Invalid dispatch row width".into());
         }
-        let n = dims.iter().product::<u32>();
+        let n = dims
+            .into_iter()
+            .try_fold(1u32, |n, d| n.checked_mul(d))
+            .ok_or("Conduction grid exceeds 32-bit indexing")?;
+        if n == 0 {
+            return Err("Empty conduction grid".into());
+        }
+        let max_groups = n.div_ceil(256);
+        let dispatch_row_width = if max_groups > dispatch_row_width {
+            max_groups.div_ceil(max_groups.div_ceil(dispatch_row_width))
+        } else {
+            dispatch_row_width
+        };
         if cells.len() != n as usize || !h.is_finite() || h <= 0. {
             return Err("Invalid conduction grid".into());
         }
@@ -190,7 +203,22 @@ impl Conduction {
             })
         };
         let work = storage("DC PCG vectors", u64::from(n) * 16);
-        let partials = storage("DC reduction scratch", u64::from(n.div_ceil(256)) * 16);
+        let group_count = n.div_ceil(256);
+        let scratch_bytes = 16
+            * (2 * u64::from(group_count)
+                + u64::from(group_count.div_ceil(256))
+                + u64::from(n.div_ceil(4)));
+        let limits = context.device.limits();
+        if scratch_bytes > limits.max_storage_buffer_binding_size as u64
+            || scratch_bytes > limits.max_buffer_size
+        {
+            return Err("DC diagonal and reduction scratch exceed the device buffer limit".into());
+        }
+        context.ensure_memory(scratch_bytes, "DC diagonal and reduction scratch")?;
+        let partials = storage(
+            "DC partial sums, diagonal and conducting workgroups",
+            scratch_bytes,
+        );
         let scalars = storage("DC scalars", 64);
         let result = storage(
             "DC current force and heating",
@@ -272,6 +300,9 @@ impl Conduction {
         let mut pipes = HashMap::new();
         for name in [
             "update_phase",
+            "prepare_diagonal",
+            "reduce_blocks",
+            "clear_partials",
             "save_unit",
             "save_motion",
             "initial_guess",
@@ -304,6 +335,27 @@ impl Conduction {
                     }),
             );
         }
+        let list_shader = context
+            .device
+            .create_shader_module(wgpu::ShaderModuleDescriptor {
+                label: Some("Conducting workgroup list"),
+                source: wgpu::ShaderSource::Wgsl(include_str!("active_groups.wgsl").into()),
+            });
+        for name in ["reset_count", "list_groups"] {
+            pipes.insert(
+                name,
+                context
+                    .device
+                    .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+                        label: Some(name),
+                        layout: Some(&pipeline_layout),
+                        module: &list_shader,
+                        entry_point: Some(name),
+                        compilation_options: Default::default(),
+                        cache: None,
+                    }),
+            );
+        }
         let owned_buffers = buffers.iter().map(|b| (*b).clone()).collect();
         Ok(Self {
             context,
@@ -316,6 +368,7 @@ impl Conduction {
             scalars,
             result,
             iterations: 0,
+            basis_wall_ms: [0.; 2],
             relative_residual: f32::INFINITY,
             boundary_current_defect: f32::INFINITY,
             boundary_current_imbalance_a: f32::INFINITY,
@@ -346,6 +399,16 @@ impl Conduction {
                     .compute_pass(&mut encoder, Some("DC finite-volume solve"));
                 pass.set_bind_group(0, &self.bind, &[]);
                 for (name, count) in chunk {
+                    let groups = self.params.dims[3].div_ceil(256);
+                    if groups >= 4096 && name.ends_with("_reduce") {
+                        pass.set_pipeline(&self.pipes["reduce_blocks"]);
+                        let blocks = groups.div_ceil(256);
+                        pass.dispatch_workgroups(
+                            blocks.min(self.dispatch_row_width),
+                            blocks.div_ceil(self.dispatch_row_width),
+                            1,
+                        );
+                    }
                     pass.set_pipeline(&self.pipes[name]);
                     pass.dispatch_workgroups(
                         (*count).min(self.dispatch_row_width),
@@ -367,15 +430,27 @@ impl Conduction {
         Ok(values.try_into().expect("four scalar records"))
     }
     pub fn solve(&mut self) -> Result<(), String> {
-        self.solve_prepared(true)
+        self.solve_prepared(true, true)
     }
-    fn solve_prepared(&mut self, update_phase: bool) -> Result<(), String> {
+    fn clear_cg_partials(&self) {
+        if self.params.control[3] != 0 {
+            self.dispatch(&[(
+                "clear_partials",
+                self.params.dims[3].div_ceil(256).div_ceil(256),
+            )]);
+        }
+    }
+    fn solve_prepared(&mut self, update_phase: bool, compact_work: bool) -> Result<(), String> {
         let groups = self.params.dims[3].div_ceil(256);
         self.params.extra[1] = self.params.physical[2];
         self.write_params();
         let mut preparation = Vec::with_capacity(4);
         if update_phase {
             preparation.push(("update_phase", groups));
+            preparation.push(("prepare_diagonal", groups.div_ceil(4)));
+            if compact_work {
+                preparation.extend([("reset_count", 1), ("list_groups", groups)]);
+            }
         }
         preparation.extend([
             ("initial_guess", groups),
@@ -384,7 +459,23 @@ impl Conduction {
         ]);
         self.dispatch(&preparation);
         self.iterations = 0;
-        let initial = self.scalar_values()?[0];
+        let initial_scalars = self.scalar_values()?;
+        if update_phase {
+            let active = initial_scalars[3][3].to_bits();
+            // Dense domains avoid the extra list lookup. Both paths keep the
+            // same per-cell stencil and the same dense reduction destinations.
+            self.params.control[3] = if compact_work && active < groups * 3 / 4 {
+                active
+            } else {
+                0
+            };
+            self.write_params();
+        }
+        let active_groups = match self.params.control[3] {
+            0 => groups,
+            n => n,
+        };
+        let initial = initial_scalars[0];
         if initial[2] == 0. {
             self.dispatch(&[("clear_solution", groups)]);
             self.relative_residual = 0.;
@@ -397,17 +488,18 @@ impl Conduction {
             if self.boundary_current_conserved()? {
                 return Ok(());
             }
+            self.clear_cg_partials();
             self.tighten_iteration_target();
         }
         for batch in 0..self.max_iterations / 32 {
             let mut commands = Vec::new();
             for _ in 0..32 {
                 commands.extend([
-                    ("apply_operator", groups),
+                    ("apply_operator", active_groups),
                     ("alpha_reduce", 1),
-                    ("update_residual", groups),
+                    ("update_residual", active_groups),
                     ("beta_reduce", 1),
-                    ("update_search", groups),
+                    ("update_search", active_groups),
                 ]);
             }
             self.dispatch(&commands);
@@ -426,6 +518,7 @@ impl Conduction {
                 {
                     return Ok(());
                 }
+                self.clear_cg_partials();
                 self.tighten_iteration_target();
             }
         }
@@ -573,10 +666,11 @@ impl Conduction {
         if !current_a.is_finite() {
             return Err("Nonfinite commanded current".into());
         }
+        let unit_start = std::time::Instant::now();
         self.params.control[0] = 0;
         self.params.physical[1] = 1.;
         self.write_params();
-        self.solve()?;
+        self.solve_prepared(true, optimized)?;
         let unit_iterations = self.iterations;
         let unit_residual = self.relative_residual;
         let unit_boundary_defect = self.boundary_current_defect;
@@ -590,10 +684,12 @@ impl Conduction {
             return Err("No conducting path between terminals".into());
         }
         self.dispatch(&[("save_unit", self.params.dims[3].div_ceil(256))]);
+        self.basis_wall_ms[0] = unit_start.elapsed().as_secs_f64() * 1000.;
+        let motion_start = std::time::Instant::now();
         self.params.control[0] = 1;
         self.params.physical[1] = 0.;
         self.write_params();
-        self.solve_prepared(!optimized)?;
+        self.solve_prepared(!optimized, optimized)?;
         self.motional_boundary_current_imbalance_a = self.boundary_current_imbalance_a;
         let motion = if optimized {
             self.port_currents(0.)?
@@ -601,6 +697,7 @@ impl Conduction {
             self.fields(0.)?
         };
         self.dispatch(&[("save_motion", self.params.dims[3].div_ceil(256))]);
+        self.basis_wall_ms[1] = motion_start.elapsed().as_secs_f64() * 1000.;
         let voltage = (current_a - motion[0]) / unit[0];
         let result = self.fields(voltage)?;
         self.iterations += unit_iterations;
@@ -725,13 +822,71 @@ fn pack_bias(context: &GpuContext, wide: &wgpu::Buffer, n: u32, row: u32) -> wgp
 #[cfg(test)]
 mod optimization_tests {
     use super::*;
+    /// Isolate work-list scheduling on a known one-volt conducting bar.
+    #[test]
+    #[ignore = "GPU work-list benchmark; run explicitly with --nocapture"]
+    fn sparse_and_dense_conductor_timing() {
+        let context = GpuContext::headless().unwrap();
+        let dims = [129u32, 128, 128];
+        let count = dims.iter().product::<u32>();
+        let field = context.device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Zero applied field"),
+            size: 64 * u64::from(count),
+            usage: wgpu::BufferUsages::STORAGE,
+            mapped_at_creation: false,
+        });
+        for side in [12, 48, 128] {
+            let cells: Vec<_> = (0..count)
+                .map(|i| {
+                    let x = i % dims[0];
+                    if i / dims[0] % dims[1] >= side || i / (dims[0] * dims[1]) >= side {
+                        return [0., 2.];
+                    }
+                    let flag = if x == 0 {
+                        0.5
+                    } else if x + 1 == dims[0] {
+                        -0.5
+                    } else {
+                        2.
+                    };
+                    [1., flag]
+                })
+                .collect();
+            let mut solver = Conduction::new(context.clone(), dims, 1e-4, &cells, &field).unwrap();
+            solver.params.control[2] = 0; // identical cold guess on every repeat
+            let mut reference = None;
+            for compact in [false, true, true, false] {
+                let start = std::time::Instant::now();
+                solver.solve_prepared(true, compact).unwrap();
+                let elapsed = start.elapsed().as_secs_f64();
+                let current = solver.port_currents(1.).unwrap()[0];
+                let analytic = (side * side) as f32 * 100. / (dims[0] - 1) as f32;
+                assert!((current - analytic).abs() < analytic * 1e-4);
+                let check = (solver.iterations, current, solver.relative_residual);
+                assert_eq!(*reference.get_or_insert(check), check);
+                eprintln!(
+                    "bar_side={side} compact={compact} dispatched={}/{} iterations={} solve_s={elapsed:.6}",
+                    if solver.params.control[3] == 0 {
+                        count.div_ceil(256)
+                    } else {
+                        solver.params.control[3]
+                    },
+                    count.div_ceil(256),
+                    solver.iterations
+                );
+            }
+        }
+    }
     #[test]
     fn optimized_ports_compact_packets_and_submission_window_match_reference() {
         let context = GpuContext::headless().unwrap();
-        let dims = [17, 17, 3];
+        let dims = [17, 17, 12];
         let n = dims.iter().product::<u32>() as usize;
         let cells: Vec<_> = (0..n)
             .map(|i| {
+                if i >= 17 * 17 * 3 {
+                    return [0., 2.];
+                }
                 [
                     if i % 17 < 5 { 50. } else { 2.2 },
                     if i % 17 == 0 {
@@ -840,6 +995,10 @@ mod optimization_tests {
             context.set_bounded_submission_window(4).unwrap();
             let start = std::time::Instant::now();
             let actual = optimized.solve_current(current).unwrap();
+            assert!(
+                optimized.params.control[3] > 0,
+                "exercise the sparse work list"
+            );
             let optimized_ms = start.elapsed().as_secs_f64() * 1000.;
             let optimized_counts = context.bounded_submission_counts();
             assert_eq!(expected, actual, "full output stats at command {current}");

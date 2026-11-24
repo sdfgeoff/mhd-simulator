@@ -1389,8 +1389,7 @@ impl EmFrame {
 }
 
 fn groups(n: u32) -> [u32; 3] {
-    let n = n.div_ceil(256);
-    [n.min(65535), n.div_ceil(65535), 1]
+    crate::gpu::volume_groups(n)
 }
 #[cfg(test)]
 mod tests;

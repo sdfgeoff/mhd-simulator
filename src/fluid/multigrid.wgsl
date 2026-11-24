@@ -14,7 +14,7 @@ var<workgroup> reduction:array<f32,256>;
 // location: current offset, child offset, level index, periodic bits.
 fn index(q:vec3<i32>,d:vec3<u32>)->u32 {let u=vec3<u32>(q);return u.x+d.x*(u.y+d.y*u.z);}
 fn decode(i:u32,d:vec3<u32>)->vec3<i32> {return vec3<i32>(vec3<u32>(i%d.x,(i/d.x)%d.y,i/(d.x*d.y)));}
-fn flat(g:vec3<u32>)->u32 {return g.x+g.y*65535u*256u;}
+fn flat(g:vec3<u32>)->u32 {return g.x+g.y*256u*256u;}
 fn canonical(q0:vec3<i32>,d:vec3<u32>)->vec3<i32> {
  var q=q0;for(var a=0u;a<3u;a++){if (p.location.w&(1u<<a))!=0u {q[a]=wrap_periodic(q[a],d[a]);}}return q;
 }
@@ -30,9 +30,27 @@ fn solution(i:u32,offset:u32,fine:bool,temp:bool)->f32 {
  if fine {if temp{return predicted[i].w;}return work[i].w;}
  let v=value[offset+i];return select(v.y,v.z,temp);
 }
+// In a closed box, positive face conductance certifies an in-bounds neighbour.
+fn box_edge(sum:f32,weight:f32,neighbor:u32,center:f32,temp:bool)->f32 {
+ if weight>0. {return sum+weight*(center-solution(neighbor,0u,true,temp));}
+ return sum;
+}
+fn fine_box_action(q:vec3<i32>,i:u32,dims:vec3<u32>,center:f32,temp:bool)->f32 {
+ let face=index(q,p.faces.xyz);
+ let lower=cache[face];
+ let row=dims.x;
+ let plane=row*dims.y;
+ var sum=box_edge(0.,lower.x,i-1u,center,temp);
+ sum=box_edge(sum,cache[face+1u].x,i+1u,center,temp);
+ sum=box_edge(sum,lower.y,i-row,center,temp);
+ sum=box_edge(sum,cache[face+p.faces.x].y,i+row,center,temp);
+ sum=box_edge(sum,lower.z,i-plane,center,temp);
+ return box_edge(sum,cache[face+p.faces.x*p.faces.y].z,i+plane,center,temp);
+}
 fn action(q:vec3<i32>,d:vec3<u32>,offset:u32,fine:bool,temp:bool)->f32 {
  let i=index(q,d);let center=solution(i,offset,fine,temp);var out=0.;
  if fine {
+  if p.location.w==0u{return fine_box_action(q,i,d,center,temp);}
   // A nonzero cached face certifies a valid neighbor. Every cycle producer
   // writes zero correction at walls/anchors, so neighbor masks are redundant.
   for(var a=0u;a<3u;a++){for(var s=-1;s<=1;s+=2){
@@ -88,8 +106,11 @@ fn prolong(@builtin(global_invocation_id) g:vec3<u32>){if scalars[1].z>0.5{retur
 }
 
 fn dot_partial(g:vec3<u32>,local:u32,group:vec3<u32>,initial:bool){
- let groups=(p.dims.w+255u)/256u;let gi=group.x+group.y*65535u;if gi>=groups{return;}
- let i=flat(g);var v=0.;if i<p.dims.w && fine_active(i) && scalars[1].z<0.5 {v=work[i].y*work[i].w;if initial{work[i].z=work[i].w;}}
+ let groups=(p.dims.w+255u)/256u;let gi=group.x+group.y*256u;if gi>=groups{return;}
+ let i=flat(g);var v=0.;if i<p.dims.w && scalars[1].z<0.5 {
+  if any(p.dims.xyz>vec3<u32>(4u)){work[i].w=predicted[i].w;}
+  if fine_active(i){v=work[i].y*work[i].w;if initial{work[i].z=work[i].w;}}
+ }
  reduction[local]=v;workgroupBarrier();
  for(var stride=128u;stride>0u;stride/=2u){if local<stride{reduction[local]+=reduction[local+stride];}workgroupBarrier();}
  if local==0u && scalars[1].z<0.5 {partials[gi].x=reduction[0];}

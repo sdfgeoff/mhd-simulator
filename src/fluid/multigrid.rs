@@ -284,21 +284,20 @@ impl Multigrid {
                 .collect::<Vec<_>>(),
         );
     }
+    #[cfg(test)]
     fn apply(&self, context: &GpuContext) {
         self.dispatch(context, &self.cycle);
     }
 }
 
-fn encode_fluid(state: &FluidState, pass: &mut wgpu::ComputePass<'_>, stages: &[(&str, [u32; 3])]) {
-    pass.set_bind_group(0, &state.bind, &[]);
-    for (stage, g) in stages {
-        pass.set_pipeline(&state.pipelines[stage]);
-        pass.dispatch_workgroups(g[0], g[1], g[2]);
-    }
-}
 impl Multigrid {
+    // The dot kernel commits the final fine correction as it consumes it.
+    // A single-level cycle writes the correction directly in coarse_solve.
+    fn before_dot(&self) -> &[(usize, &'static str)] {
+        &self.cycle[..self.cycle.len() - usize::from(self.levels.len() > 1)]
+    }
     pub(super) fn initialize(&self, state: &FluidState) {
-        self.apply(&state.context);
+        self.dispatch(&state.context, self.before_dot());
         self.dispatch(&state.context, &[(0, "initial_direction")]);
         state.dispatch(&[("initial_reduce", [1, 1, 1])]);
     }
@@ -319,7 +318,7 @@ impl Multigrid {
                         ("pressure_residual_subspace", cells),
                     ]);
                 }
-                self.apply(&state.context);
+                self.dispatch(&state.context, self.before_dot());
                 self.dispatch(&state.context, &[(0, "preconditioned_dot")]);
                 state.dispatch(&[("beta_reduce", [1, 1, 1])]);
                 self.dispatch(&state.context, &[(0, "preconditioned_search")]);
@@ -335,8 +334,7 @@ impl Multigrid {
                 .context
                 .compute_pass(&mut encoder, Some("Multigrid-preconditioned CG batch"));
             for _ in 0..batch {
-                encode_fluid(
-                    state,
+                state.encode_stages(
                     &mut pass,
                     &[
                         ("pressure_apply", cells),
@@ -345,8 +343,7 @@ impl Multigrid {
                     ],
                 );
                 if state.params.initial[3] > 0. {
-                    encode_fluid(
-                        state,
+                    state.encode_stages(
                         &mut pass,
                         &[
                             ("pressure_residual_mean", [1, 1, 1]),
@@ -354,9 +351,9 @@ impl Multigrid {
                         ],
                     );
                 }
-                self.encode_stages(&mut pass, &self.cycle);
+                self.encode_stages(&mut pass, self.before_dot());
                 self.encode_stages(&mut pass, &[(0, "preconditioned_dot")]);
-                encode_fluid(state, &mut pass, &[("beta_reduce", [1, 1, 1])]);
+                state.encode_stages(&mut pass, &[("beta_reduce", [1, 1, 1])]);
                 self.encode_stages(&mut pass, &[(0, "preconditioned_search")]);
             }
         }

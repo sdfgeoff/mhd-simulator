@@ -267,7 +267,7 @@ pub(crate) fn main() -> Result<(), Box<dyn Error>> {
     let mut max_motion_imbalance_a = 0_f32;
     let mut max_port_imbalance_a = 0_f32;
     let mut error: Option<String> = None;
-    let mut costs = String::from("step,charge_wall_ms,fluid_wall_ms\n");
+    let mut costs = String::from("step,charge_wall_ms,fluid_wall_ms,unit_basis_ms,motional_basis_ms,velocity_projection_ms,transport_projection_ms\n");
     for step in 1..=steps {
         let next_dt = if run.time_s >= pulse_start_s + duration * 4. / 3. + retract_delay_s {
             tail_dt_s
@@ -318,9 +318,11 @@ pub(crate) fn main() -> Result<(), Box<dyn Error>> {
                 fluid_start.elapsed().as_secs_f64() * 1000.
             );
         }
+        let fluid_ms = fluid_start.elapsed().as_secs_f64() * 1000.;
+        let [unit_ms, motion_ms] = current.basis_wall_ms;
+        let [velocity_ms, transport_ms] = run.fluid.as_ref().unwrap().projection_wall_ms;
         costs.push_str(&format!(
-            "{step},{charge_ms},{}\n",
-            fluid_start.elapsed().as_secs_f64() * 1000.
+            "{step},{charge_ms},{fluid_ms},{unit_ms},{motion_ms},{velocity_ms},{transport_ms}\n"
         ));
         // Drain the profiler's bounded history while advancing, as the main
         // CLI does. This only collects diagnostics already completed on GPU.

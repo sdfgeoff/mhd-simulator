@@ -94,26 +94,50 @@ fn curvature(@builtin(global_invocation_id) g:vec3<u32>){let i=flat(g);if i>=p.d
  }
  output_field[i]=vec4<f32>(input_field[i].x,clamp(k,-2.0/p.step.y,2.0/p.step.y),input_field[i].zw);
 }
-// During transport normals stores the PLIC plane (outward L1 normal, intercept).
-// It is rebuilt from each intermediate fraction field and restored to curvature
-// normals by refresh after all sweeps. Pure/degenerate cells use donor fluxes.
-@compute @workgroup_size(256)
-fn reconstruct(@builtin(global_invocation_id) g:vec3<u32>){
- let i=flat(g);if i>=p.dims.w{return;}let a=input_field[i].x;
- if a<=1e-6 || a>=1.0-1e-6 || wall(i){normals[i]=vec4<f32>(0.0);return;}
+// Reconstruct the PLIC plane (outward L1 normal, intercept) from the current
+// intermediate fraction. Pure and degenerate cells use donor fluxes.
+fn reconstruct_plane(i:u32)->vec4<f32>{
+ let a=input_field[i].x;
+ if a<=1e-6 || a>=1.0-1e-6 || wall(i){return vec4<f32>(0.0);}
  let q=point(i);var grad=vec3<f32>(0.0);
  for(var z=-1;z<=1;z++){for(var y=-1;y<=1;y++){for(var x=-1;x<=1;x++){
   let o=vec3<i32>(x,y,z);let w=select(vec3<f32>(1.0),vec3<f32>(2.0),o==vec3<i32>(0));
   grad-=vec3<f32>(f32(x)*w.y*w.z,f32(y)*w.x*w.z,f32(z)*w.x*w.y)*alpha(q+o,q);
  }}}
  let magnitude=abs(grad.x)+abs(grad.y)+abs(grad.z);
- if magnitude<=1e-12 {normals[i]=vec4<f32>(0.0);return;}
+ if magnitude<=1e-12 {return vec4<f32>(0.0);}
  let unit=interface_normal(q,grad);let n=unit/max(dot(abs(unit),vec3<f32>(1.0)),1e-20);
- normals[i]=vec4<f32>(n,cube_intercept(n,a));
+ return vec4<f32>(n,cube_intercept(n,a));
+}
+@compute @workgroup_size(256)
+fn reconstruct(@builtin(global_invocation_id) g:vec3<u32>){
+ let i=flat(g);if i<p.dims.w{normals[i]=reconstruct_plane(i);}
+}
+@compute @workgroup_size(256)
+fn sweep_planes(@builtin(global_invocation_id) g:vec3<u32>){
+ let i=flat(g);if i<p.dims.w{output_field[i]=reconstruct_plane(i);}
 }
 // Signed volume and enthalpy fluxes through one face, scaled by dt/h.
-// Each neighboring cell evaluates this identical expression: no atomics or
-// independently limited per-cell fluxes can break flux cancellation.
+// Evaluated once on each lower face. Both adjacent cells read the same result.
+fn liquid_flux(at:vec3<i32>,axis:u32)->vec3<f32>{
+ var previous=at;previous[axis]-=1;
+ if !inside(at)||!inside(previous){return vec3<f32>(0.0);}
+ let right=bounded(at);let left=bounded(previous);
+ if wall(index(right))||wall(index(left)){return vec3<f32>(0.0);}
+ let fd=p.dims.xyz+vec3<u32>(1);let fi=u32(right.x)+fd.x*(u32(right.y)+fd.y*u32(right.z));
+ let displacement=velocity[fi][axis]*p.step.x/p.step.y;
+ // Independently verify the actual face CFL, even if a caller supplied an
+ // incorrect speed bound. Returning a flag avoids unsafe geometry arithmetic.
+ if !(abs(displacement)<=0.150001) {return vec3<f32>(0.0,0.0,1.0);}
+ if displacement==0.0{return vec3<f32>(0.0);}
+ let donor=index(select(right,left,displacement>0.0));let a=input_field[donor].x;
+ var fraction=a;let plane=output_field[donor];
+ if dot(abs(plane.xyz),vec3<f32>(1.0))>0.5 {
+  fraction=slab_fraction(plane.xyz,plane.w,axis,abs(displacement),sign(displacement));
+ }
+ return vec3<f32>(displacement*fraction,displacement,0.0);
+}
+
 fn geometric_flux(at:vec3<i32>,axis:u32)->vec4<f32>{
  let f=liquid_flux(at,axis);var heat=0.0;
  if p.choice.y!=0u && f.y!=0.0 && f.z==0.0 {
@@ -122,6 +146,12 @@ fn geometric_flux(at:vec3<i32>,axis:u32)->vec4<f32>{
   if a>1e-12 {heat=f.x*(thermal[donor].state.z-thermal[donor].valid.y)/a;}
  }
  return vec4<f32>(f.x,heat,f.y,f.z);
+}
+// The next occupancy packet held the plane until this pass. The old normal
+// buffer now holds the full lower-face flux until both transport stages finish.
+@compute @workgroup_size(256)
+fn cache_flux(@builtin(global_invocation_id) g:vec3<u32>){
+ let i=flat(g);if i<p.dims.w{normals[i]=geometric_flux(point(i),p.choice.z);}
 }
 @compute @workgroup_size(256)
 fn sweep(@builtin(global_invocation_id) g:vec3<u32>){
@@ -138,7 +168,7 @@ fn sweep(@builtin(global_invocation_id) g:vec3<u32>){
  }
  if !wall(i){
   var upper=q;upper[axis]+=1;
-  let low_flux=geometric_flux(q,axis);let high_flux=geometric_flux(upper,axis);
+  let low_flux=normals[i];let high_flux=cached_face(upper);
   invalid=invalid || low_flux.w>0.5 || high_flux.w>0.5;
   let divergence=high_flux.z-low_flux.z;
   a+=low_flux.x-high_flux.x+cc*divergence;correction+=cc*divergence;
@@ -156,7 +186,7 @@ fn sweep(@builtin(global_invocation_id) g:vec3<u32>){
 fn collect(@builtin(global_invocation_id) g:vec3<u32>,@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>){let i=flat(g);var s=vec4<f32>(0.0);var b=vec4<f32>(1e30,-1e30,0.0,0.0);
  if i<p.dims.w{let f=input_field[i];s.x=f.x*p.step.y*p.step.y*p.step.y;s.y=normals[i].w*p.step.y*p.step.y/32.0;s.z=f.w*p.step.y*p.step.y*p.step.y;s.w=select(0.0,1.0,!(abs(f.x)<1e10)||!(abs(f.y)<1e10)||f.z<0.0||!(abs(f.w)<1e10));b=vec4<f32>(f.x,f.x,select(0.0,abs(f.y),f.x>1e-6 && f.x<0.999999),0.0);}
  sums[l]=s;bounds[l]=b;workgroupBarrier();for(var d=128u;d>0u;d/=2u){if l<d{sums[l]+=sums[l+d];bounds[l]=vec4<f32>(min(bounds[l].x,bounds[l+d].x),max(bounds[l].yz,bounds[l+d].yz),0.0);}workgroupBarrier();}
- let gi=group.x+group.y*65535u;if l==0u{stats[gi*2u]=sums[0];stats[gi*2u+1u]=bounds[0];}
+ let gi=group.x+group.y*256u;if l==0u && gi<(p.dims.w+255u)/256u{stats[gi*2u]=sums[0];stats[gi*2u+1u]=bounds[0];}
 }
 @compute @workgroup_size(256)
 fn reduce(@builtin(local_invocation_index) l:u32){let n=(p.dims.w+255u)/256u;var s=vec4<f32>(0.0);var b=vec4<f32>(1e30,-1e30,0.0,0.0);

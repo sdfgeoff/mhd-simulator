@@ -12,9 +12,9 @@ struct Cell {state:vec4<f32>,flux:vec4<f32>,budget:vec4<f32>,valid:vec4<f32>}
 var<workgroup> reduction:array<vec4<f32>,256>;
 var<workgroup> extremes:array<vec4<f32>,256>;
 var<workgroup> corrections:array<vec4<f32>,256>;
-fn flat(g:vec3<u32>)->u32{return g.x+g.y*65535u*256u;}
+fn flat(g:vec3<u32>)->u32{return g.x+g.y*256u*256u;}
 fn groups()->u32{return (p.dims.w+255u)/256u;}
-fn group(g:vec3<u32>)->u32{return g.x+g.y*65535u;}
+fn group(g:vec3<u32>)->u32{return g.x+g.y*256u;}
 fn point(i:u32)->vec3<i32>{return vec3<i32>(i32(i%p.dims.x),i32((i/p.dims.x)%p.dims.y),i32(i/(p.dims.x*p.dims.y)));}
 fn inside(q:vec3<i32>)->bool{return all(q>=vec3<i32>(0))&&all(q<vec3<i32>(p.dims.xyz));}
 fn index(q:vec3<i32>)->u32{return u32(q.x)+p.dims.x*(u32(q.y)+p.dims.y*u32(q.z));}

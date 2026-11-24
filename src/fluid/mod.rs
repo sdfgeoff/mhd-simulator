@@ -144,6 +144,8 @@ pub struct FluidState {
     pub time_s: f64,
     pub diagnostics: FluidDiagnostics,
     pub fluid_cells: u64,
+    /// Host wall times for the velocity and post-transport pressure projections.
+    pub projection_wall_ms: [f64; 2],
     pub reference_probe_mm: [f32; 3],
     pub components: usize,
     pub bytes: u64,
@@ -513,6 +515,7 @@ impl FluidState {
             "stress_diffuse",
             "pressure_coefficients",
             "pressure_residual_mean",
+            "pressure_reduce_blocks",
             "pressure_initial_subspace",
             "pressure_residual_subspace",
             "pressure_guess",
@@ -658,6 +661,7 @@ impl FluidState {
             surface_tension_n_m,
             air_density_kg_m3,
             force_max: 0.,
+            projection_wall_ms: [0.; 2],
             momentum_projection_pending: false,
             #[cfg(test)]
             euler_viscosity_reference: false,
@@ -935,7 +939,8 @@ impl FluidState {
             }
             iterations += extra;
             residual = r;
-            elapsed += started.elapsed().as_secs_f64() * 1000.;
+            self.projection_wall_ms[1] = started.elapsed().as_secs_f64() * 1000.;
+            elapsed += self.projection_wall_ms[1];
         }
         self.dispatch(&[
             ("fields", groups(self.params.dims[3])),
@@ -1024,17 +1029,27 @@ impl FluidState {
                 .create_command_encoder(&Default::default());
             {
                 let mut pass = self.context.compute_pass(&mut encoder, None);
-                pass.set_bind_group(0, &self.bind, &[]);
-                for (entry, g) in chunk {
-                    pass.set_pipeline(&self.pipelines[entry]);
-                    pass.dispatch_workgroups(g[0], g[1], g[2]);
-                }
+                self.encode_stages(&mut pass, chunk);
             }
             if bounded {
                 self.context.submit_bounded(encoder.finish());
             } else {
                 self.context.queue.submit(Some(encoder.finish()));
             }
+        }
+    }
+    fn encode_stages(&self, pass: &mut wgpu::ComputePass<'_>, stages: &[(&str, [u32; 3])]) {
+        pass.set_bind_group(0, &self.bind, &[]);
+        let group_count = self.params.dims[3].div_ceil(256);
+        for &(stage, g) in stages {
+            if group_count >= 4096
+                && matches!(stage, "initial_reduce" | "alpha_reduce" | "beta_reduce" | "pressure_residual_mean")
+            {
+                pass.set_pipeline(&self.pipelines["pressure_reduce_blocks"]);
+                pass.dispatch_workgroups(group_count.div_ceil(256), 1, 1);
+            }
+            pass.set_pipeline(&self.pipelines[stage]);
+            pass.dispatch_workgroups(g[0], g[1], g[2]);
         }
     }
     fn convergence(&self) -> Result<(f32, bool, u32), String> {
@@ -1383,7 +1398,10 @@ impl FluidState {
             if self.time_s == 0. && self.bounded_submissions() {
                 eprintln!("First fluid step: viscosity submitted; starting pressure");
             }
-            self.project(true)
+            let started = std::time::Instant::now();
+            let projected = self.project(true);
+            self.projection_wall_ms = [started.elapsed().as_secs_f64() * 1000., 0.];
+            projected
         };
         let result = run().and_then(|(iterations, residual)| {
             self.dispatch(&[
@@ -1523,8 +1541,7 @@ fn probe_cell(
     )?)))
 }
 fn groups(n: u32) -> [u32; 3] {
-    let n = n.div_ceil(256);
-    [n.min(65535), n.div_ceil(65535), 1]
+    crate::gpu::volume_groups(n)
 }
 fn anchors(mask: &mut [u32], dims: [u32; 3], periodic: [bool; 3]) -> usize {
     let mut components = 0;

@@ -1,7 +1,7 @@
 // Test-only volume/Fourier moments. Only the private reduction buffer is written.
 @compute @workgroup_size(256)
 fn cylinder_collect(@builtin(global_invocation_id) g:vec3<u32>,@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>){
- let gi=group.x+65535u*group.y;if gi>=(p.dims.w+255u)/256u{return;}
+ let gi=group.x+256u*group.y;if gi>=(p.dims.w+255u)/256u{return;}
  let i=flat(g);var a=vec4<f32>(0.);var b=vec4<f32>(0.);
  if i<p.dims.w {
   let q=point(i);let alpha=input_field[i].x;let phase=6.283185307179586*(f32(q.z)+0.5)/f32(p.dims.z);

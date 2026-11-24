@@ -6,7 +6,7 @@ struct Params {dims:vec4<u32>,choice:vec4<u32>,step:vec4<f32>}
 @group(0) @binding(4) var<storage,read> velocity:array<vec4<f32>>; // frozen advector / compression velocity
 @group(0) @binding(5) var<storage,read> carried:array<vec4<f32>>;
 @group(0) @binding(6) var<storage,read_write> transported:array<vec4<f32>>;
-@group(0) @binding(7) var<storage,read> normals:array<vec4<f32>>;
+@group(0) @binding(7) var<storage,read> normals:array<vec4<f32>>; // lower-face flux for this sweep
 @group(0) @binding(8) var<storage,read> mask:array<u32>;
 fn face_point(i:u32)->vec3<i32>{let d=p.dims.xyz+vec3<u32>(1);return vec3<i32>(i32(i%d.x),i32((i/d.x)%d.y),i32(i/(d.x*d.y)));}
 fn face_index(q:vec3<i32>)->u32{let d=p.dims.xyz+vec3<u32>(1);return u32(q.x)+d.x*(u32(q.y)+d.y*u32(q.z));}
@@ -69,13 +69,13 @@ fn momentum_trace(at:vec3<i32>,component:u32,axis:u32,flux:f32)->f32 {
 fn momentum(@builtin(global_invocation_id) g:vec3<u32>){
  let i=flat(g);let fd=p.dims.xyz+vec3<u32>(1);if i>=fd.x*fd.y*fd.z{return;}
  let q=canonical_face(face_point(i));let axis=p.choice.z;var upper=q;upper[axis]+=1;var out=vec4<f32>(0.0);
- let base_low=liquid_flux(q,axis);let base_high=liquid_flux(upper,axis);
+ let base_low=cached_face(q).xzw;let base_high=cached_face(upper).xzw;
  let source_q=compression_density(q)*(base_high.y-base_low.y);
  for(var component=0u;component<3u;component++){
   if !open_face(q,component){continue;}var left=q;left[component]-=1;
   let old_density=0.5*(rho(q,false)+rho(left,false));let new_density=0.5*(rho(q,true)+rho(left,true));
   var left_upper=left;left_upper[axis]+=1;
-  let left_low=liquid_flux(left,axis);let left_high=liquid_flux(left_upper,axis);
+  let left_low=cached_face(left).xzw;let left_high=cached_face(left_upper).xzw;
   // Shared primal fluxes give the exact mass balance for arithmetic dual density.
   let center=carried_velocity(q,component);
   let low=0.5*(mass_flux(base_low)+mass_flux(left_low));

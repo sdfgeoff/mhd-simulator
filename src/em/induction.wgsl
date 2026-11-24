@@ -74,7 +74,7 @@ fn diagonal(i:u32)->f32 {return max(source[i].w+mass(i),1e-30);}
 // Residual/search vectors may be normalized while the increment stays in SI.
 // Slot six is unused by field/energy reductions; zero initialization means unity.
 fn residual_scale()->f32 {return select(1.0,scalars[6].x,scalars[6].x>0.0);}
-fn group_id(w:vec3<u32>)->u32{return w.x+w.y*65535u;}
+fn group_id(w:vec3<u32>)->u32{return w.x+w.y*256u;}
 fn sum_group(local:u32)->vec4<f32>{
     workgroupBarrier();for(var s=128u;s>0u;s/=2u){if local<s {reduction[local]+=reduction[local+s];}workgroupBarrier();}return reduction[0];
 }

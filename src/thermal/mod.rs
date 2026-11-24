@@ -139,8 +139,7 @@ pub struct ThermalState {
     transport_delta_j: f64,
 }
 fn groups(n: u32) -> [u32; 3] {
-    let n = n.div_ceil(256);
-    [n.min(65535), n.div_ceil(65535), 1]
+    crate::gpu::volume_groups(n)
 }
 impl ThermalState {
     pub fn new(

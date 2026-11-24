@@ -5,7 +5,7 @@ fn audit_face(q0:vec3<i32>,axis:u32)->f32 {
  return velocity[u.x+d.x*(u.y+d.y*u.z)][axis];
 }
 fn patch_collect(g:vec3<u32>,l:u32,group:vec3<u32>,kinetic:bool){
- let gi=group.x+group.y*65535u;if gi>=(p.dims.w+255u)/256u{return;}
+ let gi=group.x+group.y*256u;if gi>=(p.dims.w+255u)/256u{return;}
  let i=flat(g);var value=vec4<f32>(0.);var phase=vec4<f32>(0.);
  if i<p.dims.w {
   let a=input_field[i].x;

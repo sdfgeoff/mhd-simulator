@@ -1,6 +1,6 @@
 struct Params {origin:vec4<f32>,dims:vec4<u32>,edges:vec4<u32>,control:vec4<u32>,physical:vec4<f32>}
 @group(0) @binding(0) var<uniform> scene:Params;
-fn flat_id(id:vec3<u32>)->u32{return id.x+id.y*65535u*256u;}
+fn flat_id(id:vec3<u32>)->u32{return id.x+id.y*256u*256u;}
 fn edge_dims(axis:u32)->vec3<u32>{var d=scene.dims.xyz+vec3<u32>(1);d[axis]-=1u;return d;}
 fn edge_offset(axis:u32)->u32{if axis==0u{return 0u;}if axis==1u{return scene.edges.x;}return scene.edges.x+scene.edges.y;}
 fn edge_index(axis:u32,p:vec3<i32>)->u32 {let d=edge_dims(axis);return edge_offset(axis)+u32(p.x)+d.x*(u32(p.y)+d.y*u32(p.z));}

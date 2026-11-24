@@ -35,7 +35,7 @@ fn height_comparison(q:vec3<i32>,i:u32)->vec4<f32>{
 }
 @compute @workgroup_size(256)
 fn height_probe_collect(@builtin(global_invocation_id) g:vec3<u32>,@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>){
- let gi=group.x+group.y*65535u;if gi>=(p.dims.w+255u)/256u{return;}
+ let gi=group.x+group.y*256u;if gi>=(p.dims.w+255u)/256u{return;}
  let i=flat(g);var counts=vec4<f32>(0.);var errors=vec4<f32>(0.);var extra=vec4<f32>(0.);
  if i<p.dims.w && !wall(i) {
   let q=point(i);let fraction=input_field[i].x;
@@ -76,7 +76,7 @@ fn height_on_axis(q:vec3<i32>,i:u32,axis:u32)->vec2<f32>{
 }
 @compute @workgroup_size(256)
 fn height_axis_probe_collect(@builtin(global_invocation_id) g:vec3<u32>,@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>){
- let gi=group.x+group.y*65535u;if gi>=(p.dims.w+255u)/256u{return;}
+ let gi=group.x+group.y*256u;if gi>=(p.dims.w+255u)/256u{return;}
  let i=flat(g);var counts=vec4<f32>(0.);var errors=vec4<f32>(0.);var extra=vec4<f32>(0.);
  if i<p.dims.w&&!wall(i) {
   let q=point(i);let fraction=input_field[i].x;

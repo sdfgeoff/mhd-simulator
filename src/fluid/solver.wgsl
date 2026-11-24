@@ -16,8 +16,8 @@ var<workgroup> reduce_b:array<vec4<f32>,256>;
 var<workgroup> reduce_c:array<vec4<f32>,256>;
 fn index(p0:vec3<i32>,dims:vec3<u32>)->u32 {let q=vec3<u32>(p0);return q.x+dims.x*(q.y+dims.y*q.z);}
 fn decode(i:u32,dims:vec3<u32>)->vec3<i32> {return vec3<i32>(vec3<u32>(i%dims.x,(i/dims.x)%dims.y,i/(dims.x*dims.y)));}
-fn flat_id(id:vec3<u32>)->u32 {return id.x+id.y*65535u*256u;}
-fn group_id(id:vec3<u32>)->u32 {return id.x+id.y*65535u;}
+fn flat_id(id:vec3<u32>)->u32 {return id.x+id.y*256u*256u;}
+fn group_id(id:vec3<u32>)->u32 {return id.x+id.y*256u;}
 fn count_groups()->u32 {return (p.dims.w+255u)/256u;}
 fn periodic(axis:u32)->bool {return (p.flags.x&(1u<<axis))!=0u;}
 fn wrap_cell(pos:vec3<i32>)->vec3<i32> {
@@ -75,9 +75,26 @@ fn cached_mobility(pos:vec3<i32>,axis:u32)->f32 {
     return velocity[index(canonical_face(pos),p.faces.xyz)][axis];
 }
 fn cached_diagonal(i:u32)->f32 {return velocity[i].w;}
+fn box_edge(sum:f32,weight:f32,neighbor:u32,center:f32,kind:u32)->f32 {
+ if weight>0. {return sum+weight*(center-select(work[neighbor].x,work[neighbor].z,kind==1u));}
+ return sum;
+}
+fn box_apply(q:vec3<i32>,i:u32,center:f32,kind:u32)->f32 {
+ let face=index(q,p.faces.xyz);
+ let lower=velocity[face];
+ let row=p.dims.x;
+ let plane=row*p.dims.y;
+ var sum=box_edge(0.,lower.x,i-1u,center,kind);
+ sum=box_edge(sum,velocity[face+1u].x,i+1u,center,kind);
+ sum=box_edge(sum,lower.y,i-row,center,kind);
+ sum=box_edge(sum,velocity[face+p.faces.x].y,i+row,center,kind);
+ sum=box_edge(sum,lower.z,i-plane,center,kind);
+ return box_edge(sum,velocity[face+p.faces.x*p.faces.y].z,i+plane,center,kind);
+}
 fn apply(pos:vec3<i32>,kind:u32)->f32 {
     if !mean_free_pressure() && (mask[index(pos,p.dims.xyz)]&3u)==2u {return potential(pos,kind);}
     let center=potential(pos,kind);var out=0.0;
+    if p.flags.x==0u{return box_apply(pos,index(pos,p.dims.xyz),center,kind);}
     for(var axis=0u;axis<3u;axis++) {for(var sign=-1;sign<=1;sign+=2) {
         var fp=pos;if sign>0 {fp[axis]+=1;}
         let beta=cached_mobility(fp,axis);
@@ -117,6 +134,21 @@ fn sample_component(position:vec3<f32>,axis:u32)->f32 {
 fn sample_velocity(position:vec3<f32>)->vec3<f32> {return vec3<f32>(sample_component(position,0u),sample_component(position,1u),sample_component(position,2u));}
 fn sum_group(local:u32)->vec4<f32> {
     workgroupBarrier();for(var stride=128u;stride>0u;stride/=2u) {if local<stride {reduce[local]+=reduce[local+stride];}workgroupBarrier();}return reduce[0];
+}
+// The second partial bank is scratch during the single-bank CG reductions.
+@compute @workgroup_size(256)
+fn pressure_reduce_blocks(@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>){
+ let i=256u*group.x+l;var v=vec4<f32>(0.);
+ if i<count_groups(){v=partials[i];}
+ reduce[l]=v;let total=sum_group(l);
+ if l==0u{partials[count_groups()+group.x]=total;}
+}
+fn pressure_total(l:u32)->vec4<f32>{
+ let blocks=count_groups()>=4096u;
+ let offset=select(0u,count_groups(),blocks);
+ let n=select(count_groups(),(count_groups()+255u)/256u,blocks);
+ var v=vec4<f32>(0.);for(var i=l;i<n;i+=256u){v+=partials[offset+i];}
+ reduce[l]=v;return sum_group(l);
 }
 @compute @workgroup_size(256)
 fn initialize(@builtin(global_invocation_id) gid:vec3<u32>) {
@@ -197,8 +229,7 @@ fn pressure_refresh(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_
 }
 @compute @workgroup_size(256)
 fn initial_reduce(@builtin(local_invocation_index) l:u32) {
-    var sum=vec4<f32>(0.0);for(var i=l;i<count_groups();i+=256u) {sum+=partials[i];}
-    reduce[l]=sum;let total=sum_group(l);
+    let total=pressure_total(l);
     if l==0u {scalars[0]=total;scalars[1]=vec4<f32>(0.0,0.0,select(0.0,1.0,total.y<=p.solve.x*total.z+p.solve.y||total.z==0.0),scalars[1].w);}
 }
 @compute @workgroup_size(256)
@@ -210,7 +241,7 @@ fn pressure_apply(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_in
 }
 @compute @workgroup_size(256)
 fn alpha_reduce(@builtin(local_invocation_index) l:u32) {
-    var sum=vec4<f32>(0.0);for(var i=l;i<count_groups();i+=256u) {sum+=partials[i];}reduce[l]=sum;let total=sum_group(l);
+    let total=pressure_total(l);
     if l==0u {var alpha=0.0;if scalars[1].z<0.5 {alpha=scalars[0].x/max(total.x,1e-35);}scalars[1].x=alpha;}
 }
 @compute @workgroup_size(256)
@@ -230,7 +261,7 @@ fn update(@builtin(global_invocation_id) gid:vec3<u32>,@builtin(local_invocation
 }
 @compute @workgroup_size(256)
 fn beta_reduce(@builtin(local_invocation_index) l:u32) {
-    var sum=vec4<f32>(0.0);for(var i=l;i<count_groups();i+=256u) {sum+=partials[i];}reduce[l]=sum;let total=sum_group(l);
+    let total=pressure_total(l);
     if l==0u && scalars[1].z<0.5 {
         scalars[1].w+=1.0;
         scalars[1].y=total.x/max(scalars[0].x,1e-35);scalars[0].x=total.x;scalars[0].y=total.y;

@@ -235,6 +235,8 @@ impl SurfaceState {
             "normal",
             "curvature",
             "reconstruct",
+            "sweep_planes",
+            "cache_flux",
             "sweep",
             "collect",
             "reduce",
@@ -562,9 +564,9 @@ impl SurfaceState {
                     (t.output, t.input)
                 }
             });
-            self.dispatch(volume, Some(velocity), heat, &["reconstruct", "sweep"]);
+            self.dispatch(volume, Some(velocity), heat, &["sweep_planes", "cache_flux", "sweep"]);
             if let Some(m) = momentum {
-                self.dispatch_momentum(volume, m, sweep);
+                self.dispatch_momentum(m, sweep);
             }
             self.current = 1 - self.current;
         }
@@ -598,22 +600,21 @@ impl SurfaceState {
         self.diagnostics.transport_divergence_m3 += self.step_divergence_m3;
         Ok(())
     }
-    fn dispatch_momentum(&self, volume: &Volume, m: MomentumTransport<'_>, sweep: u32) {
+    fn dispatch_momentum(&self, m: MomentumTransport<'_>, sweep: u32) {
         let (input, output) = if sweep.is_multiple_of(2) {
             (m.velocity, m.scratch)
         } else {
             (m.scratch, m.velocity)
         };
         let buffers = [
-            &self.uniform,
-            volume.material_ids(),
-            self.field(),
-            &self.fields[1 - self.current],
-            m.advector,
-            input,
-            output,
-            &self.normals,
-            m.mask,
+            (0, &self.uniform),
+            (2, self.field()),
+            (3, &self.fields[1 - self.current]),
+            (4, m.advector),
+            (5, input),
+            (6, output),
+            (7, &self.normals),
+            (8, m.mask),
         ];
         let bind = self
             .context
@@ -623,9 +624,8 @@ impl SurfaceState {
                 layout: &self.momentum_pipeline.get_bind_group_layout(0),
                 entries: &buffers
                     .iter()
-                    .enumerate()
-                    .map(|(i, b)| wgpu::BindGroupEntry {
-                        binding: i as u32,
+                    .map(|&(binding, b)| wgpu::BindGroupEntry {
+                        binding,
                         resource: b.as_entire_binding(),
                     })
                     .collect::<Vec<_>>(),
@@ -681,8 +681,7 @@ impl SurfaceState {
     }
 }
 fn groups(n: u32) -> [u32; 3] {
-    let n = n.div_ceil(256);
-    [n.min(65535), n.div_ceil(65535), 1]
+    crate::gpu::volume_groups(n)
 }
 #[cfg(test)]
 pub(crate) mod tests;

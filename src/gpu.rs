@@ -1,4 +1,13 @@
 //! GPU ownership and limits shared by the native app and headless execution.
+/// Linear volume kernels flatten multi-row launches with a 256-group stride.
+pub fn volume_groups(cells: u32) -> [u32; 3] {
+    let count = cells.div_ceil(256);
+    if count <= 65535 {
+        [count, 1, 1]
+    } else {
+        [256, count.div_ceil(256), 1]
+    }
+}
 #[derive(Clone)]
 pub struct GpuContext {
     pub device: wgpu::Device,
@@ -252,6 +261,93 @@ mod memory_tests {
 mod periodic_index_tests {
     use super::*;
     use wgpu::util::DeviceExt;
+    #[test]
+    fn multirow_volume_dispatch_reaches_last_partial_group() {
+        let _lock = crate::gpu_test_lock();
+        let context = GpuContext::headless().unwrap();
+        let count = 85_215u32 * 256 - 11;
+        let launch = volume_groups(count);
+        assert_eq!(launch, [256, 333, 1]);
+        let limits = context.device.limits();
+        if u64::from(count) * 16 > u64::from(limits.max_storage_buffer_binding_size)
+            || u64::from(count) * 16 > limits.max_buffer_size
+            || context
+                .ensure_memory(u64::from(count) * 24, "Large-grid indexing regression")
+                .is_err()
+        {
+            return;
+        }
+        let buffer = |element_bytes: u64| {
+            context.device.create_buffer(&wgpu::BufferDescriptor {
+                label: Some("Large-grid indexing regression"),
+                size: u64::from(count) * element_bytes,
+                usage: wgpu::BufferUsages::STORAGE
+                    | wgpu::BufferUsages::COPY_SRC
+                    | wgpu::BufferUsages::COPY_DST,
+                mapped_at_creation: false,
+            })
+        };
+        let original = buffer(4);
+        let fractions = buffer(16);
+        let result = buffer(4);
+        let params = [count, 1, 1, count, 1, 0, 0, 0, 0, 0, 0, 0];
+        let uniform = context
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: None,
+                contents: bytemuck::cast_slice(&params),
+                usage: wgpu::BufferUsages::UNIFORM,
+            });
+        let samples = [0, 255, 65535, 65536, 65535 * 256, count - 1];
+        for i in samples {
+            context
+                .queue
+                .write_buffer(&original, u64::from(i) * 4, bytemuck::bytes_of(&(2 + i)));
+        }
+        let shader = context
+            .device
+            .create_shader_module(wgpu::ShaderModuleDescriptor {
+                label: None,
+                source: wgpu::ShaderSource::Wgsl(include_str!("surface_ids.wgsl").into()),
+            });
+        let pipeline = context
+            .device
+            .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+                label: None,
+                layout: None,
+                module: &shader,
+                entry_point: Some("update"),
+                compilation_options: Default::default(),
+                cache: None,
+            });
+        let buffers = [&uniform, &original, &fractions, &result];
+        let bind = context
+            .device
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                label: None,
+                layout: &pipeline.get_bind_group_layout(0),
+                entries: &buffers
+                    .iter()
+                    .enumerate()
+                    .map(|(i, b)| wgpu::BindGroupEntry {
+                        binding: i as u32,
+                        resource: b.as_entire_binding(),
+                    })
+                    .collect::<Vec<_>>(),
+            });
+        let mut encoder = context.device.create_command_encoder(&Default::default());
+        {
+            let mut pass = encoder.begin_compute_pass(&Default::default());
+            pass.set_pipeline(&pipeline);
+            pass.set_bind_group(0, &bind, &[]);
+            pass.dispatch_workgroups(launch[0], launch[1], launch[2]);
+        }
+        context.queue.submit(Some(encoder.finish()));
+        for i in samples {
+            let actual = read_bytes(&context, &result, u64::from(i) * 4, 4).unwrap();
+            assert_eq!(actual, (2 + i).to_ne_bytes());
+        }
+    }
     #[test]
     fn shader_periodic_indices_match_euclidean_wrapping_including_non_power_of_two_sizes() {
         let _lock = crate::gpu_test_lock();

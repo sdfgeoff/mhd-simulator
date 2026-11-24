@@ -54,6 +54,20 @@ fn diagonal(i:u32)->f32{
  for(var a=0u;a<3u;a++){for(var sign=-1;sign<=1;sign+=2){var n=q;n[a]+=sign;if valid(n){d+=coefficient(i,index(n));}}}
  return max(d,1e-30);
 }
+fn diagonal_offset()->u32{return groups()+(groups()+255u)/256u;}
+@compute @workgroup_size(256)
+fn prepare_diagonal(@builtin(global_invocation_id) g:vec3<u32>){
+ let packet=flat_id(g);if packet>=(cfg.dims.w+3u)/4u{return;}
+ var d=vec4<f32>(1.0);
+ for(var lane=0u;lane<4u;lane++){let i=4u*packet+lane;if i<cfg.dims.w && unknown(i){d[lane]=diagonal(i);}}
+ partials[diagonal_offset()+packet]=d;
+}
+fn cached_diagonal(i:u32)->f32{return partials[diagonal_offset()+i/4u][i%4u];}
+fn dense_cg_group(slot:u32)->u32{
+ if cfg.control.w==0u{return slot;}
+ if slot>=cfg.control.w{return groups();}
+ return u32(partials[diagonal_offset()+(cfg.dims.w+3u)/4u+slot].x);
+}
 fn rhs(i:u32)->f32{
  if !unknown(i){return 0.0;}let q=xyz(i);var b=0.0;
  for(var a=0u;a<3u;a++){for(var sign=-1;sign<=1;sign+=2){var n=q;n[a]+=sign;if valid(n){let j=index(n);if flag(j)<=1.0{b+=coefficient(i,j)*terminal(j);}b-=cfg.physical.x*coefficient(i,j)*0.5*(emf(i)[a]+emf(j)[a])*f32(sign);}}}
@@ -76,41 +90,53 @@ fn reduce(value:vec4<f32>,l:u32,group:u32){
  for(var s=128u;s>0u;s/=2u){if l<s{scratch[l]+=scratch[l+s];}workgroupBarrier();}
  if l==0u&&group<groups(){partials[group]=scratch[0];}
 }
-fn sum_partials(l:u32)->vec4<f32>{var v=vec4<f32>(0.0);for(var i=l;i<groups();i+=256u){v+=partials[i];}scratch[l]=v;workgroupBarrier();for(var s=128u;s>0u;s/=2u){if l<s{scratch[l]+=scratch[l+s];}workgroupBarrier();}return scratch[0];}
+@compute @workgroup_size(256)
+fn reduce_blocks(@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>){
+ let block=flat_group(group);let i=block*256u+l;var v=vec4<f32>(0.);
+ if i<groups(){v=partials[i];}
+ scratch[l]=v;workgroupBarrier();
+ for(var s=128u;s>0u;s/=2u){if l<s{scratch[l]+=scratch[l+s];}workgroupBarrier();}
+ if l==0u && block<(groups()+255u)/256u{partials[groups()+block]=scratch[0];}
+}
+fn sum_partials(l:u32)->vec4<f32>{let large=groups()>=4096u;let n=select(groups(),(groups()+255u)/256u,large);let offset=select(0u,groups(),large);var v=vec4<f32>(0.0);for(var i=l;i<n;i+=256u){v+=partials[offset+i];}scratch[l]=v;workgroupBarrier();for(var s=128u;s>0u;s/=2u){if l<s{scratch[l]+=scratch[l+s];}workgroupBarrier();}return scratch[0];}
+@compute @workgroup_size(256)
+fn clear_partials(@builtin(global_invocation_id) g:vec3<u32>){
+ let i=flat_id(g);if i<groups(){partials[i]=vec4<f32>(0.);}
+}
 fn cg_active()->bool{return scalars[0].y>cfg.extra.y*cfg.extra.y*scalars[0].z;}
 @compute @workgroup_size(256)
 fn initialize(@builtin(global_invocation_id) g:vec3<u32>,@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>){
  let i=flat_id(g);var v=vec4<f32>(0.0);if i<cfg.dims.w{
-  if unknown(i){let b=rhs(i);let r=residual_value(i);let z=r/diagonal(i);work[i].y=r;work[i].z=z;work[i].w=0.0;v=vec4<f32>(r*z,r*r,b*b,0.0);}else if cells[i].x>0.0{work[i].x=terminal(i);}
+  if unknown(i){let b=rhs(i);let r=residual_value(i);let z=r/cached_diagonal(i);work[i].y=r;work[i].z=z;work[i].w=0.0;v=vec4<f32>(r*z,r*r,b*b,0.0);}else if cells[i].x>0.0{work[i].x=terminal(i);}
  }reduce(v,l,flat_group(group));
 }
 @compute @workgroup_size(256)
 fn initial_reduce(@builtin(local_invocation_index) l:u32){let v=sum_partials(l);if l==0u{scalars[0]=v;}}
 @compute @workgroup_size(256)
 fn apply_operator(@builtin(global_invocation_id) g:vec3<u32>,@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>){
- let i=flat_id(g);var v=vec4<f32>(0.0);if i<cfg.dims.w&&unknown(i){let a=matrix_value(i,2u);work[i].w=a;v.x=work[i].z*a;}reduce(v,l,flat_group(group));
+ let dense=dense_cg_group(flat_group(group));if dense>=groups(){return;}let i=dense*256u+l;var v=vec4<f32>(0.0);if i<cfg.dims.w&&unknown(i){let a=matrix_value(i,2u);work[i].w=a;v.x=work[i].z*a;}reduce(v,l,dense);
 }
 @compute @workgroup_size(256)
 fn alpha_reduce(@builtin(local_invocation_index) l:u32){let v=sum_partials(l);if l==0u{scalars[0].w=0.0;if cg_active()&&v.x>0.0{scalars[0].w=scalars[0].x/v.x;}}}
 @compute @workgroup_size(256)
 fn update_residual(@builtin(global_invocation_id) g:vec3<u32>,@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>){
- let i=flat_id(g);var v=vec4<f32>(0.0);if i<cfg.dims.w&&unknown(i){
+ let dense=dense_cg_group(flat_group(group));if dense>=groups(){return;}let i=dense*256u+l;var v=vec4<f32>(0.0);if i<cfg.dims.w&&unknown(i){
   // Keep twenty high-word mantissa bits. Clearing thirteen bits made the low
   // word too large: subtracting adjacent nearly-equal copper potentials then
   // lost the tiny face drop at high conductivity contrast. The explicit
   // three-bit split retains a small low word without requiring f64/f16.
   let old=work[i].x;let increment=scalars[0].w*work[i].z+correction(i);let high=bitcast<f32>(bitcast<u32>(old+increment)&0xfffffff8u);
   unit_potential[i][cfg.control.x+2u]=(old-high)+increment;work[i].x=high;
-  work[i].y-=scalars[0].w*work[i].w;let r=work[i].y;v=vec4<f32>(r*r/diagonal(i),r*r,0.0,0.0);
- }reduce(v,l,flat_group(group));
+  work[i].y-=scalars[0].w*work[i].w;let r=work[i].y;v=vec4<f32>(r*r/cached_diagonal(i),r*r,0.0,0.0);
+ }reduce(v,l,dense);
 }
 @compute @workgroup_size(256)
 fn beta_reduce(@builtin(local_invocation_index) l:u32){let v=sum_partials(l);if l==0u{scalars[1].x=0.0;if scalars[0].x>0.0{scalars[1].x=v.x/scalars[0].x;}scalars[0].x=v.x;scalars[0].y=v.y;}}
 @compute @workgroup_size(256)
-fn update_search(@builtin(global_invocation_id) g:vec3<u32>){let i=flat_id(g);if i<cfg.dims.w&&unknown(i){work[i].z=work[i].y/diagonal(i)+scalars[1].x*work[i].z;}}
+fn update_search(@builtin(workgroup_id) group:vec3<u32>,@builtin(local_invocation_index) l:u32){let dense=dense_cg_group(flat_group(group));if dense>=groups(){return;}let i=dense*256u+l;if i<cfg.dims.w&&unknown(i){work[i].z=work[i].y/cached_diagonal(i)+scalars[1].x*work[i].z;}}
 @compute @workgroup_size(256)
 fn true_residual(@builtin(global_invocation_id) g:vec3<u32>,@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>){
- let i=flat_id(g);var v=vec4<f32>(0.0);if i<cfg.dims.w&&unknown(i){let b=rhs(i);let r=residual_value(i);let z=r/diagonal(i);work[i].y=r;work[i].z=z;v=vec4<f32>(r*z,r*r,b*b,0.0);}reduce(v,l,flat_group(group));
+ let i=flat_id(g);var v=vec4<f32>(0.0);if i<cfg.dims.w&&unknown(i){let b=rhs(i);let r=residual_value(i);let z=r/cached_diagonal(i);work[i].y=r;work[i].z=z;v=vec4<f32>(r*z,r*r,b*b,0.0);}reduce(v,l,flat_group(group));
 }
 @compute @workgroup_size(256)
 fn terminal_flux(@builtin(global_invocation_id) g:vec3<u32>,@builtin(local_invocation_index) l:u32,@builtin(workgroup_id) group:vec3<u32>){
