@@ -31,3 +31,7 @@ V3exported itsinitialfield, then theAMDkernel reported a gfxringtimeout/reset be
 ## Fluid submission correction V5
 
 V4chargeaccepted in82.8s, thenAMDGPUtimeoutinfirstfluidstep. V5fenceslargegridfluidpressureandMGstages, preservingstageorderandconvergencecheckcadence. ForcedboundedvsoriginalGPUtest has exactpressure/velocityfields forJacobiandMG; analyticpressureL2<1e-4. Thisaddresses a suspectedlongsubmissionpath; exactoffendingkernel remainsunisolated. Firstfluidpredictor/viscosity/pressureprogresslogsadded. Samehardware,numerics,pulse,10msduration. See `pressure-submission-recovery-v5.json`; noacceptedfluidstepyet.
+
+## User runtime decision (reply1037)
+
+The85µmAMDrun was stopped at user runtime objection. First0.5msfield is retained and analysed:110.14nLbelowexit,1.269m/sdownwardoutlet,attachedallthresholds,no boundary contact. See stopped-v5-prefix500us.json/png. CPU-only NVIDIA proposal retains100µmearlierresolution,3µssteps/3334steps10.002ms,fullassemblyand10mmflightspace. ActualpreviousNVIDIAcosts imply10–14hplanningruntime; memoryestimate5.4GiBrequiresnativefitconfirmation. Proposalfiles are unqueued. Asked whether overnight10–14h is acceptable; awaitinganswer beforelaunch.

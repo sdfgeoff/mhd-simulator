@@ -1,0 +1,696 @@
+{
+  "run": {
+    "thermal_enabled": false,
+    "thermal": {
+      "initial_temperature_c": 20.0,
+      "boundaries": [
+        {
+          "kind": "insulated"
+        },
+        {
+          "kind": "insulated"
+        },
+        {
+          "kind": "insulated"
+        },
+        {
+          "kind": "insulated"
+        },
+        {
+          "kind": "insulated"
+        },
+        {
+          "kind": "insulated"
+        }
+      ],
+      "exposed_boundary": {
+        "kind": "insulated"
+      },
+      "max_substeps": 4096
+    },
+    "dt_s": 3e-06,
+    "fluid_enabled": true,
+    "prescribed_jet": null
+  },
+  "cad_curves": [],
+  "electromagnetics": {
+    "wires": [],
+    "magnets": [
+      {
+        "body": 18,
+        "magnetization_a_m": [
+          755985.9796865028,
+          0,
+          0
+        ],
+        "subdivisions": 3,
+        "smoothing_mm": 0.05
+      },
+      {
+        "body": 20,
+        "magnetization_a_m": [
+          755985.9796865028,
+          0,
+          0
+        ],
+        "subdivisions": 3,
+        "smoothing_mm": 0.05
+      }
+    ],
+    "uniform": [],
+    "dt_s": 1e-05,
+    "relative_tolerance": 0.0001,
+    "max_iterations": 4000
+  },
+  "fluid": {
+    "surface": {
+      "enabled": true
+    },
+    "material_id": 4,
+    "dt_s": 3e-06,
+    "acceleration_m_s2": [
+      0.0,
+      0.0,
+      -9.81
+    ],
+    "initial_velocity_m_s": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "periodic": [
+      false,
+      false,
+      false
+    ],
+    "advection": true,
+    "use_em_force": false,
+    "mushy_drag_rate_s_inv": 1000000.0,
+    "relative_tolerance": 0.0001,
+    "absolute_divergence_tolerance": 1e-05,
+    "max_iterations": 10000,
+    "max_viscous_substeps": 4096
+  },
+  "version": 3,
+  "geometry": "/home/geoffrey/Reference/OffTopic/mhd-hardware-study/hardware/designs/concept1-sturdy-tip-drill118-060-v1-060/assembly.gltf",
+  "domain": {
+    "min_mm": [
+      -11.2,
+      -10.2,
+      -10.5
+    ],
+    "max_mm": [
+      11.2,
+      10.2,
+      17.4
+    ],
+    "cell_mm": 0.1
+  },
+  "materials": [
+    {
+      "surface_tension_n_m": null,
+      "thermal": {
+        "solidus_c": null,
+        "liquidus_c": null,
+        "heat_capacity_j_kg_k": 1005.0,
+        "conductivity_w_m_k": 0.026,
+        "latent_heat_j_kg": null
+      },
+      "id": 0,
+      "name": "Air / void",
+      "conductivity_s_m": 0.0,
+      "relative_permeability": 1.0,
+      "density_kg_m3": 1.2,
+      "dynamic_viscosity_pa_s": 1.8e-05,
+      "notes": "EM vacuum/insulator approximation; approximate density and dynamic viscosity near room temperature. Constant properties; temperature dependence is not modeled.",
+      "reference": "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/air-properties-definitions/"
+    },
+    {
+      "surface_tension_n_m": null,
+      "thermal": {
+        "solidus_c": null,
+        "liquidus_c": null,
+        "heat_capacity_j_kg_k": null,
+        "conductivity_w_m_k": null,
+        "latent_heat_j_kg": null
+      },
+      "id": 1,
+      "name": "Unassigned",
+      "conductivity_s_m": null,
+      "relative_permeability": null,
+      "density_kg_m3": null,
+      "dynamic_viscosity_pa_s": null,
+      "notes": "Select a physical material before simulating this component.",
+      "reference": null
+    },
+    {
+      "surface_tension_n_m": null,
+      "thermal": {
+        "solidus_c": 1084.62,
+        "liquidus_c": 1084.62,
+        "heat_capacity_j_kg_k": 394.0,
+        "conductivity_w_m_k": 394.0,
+        "latent_heat_j_kg": null
+      },
+      "id": 2,
+      "name": "Copper",
+      "conductivity_s_m": 58000000.0,
+      "relative_permeability": 1.0,
+      "density_kg_m3": 8890.0,
+      "dynamic_viscosity_pa_s": null,
+      "notes": "100% IACS reference conductivity and density at 20 \u00b0C; unit permeability approximation. Temperature dependence is not applied.",
+      "reference": "https://help.copper.fyi/hc/en-us/articles/4410229175442-How-does-copper-set-the-standard-for-electrical-conductivity"
+    },
+    {
+      "surface_tension_n_m": 0.5,
+      "thermal": {
+        "solidus_c": 183.0,
+        "liquidus_c": 190.0,
+        "heat_capacity_j_kg_k": 190.0,
+        "conductivity_w_m_k": 49.0,
+        "latent_heat_j_kg": 45000.0
+      },
+      "id": 3,
+      "name": "Benchmark conducting liquid (uncalibrated)",
+      "conductivity_s_m": 2000000.0,
+      "relative_permeability": 1.0,
+      "density_kg_m3": 7000.0,
+      "dynamic_viscosity_pa_s": 0.002,
+      "notes": "Synthetic EM/fluid nozzle: sigma 2e6 S/m, rho 7000 kg/m3, viscosity 0.002 Pa s, surface tension 0.5 N/m. Constant illustrative liquid properties, not calibrated solder. Five ideal closed current loops; no prescribed fluid force. Isothermal: Joule heat is reported, temperature does not evolve.",
+      "reference": null
+    },
+    {
+      "surface_tension_n_m": 0.53,
+      "thermal": {
+        "solidus_c": 227,
+        "liquidus_c": 227,
+        "heat_capacity_j_kg_k": 214.0,
+        "conductivity_w_m_k": 60.5,
+        "latent_heat_j_kg": 59000.0
+      },
+      "id": 4,
+      "name": "Sn99.3Cu0.7 molten research properties",
+      "conductivity_s_m": 2200000,
+      "relative_permeability": 1.0,
+      "density_kg_m3": 7000,
+      "dynamic_viscosity_pa_s": 0.001894473372694133,
+      "notes": "Applied at 250.0 C from hardware/solder-properties.json; see its units, sources and limitations. No temperature dependence during this thermal-disabled trial.",
+      "reference": "https://docnum.univ-lorraine.fr/public/UPV-M/Theses/2007/Mhiaou.Souad.SMZ0755.pdf"
+    },
+    {
+      "surface_tension_n_m": null,
+      "thermal": {
+        "solidus_c": null,
+        "liquidus_c": null,
+        "heat_capacity_j_kg_k": 450.0,
+        "conductivity_w_m_k": 9.0,
+        "latent_heat_j_kg": null
+      },
+      "id": 5,
+      "name": "Permanent magnet",
+      "conductivity_s_m": 625000.0,
+      "relative_permeability": 1.0,
+      "density_kg_m3": 7500.0,
+      "dynamic_viscosity_pa_s": null,
+      "notes": "Representative NdFeB: resistivity 160 \u00b5\u03a9\u00b7cm, density 7.5 g/cm\u00b3. The solver uses \u03bcr=1 as an explicit approximation (typical recoil \u03bcr\u22481.05). Set source magnetization separately per CAD body; no temperature dependence or demagnetization model. Thermal conductivity 9 W/(m K) is an illustrative assumption; heat capacity 450 J/(kg K) is within the vendor range.",
+      "reference": "https://www.kjmagnetics.com/neodymium-magnet-specifications.asp"
+    },
+    {
+      "surface_tension_n_m": null,
+      "thermal": {
+        "solidus_c": 1375.0,
+        "liquidus_c": 1400.0,
+        "heat_capacity_j_kg_k": 500.0,
+        "conductivity_w_m_k": 15.0,
+        "latent_heat_j_kg": null
+      },
+      "id": 6,
+      "name": "316 stainless steel",
+      "conductivity_s_m": 1333333.2,
+      "relative_permeability": 1.0,
+      "density_kg_m3": 8000.0,
+      "dynamic_viscosity_pa_s": null,
+      "notes": "Density and conductivity references at 20 \u00b0C. Unit permeability is an annealed/nonmagnetic approximation; processing can change it. No temperature dependence is applied.",
+      "reference": "https://www.thyssenkrupp-materials.co.uk/stainless-steel-316-14401.html/index.html"
+    },
+    {
+      "surface_tension_n_m": null,
+      "thermal": {
+        "solidus_c": null,
+        "liquidus_c": null,
+        "heat_capacity_j_kg_k": 880.0,
+        "conductivity_w_m_k": 30.0,
+        "latent_heat_j_kg": null
+      },
+      "id": 7,
+      "name": "Alumina",
+      "conductivity_s_m": 0.0,
+      "relative_permeability": 1.0,
+      "density_kg_m3": 3900.0,
+      "dynamic_viscosity_pa_s": null,
+      "notes": "Representative CoorsTek AD-995 (99.5%) density. Ideal electrical insulator and unit-permeability approximations; room-temperature resistivity exceeds 10\u00b9\u2074 \u03a9\u00b7cm. Grade and temperature matter; no temperature dependence is applied.",
+      "reference": "https://www2.coorstek.com/media/4235/advanced-alumina.pdf"
+    },
+    {
+      "surface_tension_n_m": null,
+      "thermal": {
+        "solidus_c": 582.0,
+        "liquidus_c": 652.0,
+        "heat_capacity_j_kg_k": 896.0,
+        "conductivity_w_m_k": 167.0,
+        "latent_heat_j_kg": null
+      },
+      "id": 8,
+      "name": "Aluminium 6061 (T6)",
+      "conductivity_s_m": 25000000.0,
+      "relative_permeability": 1.0,
+      "density_kg_m3": 2700.0,
+      "dynamic_viscosity_pa_s": null,
+      "notes": "Representative 6061-T6 room-temperature properties: density 2700 kg/m\u00b3, conductivity 25 MS/m, heat capacity 896 J/(kg K) at 100 \u00b0C, thermal conductivity 167 W/(m K). Melting interval 582\u2013652 \u00b0C. Unit permeability approximation. Temper/temperature dependence is not modeled; latent heat and liquid viscosity remain unknown.",
+      "reference": "https://online.kaiseraluminum.com/depot/PublicProductInformation/Document/1006/Kaiser_Aluminum_Shapes_Soft_Alloy.pdf"
+    },
+    {
+      "surface_tension_n_m": null,
+      "thermal": {
+        "solidus_c": 1375.0,
+        "liquidus_c": 1400.0,
+        "heat_capacity_j_kg_k": 500.0,
+        "conductivity_w_m_k": 15.0,
+        "latent_heat_j_kg": null
+      },
+      "id": 14,
+      "name": "Thin-wall stainless screening",
+      "conductivity_s_m": 1100000.0,
+      "relative_permeability": 1.0,
+      "density_kg_m3": 8000.0,
+      "dynamic_viscosity_pa_s": null,
+      "notes": "Rounded fixed hot-conductivity sensitivity consistent with manufacturer indicative resistivity curve around250C (~0.9 microohm m). No temperature feedback; other properties unchanged.",
+      "reference": "https://ucpcdn.thyssenkrupp.com/_legacy/UCPthyssenkruppBAMXtkStainless/assets.files/downloads/316_1.pdf, physical-property spread (PDF page4), graph read approximately."
+    },
+    {
+      "surface_tension_n_m": null,
+      "thermal": {
+        "solidus_c": 227.0,
+        "liquidus_c": 227.0,
+        "heat_capacity_j_kg_k": 214.0,
+        "conductivity_w_m_k": 60.5,
+        "latent_heat_j_kg": 59000.0
+      },
+      "id": 15,
+      "name": "Fixed solid solder feedstock screening",
+      "conductivity_s_m": 6000000.0,
+      "relative_permeability": 1.0,
+      "density_kg_m3": 7420.0,
+      "dynamic_viscosity_pa_s": null,
+      "notes": "ALPHA VACULOY datasheet defaults: resistivity 11.99 \u00b5\u03a9\u00b7cm and density 7.42 g/cm\u00b3. Unit permeability approximation. Not calibrated molten-metal properties; temperature dependence is not applied. Liquid viscosity 0.002 Pa\u00b7s, surface tension 0.5 N/m and latent heat are illustrative starting assumptions; Sn60Pb40 heat capacity is also an estimate. Replace them with operating-temperature data.",
+      "reference": "https://www.macdermidalpha.com/sites/default/files/2024-04/ALPHA-VACULOY-Sn99.3Cu0.7-Solid-Solder-EN-12Apr24-TB.pdf"
+    },
+    {
+      "surface_tension_n_m": null,
+      "thermal": {
+        "solidus_c": 1084.62,
+        "liquidus_c": 1084.62,
+        "heat_capacity_j_kg_k": 394.0,
+        "conductivity_w_m_k": 394.0,
+        "latent_heat_j_kg": null
+      },
+      "id": 16,
+      "name": "Positive copper cable port",
+      "conductivity_s_m": 25000000.0,
+      "relative_permeability": 1.0,
+      "density_kg_m3": 8890.0,
+      "dynamic_viscosity_pa_s": null,
+      "notes": "100% IACS reference conductivity and density at 20 \u00b0C; unit permeability approximation. Temperature dependence is not applied.",
+      "reference": "https://help.copper.fyi/hc/en-us/articles/4410229175442-How-does-copper-set-the-standard-for-electrical-conductivity"
+    },
+    {
+      "surface_tension_n_m": null,
+      "thermal": {
+        "solidus_c": 1084.62,
+        "liquidus_c": 1084.62,
+        "heat_capacity_j_kg_k": 394.0,
+        "conductivity_w_m_k": 394.0,
+        "latent_heat_j_kg": null
+      },
+      "id": 17,
+      "name": "Negative copper cable port",
+      "conductivity_s_m": 25000000.0,
+      "relative_permeability": 1.0,
+      "density_kg_m3": 8890.0,
+      "dynamic_viscosity_pa_s": null,
+      "notes": "100% IACS reference conductivity and density at 20 \u00b0C; unit permeability approximation. Temperature dependence is not applied.",
+      "reference": "https://help.copper.fyi/hc/en-us/articles/4410229175442-How-does-copper-set-the-standard-for-electrical-conductivity"
+    },
+    {
+      "surface_tension_n_m": null,
+      "thermal": {
+        "solidus_c": 1375.0,
+        "liquidus_c": 1400.0,
+        "heat_capacity_j_kg_k": 500.0,
+        "conductivity_w_m_k": 15.0,
+        "latent_heat_j_kg": null
+      },
+      "id": 18,
+      "name": "SmCo screening assumption",
+      "conductivity_s_m": 1100000.0,
+      "relative_permeability": 1.0,
+      "density_kg_m3": 8000.0,
+      "dynamic_viscosity_pa_s": null,
+      "notes": "Assumed Br and conductivity; grade, temperature, coercivity and cooling must be qualified.",
+      "reference": "https://www.thyssenkrupp-materials.co.uk/stainless-steel-316-14401.html/index.html"
+    },
+    {
+      "surface_tension_n_m": null,
+      "thermal": {
+        "solidus_c": null,
+        "liquidus_c": null,
+        "heat_capacity_j_kg_k": 880.0,
+        "conductivity_w_m_k": 0.528,
+        "latent_heat_j_kg": null
+      },
+      "id": 19,
+      "name": "Mica sheet and head washer",
+      "conductivity_s_m": 0.0,
+      "relative_permeability": 1.0,
+      "density_kg_m3": 3900.0,
+      "dynamic_viscosity_pa_s": null,
+      "notes": "Representative CoorsTek AD-995 (99.5%) density. Ideal electrical insulator and unit-permeability approximations; room-temperature resistivity exceeds 10\u00b9\u2074 \u03a9\u00b7cm. Grade and temperature matter; no temperature dependence is applied.",
+      "reference": "https://www2.coorstek.com/media/4235/advanced-alumina.pdf"
+    },
+    {
+      "surface_tension_n_m": null,
+      "thermal": {
+        "solidus_c": 1084.62,
+        "liquidus_c": 1084.62,
+        "heat_capacity_j_kg_k": 394.0,
+        "conductivity_w_m_k": 394.0,
+        "latent_heat_j_kg": null
+      },
+      "id": 20,
+      "name": "Broad copper plate",
+      "conductivity_s_m": 25000000.0,
+      "relative_permeability": 1.0,
+      "density_kg_m3": 8890.0,
+      "dynamic_viscosity_pa_s": null,
+      "notes": "100% IACS reference conductivity and density at 20 \u00b0C; unit permeability approximation. Temperature dependence is not applied.",
+      "reference": "https://help.copper.fyi/hc/en-us/articles/4410229175442-How-does-copper-set-the-standard-for-electrical-conductivity"
+    },
+    {
+      "surface_tension_n_m": null,
+      "thermal": {
+        "solidus_c": null,
+        "liquidus_c": null,
+        "heat_capacity_j_kg_k": 880.0,
+        "conductivity_w_m_k": 25.0,
+        "latent_heat_j_kg": null
+      },
+      "id": 21,
+      "name": "Insulating sleeve envelope, ceramic placeholder",
+      "conductivity_s_m": 0.0,
+      "relative_permeability": 1.0,
+      "density_kg_m3": 3900.0,
+      "dynamic_viscosity_pa_s": null,
+      "notes": "Representative CoorsTek AD-995 (99.5%) density. Ideal electrical insulator and unit-permeability approximations; room-temperature resistivity exceeds 10\u00b9\u2074 \u03a9\u00b7cm. Grade and temperature matter; no temperature dependence is applied.",
+      "reference": "https://www2.coorstek.com/media/4235/advanced-alumina.pdf"
+    }
+  ],
+  "bodies": [
+    {
+      "name": "Integrated stainless Concept1 head and heater block / 0",
+      "triangles": 3448,
+      "visible": true,
+      "simulation": {
+        "included": true,
+        "material_id": 14,
+        "temperature_c": 250,
+        "fixed_temperature_c": null,
+        "heat_source_w_m3": 0
+      }
+    },
+    {
+      "name": "Molten SnCu pool original concept / 0",
+      "triangles": 256,
+      "visible": true,
+      "simulation": {
+        "included": true,
+        "material_id": 4,
+        "temperature_c": 250,
+        "fixed_temperature_c": null,
+        "heat_source_w_m3": 0
+      }
+    },
+    {
+      "name": "Positive copper strip with flat clamp pad / 0",
+      "triangles": 478,
+      "visible": true,
+      "simulation": {
+        "included": true,
+        "material_id": 20,
+        "temperature_c": 250,
+        "fixed_temperature_c": null,
+        "heat_source_w_m3": 0
+      }
+    },
+    {
+      "name": "Positive mica sheet under head / 0",
+      "triangles": 478,
+      "visible": true,
+      "simulation": {
+        "included": true,
+        "material_id": 19,
+        "temperature_c": 250,
+        "fixed_temperature_c": null,
+        "heat_source_w_m3": 0
+      }
+    },
+    {
+      "name": "Positive M2 ceramic shoulder sleeve / 0",
+      "triangles": 768,
+      "visible": true,
+      "simulation": {
+        "included": true,
+        "material_id": 21,
+        "temperature_c": 250,
+        "fixed_temperature_c": null,
+        "heat_source_w_m3": 0
+      }
+    },
+    {
+      "name": "Positive M2 ceramic shoulder flange / 0",
+      "triangles": 768,
+      "visible": true,
+      "simulation": {
+        "included": true,
+        "material_id": 21,
+        "temperature_c": 250,
+        "fixed_temperature_c": null,
+        "heat_source_w_m3": 0
+      }
+    },
+    {
+      "name": "Positive insulated M2x8 clamp screw / 0",
+      "triangles": 764,
+      "visible": true,
+      "simulation": {
+        "included": true,
+        "material_id": 14,
+        "temperature_c": 250,
+        "fixed_temperature_c": null,
+        "heat_source_w_m3": 0
+      }
+    },
+    {
+      "name": "Positive copper cable port virtual region / 0",
+      "triangles": 12,
+      "visible": true,
+      "simulation": {
+        "included": true,
+        "material_id": 16,
+        "temperature_c": 250,
+        "fixed_temperature_c": null,
+        "heat_source_w_m3": 0
+      }
+    },
+    {
+      "name": "Negative copper strip with flat clamp pad / 0",
+      "triangles": 478,
+      "visible": true,
+      "simulation": {
+        "included": true,
+        "material_id": 20,
+        "temperature_c": 250,
+        "fixed_temperature_c": null,
+        "heat_source_w_m3": 0
+      }
+    },
+    {
+      "name": "Negative mica sheet under head / 0",
+      "triangles": 478,
+      "visible": true,
+      "simulation": {
+        "included": true,
+        "material_id": 19,
+        "temperature_c": 250,
+        "fixed_temperature_c": null,
+        "heat_source_w_m3": 0
+      }
+    },
+    {
+      "name": "Negative M2 ceramic shoulder sleeve / 0",
+      "triangles": 768,
+      "visible": true,
+      "simulation": {
+        "included": true,
+        "material_id": 21,
+        "temperature_c": 250,
+        "fixed_temperature_c": null,
+        "heat_source_w_m3": 0
+      }
+    },
+    {
+      "name": "Negative M2 ceramic shoulder flange / 0",
+      "triangles": 768,
+      "visible": true,
+      "simulation": {
+        "included": true,
+        "material_id": 21,
+        "temperature_c": 250,
+        "fixed_temperature_c": null,
+        "heat_source_w_m3": 0
+      }
+    },
+    {
+      "name": "Negative insulated M2x8 clamp screw / 0",
+      "triangles": 764,
+      "visible": true,
+      "simulation": {
+        "included": true,
+        "material_id": 14,
+        "temperature_c": 250,
+        "fixed_temperature_c": null,
+        "heat_source_w_m3": 0
+      }
+    },
+    {
+      "name": "Negative copper cable port virtual region / 0",
+      "triangles": 12,
+      "visible": true,
+      "simulation": {
+        "included": true,
+        "material_id": 17,
+        "temperature_c": 250,
+        "fixed_temperature_c": null,
+        "heat_source_w_m3": 0
+      }
+    },
+    {
+      "name": "Heater retaining grub envelope / 0",
+      "triangles": 380,
+      "visible": true,
+      "simulation": {
+        "included": true,
+        "material_id": 14,
+        "temperature_c": 250,
+        "fixed_temperature_c": null,
+        "heat_source_w_m3": 0
+      }
+    },
+    {
+      "name": "Sensor retaining grub envelope / 0",
+      "triangles": 380,
+      "visible": true,
+      "simulation": {
+        "included": true,
+        "material_id": 14,
+        "temperature_c": 250,
+        "fixed_temperature_c": null,
+        "heat_source_w_m3": 0
+      }
+    },
+    {
+      "name": "6x20 heater cartridge sheath envelope / 0",
+      "triangles": 380,
+      "visible": true,
+      "simulation": {
+        "included": true,
+        "material_id": 14,
+        "temperature_c": 250,
+        "fixed_temperature_c": null,
+        "heat_source_w_m3": 0
+      }
+    },
+    {
+      "name": "3x15 sensor cartridge sheath envelope / 0",
+      "triangles": 380,
+      "visible": true,
+      "simulation": {
+        "included": true,
+        "material_id": 14,
+        "temperature_c": 250,
+        "fixed_temperature_c": null,
+        "heat_source_w_m3": 0
+      }
+    },
+    {
+      "name": "Left10x10x5mm SmCo pole / 0",
+      "triangles": 12,
+      "visible": true,
+      "simulation": {
+        "included": true,
+        "material_id": 18,
+        "temperature_c": 20,
+        "fixed_temperature_c": null,
+        "heat_source_w_m3": 0
+      }
+    },
+    {
+      "name": "Left magnet-face mica shield / 0",
+      "triangles": 12,
+      "visible": true,
+      "simulation": {
+        "included": true,
+        "material_id": 19,
+        "temperature_c": 250,
+        "fixed_temperature_c": null,
+        "heat_source_w_m3": 0
+      }
+    },
+    {
+      "name": "Right10x10x5mm SmCo pole / 0",
+      "triangles": 12,
+      "visible": true,
+      "simulation": {
+        "included": true,
+        "material_id": 18,
+        "temperature_c": 20,
+        "fixed_temperature_c": null,
+        "heat_source_w_m3": 0
+      }
+    },
+    {
+      "name": "Right magnet-face mica shield / 0",
+      "triangles": 12,
+      "visible": true,
+      "simulation": {
+        "included": true,
+        "material_id": 19,
+        "temperature_c": 250,
+        "fixed_temperature_c": null,
+        "heat_source_w_m3": 0
+      }
+    }
+  ],
+  "plane": {
+    "position_mm": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "quaternion_xyzw": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  }
+}

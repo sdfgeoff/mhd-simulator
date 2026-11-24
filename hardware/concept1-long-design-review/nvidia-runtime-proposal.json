@@ -1,0 +1,49 @@
+{
+  "status": "PROPOSAL_ONLY_NOT_QUEUED",
+  "human_steering": 1037,
+  "recommendation": "ReturntomeasuredNVIDIAthroughput, retainprevious100umresolutionratherthan85um, one10msrun.",
+  "numerics": {
+    "cell_um": 100,
+    "dt_us": 3,
+    "steps": 3334,
+    "duration_ms": 10.002,
+    "fields_every_steps": 200
+  },
+  "hardware": "Samefullassembly/fullmagnetsources/pulse120A400usforward/25A133usreverse/gap25/rise20",
+  "domain": {
+    "min_mm": [
+      -11.2,
+      -10.2,
+      -10.5
+    ],
+    "max_mm": [
+      11.2,
+      10.2,
+      17.4
+    ],
+    "cell_mm": 0.1
+  },
+  "flight_space_mm": 10.0,
+  "predicted_dims": [
+    224,
+    204,
+    279
+  ],
+  "previous_NVIDIA_dims": [
+    224,
+    204,
+    259
+  ],
+  "observed_previous_NVIDIA_memory_MiB": 5137,
+  "linear_memory_estimate_MiB": 5533.679536679537,
+  "memory_limit_note": "Estimateonly; normalnativebudget/bufferguardsmustpass. No newGPUpreflightorphysicsstarted.",
+  "measured_previous_1200_steps_s": 12965.117879205,
+  "linear_3334_step_hours_samecellcost": 10.005949770664229,
+  "cell_scaled_hours": 10.778609984615136,
+  "planning_runtime_range_hours": [
+    10,
+    14
+  ],
+  "runtime_note": "Planningestimatefromactualprevious100umNVIDIArun,notguarantee. Pressure/currentiterationsandtailcanchange.",
+  "tradeoff": "Same100umresolutionasoriginalsuccessfulscreens,notrequested85umfinergrid;longerdurationretained.10mmflightspacecanstillbecontactedifdroptravel>10mm;flagboundarycontact."
+}
