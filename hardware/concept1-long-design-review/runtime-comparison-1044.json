@@ -1,0 +1,71 @@
+{
+  "scope": "Read-only actualsavedtimingcomparison forhuman1044; stoppedAMDpartial250steps, othercasescomplete. No newphysics/tests/queues.",
+  "cases": [
+    {
+      "source": "artifacts/hardware-research/m6-rooted08-flow110-r25-motionabs1e-06A-h010-dt3",
+      "dims": [
+        76,
+        76,
+        185
+      ],
+      "cells": 1068560,
+      "cell_um": 100.00000474974513,
+      "saved_steps": 1200,
+      "physical_ms": 3.5999999999999646,
+      "charge_fluid_wall_s": 403.97887684799997,
+      "seconds_per_step": 0.33664906404,
+      "mean_charge_iterations": 151.6,
+      "mean_pressure_iterations": 69.45
+    },
+    {
+      "source": "artifacts/hardware-research/plain-bore-v4-2mm-flow110-r25-h0050",
+      "dims": [
+        152,
+        152,
+        370
+      ],
+      "cells": 8548480,
+      "cell_um": 50.000002374872565,
+      "saved_steps": 2400,
+      "physical_ms": 3.600000000000199,
+      "charge_fluid_wall_s": 7246.010657682,
+      "seconds_per_step": 3.0191711073675,
+      "mean_charge_iterations": 259.6933333333333,
+      "mean_pressure_iterations": 97.70333333333333
+    },
+    {
+      "source": "artifacts/hardware-research/concept1-drill118-060-forward120-v1",
+      "dims": [
+        224,
+        204,
+        259
+      ],
+      "cells": 11835264,
+      "cell_um": 100.00000474974513,
+      "saved_steps": 1200,
+      "physical_ms": 3.5999999999999646,
+      "charge_fluid_wall_s": 12965.117879205,
+      "seconds_per_step": 10.8042648993375,
+      "mean_charge_iterations": 798.96,
+      "mean_pressure_iterations": 411.33666666666664
+    },
+    {
+      "source": "artifacts/hardware-research/concept1-design060-long-h0085-v5",
+      "dims": [
+        265,
+        240,
+        343
+      ],
+      "cells": 21814800,
+      "cell_um": 85.0000069476664,
+      "saved_steps": 250,
+      "physical_ms": 0.49999999999999917,
+      "charge_fluid_wall_s": 64305.278760438,
+      "seconds_per_step": 257.221115041752,
+      "mean_charge_iterations": 1393.536,
+      "mean_pressure_iterations": 564.728
+    }
+  ],
+  "inference": "Runtimegrowthcombineslargermodel/iterationcounts, longerduration, and changedhardware/submissionlayout; thisisnotcontrolledisolationofeachcause.",
+  "status": "Noactivecompute; NVIDIAproposalnotlaunched. User1037/1044runtimeobjection supersedesoldmonitorplans."
+}
