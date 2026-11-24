@@ -1,0 +1,595 @@
+[
+  {
+    "stem": "01-timestep-activity",
+    "title": "1  Full timestep \u2014 activity, residency and transfers",
+    "subtitle": "Stopped direct-contact V5 path \u2022 read top to bottom \u2022 all arrays stay on GPU unless an arrow explicitly says otherwise",
+    "rows": [
+      {
+        "cpu": "Host clock t, \u0394t and pulse\nIcmd = pulse(t+\u0394t/2)\n(time f64, Icmd f32)",
+        "gpu": "Configure unit-voltage basis",
+        "data": "Resident at start: B\u2080; \u03c3/flags; potential predictors;\nMAC velocity; fluid packet; \u03b1/curvature; masks",
+        "disk": "",
+        "tx": "H\u2192D: 80 B DC uniform",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "Residual / current checks\n(small mapped readbacks)",
+        "gpu": "UNIT electrical solve \u2192 detail 2\nupdate_phase \u2192 initial_guess \u2192 PCG",
+        "data": "R: accepted \u03b1, \u03c3, terminal flags, predictors\nW: \u03c3, DC work, partial reductions, scalar buffer",
+        "disk": "",
+        "tx": "D\u2192H: 64 B / check",
+        "direction": "d2h",
+        "kind": "data"
+      },
+      {
+        "cpu": "Read unit-basis port currents",
+        "gpu": "collect_fields(1 V) \u2192 fields_reduce\nsave_unit",
+        "data": "R: B\u2080, solved potential, \u03c3\nW: 64N DC packet; unit high/low predictor",
+        "disk": "",
+        "tx": "D\u2192H: 64 B scalar packet",
+        "direction": "d2h",
+        "kind": "data"
+      },
+      {
+        "cpu": "Configure motional basis;\nthen residual/current checks",
+        "gpu": "MOTIONAL electrical solve \u2192 detail 2\nupdate_phase again \u2192 initial_guess \u2192 PCG",
+        "data": "R: same \u03b1/\u03c3 matrix, B\u2080, old fluid u\nW: DC work / motion predictor / reductions",
+        "disk": "",
+        "tx": "H\u2192D config; D\u2192H checks",
+        "direction": "both",
+        "kind": "data"
+      },
+      {
+        "cpu": "Read motional-basis port currents",
+        "gpu": "collect_fields(0 V) \u2192 fields_reduce\nsave_motion",
+        "data": "W: 64N DC packet AGAIN; motion predictor\nUnit / motion packets will be overwritten.",
+        "disk": "",
+        "tx": "D\u2192H: 64 B scalar packet",
+        "direction": "d2h",
+        "kind": "data"
+      },
+      {
+        "cpu": "V = (Icmd \u2212 Im) / Gunit",
+        "gpu": "collect_fields(V) \u2192 fields_reduce",
+        "data": "W: final 64N packet = B, J, J\u00d7B, Q, applied B\nThis allocation is ALIASED as fluid force input.",
+        "disk": "",
+        "tx": "H\u2192D: 80 B uniform; D\u2192H: 64 B",
+        "direction": "both",
+        "kind": "data"
+      },
+      {
+        "cpu": "Get force/speed/validity bound",
+        "gpu": "update_force: fields \u2192 diagnostics\nNo full force-buffer copy (shared handle).",
+        "data": "R: DC force packet, MAC velocity, phase\nW: 64N fluid packet + diagnostic reductions",
+        "disk": "",
+        "tx": "D\u2192H: 48 B diagnostics",
+        "direction": "d2h",
+        "kind": "data"
+      },
+      {
+        "cpu": "No host field transfer",
+        "gpu": "Save accepted state (GPU\u2192GPU)",
+        "data": "D2D: velocity \u2192 previous (16F bytes)\nD2D: fluid packet \u2192 checkpoint (64N bytes)",
+        "disk": "",
+        "tx": "",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "Check viscous bound if no safe analytic shortcut",
+        "gpu": "predict \u2192 candidate face scratch\nOptional viscosity_bound \u2192 viscosity_bound_reduce",
+        "data": "R: old face velocity; W: predicted scratch (16F)\nIf needed: reduction produces one f32 viscous bound.",
+        "disk": "",
+        "tx": "Conditional D\u2192H: 4 B bound",
+        "direction": "d2h",
+        "kind": "data"
+      },
+      {
+        "cpu": "Set viscous substep / stage parameters",
+        "gpu": "Diffuse stress: Euler substeps or RKC stages",
+        "data": "Euler: stress_diffuse \u2192 D2D velocity\u2192scratch (16F).\nRKC: coeff/tensor/stages; reuse fluid packet as stage state.\nNo new physical grid or full host-field transfer.",
+        "disk": "",
+        "tx": "H\u2192D: uniform / stage coefficients",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "No host field transfer",
+        "gpu": "viscous kernel adds EM + gravity + capillary forcing",
+        "data": "R: diffused scratch, \u03b1, \u03ba, force; W: face velocity.\nD2D: forced velocity \u2192 candidate scratch (16F)\nbefore pressure projection A.",
+        "disk": "",
+        "tx": "",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "Iterative convergence control",
+        "gpu": "Pressure projection A \u2192 detail 3\nfields \u2192 diagnostics",
+        "data": "R/W: pressure work, face cache / scratch, MG\nW: projected velocity + fluid packet",
+        "disk": "",
+        "tx": "D\u2192H: 32 B checks; 48 B diagnostics",
+        "direction": "d2h",
+        "kind": "data"
+      },
+      {
+        "cpu": "Record work integrals",
+        "gpu": "energy_collect \u2192 energy_reduce",
+        "data": "R: current / previous faces, EM / gravity / capillary\nW: GPU work/energy scalar reductions",
+        "disk": "",
+        "tx": "D\u2192H: 32 B energy packet",
+        "direction": "d2h",
+        "kind": "data"
+      },
+      {
+        "cpu": "VOF controls + validation",
+        "gpu": "Interface + momentum transport \u2192 detail 4\n3 directional sweeps \u2192 normal / curvature",
+        "data": "D2D backups; ping-pong \u03b1 and face momentum\nW: new \u03b1 / \u03ba; packed moving material IDs",
+        "disk": "",
+        "tx": "H\u2192D: 48 B / axis; D\u2192H: 32 B",
+        "direction": "both",
+        "kind": "data"
+      },
+      {
+        "cpu": "Read phase flag; CPU anchors\nONLY if active topology changes",
+        "gpu": "update_surface \u2192 phase_faces\nPressure projection B if momentum pending",
+        "data": "R: new \u03b1 / \u03ba, static IDs; W: phase / mask / faces\nW: pressure correction, new fluid packet",
+        "disk": "",
+        "tx": "D\u2192H: 4 B flag; 32 B / solve check",
+        "direction": "d2h",
+        "kind": "data"
+      },
+      {
+        "cpu": "f64 energy / Joule ledger\nAccept t \u2190 t+\u0394t; append host CSV strings",
+        "gpu": "fields/diagnostics refreshed\nLast accepted u and \u03b1 feed next DC solve.",
+        "data": "Resident: accepted \u03b1\u207f\u207a\u00b9 and u\u207f\u207a\u00b9\nNo re-solve of current with the new velocity this step.",
+        "disk": "",
+        "tx": "D\u2192H: 48 B diagnostics",
+        "direction": "d2h",
+        "kind": "data"
+      },
+      {
+        "cpu": "At save cadence ONLY:\nmap 32 MiB chunk, write, unmap",
+        "gpu": "Copy accepted fluid packet, one chunk at a time\nGPU\u2192staging; wait/map; reuse same staging.",
+        "data": "R: 64N fluid packet\nTemporary staging \u226432 MiB, not 64N extra",
+        "disk": "fluid.bin (64N bytes)\nmetadata.json last\nCSV snapshots",
+        "tx": "D\u2192H: \u226432 MiB / chunk",
+        "direction": "d2h",
+        "kind": "data"
+      }
+    ],
+    "notes": [
+      "N = cell slots; F = (nx+1)(ny+1)(nz+1). All dense arrays include masked slots. Precision: f32 fields, u32 masks/IDs; CPU clocks/ledgers f64.",
+      "Magnet B\u2080 is computed once at startup. No per-step induction/self-field or thermal solve in this client. CPU/GPU control waits are not full-field transfers.",
+      "Solid arrows: explicit transfers. Green link: GPU-resident reads/writes. Chronological row order includes conditional branches detailed on sheets 2\u20134."
+    ],
+    "loops": []
+  },
+  {
+    "stem": "02-electrical-basis-loop",
+    "title": "2  Electrical solve \u2014 expanded PCG and data transfers",
+    "subtitle": "This subactivity executes TWICE per timestep: unit-voltage basis, then motional basis; same matrix, different RHS",
+    "rows": [
+      {
+        "cpu": "Set mode / voltage / target\nwrite_params()",
+        "gpu": "update_phase",
+        "data": "R: fluid \u03b1 (from 64N fluid packet)\nW: \u03c3 in DC properties (8N bytes total)",
+        "disk": "",
+        "tx": "H\u2192D: 80 B uniform",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "Submit initial solve stages",
+        "gpu": "initial_guess \u2192 initialize \u2192 initial_reduce",
+        "data": "R: prior high/low predictors, \u03c3/flags, B\u2080/u as needed\nW: work[\u03c6,r,p,Ap], partials \u2192 scalars",
+        "disk": "",
+        "tx": "",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "Initial residual: zero RHS \u2192 exit;\nalready converged \u2192 gate row 09;\notherwise \u2192 row 04",
+        "gpu": "GPU scalar packet copied to MAP_READ staging",
+        "data": "R: 64 B DC scalar buffer\nCPU gets a 64 B host vector, NOT the potential field.",
+        "disk": "",
+        "tx": "D\u2192H: 64 B + map/wait",
+        "direction": "d2h",
+        "kind": "data"
+      },
+      {
+        "cpu": "Enqueue 32 CG iterations\nKeep accepted-field data on GPU.",
+        "gpu": "apply_operator: Ap = A p\nworkgroup dot products",
+        "data": "R: \u03c3, flags, neighboring p\nW: work.Ap, partial p\u00b7Ap",
+        "disk": "",
+        "tx": "",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "No host scalar transfer\ninside these 5 kernels",
+        "gpu": "alpha_reduce \u2192 update_residual\n\u2192 beta_reduce \u2192 update_search",
+        "data": "GPU reductions set CG coefficients.\nR/W: \u03c6 high/low, r, p, Ap; scratch / scalars",
+        "disk": "",
+        "tx": "",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "After 32 iterations: below target?\nNo \u2192 row 04; yes \u2192 row 07",
+        "gpu": "Copy scalar buffer to staging",
+        "data": "R: partial-reduction scalars only\nNo full potential/field download.",
+        "disk": "",
+        "tx": "D\u2192H: 64 B + map/wait",
+        "direction": "d2h",
+        "kind": "data"
+      },
+      {
+        "cpu": "If candidate-converged:\nrequest independent residual",
+        "gpu": "true_residual \u2192 initial_reduce",
+        "data": "R: \u03c3, neighbor potential high/low, motional RHS\nW: true-residual dot products \u2192 scalar buffer",
+        "disk": "",
+        "tx": "",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "True residual passes?\nElse tighten target and continue.",
+        "gpu": "Copy scalar buffer to staging",
+        "data": "R: true-residual scalars only",
+        "disk": "",
+        "tx": "D\u2192H: 64 B + map/wait",
+        "direction": "d2h",
+        "kind": "data"
+      },
+      {
+        "cpu": "Current-conservation test\nUnit relative gate; motion mixed gate",
+        "gpu": "terminal_flux \u2192 terminal_flux_reduce",
+        "data": "R: terminal faces / neighbors, \u03c3, \u03c6 high/low, u\u00d7B\u2080\nW: net and absolute terminal-flux sums",
+        "disk": "",
+        "tx": "",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "Accept basis? Else tighten \u2192 row 04.\nCap / nonfinite \u2192 error.",
+        "gpu": "Copy scalar buffer to staging",
+        "data": "R: flux scalars only. Residual and current gates\nare both required; changing precision is not free.",
+        "disk": "",
+        "tx": "D\u2192H: 64 B + map/wait",
+        "direction": "d2h",
+        "kind": "data"
+      },
+      {
+        "cpu": "Read physical basis port current",
+        "gpu": "collect_fields \u2192 fields_reduce",
+        "data": "R: \u03c3, potential, B\u2080, u\nW: full 64N DC output packet + power/port sums",
+        "disk": "",
+        "tx": "D\u2192H: 64 B + map/wait",
+        "direction": "d2h",
+        "kind": "data"
+      },
+      {
+        "cpu": "Return basis scalar results",
+        "gpu": "save_unit OR save_motion",
+        "data": "R: current potential high / correction low\nW: predictor vec4<f32> (16N bytes)",
+        "disk": "",
+        "tx": "",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "After BOTH bases: compute V\nThen collect_fields(V) once more.",
+        "gpu": "Final current / force / heating assembly",
+        "data": "Final 64N packet overwrites unit/motion packets.\nNo new third PCG solve; only field reconstruction.",
+        "disk": "",
+        "tx": "H\u2192D: 80 B; D\u2192H: 64 B",
+        "direction": "both",
+        "kind": "data"
+      }
+    ],
+    "notes": [
+      "Core work = vec4<f32> \u00d7 N; predictors = vec4<f32> \u00d7 N with separate unit/motion low words. \u03c3 + packed flags = vec2<f32> \u00d7 N.",
+      "Current V5 large-grid path: each \u22645-command chunk is submitted and fenced. Fence waits have NO payload; scalar readbacks happen only at explicit checks.",
+      "Smaller-grid path batches commands without those per-chunk fences. Residual polling still occurs after 32 CG iterations. Cap/failure exits the research run."
+    ],
+    "loops": [
+      [
+        5,
+        3,
+        "not converged \u2192 next 32"
+      ],
+      [
+        9,
+        3,
+        "failed gate \u2192 continue"
+      ]
+    ]
+  },
+  {
+    "stem": "03-pressure-projection-loop",
+    "title": "3  Pressure projection \u2014 PCG, multigrid and transfers",
+    "subtitle": "Called first after forcing; called again after momentum/interface transport when projection is pending",
+    "rows": [
+      {
+        "cpu": "Set pressure gauge / parameters\nConnected domain: mean-free; otherwise anchors.",
+        "gpu": "pressure_warm (if enabled)\npressure_coefficients \u2192 pressure_guess",
+        "data": "R: face candidate, old pressure, \u03b1/density, mask\nW: face coefficient cache and pressure work",
+        "disk": "",
+        "tx": "H\u2192D: 128 B fluid uniform",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "Submit residual preparation",
+        "gpu": "pressure_refresh; optional residual-mean\n/subspace kernels; initial_reduce",
+        "data": "R: candidate divergence / pressure matrix\nW: r, initial p and scalar norms",
+        "disk": "",
+        "tx": "",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "Initial status: converged \u2192 row 13;\notherwise optional MG / batch",
+        "gpu": "Convergence scalars \u2192 staging",
+        "data": "R: 32 B scalar range (residual / stop / iteration).",
+        "disk": "",
+        "tx": "D\u2192H: 32 B + map/wait",
+        "direction": "d2h",
+        "kind": "data"
+      },
+      {
+        "cpu": "If needed and memory permits:\nallocate optional coarse hierarchy ONCE",
+        "gpu": "MG build \u2192 initial V-cycle\n\u2192 initial_direction \u2192 initial_reduce",
+        "data": "Coarse coeff + correction buffers: vec4<f32> each.\nFine cache/work reuse fluid arrays; no fine copy.",
+        "disk": "",
+        "tx": "",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "Choose iteration batch:\n8 with MG, 32 without; stop at 64 boundary.",
+        "gpu": "pressure_apply \u2192 alpha_reduce \u2192 update",
+        "data": "R: cached mobility, pressure search direction\nW: Ap, \u03b1CG, pressure solution / residual",
+        "disk": "",
+        "tx": "",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "No host field transfer",
+        "gpu": "If mean-free: residual_mean\n\u2192 residual_subspace",
+        "data": "GPU reductions/projectors keep the pressure\nconstant-nullspace out of the Krylov solve.",
+        "disk": "",
+        "tx": "",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "No host field transfer",
+        "gpu": "MG option: restrict residual down levels;\ncoarse_solve; prolong + smooth upwards",
+        "data": "R: fine residual / cache, coarse graphs\nW: preconditioned residual (fine work.w)\nJacobi option skips the V-cycle.",
+        "disk": "",
+        "tx": "",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "No host scalar transfer\ninside this iteration sequence",
+        "gpu": "preconditioned_dot (MG) \u2192 beta_reduce\n\u2192 preconditioned_search (MG) / search",
+        "data": "R/W: fine r and search p; GPU dot-product sums\nRepeat sequence until the chosen batch is encoded.",
+        "disk": "",
+        "tx": "",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "Read residual / stop / iteration\nNot converged \u2192 row 05",
+        "gpu": "Convergence scalars \u2192 staging",
+        "data": "R: 32 B scalar range only; not pressure array.",
+        "disk": "",
+        "tx": "D\u2192H: 32 B + map/wait",
+        "direction": "d2h",
+        "kind": "data"
+      },
+      {
+        "cpu": "If GPU claims converged:\nverify refreshed physical equation.",
+        "gpu": "pressure_refresh + mean-free stages\n\u2192 initial_reduce",
+        "data": "Independent residual refresh; may restart MG\npreconditioned direction if checks fail.",
+        "disk": "",
+        "tx": "",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "Every 64 iterations / cap:\nphysical equation check if still iterating.",
+        "gpu": "pressure_check \u2192 check_reduce",
+        "data": "R: original uncached mobility / pressure equation\nW: true residual / divergence criteria",
+        "disk": "",
+        "tx": "",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "Accept \u2192 row 13; failed gate \u2192 row 05.\nCap / nonfinite \u2192 error",
+        "gpu": "Convergence scalars \u2192 staging",
+        "data": "Relative residual AND physical divergence criterion\ncontrol acceptance; cap/nonfinite causes error.",
+        "disk": "",
+        "tx": "D\u2192H: 32 B + map/wait",
+        "direction": "d2h",
+        "kind": "data"
+      },
+      {
+        "cpu": "No host velocity transfer",
+        "gpu": "correct \u2192 pressure_commit (warm-start path)",
+        "data": "R: pressure solution + candidate faces\nW: projected MAC velocities / accumulated pressure",
+        "disk": "",
+        "tx": "",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "Read flow diagnostics",
+        "gpu": "fields \u2192 diagnostics",
+        "data": "W: full fluid packet + maxima / kinetic sums\nCPU gets 48 B of diagnostics, not the full packet.",
+        "disk": "",
+        "tx": "D\u2192H: 48 B + map/wait",
+        "direction": "d2h",
+        "kind": "data"
+      }
+    ],
+    "notes": [
+      "MG V-cycle = diagonal-start + restriction down levels; 8 coarse relaxation sweeps; prolongation and smoothing back up. Matrix/physics remain on the uniform fine grid.",
+      "V5 large-grid workaround fences EACH fluid/MG stage; waits transfer no fields. Normal smaller-grid MG encodes 8 CG iterations in a batch.",
+      "A phase-topology change can trigger CPU anchor rebuilding (sheet 4). In the present fixed-solid air+liquid case, moving \u03b1 normally leaves the active fluid mask unchanged."
+    ],
+    "loops": [
+      [
+        8,
+        4,
+        "not converged \u2192 next batch"
+      ],
+      [
+        11,
+        4,
+        "verification fails \u2192 continue"
+      ]
+    ]
+  },
+  {
+    "stem": "04-interface-copies-and-export",
+    "title": "4  Interface / momentum transport, checkpoints and output",
+    "subtitle": "Explicit GPU copies, CPU/GPU validation paths and disk writes after the first fluid projection",
+    "rows": [
+      {
+        "cpu": "Host supplies \u0394t / density parameters",
+        "gpu": "energy_collect \u2192 energy_reduce\n(begin accepted fluid-work accounting)",
+        "data": "R: current/previous MAC faces, force, \u03b1 / curvature\nW: energy sums, NOT a full field snapshot",
+        "disk": "",
+        "tx": "D\u2192H: 32 B work packet",
+        "direction": "d2h",
+        "kind": "data"
+      },
+      {
+        "cpu": "No host field transfer",
+        "gpu": "begin_momentum_transport / backups",
+        "data": "D2D: MAC velocity \u2192 checkpoint subrange (16F).\nD2D: \u03b1 packet \u2192 interface checkpoint (16N).\nNo second allocation for the advector checkpoint.",
+        "disk": "",
+        "tx": "",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "Select sweep axis and first/last flags\nRepeat the following rows THREE times.",
+        "gpu": "Set VOF config for this axis",
+        "data": "R: fixed advector faces; current \u03b1 input\nW: 48 B surface uniform only",
+        "disk": "",
+        "tx": "H\u2192D: 48 B uniform",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "No host field transfer",
+        "gpu": "reconstruct \u2192 sweep",
+        "data": "R: input \u03b1, fixed face advector, wall mask\nW: normal/plane reconstruction; output \u03b1 packet\n\u03b1 and momentum use matching mass fluxes.",
+        "disk": "",
+        "tx": "",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "Advance axis counter;\nsweeps remain \u2192 row 03",
+        "gpu": "momentum kernel \u2192 swap \u03b1 ping-pong index",
+        "data": "R: old/new \u03b1, advector, carried face velocities\nW: transported face momentum (scratch / velocity)\nNext sweep uses the alternate \u03b1 / momentum side.",
+        "disk": "",
+        "tx": "",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "Read interface validity / volume",
+        "gpu": "normal \u2192 curvature \u2192 reduce",
+        "data": "W: \u03b1 / curvature packet, normal buffer, stats\nCFL / fraction-range / nonfinite checks run here.",
+        "disk": "",
+        "tx": "D\u2192H: 32 B + map/wait",
+        "direction": "d2h",
+        "kind": "data"
+      },
+      {
+        "cpu": "If invalid: return error\nGeneric engine restores accepted state.",
+        "gpu": "After valid transport: commit carried momentum",
+        "data": "D2D: carried scratch \u2192 MAC velocity (16F)\nOn failure: \u03b1 and velocity restored from backups.",
+        "disk": "",
+        "tx": "",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "No host field transfer",
+        "gpu": "update_materials (generic path)",
+        "data": "R: original material IDs, accepted \u03b1\nW: packed moving-material IDs (4N bytes).",
+        "disk": "",
+        "tx": "",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "Clear topology flag / set phase config",
+        "gpu": "surface phase classifier",
+        "data": "R: static IDs, \u03b1 / \u03ba\nW: fluid.reserved, mask if active status changes; flag",
+        "disk": "",
+        "tx": "H\u2192D: 32 B config + 4 B flag reset",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "Read flag. If topology changed:\ndownload mask; CPU connected components / anchors.",
+        "gpu": "Copy mask ONLY on changed active topology",
+        "data": "D\u2192H: 4 B flag normally. Changed branch: 4N mask.\nH\u2192D: rebuilt 4N mask. Air\u2194liquid alone is not\na change of active topology in this isothermal path.",
+        "disk": "",
+        "tx": "D\u2192H: 4 B; conditional 4N round-trip",
+        "direction": "both",
+        "kind": "data"
+      },
+      {
+        "cpu": "Set updated mixture / gauge parameters",
+        "gpu": "phase_faces; momentum pending?\npressure projection B (sheet 3); fields / diagnostics",
+        "data": "R/W: new-density face coefficients and pressure work\nW: final MAC velocity + fluid packet",
+        "disk": "",
+        "tx": "H\u2192D: 128 B; D\u2192H: 32 B / 48 B",
+        "direction": "both",
+        "kind": "data"
+      },
+      {
+        "cpu": "f64 ledger; accept t+\u0394t\nKeep scalar diagnostic CSV strings in host RAM.",
+        "gpu": "No further field transfer on an ordinary step",
+        "data": "\u03b1 / u remain on GPU for the next electrical solve.\nThermal arrays / thermal transport are absent.",
+        "disk": "",
+        "tx": "",
+        "direction": "h2d",
+        "kind": "data"
+      },
+      {
+        "cpu": "Save cadence only:\nmap chunk \u2192 write \u2192 unmap; repeat",
+        "gpu": "copy_buffer_to_buffer: fluid \u2192 staging\nmap_async + wait for each completed chunk",
+        "data": "R: accepted 64N fluid packet\nOne reusable MAP_READ buffer \u226432 MiB\nNo full-field staging allocation.",
+        "disk": "Write raw fluid.bin\nthen metadata.json\nCSVs also flushed",
+        "tx": "D\u2192H: \u226432 MiB / chunk",
+        "direction": "d2h",
+        "kind": "data"
+      }
+    ],
+    "notes": [
+      "Checkpoints preserve accepted solver state for error handling; disk files are separate saved observations. No disk read/write is required inside CG iterations.",
+      "Data precision: GPU packets f32; masks/flags u32; CPU ledgers f64. Every GPU\u2192CPU readback uses a GPU staging copy + map/wait + host vector.",
+      "Both the force refresh and the two fluid projection completions materialise fluid packets/diagnostics. None of those resident packets move to CPU merely because they are called \u201cdisplay fields\u201d."
+    ],
+    "loops": [
+      [
+        4,
+        2,
+        "next axis (3 sweeps total)"
+      ]
+    ]
+  }
+]

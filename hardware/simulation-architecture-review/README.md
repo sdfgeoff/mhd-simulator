@@ -80,3 +80,7 @@ For reference, recorded AMD V5 first250steps spent approximately38% of measured 
 |Accepted field export and bounded staging|[src/run/export.rs](../../src/run/export.rs)|
 
 Both diagrams were rendered and visually inspected. Buffer arithmetic was cross-checked against the source strides; no GPU test/run was launched. All simulations remain stopped.
+
+## Expanded activity diagrams
+
+The [four detailed activity sheets](activity/README.md) expand the timestep, electrical PCG, pressure/MG, interface/momentum and export paths, with residency, copy sizes and CPU/GPU synchronization. Prepared for board reply1056.
