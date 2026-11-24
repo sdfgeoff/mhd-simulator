@@ -1,0 +1,334 @@
+{
+  "scope": "Static code audit of stopped V5 direct-contact client; no new simulation. Major distinct live allocations, not a complete driver-level accounting.",
+  "source_revision": "85d10db",
+  "dims": [
+    265,
+    240,
+    343
+  ],
+  "N": 21814800,
+  "F": 22052464,
+  "E": 65918878,
+  "coarse_cells": 3141240,
+  "coarse_levels": [
+    [
+      133,
+      120,
+      172
+    ],
+    [
+      67,
+      60,
+      86
+    ],
+    [
+      34,
+      30,
+      43
+    ],
+    [
+      17,
+      15,
+      22
+    ],
+    [
+      9,
+      8,
+      11
+    ],
+    [
+      5,
+      4,
+      6
+    ],
+    [
+      3,
+      2,
+      3
+    ]
+  ],
+  "buffers": [
+    {
+      "group": "Geometry",
+      "name": "CAD body masks",
+      "contents": "bit per CAD body; shared by static and evolving Volume",
+      "precision": "u32",
+      "stride_bytes": 4,
+      "count": 21814800,
+      "bytes": 87259200,
+      "GiB": 0.08126646280288696,
+      "source": "src/domain.rs:403"
+    },
+    {
+      "group": "Geometry",
+      "name": "Static material IDs",
+      "contents": "original material ID per cell",
+      "precision": "u32",
+      "stride_bytes": 4,
+      "count": 21814800,
+      "bytes": 87259200,
+      "GiB": 0.08126646280288696,
+      "source": "src/domain.rs:404"
+    },
+    {
+      "group": "Geometry",
+      "name": "Moving material IDs",
+      "contents": "ID + 23-bit quantised alpha + moving flag",
+      "precision": "packed u32",
+      "stride_bytes": 4,
+      "count": 21814800,
+      "bytes": 87259200,
+      "GiB": 0.08126646280288696,
+      "source": "src/surface.rs:303; src/surface_ids.wgsl"
+    },
+    {
+      "group": "Magnetic",
+      "name": "Static B0 packet",
+      "contents": "B xyz/norm + generic J/force/heat/applied-B fields; only bias is needed here",
+      "precision": "16 x f32",
+      "stride_bytes": 64,
+      "count": 21814800,
+      "bytes": 1396147200,
+      "GiB": 1.3002634048461914,
+      "source": "src/em/mod.rs:28; examples/conduction_flow.rs:195"
+    },
+    {
+      "group": "Conduction",
+      "name": "Conductivity / terminal flags",
+      "contents": "sigma; flags with optional low16 material-group bits",
+      "precision": "2 x f32 (flags partly packed u32)",
+      "stride_bytes": 8,
+      "count": 21814800,
+      "bytes": 174518400,
+      "GiB": 0.16253292560577393,
+      "source": "examples/conduction/gpu.rs:119"
+    },
+    {
+      "group": "Conduction",
+      "name": "DC PCG work",
+      "contents": "potential high, residual, search, operator product",
+      "precision": "4 x f32",
+      "stride_bytes": 16,
+      "count": 21814800,
+      "bytes": 349036800,
+      "GiB": 0.32506585121154785,
+      "source": "examples/conduction/gpu.rs:136"
+    },
+    {
+      "group": "Conduction",
+      "name": "Potential predictors / low words",
+      "contents": "unit high, motion high, unit correction low, motion correction low",
+      "precision": "4 x f32; compensated high/low, NOT f64",
+      "stride_bytes": 16,
+      "count": 21814800,
+      "bytes": 349036800,
+      "GiB": 0.32506585121154785,
+      "source": "examples/conduction/gpu.rs:140; solver.wgsl:96"
+    },
+    {
+      "group": "Conduction",
+      "name": "DC output packet",
+      "contents": "B xyz/norm; J xyz/divJ; force xyz/Joule density; applied B copy",
+      "precision": "16 x f32",
+      "stride_bytes": 64,
+      "count": 21814800,
+      "bytes": 1396147200,
+      "GiB": 1.3002634048461914,
+      "source": "examples/conduction/solver.wgsl:121"
+    },
+    {
+      "group": "Conduction",
+      "name": "DC reductions",
+      "contents": "partial dot products / currents / power",
+      "precision": "4 x f32",
+      "stride_bytes": 16,
+      "count": 85215,
+      "bytes": 1363440,
+      "GiB": 0.001269802451133728,
+      "source": "examples/conduction/gpu.rs:137"
+    },
+    {
+      "group": "Fluid",
+      "name": "Fluid mask / pressure anchors",
+      "contents": "air + liquid active; solids excluded; anchor encoded",
+      "precision": "u32",
+      "stride_bytes": 4,
+      "count": 21814800,
+      "bytes": 87259200,
+      "GiB": 0.08126646280288696,
+      "source": "src/fluid/mod.rs:292"
+    },
+    {
+      "group": "Fluid",
+      "name": "MAC velocity",
+      "contents": "staggered ux uy uz; w reused as pressure diagonal",
+      "precision": "4 x f32",
+      "stride_bytes": 16,
+      "count": 22052464,
+      "bytes": 352839424,
+      "GiB": 0.32860732078552246,
+      "source": "src/fluid/mod.rs:435-441"
+    },
+    {
+      "group": "Fluid",
+      "name": "MAC scratch",
+      "contents": "predicted velocities; w reused by MG",
+      "precision": "4 x f32",
+      "stride_bytes": 16,
+      "count": 22052464,
+      "bytes": 352839424,
+      "GiB": 0.32860732078552246,
+      "source": "src/fluid/mod.rs:435-441"
+    },
+    {
+      "group": "Fluid",
+      "name": "MAC previous",
+      "contents": "accepted pre-step face velocities; energy / rollback",
+      "precision": "4 x f32",
+      "stride_bytes": 16,
+      "count": 22052464,
+      "bytes": 352839424,
+      "GiB": 0.32860732078552246,
+      "source": "src/fluid/mod.rs:435-441"
+    },
+    {
+      "group": "Fluid",
+      "name": "Pressure PCG work",
+      "contents": "pressure potential, residual, search, operator / MG temp",
+      "precision": "4 x f32",
+      "stride_bytes": 16,
+      "count": 21814800,
+      "bytes": 349036800,
+      "GiB": 0.32506585121154785,
+      "source": "src/fluid/mod.rs:437"
+    },
+    {
+      "group": "Fluid",
+      "name": "Fluid state / output packet",
+      "contents": "u xyz/speed; pressure/divergence; force; active/melt/alpha/curvature",
+      "precision": "16 x f32",
+      "stride_bytes": 64,
+      "count": 21814800,
+      "bytes": 1396147200,
+      "GiB": 1.3002634048461914,
+      "source": "src/fluid/solver.wgsl:257"
+    },
+    {
+      "group": "Fluid",
+      "name": "Field / advector checkpoint",
+      "contents": "full state rollback; same allocation reused as MAC advector checkpoint",
+      "precision": "16 x f32 cell-sized; subrange reused",
+      "stride_bytes": 64,
+      "count": 21814800,
+      "bytes": 1396147200,
+      "GiB": 1.3002634048461914,
+      "source": "src/fluid/mod.rs:442; begin_momentum_transport"
+    },
+    {
+      "group": "Fluid",
+      "name": "Fluid reductions",
+      "contents": "three vec4 partial statistics per workgroup",
+      "precision": "12 x f32",
+      "stride_bytes": 48,
+      "count": 86143,
+      "bytes": 4134864,
+      "GiB": 0.003850892186164856,
+      "source": "src/fluid/mod.rs:438"
+    },
+    {
+      "group": "Interface",
+      "name": "Interface A",
+      "contents": "alpha; curvature; sweep indicator; divergence correction",
+      "precision": "4 x f32",
+      "stride_bytes": 16,
+      "count": 21814800,
+      "bytes": 349036800,
+      "GiB": 0.32506585121154785,
+      "source": "src/surface.rs:189-194; src/surface.wgsl"
+    },
+    {
+      "group": "Interface",
+      "name": "Interface B",
+      "contents": "ping-pong alpha / curvature / sweep workspace",
+      "precision": "4 x f32",
+      "stride_bytes": 16,
+      "count": 21814800,
+      "bytes": 349036800,
+      "GiB": 0.32506585121154785,
+      "source": "src/surface.rs:189-194; src/surface.wgsl"
+    },
+    {
+      "group": "Interface",
+      "name": "Interface normals",
+      "contents": "normal xyz + magnitude or plane intercept",
+      "precision": "4 x f32",
+      "stride_bytes": 16,
+      "count": 21814800,
+      "bytes": 349036800,
+      "GiB": 0.32506585121154785,
+      "source": "src/surface.rs:189-194; src/surface.wgsl"
+    },
+    {
+      "group": "Interface",
+      "name": "Interface checkpoint",
+      "contents": "accepted alpha packet for failed transport rollback",
+      "precision": "4 x f32",
+      "stride_bytes": 16,
+      "count": 21814800,
+      "bytes": 349036800,
+      "GiB": 0.32506585121154785,
+      "source": "src/surface.rs:189-194; src/surface.wgsl"
+    },
+    {
+      "group": "Interface",
+      "name": "Interface reductions",
+      "contents": "volume / bounds / errors / area",
+      "precision": "8 x f32",
+      "stride_bytes": 32,
+      "count": 85216,
+      "bytes": 2726912,
+      "GiB": 0.0025396347045898438,
+      "source": "src/surface.rs:194"
+    },
+    {
+      "group": "Pressure MG",
+      "name": "Coarse coefficient graph",
+      "contents": "three neighbor coefficients + diagonal",
+      "precision": "4 x f32",
+      "stride_bytes": 16,
+      "count": 3141240,
+      "bytes": 50259840,
+      "GiB": 0.04680812358856201,
+      "source": "src/fluid/multigrid.rs:108"
+    },
+    {
+      "group": "Pressure MG",
+      "name": "Coarse corrections / work",
+      "contents": "residual / correction / temp values",
+      "precision": "4 x f32",
+      "stride_bytes": 16,
+      "count": 3141240,
+      "bytes": 50259840,
+      "GiB": 0.04680812358856201,
+      "source": "src/fluid/multigrid.rs:109"
+    }
+  ],
+  "major_logical_bytes": 9718664768,
+  "omitted_small": "uniforms, small scalar buffers, material/component tables, Viscosity stage uniforms, phase flag/placeholders, profiler, driver allocations/caches",
+  "aliases_not_counted_twice": [
+    "B0 bias references share one allocation",
+    "DC output is shared directly as fluid impressed force; no frozen-force copy",
+    "static/evolving Volume share masks/input tables",
+    "MG fine work reuses fluid work/velocity/scratch",
+    "fluid checkpoint alternates full-state backup and advector use; not two allocations"
+  ],
+  "not_active": [
+    "thermal evolution (zero thermal working buffers)",
+    "induction/reaction EM solver during timestep",
+    "self-field update"
+  ],
+  "startup_only": "Applied magnetic field computed once with temporary E*52 + N*128 + reductions/source buffers. Retain one N*64 result packet; drop other EM workspace. Largest temporary E*32 buffer.",
+  "export_only_bytes": 33554432,
+  "CPU": "time/pulse schedule and energy accumulation f64; main GPU arithmetic f32. Readback scalars/control flags synchronize iterated solves.",
+  "observed_AMD_whole_device_bytes_approx": 12307000000
+}
