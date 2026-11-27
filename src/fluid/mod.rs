@@ -8,7 +8,9 @@ use crate::{
 };
 use bytemuck::{Pod, Zeroable};
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, VecDeque};
+mod connectivity;
+use connectivity::anchors;
+use std::collections::HashMap;
 use wgpu::util::DeviceExt;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -119,6 +121,22 @@ pub struct ForceField<'a> {
     pub grid: &'a GridSi,
 }
 #[repr(C)]
+#[derive(Clone, Copy, Default, Pod, Zeroable)]
+struct PressureGauge {
+    root: u32,
+    size: u32,
+    largest_pinned_size: u32,
+    padding: u32,
+}
+
+struct PressureConvergence {
+    relative: f32,
+    accepted: bool,
+    iterations: u32,
+    within_nominal_norm: bool,
+}
+
+#[repr(C)]
 #[derive(Clone, Copy, Pod, Zeroable)]
 struct Params {
     dims: [u32; 4],
@@ -126,10 +144,11 @@ struct Params {
     flags: [u32; 4],
     physical: [f32; 4],
     acceleration: [f32; 4],
-    // Initial velocity xyz; inverse fluid-cell count w during mean-free pressure.
+    // Initial velocity xyz; inverse main-component size w during mean-free pressure.
     initial: [f32; 4],
     solve: [f32; 4],
     surface: [f32; 4],
+    gauge: PressureGauge,
 }
 struct PhaseGpu {
     pipeline: wgpu::ComputePipeline,
@@ -352,7 +371,7 @@ impl FluidState {
             }
         }
         let reference_probe_mm = best.1;
-        let components = anchors(&mut mask, grid.dims, config.periodic);
+        let (components, gauge) = anchors(&mut mask, grid.dims, config.periodic);
         let force = if config.use_em_force {
             let field = force
                 .ok_or("Compute electromagnetics first, then select a recorded force frame")?;
@@ -389,6 +408,7 @@ impl FluidState {
                 })
         };
         let params = Params {
+            gauge,
             surface: [
                 f32::from(config.surface.enabled),
                 air_density_kg_m3,
@@ -905,7 +925,8 @@ impl FluidState {
                 .map(|v| u32::from(*v != 0))
                 .collect();
             self.fluid_cells = mask.iter().filter(|v| **v != 0).count() as u64;
-            self.components = anchors(&mut mask, self.grid.dims, self.config.periodic);
+            (self.components, self.params.gauge) =
+                anchors(&mut mask, self.grid.dims, self.config.periodic);
             self.context
                 .queue
                 .write_buffer(&self._mask, 0, bytemuck::cast_slice(&mask));
@@ -1052,28 +1073,35 @@ impl FluidState {
             pass.dispatch_workgroups(g[0], g[1], g[2]);
         }
     }
-    fn convergence(&self) -> Result<(f32, bool, u32), String> {
+    fn convergence(&self) -> Result<PressureConvergence, String> {
         let data = read_bytes(&self.context, &self.scalars, 0, 32)?;
         let s = bytemuck::cast_slice::<u8, f32>(&data);
         let residual = (s[1] / s[2].max(1e-38)).sqrt();
         if !residual.is_finite() || s.iter().any(|v| !v.is_finite()) || s[1] < 0. || s[2] < 0. {
             return Err("Nonfinite fluid pressure residual".into());
         }
-        Ok((residual, s[6] > 0.5, s[7] as u32))
+        let within_nominal_norm = s[1] <= self.params.solve[0] * s[2] + self.params.solve[1];
+        Ok(PressureConvergence {
+            relative: residual,
+            accepted: s[6] > 0.5,
+            iterations: s[7] as u32,
+            within_nominal_norm,
+        })
     }
     fn configure_pressure_projection(&mut self) -> bool {
-        // A global projection is valid for exactly one null vector. Disconnected
-        // graphs retain the existing independent point references and MG graph.
-        let meanfree = self.components == 1;
+        // Project the largest Neumann block onto its mean-free subspace.
+        // Each other block keeps its independent point reference. Its largest
+        // size bounds the untracked gauge-row contribution to the inner norm.
+        let meanfree = self.params.gauge.size > 0;
         #[cfg(test)]
-        let meanfree = self.force_meanfree_pressure.unwrap_or(meanfree) && self.components == 1;
+        let meanfree = meanfree && self.force_meanfree_pressure.unwrap_or(true);
         let inverse = if meanfree {
-            1. / self.fluid_cells.max(1) as f32
+            1. / self.params.gauge.size as f32
         } else {
             0.
         };
         let bound = if meanfree {
-            1.
+            self.params.gauge.largest_pinned_size.max(1) as f32
         } else {
             self.fluid_cells.max(1) as f32
         };
@@ -1123,7 +1151,7 @@ impl FluidState {
             || self.diagnostics.iterations >= 256;
         #[cfg(test)]
         let preferred = self.force_multigrid.unwrap_or(preferred);
-        if preferred && !residual.1 && !self.multigrid_attempted {
+        if preferred && !residual.accepted && !self.multigrid_attempted {
             // Optional acceleration must never make a fitting Jacobi solve fail.
             // Attempt once per state; a new run rechecks the live memory budget.
             self.multigrid_attempted = true;
@@ -1133,13 +1161,14 @@ impl FluidState {
             }
         }
         let mg = self.multigrid.as_ref().filter(|_| preferred);
-        if !residual.1
+        if !residual.accepted
             && let Some(mg) = mg
         {
             mg.build(&self.context);
             mg.initialize(self);
         }
-        while !residual.1 && iterations < self.config.max_iterations {
+        let mut next_check_norm = f32::INFINITY;
+        while !residual.accepted && iterations < self.config.max_iterations {
             // The GPU guards converged iterations. Poll less often while still
             // stopping at each independent physical-residual check and the cap.
             let batch = (if mg.is_some() { 8u32 } else { 32u32 })
@@ -1166,29 +1195,36 @@ impl FluidState {
                 self.dispatch(&stages);
             }
             residual = self.convergence()?;
-            if residual.2 <= iterations && !residual.1 {
+            if residual.iterations <= iterations && !residual.accepted {
                 return Err("Fluid pressure iteration made no progress".into());
             }
-            iterations = residual.2;
-            if residual.1 {
+            iterations = residual.iterations;
+            if residual.accepted {
                 self.dispatch(&self.pressure_refresh_stages());
                 residual = self.convergence()?;
-                if !residual.1
+                if !residual.accepted
                     && let Some(mg) = mg
                 {
                     mg.initialize(self);
                 }
-            } else if iterations % 64 == 0 || iterations == self.config.max_iterations {
+            } else if iterations % 64 == 0
+                || iterations == self.config.max_iterations
+                || (residual.within_nominal_norm && residual.relative < next_check_norm)
+            {
+                // An anchored residual can meet the physical tolerance before
+                // its conservative gauge bound. Test the full equation now,
+                // then wait for a further norm reduction or the regular check.
+                next_check_norm = 0.5 * residual.relative;
                 // Inspect the full physical equation without resetting CG conjugacy.
                 // The conservative inner gauge bound may be below f32 precision.
                 self.dispatch(&[("pressure_check", cells), ("check_reduce", [1, 1, 1])]);
                 residual = self.convergence()?;
             }
         }
-        if !residual.1 {
+        if !residual.accepted {
             return Err(format!(
                 "Fluid pressure solve did not converge after {iterations} iterations (true relative residual {:.3e}, requested {:.3e}, RMS divergence floor {:.3e} s⁻¹)",
-                residual.0,
+                residual.relative,
                 self.config.relative_tolerance,
                 self.config.absolute_divergence_tolerance
             ));
@@ -1202,7 +1238,7 @@ impl FluidState {
         } else {
             &completion[..1]
         });
-        Ok((iterations, residual.0))
+        Ok((iterations, residual.relative))
     }
     fn read_diagnostics(
         &mut self,
@@ -1542,53 +1578,6 @@ fn probe_cell(
 }
 fn groups(n: u32) -> [u32; 3] {
     crate::gpu::volume_groups(n)
-}
-fn anchors(mask: &mut [u32], dims: [u32; 3], periodic: [bool; 3]) -> usize {
-    let mut components = 0;
-    let mut roots = vec![0u32; mask.len()];
-    let mut queue = VecDeque::new();
-    for root in 0..mask.len() {
-        if mask[root] != 1 {
-            continue;
-        }
-        components += 1;
-        mask[root] = 4;
-        roots[root] = root as u32;
-        queue.push_back(root);
-        while let Some(i) = queue.pop_front() {
-            let p = [
-                i % dims[0] as usize,
-                (i / dims[0] as usize) % dims[1] as usize,
-                i / (dims[0] * dims[1]) as usize,
-            ];
-            for axis in 0..3 {
-                for direction in [-1i32, 1] {
-                    let mut q = p;
-                    let mut v = p[axis] as i32 + direction;
-                    if periodic[axis] {
-                        v = v.rem_euclid(dims[axis] as i32);
-                    } else if v < 0 || v >= dims[axis] as i32 {
-                        continue;
-                    }
-                    q[axis] = v as usize;
-                    let j = q[0] + dims[0] as usize * (q[1] + dims[1] as usize * q[2]);
-                    if mask[j] == 1 {
-                        mask[j] = 3;
-                        roots[j] = root as u32;
-                        queue.push_back(j);
-                    }
-                }
-            }
-        }
-    }
-    for (v, root) in mask.iter_mut().zip(roots) {
-        if *v == 3 {
-            *v = 1 | (root << 2);
-        } else if *v == 4 {
-            *v = 2 | (root << 2);
-        }
-    }
-    components
 }
 #[cfg(test)]
 mod tests;

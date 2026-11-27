@@ -2,6 +2,8 @@
 
 Measurements use an NVIDIA GeForce RTX 3060 Laptop GPU with the Vulkan backend. The reference is commit `58855ca`; the optimized version uses the same geometry, materials, resolution, timestep, iteration limits and residual tolerances. No new full-grid allocations or GPU features are required.
 
+The [uniform-grid pressure benchmark](uniform-grid-pressure-2026-11-28.md) measures component-aware pressure projection and voxel connectivity preparation against commit `c633635`.
+
 The [November 2026 full-assembly replay](solver-replay-2026-11-25.md) measures subsequent pressure, charge, interface and analysis changes against commit `c118ad7`.
 
 ## Measured speed

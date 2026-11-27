@@ -67,17 +67,21 @@ fn hierarchy(dims: [u32; 4], faces: [u32; 4], periodic: u32) -> Result<(Vec<Leve
 
 fn cycle_stages(level_count: usize) -> Vec<(usize, &'static str)> {
     let mut stages = Vec::new();
-    for l in 0..level_count - 1 {
-        stages.extend([(l, "diagonal_start"), (l + 1, "restrict_residual")]);
-    }
     let coarsest = level_count - 1;
+    if coarsest > 0 {
+        stages.push((0, "diagonal_start"));
+    }
+    // Restriction initializes each parent's first Jacobi correction while its
+    // residual and diagonal are in registers.
+    for level in 1..=coarsest {
+        stages.push((level, "restrict_residual"));
+    }
     stages.push((coarsest, "coarse_solve"));
-    for l in (0..coarsest).rev() {
-        stages.extend([
-            (l + 1, "prolong"),
-            (l, "smooth_to_temp"),
-            (l, "commit_smooth"),
-        ]);
+    for level in (0..coarsest).rev() {
+        stages.extend([(level + 1, "prolong"), (level, "smooth_to_temp")]);
+    }
+    if coarsest > 0 {
+        stages.push((0, "commit_smooth"));
     }
     stages
 }

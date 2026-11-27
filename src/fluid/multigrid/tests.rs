@@ -35,7 +35,7 @@ fn fixture(d: [u32; 3], periodic: [bool; 3], walls: bool, reverse: bool) -> (Flu
             u32::from(!walls || (x != d[0] / 2 && !(x == 1 && y == 1)))
         })
         .collect();
-    state.components = anchors(&mut mask, d, periodic);
+    (state.components, state.params.gauge) = anchors(&mut mask, d, periodic);
     state.fluid_cells = mask.iter().filter(|&&m| m != 0).count() as u64;
     let mut fields = vec![FluidCell::default(); count as usize];
     for (i, field) in fields.iter_mut().enumerate() {
@@ -80,20 +80,18 @@ fn aggregation_is_gpu_galerkin_on_odd_periodic_and_disconnected_domains() {
             for reverse in [false, true] {
                 let (mut state, mask) = fixture(dims, periodic, walls, reverse);
                 let mut topology: Vec<_> = mask.iter().map(|&m| u32::from(m != 0)).collect();
-                state.components = anchors(&mut topology, dims, periodic);
+                (state.components, state.params.gauge) = anchors(&mut topology, dims, periodic);
                 if floating {
-                    if state.components != 1 {
-                        continue;
-                    }
                     state.force_meanfree_pressure = Some(true);
                     assert!(state.configure_pressure_projection());
                     state.dispatch(&[
                         ("pressure_guess", groups(state.params.dims[3])),
                         ("pressure_coefficients", groups(state.params.faces[3])),
                     ]);
-                    state.dispatch(&[("pressure_coefficients", groups(state.params.faces[3]))]);
                 }
-                let active = |m: u32| if floating { m != 0 } else { m & 3 == 1 };
+                let active = |m: u32| {
+                    m & 3 == 1 || (floating && m & 3 == 2 && m >> 2 == state.params.gauge.root)
+                };
                 let mg = Multigrid::new(&state).unwrap();
                 mg.build(&state.context);
                 assert!(
@@ -415,14 +413,8 @@ fn meanfree_pressure_contrast_and_disconnected_controls() {
             for multigrid in [false, true] {
                 let (mut state, mask) = fixture(dims, periodic, walls, reverse);
                 let mut topology: Vec<_> = mask.iter().map(|&m| u32::from(m != 0)).collect();
-                state.components = anchors(&mut topology, dims, periodic);
+                (state.components, state.params.gauge) = anchors(&mut topology, dims, periodic);
                 state.force_multigrid = Some(multigrid);
-                if state.components != 1 {
-                    state.force_meanfree_pressure = Some(true);
-                    assert!(!state.configure_pressure_projection());
-                    assert_eq!(state.params.initial[3], 0.);
-                    continue;
-                }
                 state.force_meanfree_pressure = Some(true);
                 assert!(state.configure_pressure_projection());
                 state.dispatch(&[
@@ -713,12 +705,14 @@ fn pressure_mode_follows_topology_and_reuses_multigrid_storage() {
     state.force_meanfree_pressure = None;
     state.force_multigrid = Some(true);
     let mut allocated = None;
-    for split in [false, true, false] {
+    // The right compartment is largest after the second split. It has a new
+    // root and must take over the mean-free solve with the same GPU storage.
+    for wall in [None, Some(dims[0] / 2), Some(2), None] {
         let mut mask: Vec<_> = (0..dims.iter().product::<u32>())
-            .map(|i| u32::from(!split || i % dims[0] != dims[0] / 2))
+            .map(|i| u32::from(Some(i % dims[0]) != wall))
             .collect();
         state.fluid_cells = mask.iter().filter(|&&m| m != 0).count() as u64;
-        state.components = anchors(&mut mask, dims, [false; 3]);
+        (state.components, state.params.gauge) = anchors(&mut mask, dims, [false; 3]);
         state.params.solve[1] = state.config.absolute_divergence_tolerance.powi(2)
             * state.grid.cell_m.powi(4)
             * state.fluid_cells as f32;
@@ -726,7 +720,7 @@ fn pressure_mode_follows_topology_and_reuses_multigrid_storage() {
             .context
             .queue
             .write_buffer(&state._mask, 0, bytemuck::cast_slice(&mask));
-        assert_eq!(state.configure_pressure_projection(), !split);
+        assert!(state.configure_pressure_projection());
         state.dispatch(&[
             ("pressure_guess", groups(state.params.dims[3])),
             ("pressure_coefficients", groups(state.params.faces[3])),
@@ -755,6 +749,10 @@ fn pressure_mode_follows_topology_and_reuses_multigrid_storage() {
         } else {
             allocated = Some(bytes);
         }
-        assert_eq!(state.params.initial[3] > 0., !split);
+        assert_eq!(state.params.initial[3], 1. / state.params.gauge.size as f32);
+        if wall == Some(2) {
+            assert_eq!(state.params.gauge.root, 3);
+            assert_eq!(state.params.gauge.largest_pinned_size, 2 * dims[1] * dims[2]);
+        }
     }
 }

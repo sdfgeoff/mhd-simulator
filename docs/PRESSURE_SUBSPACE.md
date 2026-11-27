@@ -3,13 +3,14 @@
 A connected, closed or periodic pressure graph has one constant null vector.
 The solver now treats that mode explicitly with mean-free residuals. It keeps
 the original reference cell to choose a pressure gauge, while retaining every
-physical equation in the connected graph. Disconnected domains keep their
-independent pinned references.
+physical equation in the largest connected component. Each remaining component
+has an independent pinned reference.
 
 ## Equation and iteration
 
 For the weighted graph Laplacian `A`, let `P = I - 11ᵀ/N`. Each CG residual is
-projected with `P`; Jacobi or the existing fixed symmetric multigrid cycle `M`
+projected with `P` on that component and the identity on the remaining components.
+Jacobi or the existing fixed symmetric multigrid cycle `M`
 induces the positive preconditioner `P M P` on the constant-orthogonal subspace.
 Search vectors can carry a constant because `A` annihilates it and the residual
 is orthogonal to it. Pressure increments use `p - p[reference]`, keeping the
@@ -21,10 +22,9 @@ centering the solution by its global mean, despite passing uniform analytic
 checks. Its successful reference-gauge formulation and failed rank-one variants
 are [preserved together](https://github.com/sdfgeoff/mhd-simulator/blob/research/pressure-nullspace-20261118/docs/FLOATING_PRESSURE_RESEARCH.md).
 
-The multigrid hierarchy includes the reference cell and omits point-anchor
-reactions in connected mode. Its existing restriction, prolongation, smoothing
-and fixed coarse solve are unchanged. For multiple components it restores the
-original anchor exclusion and reactions. The graph is rebuilt for each projection,
+The multigrid hierarchy includes the reference cell of the mean-free component.
+On the other components the pinned cell contributes zero correction and its
+incident edges supply the coarse diagonal reaction. The graph is rebuilt for each projection,
 so a topology change can switch modes using the same allocation.
 
 ## Physical acceptance and storage
@@ -35,10 +35,12 @@ the original uncached mobility/Laplacian equation at **all** fluid cells. In
 particular, a removed residual mean cannot hide incompatible physical data.
 Recursive convergence triggers an independent physical refresh before acceptance.
 
-The connected solve no longer needs the pinned system's additional internal
-cell-count stopping factor. It can therefore stop closer to the configured
-physical floor. This removes excess solve accuracy; it does not promise identical
-local fields or identical final divergence below that floor.
+For a pinned component of size `n`, the squared norm including its omitted
+row is bounded by `n` times the retained squared norm when the component RHS
+is compatible. The mean-free component retains all rows. The inner test adds
+the squared residual norm on the mean-free component to the pinned components'
+squared residual norm multiplied by the largest pinned size. The separate physical
+check includes each original equation and handles accumulated roundoff.
 
 The residual mean and projection reuse existing reduction, work and scalar
 buffers. No volume-sized buffer is added. The pressure-mode bit in the multigrid
@@ -56,7 +58,7 @@ selection threshold and live workspace checks remain in place.
    include 7000:1 in both orientations. Neumann V-cycles pass symmetry/positivity
    checks and preserve live vector lanes.
 4. A connected → disconnected → connected test checks physical projection and
-   reuses the same multigrid bytes. Disconnected graphs retain pinned references.
+   reuses the same multigrid bytes, including when the largest component moves to a new root.
 5. Forced late pressure failure and retry check packet restoration for both
    gauges with both preconditioners.
 
@@ -65,7 +67,7 @@ The research study also includes full nozzle trajectories, refined prefixes,
 integration is being checked separately; research timings are not automatically
 production timing claims.
 
-## Application measurements
+## Earlier single-component application measurements
 
 Three alternating warmed application-binary pairs ran three coupled 10 µs ticks
 on the actual V6 project, on an RTX 3060 Laptop GPU. All profiling passes were

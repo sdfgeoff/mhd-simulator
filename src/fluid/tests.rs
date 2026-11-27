@@ -116,7 +116,7 @@ fn periodic_uniform_flow_and_closed_hydrostatic_balance() {
         },
     );
     closed.step(&volume).unwrap();
-    let actual = closed.convergence().unwrap().2;
+    let actual = closed.convergence().unwrap().iterations;
     assert_eq!(closed.diagnostics.iterations, actual);
     assert!(actual > 0 && actual <= closed.config.max_iterations);
     assert!(
@@ -215,7 +215,7 @@ fn pressure_failure_rolls_back_and_disconnected_components_get_gauges() {
         read_bytes(&state.context, &state.result, 0, state.result.size()).unwrap()
     );
     let mut mask = vec![1, 0, 1];
-    assert_eq!(anchors(&mut mask, [3, 1, 1], [false; 3]), 2);
+    assert_eq!(anchors(&mut mask, [3, 1, 1], [false; 3]).0, 2);
     assert_eq!(
         mask.iter().map(|v| v & 3).collect::<Vec<_>>(),
         vec![2, 0, 2]
@@ -223,7 +223,7 @@ fn pressure_failure_rolls_back_and_disconnected_components_get_gauges() {
     assert_eq!(mask[0] >> 2, 0);
     assert_eq!(mask[2] >> 2, 2);
     let mut mask = vec![1, 0, 1];
-    assert_eq!(anchors(&mut mask, [3, 1, 1], [true, false, false]), 1);
+    assert_eq!(anchors(&mut mask, [3, 1, 1], [true, false, false]).0, 1);
 }
 
 #[test]
@@ -510,7 +510,7 @@ fn physical_pressure_check_accepts_solution_without_discarding_cg_direction() {
         ("pressure_check", groups(state.params.dims[3])),
         ("check_reduce", [1, 1, 1]),
     ]);
-    assert!(state.convergence().unwrap().1);
+    assert!(state.convergence().unwrap().accepted);
     assert_eq!(
         before,
         read_bytes(&state.context, &state._work, 0, state._work.size()).unwrap()
@@ -543,7 +543,7 @@ fn cached_pressure_coefficients_match_original_operator_with_walls_phase_and_per
             );
             let n = state.params.dims[3] as usize;
             let mut mask: Vec<u32> = (0..n).map(|i| u32::from((i / 4) % 8 != 3)).collect();
-            state.components = anchors(&mut mask, state.grid.dims, periodic);
+            (state.components, state.params.gauge) = anchors(&mut mask, state.grid.dims, periodic);
             state.fluid_cells = mask.iter().filter(|&&m| m != 0).count() as u64;
             state.configure_pressure_projection();
             state
@@ -593,7 +593,7 @@ fn cached_pressure_coefficients_match_original_operator_with_walls_phase_and_per
             // Independent GPU evaluation of the original physical stencil, without
             // introducing a duplicate CPU numerical implementation.
             let source = format!(
-                "{}\n{}\n{}\n@compute @workgroup_size(256) fn reference(@builtin(global_invocation_id) gid:vec3<u32>){{let i=flat_id(gid);if i<p.dims.w && mask[i]!=0u {{let pos=decode(i,p.dims.xyz);var a=laplacian(pos,1u);if !mean_free_pressure() && (mask[i]&3u)==2u {{a=potential(pos,1u);}}work[i].w=a;work[i].y=diagonal(pos);}}}}",
+                "{}\n{}\n{}\n@compute @workgroup_size(256) fn reference(@builtin(global_invocation_id) gid:vec3<u32>){{let i=flat_id(gid);if i<p.dims.w && mask[i]!=0u {{let pos=decode(i,p.dims.xyz);var a=laplacian(pos,1u);if (mask[i]&3u)==2u && (p.initial.w==0.0 || i!=p.gauge.x) {{a=potential(pos,1u);}}work[i].w=a;work[i].y=diagonal(pos);}}}}",
                 include_str!("../periodic.wgsl"),
                 include_str!("viscosity.wgsl"),
                 include_str!("solver.wgsl")

@@ -4,7 +4,7 @@ The solver retains the fine pressure equation, pressure gauge, tolerances and in
 
 ## Operator and cycle
 
-The fine operator is the weighted graph Laplacian assembled from cached MAC-face mobilities. A connected graph uses [mean-free residuals](PRESSURE_SUBSPACE.md), retaining every cell. Disconnected graphs keep pinned reference cells: connections to an anchor contribute a diagonal reaction, and the anchor itself has zero correction. Walls have no connecting edge.
+The fine operator is the weighted graph Laplacian assembled from cached MAC-face mobilities. The largest connected component uses [mean-free residuals](PRESSURE_SUBSPACE.md), retaining every cell. Other components keep independent pinned references. Connections to a pinned cell contribute a diagonal reaction and the cell has zero correction. Walls have no connecting edge.
 
 1. Aggregate adjacent cells in blocks of up to 2×2×2. Piecewise-constant prolongation, `P`, excludes pinned fine cells only in the disconnected mode; restriction is its transpose, `R = Pᵀ`, using sums rather than averages.
 2. Construct the coarse graph as `A_c = R A P`. Sum edges crossing aggregate boundaries and accumulate anchor reactions separately. Internal edges cancel analytically. Later levels also sum the existing reactions. This preserves a seven-point graph without subtracting large internal-edge sums.
